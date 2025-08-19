@@ -1,3 +1,4 @@
+; flat compiler | ::stage( 0 ) */
 WIN64 = 1
 display '::stage( 0 )'
 format  PE64 console
@@ -11,9 +12,10 @@ _esi equ rsi
 _edi equ rdi
 cell equ qword
 
-VERSION_STRING equ "1.73.04"
-VERSION_MAJOR = 1
-VERSION_MINOR = 73
+VERSION_STRING equ "25.8.00"
+VERSION_MAJOR = 25
+VERSION_MINOR = 8
+VERSION_RELEASE = 0
 
 LABEL_STRUCTURE_SIZE = 32
 
@@ -386,19 +388,12 @@ init_memory:
 	mov	eax,[memory_setting]
 	shl	eax,10
 	jnz	allocate_memory
-if WIN64
 	sub		rsp,40
 	mov		rcx,buffer
 	call	qword[GlobalMemoryStatus]
 	add		rsp,40
 	mov	rax,qword [buffer+32]
 	mov	rdx,qword [buffer+16]
-else
-	push	buffer
-	call	[GlobalMemoryStatus]
-	mov	eax,dword [buffer+20]
-	mov	edx,dword [buffer+12]
-end if
 	cmp	eax,0
 	jl	large_memory
 	cmp	edx,0
@@ -415,7 +410,6 @@ end if
 	sub	_ecx,_edx
 	mov	cell[memory_end],_ecx
 	mov	cell[additional_memory_end],_edx
-if WIN64
 	sub	rsp,40
 	mov	r9d,PAGE_READWRITE
 	mov	r8d,MEM_COMMIT
@@ -423,13 +417,6 @@ if WIN64
 	mov	rcx,0
 	call	qword[VirtualAlloc]
 	add	rsp,40
-else
-	push	PAGE_READWRITE
-	push	MEM_COMMIT
-	push	_eax
-	push	0
-	call	[VirtualAlloc]
-end if
 	or	eax,eax
 	jz	not_enough_memory
 	mov	cell[memory_start],_eax
@@ -451,19 +438,12 @@ exit_program:
 	mov	_eax,cell[memory_start]
 	test	eax,eax
 	jz	do_exit
-if WIN64
 	sub	rsp,40
 	mov	r8d,MEM_RELEASE
 	mov	rdx,0
 	mov	rcx,rax
 	call	qword[VirtualFree]
 	add	rsp,40
-else
-	push	MEM_RELEASE
-	push	0
-	push	_eax
-	call	[VirtualFree]
-end if
     do_exit:
 	call	cell[ExitProcess]
 
@@ -474,26 +454,18 @@ get_environment_variable:
 	jbe	buffer_for_variable_ok
 	mov	ecx,4000h
     buffer_for_variable_ok:
-if WIN64
 	sub	rsp,40
 	mov	r8,rcx
 	mov	rdx,rdi
 	mov	rcx,rsi
 	call	qword[GetEnvironmentVariable]
 	add	rsp,40
-else
-	push	_ecx
-	push	_edi
-	push	_esi
-	call	[GetEnvironmentVariable]
-end if
 	add	edi,eax
 	cmp	_edi,cell[memory_end]
 	jae	out_of_memory
 	ret
 
 open:
-if WIN64
 	sub	rsp,72
 	mov	qword[rsp+48],0
 	mov	qword[rsp+40],0
@@ -504,16 +476,6 @@ if WIN64
 	mov	rdx,GENERIC_READ
 	call	qword[CreateFile]
 	add	rsp,72
-else
-	push	0
-	push	0
-	push	OPEN_EXISTING
-	push	0
-	push	FILE_SHARE_READ
-	push	GENERIC_READ
-	push	edx
-	call	[CreateFile]
-end if
 	cmp	eax,-1
 	je	file_error
 	mov	ebx,eax
@@ -523,7 +485,6 @@ end if
 	stc
 	ret
 create:
-if WIN64
 	sub	rsp,72
 	mov	qword[rsp+48],0
 	mov	qword[rsp+40],0
@@ -534,23 +495,13 @@ if WIN64
 	mov	rdx,GENERIC_WRITE
 	call	qword[CreateFile]
 	add	rsp,72
-else
-	push	0
-	push	0
-	push	CREATE_ALWAYS
-	push	0
-	push	FILE_SHARE_READ
-	push	GENERIC_WRITE
-	push	edx
-	call	[CreateFile]
-end if
 	cmp	eax,-1
 	je	file_error
 	mov	ebx,eax
 	clc
 	ret
+	
 write:
-if WIN64
 	sub	rsp,56
 	mov	qword[rsp+32],0
 	mov	r9d,bytes_count
@@ -558,21 +509,12 @@ if WIN64
 	mov	rcx,rbx
 	call	qword[WriteFile]
 	add	rsp,56
-else
-	push	0
-	push	bytes_count
-	push	ecx
-	push	edx
-	push	ebx
-	call	[WriteFile]
-end if
 	or	eax,eax
 	jz	file_error
 	clc
 	ret
 read:
 	mov	ebp,ecx
-if WIN64
 	sub	rsp,56
 	mov	qword[rsp+32],0
 	mov	r9d,bytes_count
@@ -580,14 +522,6 @@ if WIN64
 	mov	rcx,rbx
 	call	qword[ReadFile]
 	add	rsp,56
-else
-	push	0
-	push	bytes_count
-	push	ecx
-	push	edx
-	push	ebx
-	call	[ReadFile]
-end if
 	or	eax,eax
 	jz	file_error
 	cmp	ebp,[bytes_count]
@@ -595,47 +529,29 @@ end if
 	clc
 	ret
 close:
-if WIN64
 	sub	rsp,40
 	mov	rcx,rbx
 	call	qword[CloseHandle]
 	add	rsp,40
-else
-	push	ebx
-	call	[CloseHandle]
-end if
 	ret
 lseek:
 	movzx	eax,al
-if WIN64
 	sub	rsp,40
 	mov	r9d,eax
 	mov	r8d,0
 	mov	rcx,rbx
 	call	qword[SetFilePointer]
 	add	rsp,40
-else
-	push	eax
-	push	0
-	push	edx
-	push	ebx
-	call	[SetFilePointer]
-end if
 	cmp	eax,-1
 	je	file_error
 	clc
 	ret
 
 display_string:
-if WIN64
 	sub	rsp,40
 	mov	rcx,qword[con_handle]
 	call	qword[GetStdHandle]
 	add	rsp,40
-else
-	push	[con_handle]
-	call	[GetStdHandle]
-end if
 	mov	_ebp,_eax
 	mov	edi,esi
 	or	ecx,-1
@@ -643,7 +559,6 @@ end if
 	repne	scasb
 	neg	ecx
 	sub	ecx,2
-if WIN64
 	sub	rsp,56
 	mov	qword[rsp+32],0
 	mov	r9d,bytes_count
@@ -652,29 +567,15 @@ if WIN64
 	mov	rcx,rbp
 	call	qword[WriteFile]
 	add	rsp,56
-else
-	push	0
-	push	bytes_count
-	push	ecx
-	push	esi
-	push	ebp
-	call	[WriteFile]
-end if
 	ret
 display_character:
 	push	_ebx
 	mov	[character],dl
-if WIN64
 	sub	rsp,40
 	mov	rcx,qword[con_handle]
 	call	qword[GetStdHandle]
 	add	rsp,40
-else
-	push	[con_handle]
-	call	[GetStdHandle]
-end if
 	mov	_ebx,_eax
-if WIN64
 	sub	rsp,56
 	mov	qword[rsp+32],0
 	mov	r9d,bytes_count
@@ -683,14 +584,6 @@ if WIN64
 	mov	rcx,rbx
 	call	qword[WriteFile]
 	add	rsp,56
-else
-	push	0
-	push	bytes_count
-	push	1
-	push	character
-	push	ebx
-	call	[WriteFile]
-end if
 	pop	_ebx
 	ret
 display_number:
@@ -739,16 +632,10 @@ display_user_messages:
 	je	line_break_ok
       make_line_break:
 	mov	word [buffer],0A0Dh
-if WIN64
 	sub	rsp,40
 	mov	rcx,qword[con_handle]
 	call	qword[GetStdHandle]
 	add	rsp,40
-else
-	push	[con_handle]
-	call	[GetStdHandle]
-end if
-if WIN64
 	sub	rsp,56
 	mov	qword[rsp+32],0
 	mov	r9d,bytes_count
@@ -757,14 +644,6 @@ if WIN64
 	mov	rcx,rax
 	call	qword[WriteFile]
 	add	rsp,56
-else
-	push	0
-	push	bytes_count
-	push	2
-	push	buffer
-	push	eax
-	call	[WriteFile]
-end if
       line_break_ok:
 	ret
 display_block:
@@ -781,17 +660,11 @@ display_block:
 	mov	word [last_displayed],ax
       block_ok:
 	push	_ecx
-if WIN64
 	sub	rsp,40
 	mov	rcx,qword[con_handle]
 	call	qword[GetStdHandle]
 	add	rsp,40
-else
-	push	[con_handle]
-	call	[GetStdHandle]
-end if
 	pop	_ecx
-if WIN64
 	sub	rsp,56
 	mov	qword[rsp+32],0
 	mov	r9d,bytes_count
@@ -800,14 +673,6 @@ if WIN64
 	mov	rcx,rax
 	call	qword[WriteFile]
 	add	rsp,56
-else
-	push	0
-	push	bytes_count
-	push	ecx
-	push	esi
-	push	eax
-	call	[WriteFile]
-end if
       block_displayed:
 	ret
 
@@ -992,15 +857,10 @@ assembler_error:
 	jmp	exit_program
 
 make_timestamp:
-if WIN64
 	sub	rsp,40
 	mov	rcx,buffer
 	call	cell[GetSystemTime]
 	add 	rsp,40
-else	
-	push	buffer
-	call	[GetSystemTime]
-end if
 	movzx	ecx,word [buffer]
 	mov	eax,ecx
 	sub	eax,1970
@@ -1859,6 +1719,21 @@ convert_line:
       symbol_character:
 	cmp	al,3Bh
 	je	ignore_comment
+	;
+	; Looking for '/*' symbols (begin of multiline comment block).
+	cmp	al, 2Fh
+	jne	@f
+	lods	byte [esi]
+	;	
+	; Looking for '*'.                 
+	cmp	al, 2Ah
+	je	multiline_comment
+	;
+	; Reloading previous value of esi register if read pair differs from '/*'.
+	dec	esi
+	dec	esi
+	lods	byte [esi]
+	@@:	
 	cmp	al,5Ch
 	je	backslash_character
 	stos	byte [edi]
@@ -1929,6 +1804,20 @@ convert_line:
 	je	concatenate_lf
 	cmp	al,0Dh
 	je	concatenate_cr
+	;
+	cmp	al, 2Fh
+	jne	@f
+	lods	byte [esi]
+	;
+	; Looking for '*'.
+	cmp	al, 2Ah
+	je	skip_multiline_comment
+	;
+	; Reloading previous value of esi register if read pair differs from '/*'.
+	dec	esi
+	dec	esi
+	lods	byte [esi]
+	@@:
 	cmp	al,3Bh
 	je	find_concatenated_line
 	mov	al,1Ah
@@ -2028,6 +1917,77 @@ convert_line:
       concatenate_ok:
 	inc	dword [_esp]
 	jmp	convert_line_data
+	;
+    ; Cutting off multiline comment block - concat version
+      skip_multiline_comment:
+	lods	byte [esi]
+	or	al, al
+	jz	unexpected_end_of_file
+	cmp	al, 1Ah
+	je	unexpected_end_of_file
+	;
+	;  Silent: fixing line numbering error
+	cmp	al,0Ah
+	jne	@f
+	inc	dword [esp]
+	cmp	byte [esi], 0Dh
+	jne	@f
+	inc	esi
+	@@:
+	cmp	al,0Dh
+	jne	@f
+	inc	dword [esp]
+	cmp	byte [esi], 0Ah
+	jne	@f
+	inc	esi
+	;
+	;  Silent: end fix
+	@@:					
+	; Looking for '*/' symbols (end of multiline comment block).
+	;
+	; Looking for '*'.
+	cmp	al, 2Ah
+	jne	skip_multiline_comment
+	lods	byte [esi]
+	cmp	al, 2Fh
+	jne	skip_multiline_comment
+	jmp	concatenate_lines
+	;
+      ; Cutting off multiline comment block.
+      multiline_comment:
+	lods	byte [esi]
+	or	al, al
+	jz	line_end
+	cmp	al, 1Ah
+	je	line_end
+	;
+	;  Silent: fixing line numbering error
+	cmp	al,0Ah			
+	jne	@f
+	inc	dword [esp]
+	cmp	byte [esi], 0Dh
+	jne	@f
+	inc	esi
+	@@:
+	cmp	al,0Dh
+	jne	@f
+	inc	dword [esp]
+	cmp	byte [esi], 0Ah
+	jne	@f
+	inc	esi
+	@@:
+	; Looking for '*/' symbols (end of multiline comment block).
+	;
+	; Looking for '*'.
+	cmp	al, 2Ah
+	jne	multiline_comment
+	;
+	; Looking for '/'.
+	lods	byte [esi]
+	cmp	al, 2Fh
+	jne	multiline_comment
+	jmp	convert_line_data
+	
       ignore_comment:
 	lods	byte [esi]
 	cmp	al,0Ah
@@ -2308,11 +2268,7 @@ preprocess_line:
 	cld
       replace_label:
 	mov	ecx,[edx+12]
-if WIN64
 	mov	_edi,[_esp+8]
-else
-	mov	_edi,[_esp+4]
-end if
 	sub	edi,ecx
 	mov	esi,[edx+8]
 	rep	movs byte [edi],[esi]
@@ -3212,12 +3168,8 @@ use_macro:
 	push	cell[macro_symbols]
 	mov	[macro_symbols],0
 	push	cell[counter_limit]
-if WIN64
 	mov	r8d,[edx+4]
 	push	r8
-else
-	push	dword [edx+4]
-end if
 	mov	dword [edx+4],1
 	push	_edx
 	mov	ebx,esi
@@ -3328,20 +3280,12 @@ end if
       arguments_end:
 	cmp	byte [ebx],0
 	jne	invalid_macro_arguments
-if WIN64
 	mov	_eax,[_esp+8]
-else
-	mov	_eax,[_esp+4]
-end if
 	dec	_eax
 	call	process_macro
 	pop	_edx
-if WIN64
 	pop	r8
 	mov	[_edx+4],r8d
-else
-	pop	dword [_edx+4]
-end if
 	pop	cell[counter_limit]
 	pop	cell[macro_symbols]
 	pop	cell[free_additional_memory]
@@ -3434,11 +3378,7 @@ use_instant_macro:
 	mov	al,')'
 	stosb
 	push	_esi
-if WIN64
 	mov	_esi,[_esp+8]
-else
-	mov	_esi,[_esp+4]
-end if
 	mov	[error_line],0
 	mov	[value_size],0
 	call	calculate_expression
@@ -3592,11 +3532,7 @@ do_irp:
 	inc	esi
 	lods	byte [esi]
 	movzx	ecx,al
-if WIN64
 	mov	_eax,[_esp+8]
-else
-	mov	_eax,[_esp+4]
-end if
 	call	add_macro_symbol
 	mov	ebx,edx
 	pop	_edx
@@ -3610,11 +3546,7 @@ end if
 	jz	variable_values_collected
 	cmp	ebp,[edx+4]
 	jne	collect_next_variable_value
-if WIN64
 	dec	qword [_esp]
-else
-	dec	dword [_esp]
-end if
 	jnz	add_irpv_value
       variable_values_collected:
 	pop	_eax
@@ -3838,11 +3770,7 @@ process_macro:
 	lea	eax,[edi+10h]
 	cmp	_eax,cell[memory_end]
 	jae	out_of_memory
-if WIN64
 	mov	_eax,[_esp+8]
-else
-	mov	_eax,[_esp+4]
-end if
 	or	eax,eax
 	jz	instant_macro_line_header
 	stos	dword [edi]
@@ -4066,11 +3994,7 @@ end if
 	stos	byte [edi]
 	cmp	byte [esi],'.'
 	jne	copy_raw_symbol
-if WIN64
 	mov	_ebx,[_esp+16+16]	;macro_block_line_number
-else
-	mov	_ebx,[_esp+8+8]	;macro_block_line_number
-end if
 	or	ebx,ebx
 	jz	copy_raw_symbol
 	cmp	al,1
@@ -4092,11 +4016,7 @@ end if
 	mov	[edi-1],cl
 	rep	movs byte [edi],[esi]
 	xchg	esi,ebx
-if WIN64
 	mov	_eax,[_esp+16+24]		;macro_block_line
-else
-	mov	_eax,[_esp+8+12]		;macro_block_line
-end if
 	cmp	byte [eax],3Bh
 	je	process_macro_line_element
 	cmp	byte [eax],1Ah
@@ -4104,11 +4024,7 @@ end if
 	mov	byte [eax],3Bh
 	jmp	process_macro_line_element
       disable_replaced_struc_name:
-if WIN64
-	mov	_ebx,[_esp+16+16]		;macro_block_line_number
-else
-	mov	_ebx,[_esp+8+8]		;macro_block_line_number
-end if
+	  mov	_ebx,[_esp+16+16]		;macro_block_line_number
 	push	_esi _edi
 	lea	edi,[ebx-3]
 	lea	esi,[edi-2]
@@ -4159,11 +4075,7 @@ end if
 	call	close_macro_block
 	jc	process_macro_line
 	pop	cell[current_line]
-if WIN64
 	add	_esp,24		;skip _eax,struc_name,struc_label
-else
-	add	_esp,12		;skip _eax,struc_name,struc_label
-end if
 	pop	cell[macro_block_line_number]
 	pop	cell[macro_block_line]
 	pop	cell[macro_block]
@@ -4415,11 +4327,7 @@ include_file:
 	dec	edi
 	jmp	cut_current_file_name
       current_file_path_ok:
-if WIN64
-	mov	rsi,[rsp+8]
-else
-	mov	_esi,[_esp+4]
-end if
+	  mov	rsi,[rsp+8]
 	call	expand_path
 	pop	_edx
 	mov	esi,edx
@@ -4434,13 +4342,8 @@ end if
 	push	_ebp
 	push	_edi
 	call	get_include_directory
-if WIN64
 	mov	[_esp+8],_esi
 	mov	_esi,[_esp+16]
-else
-	mov	[_esp+4],_esi
-	mov	_esi,[_esp+8]
-end if
 	call	expand_path
 	pop	_edx
 	mov	esi,edx
@@ -5154,11 +5057,7 @@ parse_line_contents:
 	jc	parse_public_label
 	cmp	al,1Dh
 	jne	parse_public_label
-if WIN64
 	add	_esp,24
-else
-	add	_esp,12
-end if
 	stos	word [edi]
 	jmp	parse_public_directive
       parse_public_label:
@@ -5436,11 +5335,7 @@ end if
 	cmp	[parenthesis_stack],0
 	je	parse_argument
 	dec	[parenthesis_stack]
-if WIN64
 	add	_esp,16
-else
-	add	_esp,8
-end if
 	jmp	argument_parsed
       expression_argument_parsed:
 	cmp	[parenthesis_stack],0
@@ -5454,11 +5349,7 @@ end if
 	cmp	[parenthesis_stack],0
 	je	contents_ok
 	dec	[parenthesis_stack]
-if WIN64
 	add	_esp,16
-else
-	add	_esp,8
-end if
 	jmp	contents_parsed
       contents_ok:
 	ret
@@ -5841,11 +5732,7 @@ get_label_id:
 	jnz	compare_labels
 	jmp	add_label
       label_found:
-if WIN64
-	add	_esp,8
-else
-	add	_esp,4
-end if
+	  add	_esp,8
 	pop	_edi
 	mov	eax,[eax+4]
 	ret
@@ -6600,15 +6487,8 @@ get_fp_value:
 	push	_ecx
 	mov	ecx,10
 	call	fp_div
-if WIN64
 	push	qword [edi]
 	push	qword [edi+8]
-else
-	push	dword [edi]
-	push	dword [edi+4]
-	push	dword [edi+8]
-	push	dword [edi+12]
-end if
 	lods	byte [esi]
 	sub	al,30h
 	movzx	ecx,al
@@ -6617,15 +6497,8 @@ end if
 	mov	edi,fp_value
 	call	fp_add
 	mov	edi,fp_value+16
-if WIN64
 	pop	qword [edi+8]
 	pop	qword [edi]
-else
-	pop	dword [edi+12]
-	pop	dword [edi+8]
-	pop	dword [edi+4]
-	pop	dword [edi]
-end if
 	pop	_ecx
 	dec	ecx
 	jnz	fp_after_dot
@@ -8705,11 +8578,7 @@ define_data:
         cmp     edi,[tagged_blocks]
         jae     out_of_memory
         clc
-if WIN64
-        call    near cell [_esp+16]
-else
-        call    near cell [_esp+8]
-end if
+		call    near cell [_esp+16]
         lods    byte [esi]
         cmp     al,','
         je      duplicated_values
@@ -8725,11 +8594,7 @@ end if
         jae     out_of_memory
         push    _eax _esi
         clc
-if WIN64
-        call    near cell [_esp+16]
-else
-        call    near cell [_esp+8]
-end if
+		call    near cell [_esp+16]
         pop     _ebx _eax
         dec     eax
         jz      data_defined
@@ -9144,11 +9009,7 @@ data_file:
         dec     edi
         jmp     cut_current_path
       current_path_ok:
-if WIN64
-        mov     _esi,[_esp+8]
-else
-        mov     _esi,[_esp+4]
-end if
+		mov     _esi,[_esp+8]
         call    expand_path
         pop     _edx
         mov     esi,edx
@@ -9158,19 +9019,10 @@ end if
       search_in_include_paths:
         push    _edx _esi
         mov     edi,esi
-if WIN64
-        mov     _esi,[_esp+8]
-else
-        mov     _esi,[_esp+4]
-end if
+		mov     _esi,[_esp+8]
         call    get_include_directory
-if WIN64
-        mov     [_esp+8],_esi
+		mov     [_esp+8],_esi
         mov     _esi,[_esp+16]
-else
-        mov     [_esp+4],_esi
-        mov     _esi,[_esp+8]
-end if
        call    expand_path
         pop     _edx
         mov     esi,edx
@@ -10403,20 +10255,11 @@ calculate_expression:
         sub     [esi],eax
         push    _eax
         mul     dword [edi+4]
-if WIN64
-        sub     cell [_esp+8],_eax
-else
-        sub     cell [_esp+4],_eax
-end if
+		sub     cell [_esp+8],_eax
         pop     _eax
         mul     dword [edi]
-if WIN64
-        sub     cell [_esp+8],_eax
+		sub     cell [_esp+8],_eax
         sbb     cell [_esp],_edx
-else
-        sub     cell [_esp+4],_eax
-        sbb     cell [_esp],_edx
-end if
         pop     _edx _eax
         jmp     div_high_loop
       div_high_small_correction:
@@ -11298,20 +11141,12 @@ calculate_logical_expression:
         cmp     byte [esi],'('
         jne     invalid_value
         call    get_value_for_comparison
-if WIN64
-        cmp     bl,[_esp+8]
-else
-        cmp     bl,[_esp+4]
-end if      
+		cmp     bl,[_esp+8]		
         jne     values_not_relative
         or      bl,bl
         jz      check_values_registers
         mov     _ebx,cell[symbol_identifier]
-if WIN64
-        cmp     _ebx,[_esp+16]
-else
-        cmp     _ebx,[_esp+8]
-end if      
+		cmp     _ebx,[_esp+16]		
         jne     values_not_relative
       check_values_registers:
         cmp     _ecx,[_esp]
@@ -11325,11 +11160,7 @@ end if
       values_not_relative:
         cmp     [compare_type],0F8h
         jne     invalid_comparison
-if WIN64
-        add     _esp,24+16
-else
-        add     _esp,12+8
-end if      
+		add     _esp,24+16		
         jmp     return_false
       invalid_comparison:
         call    recoverable_misuse
@@ -11337,11 +11168,7 @@ end if
         pop     _ebx
         shl     ebx,16
         mov     bx,[_esp]
-if WIN64
-        add     _esp,16
-else
-        add     _esp,8
-end if      
+		add     _esp,16		
         pop     _ecx _ebp
         cmp     [compare_type],'='
         je      check_equal
@@ -12334,11 +12161,7 @@ write_mz_header:
         sub     eax,esi
         mov     [edx+0Ah],ax            ; minimum memory in addition to code
         add     [edx+0Ch],ax            ; maximum memory in addition to code
-if WIN64
-        int3    ;salc
-else
-        salc
-end if
+		int3    ;salc
         mov     ah,al
         or      [edx+0Ch],ax
         mov     word [edx+18h],1Ch      ; offset of relocation table
@@ -12385,11 +12208,7 @@ make_stub:
       stub_message db 'This program cannot be run in DOS mode.',0Dh,0Ah,24h
         rq      1
       default_stub_end:
-if WIN64
-        use64
-else
-        use32
-end if
+		use64
       stub_from_file:
         push    _esi
         mov     esi,edx
@@ -14422,11 +14241,7 @@ coff_formatter:
         jmp     section_relocations_ok
       section_relocations_count_16bit:
         mov     [edi+20h],cx
-if WIN64
-        jecxz    section_relocations_ok
-else
-        jcxz    section_relocations_ok
-end if
+		jecxz    section_relocations_ok
         mov     [edi+18h],edx
       section_relocations_ok:
         sub     ebx,[code_start]
@@ -26511,8 +26326,6 @@ invoked_error:
 	jmp	assembler_error
 	ret
 	
-
-
 symbol_characters db 27
  db 9,0Ah,0Dh,1Ah,20h,'+-/*=<>()[]{}:,|&~#`;\'
 
@@ -30830,8 +30643,7 @@ section '.data' data readable writeable
 	_assertion_failed db 'assertion failed',0
 
 	align 4
-
-	if WIN64
+	
 	additional_memory dq ?
 	additional_memory_end dq ?
 	address_symbol dq ?
@@ -30853,33 +30665,7 @@ section '.data' data readable writeable
 	struc_label dq ?
 	struc_name dq ?
 	symbol_identifier dq ?
-	else
-	additional_memory dd ?
-	additional_memory_end dd ?
-	address_symbol dd ?
-	counter dd ?
-	counter_limit dd ?
-	current_line dd ?
-	current_offset dd ?
-	error dd ?
-	error_line dd ?
-	free_additional_memory dd ?
-	macro_block dd ?
-	macro_block_line dd ?
-	macro_block_line_number dd ?
-	macro_line dd ?
-	macro_symbols dd ?
-	memory_end dd ?
-	memory_start dd ?
-	stack_limit dd ?
-	struc_label dd ?
-	struc_name dd ?
-	symbol_identifier dd ?
-	end if
-
-
-
-
+	
 	initial_definitions dd ?
 	input_file dd ?
 	output_file dd ?
@@ -31004,12 +30790,7 @@ section '.data' data readable writeable
 	characters rb 100h
 	converted rb 100h
 	message rb 200h
-
-	if WIN64
 	con_handle dq ?
-	else
-	con_handle dd ?
-	end if
 	memory_setting dd ?
 	start_time dd ?
 	definitions_pointer dd ?
@@ -31032,7 +30813,6 @@ section '.data' data readable writeable
 	  dd 0,0,0,0,0
 
 	  kernel_table:
-	if WIN64
 		ExitProcess dq rva _ExitProcess
 		CreateFile dq rva _CreateFileA
 		ReadFile dq rva _ReadFile
@@ -31048,23 +30828,6 @@ section '.data' data readable writeable
 		GetSystemTime dq rva _GetSystemTime
 		GlobalMemoryStatus dq rva _GlobalMemoryStatus
 		dq 0
-	else
-		ExitProcess dd rva _ExitProcess
-		CreateFile dd rva _CreateFileA
-		ReadFile dd rva _ReadFile
-		WriteFile dd rva _WriteFile
-		CloseHandle dd rva _CloseHandle
-		SetFilePointer dd rva _SetFilePointer
-		GetCommandLine dd rva _GetCommandLineA
-		GetEnvironmentVariable dd rva _GetEnvironmentVariable
-		GetStdHandle dd rva _GetStdHandle
-		VirtualAlloc dd rva _VirtualAlloc
-		VirtualFree dd rva _VirtualFree
-		GetTickCount dd rva _GetTickCount
-		GetSystemTime dd rva _GetSystemTime
-		GlobalMemoryStatus dd rva _GlobalMemoryStatus
-		dd 0
-	end if
 
 	  kernel_name db 'KERNEL32.DLL',0
 
@@ -31101,4 +30864,4 @@ section '.reloc' fixups data readable discardable
 	if $=$$
 		dd 0,8
 	end if
-;31104
+; 30867
