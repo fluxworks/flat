@@ -1,9 +1,14 @@
-
-; Example of 64-bit PE program
-
+/*
+Example of 64-bit PE program */
 format PE64 GUI
 entry start
-
+/*
+when | Compare :al: with ( from )  jump ( to ) when equal. */
+macro when from, to
+{
+	cmp al, from
+	je to
+}
 section '.text' code readable executable
 
   start:
@@ -43,3 +48,5 @@ section '.idata' import data readable writeable
     db 'ExitProcess',0
   _MessageBoxA dw 0
     db 'MessageBoxA',0
+/*
+51 */
