@@ -1487,8 +1487,6 @@ system: ret
 	.signal_open_file_error:
 		stc
 		ret
-
-	
 /*
 flat | lex | Lexigraphical Handling */
 lex: ret
@@ -1500,7 +1498,7 @@ lex: ret
 	.create_characters:
 		stosb
 		inc	al
-		jnz	.create_characters
+		jnz	lex.create_characters
 		mov	esi, chars+'a'
 		mov	edi, chars+'A'
 		mov	ecx,26
@@ -1509,7 +1507,7 @@ lex: ret
 		mov	esi,symbol_characters+1
 		movzx	ecx,byte [ esi-1]
 		xor	eax,eax
-		jmp .test_for_symbols
+		jmp lex.test_for_symbols
 		ret
 	
 	.create_definition:
@@ -1517,25 +1515,25 @@ lex: ret
 		jae	errors.oom
 		lods	byte [ esi]
 		or	al,al
-		jz	.created_definition
+		jz	lex.created_definition
 		cmp	al,20h
-		je .create_definition
+		je lex.create_definition
 		mov	ah,al
 		mov	ebx, chars
 		xlat	byte [ ebx]
 		or	al,al
-		jz	.create_definition_separator
+		jz	lex.create_definition_separator
 		cmp	ah,27h
-		je .create_definition_strands
+		je lex.create_definition_strands
 		cmp	ah,22h
-		je .create_definition_strands
+		je lex.create_definition_strands
 		mov	byte [ edi ], 1Ah
 		scas	word [edi]
 		xchg	al,ah
 		stos	byte [ edi]
 		mov	ebx, chars
 		xor	ecx,ecx
-		jmp .create_definition_symbol
+		jmp lex.create_definition_symbol
 		ret
 	
 	.create_definition_ok:
@@ -1544,9 +1542,9 @@ lex: ret
 		call system.append
 		jc	errors.main_file_not_found
 		mov	_edi,cell[memory_start]
-		call preprocess_file
+		call lex.read_file
 		cmp [ macro_status ], 0
-		je process_postponed
+		je finals.create_finals
 		mov	_eax,cell[error_line]
 		mov	cell[current_line ], _eax
 		jmp	errors.incomplete_macro
@@ -1556,7 +1554,28 @@ lex: ret
 		mov	cell[memory_start ], _edi
 		sub	edi,[edx+8]
 		mov	[edx+12 ], edi
-		jmp	.read_definitions
+		jmp	lex.read_definitions
+		ret
+	
+	.create_definition_symbols:
+		push _edi _esi
+		xor	eax,eax
+		or	cl,cl
+		jz	reshape_hash
+		cmp	ch,11b
+		je lex.created_definition_symbols
+		push _ecx
+		movzx	ecx,cl
+		mov	edi,preprocessor_directives
+		call get_directive
+		jnc	errors.reserved_word_used_as_symbol
+		pop	_ecx
+		jmp lex.created_definition_symbols
+		ret
+	
+	.created_definition_symbols:
+		call calculate_hash
+		jmp reshape_hash
 		ret
 	
 	.create_definition_symbol:
@@ -1564,34 +1583,34 @@ lex: ret
 		stos	byte [ edi]
 		xlat	byte [ ebx]
 		or	al,al
-		loopnzd .create_definition_symbol
+		loopnzd lex.create_definition_symbol
 		neg	ecx
 		cmp	ecx,255
 		ja	errors.invalid_definition
 		mov	ebx,edi
 		sub	ebx,ecx
 		mov	byte [ ebx-2 ], cl
-		jmp .create_definition_separators
+		jmp lex.create_definition_separators
 		ret
 		
 	.create_definition_separators:
 		dec	edi
 		mov	ah,[esi-1]
-		jmp .create_definition_separator
+		jmp lex.create_definition_separator
 		ret
 	
 	.create_definition_separator:
 		xchg	al,ah
 		or	al,al
-		jz	.created_definition
+		jz	lex.created_definition
 		cmp	al,20h
-		je .create_definition
+		je lex.create_definition
 		cmp	al,3Bh
 		je errors.invalid_definition
 		cmp	al,5Ch
-		je .create_definition_backslash
+		je lex.create_definition_backslash
 		stos	byte [ edi]
-		jmp	.create_definition
+		jmp	lex.create_definition
 		ret
 	
 	.create_definition_strands:
@@ -1599,7 +1618,7 @@ lex: ret
 		stos	byte [ edi]
 		scas	dword [edi]
 		mov	ebx,edi
-		jmp .create_definition_strand
+		jmp lex.create_definition_strand
 		ret
 		
 	.create_definition_strand:
@@ -1608,25 +1627,25 @@ lex: ret
 		or	al,al
 		jz	errors.invalid_definition
 		cmp	al,ah
-		jne	.create_definition_strand
+		jne	lex.create_definition_strand
 		lods	byte [ esi]
 		cmp	al,ah
-		je .create_definition_strand
+		je lex.create_definition_strand
 		dec	esi
 		dec	edi
 		mov	eax,edi
 		sub	eax,ebx
 		mov	[ebx-4 ], eax
-		jmp	.create_definition
+		jmp	lex.create_definition
 		ret
 	
 	.create_definition_backslashes:
 		lods	byte [ esi]
 		cmp	al, 5Ch
-		jne	.create_definition_backslash_symbol
+		jne	lex.create_definition_backslash_symbol
 		stos	byte [ edi]
 		inc	byte [ ecx]
-		jmp	.create_definition_backslashes
+		jmp	lex.create_definition_backslashes
 		ret
 		
 	.create_definition_backslash:
@@ -1644,7 +1663,7 @@ lex: ret
 		mov	ax,5C01h
 		stos	word [edi]
 		dec	esi
-		jmp .create_definition_backslashes
+		jmp lex.create_definition_backslashes
 		ret
 		
 	.create_definition_backslash_symbol:
@@ -1660,43 +1679,104 @@ lex: ret
 		mov	ebx, chars
 		xlat	byte [ ebx]
 		or	al,al
-		jz	.created_definition_backslash_character
+		jz	lex.created_definition_backslash_character
 		mov	al,ah
-		jmp .created_definition_backslash_symbol
+		jmp lex.created_definition_backslash_symbol
 		ret
 		
 	.created_definition_backslash_symbol:
 		stos	byte [ edi]
 		xlat	byte [ ebx]
 		or	al,al
-		jz	.create_definition_separators
+		jz	lex.create_definition_separators
 		inc	byte [ ecx]
 		jz	errors.invalid_definition
 		lods	byte [ esi]
-		jmp	.created_definition_backslash_symbol
+		jmp	lex.created_definition_backslash_symbol
 		ret
 		
 	.created_definition_backslash_character:
 		mov	al,ah
 		stos	byte [ edi]
 		inc	byte [ ecx]
-		jmp	.create_definition
+		jmp	lex.create_definition
 		ret
 	/*
 	flat | lex::read */
 	.read_definitions:
 		movzx	ecx,byte [ esi]
 		test	ecx,ecx
-		jz	.create_definition_ok
+		jz	lex.create_definition_ok
 		inc	esi
 		lea	eax,[esi+ecx]
 		push _eax
 		mov	ch,10b
-		call add_preprocessor_symbol
+		call lex.create_definition_symbols
 		pop	_esi
 		mov	_edi,cell[memory_start]
 		mov	[edx+8 ], edi
-		jmp .create_definition
+		jmp lex.create_definition
+		ret
+	
+
+	.read_file:
+		push cell[memory_end]
+		push _esi
+		mov	al,2
+		xor	edx,edx
+		call system.read_from_offset
+		push _eax
+		xor	al,al
+		xor	edx,edx
+		call system.read_from_offset
+		pop	_ecx
+		mov	_edx,cell[memory_end]
+		dec	edx
+		mov	byte [ edx ], 1Ah
+		sub	edx,ecx
+		jc	errors.oom
+		mov	esi,edx
+		cmp	edx,edi
+		jbe	errors.oom
+		mov	cell[memory_end ], _edx
+		call system.read
+		call system.signal
+		pop	_edx
+		xor	ecx,ecx
+		mov	ebx,esi
+		jmp lex.read_source
+		ret
+		
+	.read_file_ok:
+		pop	cell[memory_end]
+		clc
+		ret
+		
+	.read_source:
+		inc	ecx
+		mov	cell[current_line ], _edi
+		mov	eax,edx
+		stos	dword [edi]
+		mov	eax,ecx
+		stos	dword [edi]
+		mov	eax,esi
+		sub	eax,ebx
+		stos	dword [edi]
+		xor	eax,eax
+		stos	dword [edi]
+		push _ebx _edx
+		call convert_line
+		call preprocess_line
+		pop	_edx _ebx
+		jmp lex.read_lines
+		ret
+		
+	.read_lines:
+		cmp	byte [ esi-1 ], 0
+		je lex.read_file_ok
+		cmp	byte [ esi-1 ], 1Ah
+		jne	lex.read_source
+		jmp lex.read_file_ok
 		ret
 		/*
 		flat | lex::edit */
@@ -1739,96 +1819,6 @@ lex: ret
 		/*
 		flat | lex::signal */
 		
-		process_postponed:
-		mov	edx,hash_tree
-		mov	ecx,32
-		find_postponed_list:
-		mov	edx,[edx]
-		or	edx,edx
-		loopnz	find_postponed_list
-		jz	preprocessing_finished
-		process_postponed_list:
-		mov	eax,[edx]
-		or	eax,eax
-		jz	preprocessing_finished
-		push _edx
-		mov	ebx,edx
-		find_earliest_postponed:
-		mov	eax,[edx]
-		or	eax,eax
-		jz	earliest_postponed_found
-		mov	ebx,edx
-		mov	edx,eax
-		jmp	find_earliest_postponed
-		earliest_postponed_found:
-		mov	[ebx ], eax
-		call use_postponed_macro
-		pop	_edx
-		cmp [ macro_status ], 0
-		je process_postponed_list
-		mov	_eax,cell[error_line]
-		mov	cell[current_line ], _eax
-		jmp	errors.incomplete_macro
-		preprocessing_finished:
-		mov	[source_start ], edi
-		ret
-		use_postponed_macro:
-		lea	esi,[edi-1]
-		push _ecx _esi
-		mov	[struc_name ], 0
-		jmp	use_macro
-
-		preprocess_file:
-		push cell[memory_end]
-		push _esi
-		mov	al,2
-		xor	edx,edx
-		call system.read_from_offset
-		push _eax
-		xor	al,al
-		xor	edx,edx
-		call system.read_from_offset
-		pop	_ecx
-		mov	_edx,cell[memory_end]
-		dec	edx
-		mov	byte [ edx ], 1Ah
-		sub	edx,ecx
-		jc	errors.oom
-		mov	esi,edx
-		cmp	edx,edi
-		jbe	errors.oom
-		mov	cell[memory_end ], _edx
-		call system.read
-		call system.signal
-		pop	_edx
-		xor	ecx,ecx
-		mov	ebx,esi
-		preprocess_source:
-		inc	ecx
-		mov	cell[current_line ], _edi
-		mov	eax,edx
-		stos	dword [edi]
-		mov	eax,ecx
-		stos	dword [edi]
-		mov	eax,esi
-		sub	eax,ebx
-		stos	dword [edi]
-		xor	eax,eax
-		stos	dword [edi]
-		push _ebx _edx
-		call convert_line
-		call preprocess_line
-		pop	_edx _ebx
-		next_line:
-		cmp	byte [ esi-1 ], 0
-		je file_end
-		cmp	byte [ esi-1 ], 1Ah
-		jne	preprocess_source
-		file_end:
-		pop	cell[memory_end]
-		clc
-		ret
-
 		convert_line:
 		push _ecx
 		test	[macro_status ], 0Fh
@@ -2514,21 +2504,7 @@ lex: ret
 		cmp	bl,cl
 		jb	fnv1a_hash
 		ret
-		add_preprocessor_symbol:
-		push _edi _esi
-		xor	eax,eax
-		or	cl,cl
-		jz	reshape_hash
-		cmp	ch,11b
-		je preprocessor_symbol_name_ok
-		push _ecx
-		movzx	ecx,cl
-		mov	edi,preprocessor_directives
-		call get_directive
-		jnc	errors.reserved_word_used_as_symbol
-		pop	_ecx
-		preprocessor_symbol_name_ok:
-		call calculate_hash
+		
 		reshape_hash:
 		mov	ebp,eax
 		and	ebp,3FFh
@@ -2618,7 +2594,7 @@ lex: ret
 		define_preprocessor_constant:
 		mov	byte [ esi-2 ], 3Bh
 		mov	cl,[esi-1]
-		call add_preprocessor_symbol
+		call lex.create_definition_symbols
 		pop	_ebx
 		mov	ecx,edi
 		dec	ecx
@@ -2633,7 +2609,7 @@ lex: ret
 		lods	byte [ esi]
 		mov	cl,al
 		mov	ch,10b
-		call add_preprocessor_symbol
+		call lex.create_definition_symbols
 		movzx	eax,byte [ esi-1]
 		add	esi,eax
 		lea	ecx,[edi-1]
@@ -2653,7 +2629,7 @@ lex: ret
 		jne	errors.invalid_name
 		lods	byte [ esi]
 		mov	cl,al
-		call add_preprocessor_symbol
+		call lex.create_definition_symbols
 		mov	_eax,cell[current_line]
 		mov	[edx+12 ], eax
 		movzx	eax,byte [ esi-1]
@@ -2851,27 +2827,88 @@ lex: ret
 		lods	dword [esi]
 		add	esi,eax
 		jmp	skip_macro_block
-		postpone_directive:
+		ret
+/*
+flat | finals | Automatically called when the preprocessor reaches the end of source */
+finals:
 		push _esi
 		mov	esi,edx
 		xor	ecx,ecx
-		call add_preprocessor_symbol
-		mov	_eax,cell[current_line]
-		mov	cell[error_line ], _eax
+		call lex.create_definition_symbols
+		mov	_eax,cell[ current_line]
+		mov	cell[ error_line ], _eax
 		mov	[edx+12 ], eax
 		pop	_esi
 		mov	[edx+8 ], esi
 		mov	al,[macro_status]
 		and	al,0F0h
 		or	al,1
-		mov	[macro_status ], al
+		mov	[ macro_status ], al
 		lods	byte [ esi]
 		or	al,al
 		jz	line_preprocessed
 		cmp	al,'{'
 		jne	errors.unexpected_characters
 		jmp	found_macro_block
-		rept_directive:
+		ret
+	/*
+	process_postponed_list */
+	.create:
+		mov	eax,[edx]
+		or	eax,eax
+		jz	finals.read_finals_ok
+		push _edx
+		mov	ebx,edx
+		jmp finals.read_earliest
+		ret
+	/*
+	process_postponed */
+	.create_finals:
+		mov	edx,hash_tree
+		mov	ecx,32
+		jmp finals.read
+		ret
+		
+	.create_final:
+		lea	esi,[edi-1]
+		push _ecx _esi
+		mov	[ struc_name ], 0
+		jmp	use_macro
+		ret
+	
+	.read:
+		mov	edx,[edx]
+		or	edx,edx
+		loopnz	finals.read
+		jz	finals.read_finals_ok
+		jmp finals.create
+		ret
+		
+	.read_earliest:
+		mov	eax,[edx]
+		or	eax,eax
+		jz	finals.signal_earliest
+		mov	ebx,edx
+		mov	edx,eax
+		jmp	finals.read_earliest
+		ret
+	
+	.read_finals_ok:
+		mov	[ source_start ], edi
+		ret
+		
+	.signal_earliest:
+		mov	[ebx ], eax
+		call finals.create_final
+		pop	_edx
+		cmp [ macro_status ], 0
+		je finals.create
+		mov	_eax,cell[error_line]
+		mov	cell[current_line ], _eax
+		jmp	errors.incomplete_macro
+		ret
+		
+	rept_directive:
 		mov	[base_code ], 0
 		jmp	define_instant_macro
 		irp_directive:
@@ -4535,7 +4572,7 @@ lex: ret
 		mov	[esi-4 ], ecx
 		push cell [macro_status]
 		and	[macro_status ], 0Fh
-		call preprocess_file
+		call lex.read_file
 		pop	_eax
 		and	al,0F0h
 		and	[macro_status ], 0Fh
@@ -26807,6 +26844,8 @@ errors: ret
 	preprocessor_directives:
 		db 6,'define'
 		dw define_symbolic_constant-directive_handler
+		db 5,'final'
+		dw finals-directive_handler
 		db 7,'include'
 		dw include_file-directive_handler
 		db 3,'irp'
@@ -26819,8 +26858,6 @@ errors: ret
 		dw define_macro-directive_handler
 		db 5,'match'
 		dw match_directive-directive_handler
-		db 8,'postpone'
-		dw postpone_directive-directive_handler
 		db 5,'purge'
 		dw purge_macro-directive_handler
 		db 4,'rept'
@@ -31340,4 +31377,4 @@ errors: ret
 		dd 0,8
 		end if
 /*
-31343*/
+31380*/
