@@ -276,11 +276,6 @@ macro test
 } 
 
 purge test
-
-postpone
-{
-	code_size = $
-}
 /*
 Preprocessor Conditionals
 In fact, there is no preprocessor conditional syntax in FASM (too bad).
@@ -1502,5 +1497,10 @@ section '.idata' import data readable writeable
     db 'ExitProcess',0
   _MessageBoxA dw 0
     db 'MessageBoxA',0
+	
+final
+{
+	code_size = $
+}
 /*
 1506 */
