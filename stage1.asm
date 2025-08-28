@@ -3,67 +3,76 @@ flat compiler | ::stage( 1 ) */
 WIN64 = 1
 display '::stage( 1 )'
 format  PE64 console
-		_eax equ rax
-		_ecx equ rcx
-		_edx equ rdx
-		_ebx equ rbx
-		_esp equ rsp
-		_ebp equ rbp
-		_esi equ rsi
-		_edi equ rdi
-		cell equ qword
+_eax equ rax
+_ecx equ rcx
+_edx equ rdx
+_ebx equ rbx
+_esp equ rsp
+_ebp equ rbp
+_esi equ rsi
+_edi equ rdi
+cell equ qword
 
-		VERSION_STRING equ "25.8.00"
-		VERSION_MAJOR = 25
-		VERSION_MINOR = 8
-		VERSION_RELEASE = 0
+VERSION_STRING equ "25.8.00"
+VERSION_MAJOR = 25
+VERSION_MINOR = 8
+VERSION_RELEASE = 0
 
-		LABEL_STRUCTURE_SIZE = 32
+LABEL_STRUCTURE_SIZE = 32
 
-		CREATE_NEW	       = 1
-		CREATE_ALWAYS	       = 2
-		OPEN_EXISTING	       = 3
-		OPEN_ALWAYS	       = 4
-		TRUNCATE_EXISTING      = 5
+CREATE_NEW	       = 1
+CREATE_ALWAYS	       = 2
+OPEN_EXISTING	       = 3
+OPEN_ALWAYS	       = 4
+TRUNCATE_EXISTING      = 5
 
-		FILE_SHARE_READ        = 1
-		FILE_SHARE_WRITE       = 2
-		FILE_SHARE_DELETE      = 4
+FILE_SHARE_READ        = 1
+FILE_SHARE_WRITE       = 2
+FILE_SHARE_DELETE      = 4
 
-		GENERIC_READ	       = 80000000h
-		GENERIC_WRITE	       = 40000000h
+GENERIC_READ	       = 80000000h
+GENERIC_WRITE	       = 40000000h
 
-		STD_INPUT_HANDLE       = 0FFFFFFF6h
-		STD_OUTPUT_HANDLE      = 0FFFFFFF5h
-		STD_ERROR_HANDLE       = 0FFFFFFF4h
+STD_INPUT_HANDLE       = 0FFFFFFF6h
+STD_OUTPUT_HANDLE      = 0FFFFFFF5h
+STD_ERROR_HANDLE       = 0FFFFFFF4h
 
-		MEM_COMMIT	       = 1000h
-		MEM_RESERVE	       = 2000h
-		MEM_DECOMMIT	       = 4000h
-		MEM_RELEASE	       = 8000h
-		MEM_FREE	       = 10000h
-		MEM_PRIVATE	       = 20000h
-		MEM_MAPPED	       = 40000h
-		MEM_RESET	       = 80000h
-		MEM_TOP_DOWN	       = 100000h
+MEM_COMMIT	       = 1000h
+MEM_RESERVE	       = 2000h
+MEM_DECOMMIT	       = 4000h
+MEM_RELEASE	       = 8000h
+MEM_FREE	       = 10000h
+MEM_PRIVATE	       = 20000h
+MEM_MAPPED	       = 40000h
+MEM_RESET	       = 80000h
+MEM_TOP_DOWN	       = 100000h
 
-		PAGE_NOACCESS	       = 1
-		PAGE_READONLY	       = 2
-		PAGE_READWRITE	       = 4
-		PAGE_WRITECOPY	       = 8
-		PAGE_EXECUTE	       = 10h
-		PAGE_EXECUTE_READ      = 20h
-		PAGE_EXECUTE_READWRITE = 40h
-		PAGE_EXECUTE_WRITECOPY = 80h
-		PAGE_GUARD	       = 100h
-		PAGE_NOCACHE	       = 200h
-		/*
-		when | Compare :al: with ( from )  jump ( to ) when equal. */
-		macro when from, to
-		{
+PAGE_NOACCESS	       = 1
+PAGE_READONLY	       = 2
+PAGE_READWRITE	       = 4
+PAGE_WRITECOPY	       = 8
+PAGE_EXECUTE	       = 10h
+PAGE_EXECUTE_READ      = 20h
+PAGE_EXECUTE_READWRITE = 40h
+PAGE_EXECUTE_WRITECOPY = 80h
+PAGE_GUARD	       = 100h
+PAGE_NOCACHE	       = 200h
+/*
+when | Compare :al: with ( from )  jump ( to ) when equal. */
+macro when from, to
+{
 		cmp al, from
 		je to
-		}
+}
+
+macro pushstr string  ;does same job as previous macro
+{
+  local addr,behind
+  push addr
+  jmp behind
+  addr db string,0
+  behind:
+}
 
 section '.text' code readable executable
 start:
@@ -16897,47 +16906,64 @@ finals:
 		mov     [base_code ], 0E8h
 		mov     [extended_code ], 9Ah
 		jmp     process_jmp
+		ret
+		
 		jmp_instruction:
-		mov     [postbyte_register ], 100b
-		mov     [base_code ], 0E9h
-		mov     [extended_code ], 0EAh
+			mov     [postbyte_register ], 100b
+			mov     [base_code ], 0E9h
+			mov     [extended_code ], 0EAh
+			
 		process_jmp:
-		lods    byte [ esi]
-		call    get_jump_operator
-		test    [prefix_flags ], 10h
-		jz      jmp_type_ok
-		test    [jump_type ], not 2
-		jnz     errors.illegal_instruction
-		mov     [jump_type ], 2
-		and     [prefix_flags ], not 10h
+			lods    byte [ esi]
+			call    get_jump_operator
+			test    [prefix_flags ], 10h
+			jz      jmp_type_ok
+			test    [jump_type ], not 2
+			jnz process_jmp_illegal_instruction
+			mov     [jump_type ], 2
+			and     [prefix_flags ], not 10h
+			
 		jmp_type_ok:
-		call    get_size_operator
-		cmp     al,'('
-		je      jmp_imm
-		mov     [base_code ], 0FFh
-		cmp     al,10h
-		je      jmp_reg
-		cmp     al,'['
-		jne     errors.invalid_operand
+			call    get_size_operator
+			cmp     al,'('
+			je      jmp_imm
+			mov     [base_code ], 0FFh
+			cmp     al,10h
+			je      jmp_reg
+			cmp     al,'['
+			jne     errors.invalid_operand
+			
 		jmp_mem:
-		cmp     [jump_type ], 1
-		je      errors.illegal_instruction
-		call    get_address
-		mov     edx,eax
-		mov     al,[operand_size]
-		or      al,al
-		jz      jmp_mem_size_not_specified
-		cmp     al,2
-		je      jmp_mem_16bit
-		cmp     al,4
-		je      jmp_mem_32bit
-		cmp     al,6
-		je      jmp_mem_48bit
-		cmp     al,8
-		je      jmp_mem_64bit
-		cmp     al,10
-		je      jmp_mem_80bit
-		jmp     errors.invalid_operand_size
+			cmp     [jump_type ], 1
+			je jmp_mem_illegal_instruction
+			call    get_address
+			mov     edx,eax
+			mov     al,[operand_size]
+			or      al,al
+			jz      jmp_mem_size_not_specified
+			cmp     al,2
+			je      jmp_mem_16bit
+			cmp     al,4
+			je      jmp_mem_32bit
+			cmp     al,6
+			je      jmp_mem_48bit
+			cmp     al,8
+			je      jmp_mem_64bit
+			cmp     al,10
+			je      jmp_mem_80bit
+			jmp     errors.invalid_operand_size
+			ret
+		
+		process_jmp_illegal_instruction:
+			pushstr 'process_jmp::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
+		jmp_mem_illegal_instruction:
+			pushstr 'jmp_mem::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
 		jmp_mem_size_not_specified:
 		cmp     [jump_type ], 3
 		je      jmp_mem_far
@@ -16949,12 +16975,20 @@ finals:
 		je      jmp_mem_16bit
 		cmp     [code_type ], 32
 		je      jmp_mem_near_32bit
+		
 		jmp_mem_64bit:
 		cmp     [jump_type ], 3
 		je      errors.invalid_operand_size
 		cmp     [code_type ], 64
-		jne     errors.illegal_instruction
+		jne jmp_mem_64bit_illegal_instruction
 		jmp     instruction_ready
+		ret
+		
+		jmp_mem_64bit_illegal_instruction:
+			pushstr 'jmp_mem_64bit::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
 		jmp_mem_far:
 		cmp     [code_type ], 16
 		je      jmp_mem_far_32bit
@@ -16978,11 +17012,19 @@ finals:
 		je      jmp_mem_near_32bit
 		cmp     [code_type ], 16
 		je      jmp_mem_far_32bit
+		
 		jmp_mem_near_32bit:
-		cmp     [code_type ], 64
-		je      errors.illegal_instruction
-		call    operand_32bit
-		jmp     instruction_ready
+			cmp     [code_type ], 64
+			je jmp_mem_near_32bit_illegal_instruction
+			call    operand_32bit
+			jmp     instruction_ready
+			ret
+		
+		jmp_mem_near_32bit_illegal_instruction:
+			pushstr 'jmp_mem_near_32bit::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
 		jmp_mem_16bit:
 		cmp     [jump_type ], 3
 		je      errors.invalid_operand_size
@@ -17001,15 +17043,30 @@ finals:
 		je      jmp_reg_32bit
 		cmp     al,8
 		jne     errors.invalid_operand_size
+		
 		jmp_reg_64bit:
-		cmp     [code_type ], 64
-		jne     errors.illegal_instruction
-		jmp     nomem_instruction_ready
+			cmp     [code_type ], 64
+			jne jmp_reg_64bit_illegal_instruction
+			jmp     nomem_instruction_ready
+			ret
+		
+		jmp_reg_64bit_illegal_instruction:
+			pushstr 'jmp_reg_64bit::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
 		jmp_reg_32bit:
-		cmp     [code_type ], 64
-		je      errors.illegal_instruction
-		call    operand_32bit
-		jmp     nomem_instruction_ready
+			cmp     [code_type ], 64
+			je jmp_reg_32bit_illegal_instruction
+			call    operand_32bit
+			jmp     nomem_instruction_ready
+			ret
+		
+		jmp_reg_32bit_illegal_instruction:
+			pushstr 'jmp_reg_32bit::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
 		jmp_reg_16bit:
 		call    operand_16bit
 		jmp     nomem_instruction_ready
@@ -17122,21 +17179,28 @@ finals:
 		no_short_jump:
 		clc
 		ret
+		
 		forced_short:
-		cmp     [base_code ], 0E8h
-		je      errors.illegal_instruction
-		cmp     [next_pass_needed ], 0
-		jne     jmp_short_value_type_ok
-		cmp     [value_type ], 0
-		jne     errors.invalid_use_of_symbol
+			cmp     [base_code ], 0E8h
+			je forced_short_illegal_instruction
+			cmp     [next_pass_needed ], 0
+			jne     jmp_short_value_type_ok
+			cmp     [value_type ], 0
+			jne     errors.invalid_use_of_symbol
 		jmp_short_value_type_ok:
-		cmp     eax,-80h
-		jae     short_jump
-		cmp     eax,80h
-		jae     jump_out_of_range
+			cmp     eax,-80h
+			jae     short_jump
+			cmp     eax,80h
+			jae     jump_out_of_range
 		short_jump:
-		stc
-		ret
+			stc
+			ret
+		
+		forced_short_illegal_instruction:
+			pushstr 'forced_short::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+			
 		jump_out_of_range:
 		cmp     [error_line ], 0
 		jne     instruction_assembled
@@ -17144,11 +17208,13 @@ finals:
 		mov     cell[error_line ], _eax
 		mov     [error ], errors.relative_jump_out_of_range
 		jmp     instruction_assembled
+		ret
+		
 		jmp_far:
 		cmp     [jump_type ], 2
 		je      errors.invalid_operand
 		cmp     [code_type ], 64
-		je      errors.illegal_instruction
+		je jmp_far_illegal_instruction
 		mov     al,[extended_code]
 		mov     [base_code ], al
 		call    get_word_value
@@ -17170,6 +17236,7 @@ finals:
 		jnz     errors.invalid_operand_size
 		cmp     [code_type ], 16
 		jne     jmp_far_32bit
+		
 		jmp_far_16bit:
 		call    get_word_value
 		mov     ebx,eax
@@ -17178,6 +17245,7 @@ finals:
 		mov     ax,bx
 		call    mark_relocation
 		stos    word [edi]
+		
 		jmp_far_segment:
 		pop     cell[symbol_identifier] _eax
 		mov     [value_type ], al
@@ -17185,6 +17253,13 @@ finals:
 		call    mark_relocation
 		stos    word [edi]
 		jmp     instruction_assembled
+		ret
+		
+		jmp_far_illegal_instruction:
+			pushstr 'jmp_far::( illegal instruction )!'
+			jmp errors.illegal_instruction
+			ret
+		
 		jmp_far_32bit:
 		call    get_dword_value
 		mov     ebx,eax
@@ -25012,7 +25087,7 @@ errors: ret
 		ret
 	
 	.illegal_instruction:
-		push _illegal_instruction
+		;push _illegal_instruction
 		jmp	.create_with_source
 		ret
 	
