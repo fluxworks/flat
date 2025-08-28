@@ -1008,13 +1008,13 @@ dump_symbols:
 	jc	prepare_external_string
 	mov	esi,[esi]
 	add	esi,[resource_data]
-      copy_elf_section_name:
+      copy_section_name:
 	lods	byte [esi]
 	cmp	edi,[tagged_blocks]
 	jae	out_of_memory
 	stos	byte [edi]
 	test	al,al
-	jnz	copy_elf_section_name
+	jnz	copy_section_name
 	jmp	prepare_strings_table
       prepare_default_section_string:
 	mov	eax,'.fla'
@@ -4859,14 +4859,8 @@ parse_line_contents:
 	je	allow_embedded_instruction
 	cmp	bx,label_directive-instruction_handler
 	je	parse_label_directive
-	cmp	bx,segment_directive-instruction_handler
-	je	parse_segment_directive
 	cmp	bx,load_directive-instruction_handler
 	je	parse_load_directive
-	cmp	bx,extrn_directive-instruction_handler
-	je	parse_extrn_directive
-	cmp	bx,public_directive-instruction_handler
-	je	parse_public_directive
 	cmp	bx,section_directive-instruction_handler
 	je	parse_formatter_argument
 	cmp	bx,format_directive-instruction_handler
@@ -5002,8 +4996,6 @@ parse_line_contents:
 	jne	allow_embedded_instruction
 	movs	byte [edi],[esi]
 	jmp	allow_embedded_instruction
-      parse_segment_directive:
-	or	[formatter_symbols_allowed],-1
       parse_label_directive:
 	cmp	byte [esi],1Ah
 	jne	argument_parsed
@@ -5041,57 +5033,9 @@ parse_line_contents:
 	xor	al,al
 	stos	byte [edi]
 	jmp	argument_parsed
-      parse_public_directive:
-	cmp	byte [esi],1Ah
-	jne	parse_argument
-	inc	esi
-	push	_esi
-	movzx	ecx,byte [esi]
-	inc	esi
-	push	_esi _ecx
-	push	_edi
-	or	[formatter_symbols_allowed],-1
-	call	get_symbol
-	mov	[formatter_symbols_allowed],0
-	pop	_edi
-	jc	parse_public_label
-	cmp	al,1Dh
-	jne	parse_public_label
-	add	_esp,24
-	stos	word [edi]
-	jmp	parse_public_directive
-      parse_public_label:
-	pop	_ecx _esi
-	mov	al,2
-	stos	byte [edi]
-	call	get_label_id
-	stos	dword [edi]
-	mov	ax,8600h
-	stos	word [edi]
-	pop	_ebx
-	push	_ebx _esi _edi
-	mov	edi,directive_operators
-	call	get_operator
-	pop	_edi _edx _ebx
-	cmp	al,86h
-	je	argument_parsed
-	mov	esi,edx
-	xchg	esi,ebx
-	movzx	ecx,byte [esi]
-	inc	esi
-	mov	ax,'('
-	stos	word [edi]
-	mov	eax,ecx
-	stos	dword [edi]
-	rep	movs byte [edi],[esi]
-	xor	al,al
-	stos	byte [edi]
-	xchg	esi,ebx
-	jmp	argument_parsed
-      parse_extrn_directive:
-	cmp	byte [esi],22h
-	je	parse_quoted_extrn
-	cmp	byte [esi],1Ah
+	ret
+	
+	
 	jne	parse_argument
 	push	_esi
 	movzx	ecx,byte [esi+1]
@@ -5121,27 +5065,9 @@ parse_line_contents:
 	cmp	byte [esi],22h
 	jne	forced_multipart_expression
 	jmp	argument_parsed
-      parse_quoted_extrn:
-	inc	esi
-	mov	ax,'('
-	stos	word [edi]
-	lods	dword [esi]
-	mov	ecx,eax
-	stos	dword [edi]
-	rep	movs byte [edi],[esi]
-	xor	al,al
-	stos	byte [edi]
-	push	_esi _edi
-	mov	edi,directive_operators
-	call	get_operator
-	mov	edx,esi
-	pop	_edi _esi
-	cmp	al,86h
-	jne	argument_parsed
-	stos	byte [edi]
-	mov	esi,edx
-	jmp	parse_label_operator
-      ptr_argument:
+	ret
+	
+	ptr_argument:
 	call	parse_address
 	jmp	address_parsed
       check_argument:
@@ -9326,8 +9252,6 @@ calculate_expression:
         sub     ebx,14h
         cmp     al,0F0h
         je      calculate_rva
-        cmp     al,0F1h
-        je      calculate_plt
         cmp     al,0D0h
         je      calculate_not
         cmp     al,0E0h
@@ -10085,10 +10009,6 @@ calculate_expression:
         cmp     word [edi+8],0
         jne     invalid_expression
         mov     al,[output_format]
-        cmp     al,5
-        je      calculate_gotoff
-        cmp     al,4
-        je      calculate_coff_rva
         cmp     al,3
         jne     invalid_expression
         test    [format_flags],8
@@ -10133,38 +10053,15 @@ calculate_expression:
       calculate_gotoff:
         test    [format_flags],8+1
         jnz     invalid_expression
-      calculate_coff_rva:
-        mov     dl,5
-        cmp     byte [edi+12],2
-        je      change_value_type
+		
       incorrect_change_of_value_type:
         call    recoverable_misuse
       change_value_type:
         mov     byte [edi+12],dl
         add     edi,14h
         jmp     calculation_loop
-      calculate_plt:
-        cmp     word [edi+8],0
-        jne     invalid_expression
-        cmp     [output_format],5
-        jne     invalid_expression
-        test    [format_flags],1
-        jnz     invalid_expression
-        mov     dl,6
-        mov     dh,2
-        test    [format_flags],8
-        jz      check_value_for_plt
-        mov     dh,4
-      check_value_for_plt:
-        mov     eax,[edi]
-        or      eax,[edi+4]
-        jnz     incorrect_change_of_value_type
-        cmp     byte [edi+12],dh
-        jne     incorrect_change_of_value_type
-        mov     eax,[edi+16]
-        cmp     byte [eax],80h
-        jne     incorrect_change_of_value_type
-        jmp     change_value_type
+		ret
+		
       div_64:
         xor     ebx,ebx
         cmp     dword [edi],0
@@ -11014,8 +10911,6 @@ calculate_relative_offset:
         mov     cell[symbol_identifier],_ecx
         test    bl,1
         jnz     relative_offset_unallowed
-        cmp     bl,6
-        je      plt_relative_offset
         mov     bh,[ds:ebp+9]
         cmp     bl,bh
         je      set_relative_offset_type
@@ -11031,13 +10926,6 @@ calculate_relative_offset:
         je      relative_offset_ok
         mov     [value_type],3
       relative_offset_ok:
-        ret
-      plt_relative_offset:
-        mov     [value_type],7
-        cmp     byte [ds:ebp+9],2
-        je      relative_offset_ok
-        cmp     byte [ds:ebp+9],4
-        jne     recoverable_misuse
         ret
 
 calculate_logical_expression:
@@ -11549,8 +11437,6 @@ formatter:
         jb      bin_extension
         cmp     al,4
         je      obj_extension
-        cmp     al,5
-        je      o_extension
         cmp     al,3
         jne     no_extension
         cmp     [subsystem],1
@@ -11656,12 +11542,9 @@ formatter:
         jmp     copy_labels
       labels_table_ok:
         mov     _edi,cell[current_offset]
-        cmp     [output_format],4
-        je      coff_formatter
         cmp     [output_format],5
         jne     common_formatter
         bt      [format_flags],0
-        jnc     elf_formatter
       common_formatter:
         mov     eax,edi
         sub     eax,[code_start]
@@ -11725,14 +11608,8 @@ format_directive:
         mov     [output_format],al
         and     edx,0Fh
         or      [format_flags],edx
-        cmp     al,2
-        je      format_mz
         cmp     al,3
         je      format_pe
-        cmp     al,4
-        je      format_coff
-        cmp     al,5
-        je      format_elf
       format_defined:
         cmp     byte [esi],86h
         jne     instruction_assembled
@@ -11761,21 +11638,16 @@ entry_directive:
         bts     [format_flags],10h
         jc      setting_already_specified
         mov     al,[output_format]
-        cmp     al,2
-        je      mz_entry
         cmp     al,3
         je      pe_entry
         cmp     al,5
         jne     illegal_instruction
         bt      [format_flags],0
-        jc      elf_entry
         jmp     illegal_instruction
 stack_directive:
         bts     [format_flags],11h
         jc      setting_already_specified
         mov     al,[output_format]
-        cmp     al,2
-        je      mz_stack
         cmp     al,3
         je      pe_stack
         jmp     illegal_instruction
@@ -11783,139 +11655,16 @@ heap_directive:
         bts     [format_flags],12h
         jc      setting_already_specified
         mov     al,[output_format]
-        cmp     al,2
-        je      mz_heap
         cmp     al,3
         je      pe_heap
-        jmp     illegal_instruction
-segment_directive:
-        mov     al,[output_format]
-        cmp     al,2
-        je      mz_segment
-        cmp     al,5
-        je      elf_segment
         jmp     illegal_instruction
 section_directive:
         mov     al,[output_format]
         cmp     al,3
         je      pe_section
-        cmp     al,4
-        je      coff_section
-        cmp     al,5
-        je      elf_section
         jmp     illegal_instruction
-public_directive:
-        mov     al,[output_format]
-        cmp     al,4
-        je      public_allowed
-        cmp     al,5
-        jne     illegal_instruction
-        bt      [format_flags],0
-        jc      illegal_instruction
-      public_allowed:
-        mov     [base_code],0C0h
-        lods    byte [esi]
-        cmp     al,2
-        je      public_label
-        cmp     al,1Dh
-        jne     invalid_argument
-        lods    byte [esi]
-        and     al,7
-        add     [base_code],al
-        lods    byte [esi]
-        cmp     al,2
-        jne     invalid_argument
-      public_label:
-        lods    dword [esi]
-        cmp     eax,0Fh
-        jb      invalid_use_of_symbol
-        je      reserved_word_used_as_symbol
-        inc     esi
-        mov     dx,[current_pass]
-        mov     [eax+18],dx
-        or      byte [eax+8],8
-        mov     ebx,eax
-        call    store_label_reference
-        mov     eax,ebx
-        mov     _ebx,cell[free_additional_memory]
-        lea     edx,[ebx+10h]
-        cmp     edx,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_edx
-        mov     [ebx+8],eax
-        mov     _eax,cell[current_line]
-        mov     [ebx+0Ch],eax
-        lods    byte [esi]
-        cmp     al,86h
-        jne     invalid_argument
-        lods    word [esi]
-        cmp     ax,'('
-        jne     invalid_argument
-        mov     [ebx+4],esi
-        lods    dword [esi]
-        lea     esi,[esi+eax+1]
-        mov     al,[base_code]
-        mov     [ebx],al
-        jmp     instruction_assembled
-extrn_directive:
-        mov     al,[output_format]
-        cmp     al,4
-        je      extrn_allowed
-        cmp     al,5
-        jne     illegal_instruction
-        bt      [format_flags],0
-        jc      illegal_instruction
-      extrn_allowed:
-        lods    word [esi]
-        cmp     ax,'('
-        jne     invalid_argument
-        mov     ebx,esi
-        lods    dword [esi]
-        lea     esi,[esi+eax+1]
-        mov     _edx,cell[free_additional_memory]
-        lea     eax,[edx+0Ch]
-        cmp     eax,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_eax
-        mov     byte [edx],80h
-        mov     [edx+4],ebx
-        lods    byte [esi]
-        cmp     al,86h
-        jne     invalid_argument
-        lods    byte [esi]
-        cmp     al,2
-        jne     invalid_argument
-        lods    dword [esi]
-        cmp     eax,0Fh
-        jb      invalid_use_of_symbol
-        je      reserved_word_used_as_symbol
-        inc     esi
-        mov     ebx,eax
-        xor     ah,ah
-        lods    byte [esi]
-        cmp     al,':'
-        je      get_extrn_size
-        dec     esi
-        cmp     al,11h
-        jne     extrn_size_ok
-      get_extrn_size:
-        lods    word [esi]
-        cmp     al,11h
-        jne     invalid_argument
-      extrn_size_ok:
-        mov     cell[address_symbol],_edx
-        mov     [label_size],ah
-        movzx   ecx,ah
-        mov     [edx+8],ecx
-        xor     eax,eax
-        xor     edx,edx
-        xor     ebp,ebp
-        mov     [address_sign],0
-        mov     ch,2
-        test    [format_flags],8
-        jz      make_free_label
-        mov     ch,4
-        jmp     make_free_label
+		ret
+		
 mark_relocation:
         cmp     [value_type],0
         je      relocation_ok
@@ -11926,20 +11675,12 @@ mark_relocation:
         je      mark_mz_relocation
         cmp     [output_format],3
         je      mark_pe_relocation
-        cmp     [output_format],4
-        je      mark_coff_relocation
-        cmp     [output_format],5
-        je      mark_elf_relocation
       relocation_ok:
         ret
 close_pass:
         mov     al,[output_format]
         cmp     al,3
         je      close_pe
-        cmp     al,4
-        je      close_coff
-        cmp     al,5
-        je      close_elf
         ret
 
 format_mz:
@@ -13806,245 +13547,7 @@ close_pe:
         mov     ebx,[code_start]
         mov     [ebx+58h],eax
         ret
-
-format_coff:
-        mov     _eax,cell[additional_memory]
-        mov     [symbols_stream],eax
-        mov     ebx,eax
-        add     eax,20h
-        cmp     eax,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_eax
-        xor     eax,eax
-        mov     [ebx],al
-        mov     [ebx+4],eax
-        mov     [ebx+8],edi
-        mov     al,4
-        mov     [ebx+10h],eax
-        mov     al,60h
-        bt      [format_flags],0
-        jnc     flat_section_flags_ok
-        or      eax,0E0000000h
-      flat_section_flags_ok:
-        mov     dword [ebx+14h],eax
-        mov     [current_section],ebx
-        xor     eax,eax
-        mov     [number_of_sections],eax
-        mov     edx,ebx
-        call    init_addressing_space
-        mov     [ebx+14h],edx
-        mov     byte [ebx+9],2
-        mov     [code_type],32
-        test    [format_flags],8
-        jz      format_defined
-        mov     byte [ebx+9],4
-        mov     [code_type],64
-        jmp     format_defined
-coff_section:
-        call    close_coff_section
-        mov     _ebx,cell[free_additional_memory]
-        lea     eax,[ebx+20h]
-        cmp     eax,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_eax
-        mov     [current_section],ebx
-        inc     [number_of_sections]
-        xor     eax,eax
-        mov     [ebx],al
-        mov     [ebx+8],edi
-        mov     [ebx+10h],eax
-        mov     [ebx+14h],eax
-        mov     edx,ebx
-        call    create_addressing_space
-        xchg    edx,ebx
-        mov     [edx+14h],ebx
-        mov     byte [edx+9],2
-        test    [format_flags],8
-        jz      coff_labels_type_ok
-        mov     byte [edx+9],4
-      coff_labels_type_ok:
-        lods    word [esi]
-        cmp     ax,'('
-        jne     invalid_argument
-        mov     [ebx+4],esi
-        mov     ecx,[esi]
-        lea     esi,[esi+4+ecx+1]
-        cmp     ecx,8
-        ja      name_too_long
-      coff_section_flags:
-        cmp     byte [esi],8Ch
-        je      coff_section_alignment
-        cmp     byte [esi],19h
-        jne     coff_section_settings_ok
-        inc     esi
-        lods    byte [esi]
-        bt      [format_flags],0
-        jc      coff_section_flag_ok
-        cmp     al,7
-        ja      invalid_argument
-      coff_section_flag_ok:
-        mov     cl,al
-        mov     eax,1
-        shl     eax,cl
-        test    dword [ebx+14h],eax
-        jnz     setting_already_specified
-        or      dword [ebx+14h],eax
-        jmp     coff_section_flags
-      coff_section_alignment:
-        bt      [format_flags],0
-        jnc     invalid_argument
-        inc     esi
-        lods    byte [esi]
-        cmp     al,'('
-        jne     invalid_argument
-        cmp     byte [esi],'.'
-        je      invalid_value
-        push    _ebx
-        call    get_count_value
-        pop     _ebx
-        mov     edx,eax
-        dec     edx
-        test    eax,edx
-        jnz     invalid_value
-        or      eax,eax
-        jz      invalid_value
-        cmp     eax,2000h
-        ja      invalid_value
-        bsf     edx,eax
-        inc     edx
-        shl     edx,20
-        or      [ebx+14h],edx
-        xchg    [ebx+10h],eax
-        or      eax,eax
-        jnz     setting_already_specified
-        jmp     coff_section_flags
-      coff_section_settings_ok:
-        cmp     dword [ebx+10h],0
-        jne     instruction_assembled
-        mov     dword [ebx+10h],4
-        bt      [format_flags],0
-        jnc     instruction_assembled
-        or      dword [ebx+14h],300000h
-        jmp     instruction_assembled
-      close_coff_section:
-        mov     ebx,[current_section]
-        mov     eax,edi
-        mov     edx,[ebx+8]
-        sub     eax,edx
-        mov     [ebx+0Ch],eax
-        xor     eax,eax
-        xchg    [undefined_data_end],eax
-        cmp     eax,edi
-        jne     coff_section_ok
-        cmp     edx,[undefined_data_start]
-        jne     coff_section_ok
-        mov     edi,edx
-        or      byte [ebx+14h],80h
-      coff_section_ok:
-        ret
-mark_coff_relocation:
-        cmp     [value_type],3
-        je      coff_relocation_relative
-        push    _ebx _eax
-        test    [format_flags],8
-        jnz     coff_64bit_relocation
-        mov     al,6
-        cmp     [value_type],2
-        je      coff_relocation
-        cmp     [value_type],5
-        jne     invalid_use_of_symbol
-        inc     al
-        jmp     coff_relocation
-      coff_64bit_relocation:
-        mov     al,1
-        cmp     [value_type],4
-        je      coff_relocation
-        mov     al,2
-        cmp     [value_type],2
-        je      coff_relocation
-        cmp     [value_type],5
-        jne     invalid_use_of_symbol
-        inc     al
-        jmp     coff_relocation
-      coff_relocation_relative:
-        push    _ebx
-        bt      [format_flags],0
-        jnc     relative_ok
-        mov     ebx,[current_section]
-        mov     ebx,[ebx+8]
-        sub     ebx,edi
-        sub     eax,ebx
-        add     eax,4
-      relative_ok:
-        mov     ebx,[addressing_space]
-        push    _eax
-        mov     al,20
-        test    [format_flags],8
-        jnz     relative_coff_64bit_relocation
-        cmp     byte [ebx+9],2
-        jne     invalid_use_of_symbol
-        jmp     coff_relocation
-      relative_coff_64bit_relocation:
-        mov     al,4
-        cmp     byte [ebx+9],4
-        jne     invalid_use_of_symbol
-      coff_relocation:
-        mov     _ebx,cell[free_additional_memory]
-        add     ebx,0Ch
-        cmp     ebx,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_ebx
-        mov     byte [ebx-0Ch],al
-        mov     eax,[current_section]
-        mov     eax,[eax+8]
-        neg     eax
-        add     eax,edi
-        mov     [ebx-0Ch+4],eax
-        mov     _eax,cell[symbol_identifier]
-        mov     [ebx-0Ch+8],eax
-        pop     _eax _ebx
-        ret
-close_coff:
-        call    close_coff_section
-        cmp     [next_pass_needed],0
-        je      coff_closed
-        mov     eax,[symbols_stream]
-        mov     cell[free_additional_memory],_eax
-      coff_closed:
-        ret
-coff_formatter:
-        sub     edi,[code_start]
-        mov     [code_size],edi
-        call    prepare_default_section
-        mov     _edi,cell[free_additional_memory]
-        mov     ebx,edi
-        mov     ecx,28h shr 2
-        imul    ecx,[number_of_sections]
-        add     ecx,14h shr 2
-        lea     eax,[edi+ecx*4]
-        cmp     eax,[structures_buffer]
-        jae     out_of_memory
-        xor     eax,eax
-        rep     stos dword [edi]
-        mov     word [ebx],14Ch
-        test    [format_flags],8
-        jz      coff_magic_ok
-        mov     word [ebx],8664h
-      coff_magic_ok:
-        mov     word [ebx+12h],104h
-        bt      [format_flags],0
-        jnc     coff_flags_ok
-        or      byte [ebx+12h],80h
-      coff_flags_ok:
-        push    _ebx
-        call    make_timestamp
-        pop     _ebx
-        mov     [ebx+4],eax
-        mov     eax,[number_of_sections]
-        mov     [ebx+2],ax
-        mov     esi,[symbols_stream]
-        xor     eax,eax
-        xor     ecx,ecx
+		
       enumerate_symbols:
         cmp     _esi,cell[free_additional_memory]
         je      symbols_enumerated
@@ -14053,8 +13556,6 @@ coff_formatter:
         jz      enumerate_section
         cmp     dl,0C0h
         jae     enumerate_public
-        cmp     dl,80h
-        jae     enumerate_extrn
         add     esi,0Ch
         jmp     enumerate_symbols
       enumerate_section:
@@ -14083,14 +13584,8 @@ coff_formatter:
         jb      enumerate_symbols
         inc     eax
         jmp     enumerate_symbols
-      enumerate_extrn:
-        mov     edx,eax
-        shl     edx,8
-        mov     dl,[esi]
-        mov     [esi],edx
-        add     esi,0Ch
-        inc     eax
-        jmp     enumerate_symbols
+		ret
+		
       prepare_default_section:
         mov     ebx,[symbols_stream]
         cmp     dword [ebx+0Ch],0
@@ -14272,8 +13767,6 @@ coff_formatter:
         mov     al,[esi]
         cmp     al,0C0h
         jae     add_public_symbol
-        cmp     al,80h
-        jae     add_extrn_symbol
         or      al,al
         jz      add_section_symbol
         add     esi,0Ch
@@ -14286,22 +13779,15 @@ coff_formatter:
         add     esi,20h
         add     ebx,12h
         jmp     make_symbols_table
-      add_extrn_symbol:
-        call    store_symbol_name
-        mov     byte [ebx+10h],2
-        add     esi,0Ch
-        add     ebx,12h
-        jmp     make_symbols_table
+		ret
+		
       add_public_symbol:
         call    store_symbol_name
         mov     eax,[esi+0Ch]
         mov     cell[current_line],_eax
         mov     eax,[esi+8]
         test    byte [eax+8],1
-        jz      undefined_coff_public
-        mov     cx,[current_pass]
-        cmp     cx,[eax+16]
-        jne     undefined_coff_public
+		mov     cx,[current_pass]
         mov     cl,[eax+11]
         or      cl,cl
         jz      public_constant
@@ -14310,9 +13796,6 @@ coff_formatter:
         cmp     cl,2
         je      public_symbol_type_ok
         jmp     invalid_use_of_symbol
-      undefined_coff_public:
-        mov     [error_info],eax
-        jmp     undefined_symbol
       check_64bit_public_symbol:
         cmp     cl,4
         jne     invalid_use_of_symbol
@@ -14410,1253 +13893,7 @@ coff_formatter:
         rep     movs byte [edi],[esi]
         pop     _esi
         ret
-
-format_elf:
-        test    [format_flags],8
-        jnz     format_elf64
-        mov     edx,edi
-        mov     ecx,34h shr 2
-        lea     eax,[edi+ecx*4]
-        cmp     eax,[tagged_blocks]
-        jae     out_of_memory
-        xor     eax,eax
-        rep     stos dword [edi]
-        mov     dword [edx],7Fh + 'ELF' shl 8
-        mov     al,1
-        mov     [edx+4],al
-        mov     [edx+5],al
-        mov     [edx+6],al
-        mov     [edx+14h],al
-        mov     byte [edx+12h],3
-        mov     byte [edx+28h],34h
-        mov     byte [edx+2Eh],28h
-        mov     [code_type],32
-        cmp     word [esi],1D19h
-        je      format_elf_exe
-      elf_header_ok:
-        mov     byte [edx+10h],1
-        mov     _eax,cell[additional_memory]
-        mov     [symbols_stream],eax
-        mov     ebx,eax
-        add     eax,20h
-        cmp     eax,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_eax
-        xor     eax,eax
-        mov     [current_section],ebx
-        mov     [number_of_sections],eax
-        mov     [ebx],al
-        mov     [ebx+4],eax
-        mov     [ebx+8],edi
-        mov     al,111b
-        mov     [ebx+14h],eax
-        mov     al,4
-        mov     [ebx+10h],eax
-        mov     edx,ebx
-        call    init_addressing_space
-        xchg    edx,ebx
-        mov     [edx+14h],ebx
-        mov     byte [edx+9],2
-        test    [format_flags],8
-        jz      format_defined
-        mov     byte [edx+9],4
-        mov     byte [ebx+10h],8
-        jmp     format_defined
-      format_elf64:
-        mov     edx,edi
-        mov     ecx,40h shr 2
-        lea     eax,[edi+ecx*4]
-        cmp     eax,[tagged_blocks]
-        jae     out_of_memory
-        xor     eax,eax
-        rep     stos dword [edi]
-        mov     dword [edx],7Fh + 'ELF' shl 8
-        mov     al,1
-        mov     [edx+5],al
-        mov     [edx+6],al
-        mov     [edx+14h],al
-        mov     byte [edx+4],2
-        mov     byte [edx+12h],62
-        mov     byte [edx+34h],40h
-        mov     byte [edx+3Ah],40h
-        mov     [code_type],64
-        cmp     word [esi],1D19h
-        jne     elf_header_ok
-        jmp     format_elf64_exe
-elf_section:
-        bt      [format_flags],0
-        jc      illegal_instruction
-        call    close_coff_section
-        mov     _ebx,cell[free_additional_memory]
-        lea     eax,[ebx+20h]
-        cmp     eax,[structures_buffer]
-        jae     out_of_memory
-        mov     cell[free_additional_memory],_eax
-        mov     [current_section],ebx
-        inc     word [number_of_sections]
-        jz      format_limitations_exceeded
-        xor     eax,eax
-        mov     [ebx],al
-        mov     [ebx+8],edi
-        mov     [ebx+10h],eax
-        mov     al,10b
-        mov     [ebx+14h],eax
-        mov     edx,ebx
-        call    create_addressing_space
-        xchg    edx,ebx
-        mov     [edx+14h],ebx
-        mov     byte [edx+9],2
-        test    [format_flags],8
-        jz      elf_labels_type_ok
-        mov     byte [edx+9],4
-      elf_labels_type_ok:
-        lods    word [esi]
-        cmp     ax,'('
-        jne     invalid_argument
-        mov     [ebx+4],esi
-        mov     ecx,[esi]
-        lea     esi,[esi+4+ecx+1]
-      elf_section_flags:
-        cmp     byte [esi],8Ch
-        je      elf_section_alignment
-        cmp     byte [esi],19h
-        jne     elf_section_settings_ok
-        inc     esi
-        lods    byte [esi]
-        sub     al,28
-        xor     al,11b
-        test    al,not 10b
-        jnz     invalid_argument
-        mov     cl,al
-        mov     al,1
-        shl     al,cl
-        test    byte [ebx+14h],al
-        jnz     setting_already_specified
-        or      byte [ebx+14h],al
-        jmp     elf_section_flags
-      elf_section_alignment:
-        inc     esi
-        lods    byte [esi]
-        cmp     al,'('
-        jne     invalid_argument
-        cmp     byte [esi],'.'
-        je      invalid_value
-        push    _ebx
-        call    get_count_value
-        pop     _ebx
-        mov     edx,eax
-        dec     edx
-        test    eax,edx
-        jnz     invalid_value
-        or      eax,eax
-        jz      invalid_value
-        xchg    [ebx+10h],eax
-        or      eax,eax
-        jnz     setting_already_specified
-        jmp     elf_section_flags
-      elf_section_settings_ok:
-        cmp     dword [ebx+10h],0
-        jne     instruction_assembled
-        mov     dword [ebx+10h],4
-        test    [format_flags],8
-        jz      instruction_assembled
-        mov     byte [ebx+10h],8
-        jmp     instruction_assembled
-mark_elf_relocation:
-        push    _ebx
-        mov     ebx,[addressing_space]
-        cmp     [value_type],3
-        je      elf_relocation_relative
-        cmp     [value_type],7
-        je      elf_relocation_relative
-        push    _eax
-        cmp     [value_type],5
-        je      elf_gotoff_relocation
-        ja      invalid_use_of_symbol
-        mov     al,1                    ; R_386_32 / R_AMD64_64
-        test    [format_flags],8
-        jz      coff_relocation
-        cmp     [value_type],4
-        je      coff_relocation
-        mov     al,11                   ; R_AMD64_32S
-        jmp     coff_relocation
-      elf_gotoff_relocation:
-        test    [format_flags],8
-        jnz     invalid_use_of_symbol
-        mov     al,9                    ; R_386_GOTOFF
-        jmp     coff_relocation
-      elf_relocation_relative:
-        cmp     byte [ebx+9],0
-        je      invalid_use_of_symbol
-        mov     ebx,[current_section]
-        mov     ebx,[ebx+8]
-        sub     ebx,edi
-        sub     eax,ebx
-        push    _eax
-        mov     al,2                    ; R_386_PC32 / R_AMD64_PC32
-        cmp     [value_type],3
-        je      coff_relocation
-        mov     al,4                    ; R_386_PLT32 / R_AMD64_PLT32
-        jmp     coff_relocation
-close_elf:
-        bt      [format_flags],0
-        jc      close_elf_exe
-        call    close_coff_section
-        cmp     [next_pass_needed],0
-        je      elf_closed
-        mov     eax,[symbols_stream]
-        mov     cell[free_additional_memory],_eax
-      elf_closed:
-        ret
-elf_formatter:
-        mov     ecx,edi
-        sub     ecx,[code_start]
-        neg     ecx
-        and     ecx,111b
-        test    [format_flags],8
-        jnz     align_elf_structures
-        and     ecx,11b
-      align_elf_structures:
-        xor     al,al
-        rep     stos byte [edi]
-        push    _edi
-        call    prepare_default_section
-        mov     esi,[symbols_stream]
-        mov     _edi,cell[free_additional_memory]
-        xor     eax,eax
-        mov     ecx,4
-        rep     stos dword [edi]
-        test    [format_flags],8
-        jz      find_first_section
-        mov     ecx,2
-        rep     stos dword [edi]
-      find_first_section:
-        mov     al,[esi]
-        or      al,al
-        jz      first_section_found
-        cmp     al,0C0h
-        jb      skip_other_symbol
-        add     esi,4
-      skip_other_symbol:
-        add     esi,0Ch
-        jmp     find_first_section
-      first_section_found:
-        mov     ebx,esi
-        mov     ebp,esi
-        add     esi,20h
-        xor     ecx,ecx
-        xor     edx,edx
-      find_next_section:
-        cmp     _esi,cell[free_additional_memory]
-        je      make_section_symbol
-        mov     al,[esi]
-        or      al,al
-        jz      make_section_symbol
-        cmp     al,0C0h
-        jae     skip_public
-        cmp     al,80h
-        jae     skip_extrn
-        or      byte [ebx+14h],40h
-      skip_extrn:
-        add     esi,0Ch
-        jmp     find_next_section
-      skip_public:
-        add     esi,10h
-        jmp     find_next_section
-      make_section_symbol:
-        mov     eax,edi
-        xchg    eax,[ebx+4]
-        stos    dword [edi]
-        test    [format_flags],8
-        jnz     elf64_section_symbol
-        xor     eax,eax
-        stos    dword [edi]
-        stos    dword [edi]
-        call    store_section_index
-        jmp     section_symbol_ok
-      store_section_index:
-        inc     ecx
-        mov     eax,ecx
-        shl     eax,8
-        mov     [ebx],eax
-        inc     dx
-        jz      format_limitations_exceeded
-        mov     eax,edx
-        shl     eax,16
-        mov     al,3
-        test    byte [ebx+14h],40h
-        jz      section_index_ok
-        or      ah,-1
-        inc     dx
-        jz      format_limitations_exceeded
-      section_index_ok:
-        stos    dword [edi]
-        ret
-      elf64_section_symbol:
-        call    store_section_index
-        xor     eax,eax
-        stos    dword [edi]
-        stos    dword [edi]
-        stos    dword [edi]
-        stos    dword [edi]
-      section_symbol_ok:
-        mov     ebx,esi
-        add     esi,20h
-        cmp     _ebx,cell[free_additional_memory]
-        jne     find_next_section
-        inc     dx
-        jz      format_limitations_exceeded
-        mov     [current_section],edx
-        mov     esi,[symbols_stream]
-      find_other_symbols:
-        cmp     _esi,cell[free_additional_memory]
-        je      elf_symbol_table_ok
-        mov     al,[esi]
-        or      al,al
-        jz      skip_section
-        cmp     al,0C0h
-        jae     make_public_symbol
-        cmp     al,80h
-        jae     make_extrn_symbol
-        add     esi,0Ch
-        jmp     find_other_symbols
-      skip_section:
-        add     esi,20h
-        jmp     find_other_symbols
-      make_public_symbol:
-        mov     eax,[esi+0Ch]
-        mov     cell[current_line],_eax
-        cmp     byte [esi],0C0h
-        jne     invalid_argument
-        mov     ebx,[esi+8]
-        test    byte [ebx+8],1
-        jz      undefined_public
-        mov     ax,[current_pass]
-        cmp     ax,[ebx+16]
-        jne     undefined_public
-        mov     dl,[ebx+11]
-        or      dl,dl
-        jz      public_absolute
-        mov     eax,[ebx+20]
-        cmp     byte [eax],0
-        jne     invalid_use_of_symbol
-        mov     eax,[eax+4]
-        test    [format_flags],8
-        jnz     elf64_public
-        cmp     dl,2
-        jne     invalid_use_of_symbol
-        mov     dx,[eax+0Eh]
-        jmp     section_for_public_ok
-      undefined_public:
-        mov     [error_info],ebx
-        jmp     undefined_symbol
-      elf64_public:
-        cmp     dl,4
-        jne     invalid_use_of_symbol
-        mov     dx,[eax+6]
-        jmp     section_for_public_ok
-      public_absolute:
-        mov     dx,0FFF1h
-      section_for_public_ok:
-        mov     eax,[esi+4]
-        stos    dword [edi]
-        test    [format_flags],8
-        jnz     elf64_public_symbol
-        movzx   eax,byte [ebx+9]
-        shr     al,1
-        and     al,1
-        neg     eax
-        cmp     eax,[ebx+4]
-        jne     value_out_of_range
-        xor     eax,[ebx]
-        js      value_out_of_range
-        mov     eax,[ebx]
-        stos    dword [edi]
-        xor     eax,eax
-        mov     al,[ebx+10]
-        stos    dword [edi]
-        mov     eax,edx
-        shl     eax,16
-        mov     al,10h
-        cmp     byte [ebx+10],0
-        je      elf_public_function
-        or      al,1
-        jmp     store_elf_public_info
-      elf_public_function:
-        or      al,2
-      store_elf_public_info:
-        stos    dword [edi]
-        jmp     public_symbol_ok
-      elf64_public_symbol:
-        mov     eax,edx
-        shl     eax,16
-        mov     al,10h
-        cmp     byte [ebx+10],0
-        je      elf64_public_function
-        or      al,1
-        jmp     store_elf64_public_info
-      elf64_public_function:
-        or      al,2
-      store_elf64_public_info:
-        stos    dword [edi]
-        mov     al,[ebx+9]
-        shl     eax,31-1
-        xor     eax,[ebx+4]
-        js      value_out_of_range
-        mov     eax,[ebx]
-        stos    dword [edi]
-        mov     eax,[ebx+4]
-        stos    dword [edi]
-        mov     al,[ebx+10]
-        stos    dword [edi]
-        xor     al,al
-        stos    dword [edi]
-      public_symbol_ok:
-        inc     ecx
-        mov     eax,ecx
-        shl     eax,8
-        mov     al,0C0h
-        mov     [esi],eax
-        add     esi,10h
-        jmp     find_other_symbols
-      make_extrn_symbol:
-        mov     eax,[esi+4]
-        stos    dword [edi]
-        test    [format_flags],8
-        jnz     elf64_extrn_symbol
-        xor     eax,eax
-        stos    dword [edi]
-        mov     eax,[esi+8]
-        stos    dword [edi]
-        mov     eax,10h
-        stos    dword [edi]
-        jmp     extrn_symbol_ok
-      elf64_extrn_symbol:
-        mov     eax,10h
-        stos    dword [edi]
-        xor     al,al
-        stos    dword [edi]
-        stos    dword [edi]
-        mov     eax,[esi+8]
-        stos    dword [edi]
-        xor     eax,eax
-        stos    dword [edi]
-      extrn_symbol_ok:
-        inc     ecx
-        mov     eax,ecx
-        shl     eax,8
-        mov     al,80h
-        mov     [esi],eax
-        add     esi,0Ch
-        jmp     find_other_symbols
-      elf_symbol_table_ok:
-        mov     edx,edi
-        mov     _ebx,cell[free_additional_memory]
-        xor     al,al
-        stos    byte [edi]
-        add     edi,16
-        mov     [edx+1],edx
-        add     ebx,10h
-        test    [format_flags],8
-        jz      make_string_table
-        add     ebx,8
-      make_string_table:
-        cmp     ebx,edx
-        je      elf_string_table_ok
-        test    [format_flags],8
-        jnz     make_elf64_string
-        cmp     byte [ebx+0Dh],0
-        je      rel_prefix_ok
-        mov     byte [ebx+0Dh],0
-        mov     eax,'.rel'
-        stos    dword [edi]
-      rel_prefix_ok:
-        mov     esi,edi
-        sub     esi,edx
-        xchg    esi,[ebx]
-        add     ebx,10h
-      make_elf_string:
-        or      esi,esi
-        jz      default_string
-        lods    dword [esi]
-        mov     ecx,eax
-        rep     movs byte [edi],[esi]
-        xor     al,al
-        stos    byte [edi]
-        jmp     make_string_table
-      make_elf64_string:
-        cmp     byte [ebx+5],0
-        je      elf64_rel_prefix_ok
-        mov     byte [ebx+5],0
-        mov     eax,'.rel'
-        stos    dword [edi]
-        mov     al,'a'
-        stos    byte [edi]
-      elf64_rel_prefix_ok:
-        mov     esi,edi
-        sub     esi,edx
-        xchg    esi,[ebx]
-        add     ebx,18h
-        jmp     make_elf_string
-      default_string:
-        mov     eax,'.fla'
-        stos    dword [edi]
-        mov     ax,'t'
-        stos    word [edi]
-        jmp     make_string_table
-      elf_string_table_ok:
-        mov     [edx+1+8],edi
-        mov     ebx,[code_start]
-        mov     eax,edi
-        sub     _eax,cell[free_additional_memory]
-        xor     ecx,ecx
-        sub     ecx,eax
-        test    [format_flags],8
-        jnz     finish_elf64_header
-        and     ecx,11b
-        add     eax,ecx
-        mov     [ebx+20h],eax
-        mov     eax,[current_section]
-        inc     ax
-        jz      format_limitations_exceeded
-        mov     [ebx+32h],ax
-        inc     ax
-        jz      format_limitations_exceeded
-        mov     [ebx+30h],ax
-        jmp     elf_header_finished
-      finish_elf64_header:
-        and     ecx,111b
-        add     eax,ecx
-        mov     [ebx+28h],eax
-        mov     eax,[current_section]
-        inc     ax
-        jz      format_limitations_exceeded
-        mov     [ebx+3Eh],ax
-        inc     ax
-        jz      format_limitations_exceeded
-        mov     [ebx+3Ch],ax
-      elf_header_finished:
-        xor     eax,eax
-        add     ecx,10*4
-        rep     stos byte [edi]
-        test    [format_flags],8
-        jz      elf_null_section_ok
-        mov     ecx,6*4
-        rep     stos byte [edi]
-      elf_null_section_ok:
-        mov     esi,ebp
-        xor     ecx,ecx
-      make_section_entry:
-        mov     ebx,edi
-        mov     eax,[esi+4]
-        mov     eax,[eax]
-        stos    dword [edi]
-        mov     eax,1
-        cmp     dword [esi+0Ch],0
-        je      bss_section
-        test    byte [esi+14h],80h
-        jz      section_type_ok
-      bss_section:
-        mov     al,8
-      section_type_ok:
-        stos    dword [edi]
-        mov     eax,[esi+14h]
-        and     al,3Fh
-        call    store_elf_machine_word
-        xor     eax,eax
-        call    store_elf_machine_word
-        mov     eax,[esi+8]
-        mov     [image_base],eax
-        sub     eax,[code_start]
-        call    store_elf_machine_word
-        mov     eax,[esi+0Ch]
-        call    store_elf_machine_word
-        xor     eax,eax
-        stos    dword [edi]
-        stos    dword [edi]
-        mov     eax,[esi+10h]
-        call    store_elf_machine_word
-        xor     eax,eax
-        call    store_elf_machine_word
-        inc     ecx
-        add     esi,20h
-        xchg    _edi,[_esp]
-        mov     ebp,edi
-      convert_relocations:
-        cmp     _esi,cell[free_additional_memory]
-        je      relocations_converted
-        mov     al,[esi]
-        or      al,al
-        jz      relocations_converted
-        cmp     al,80h
-        jb      make_relocation_entry
-        cmp     al,0C0h
-        jb      relocation_entry_ok
-        add     esi,10h
-        jmp     convert_relocations
-      make_relocation_entry:
-        test    [format_flags],8
-        jnz     make_elf64_relocation_entry
-        mov     eax,[esi+4]
-        stos    dword [edi]
-        mov     eax,[esi+8]
-        mov     eax,[eax]
-        mov     al,[esi]
-        stos    dword [edi]
-        jmp     relocation_entry_ok
-      make_elf64_relocation_entry:
-        mov     eax,[esi+4]
-        stos    dword [edi]
-        xor     eax,eax
-        stos    dword [edi]
-        movzx   eax,byte [esi]
-        stos    dword [edi]
-        mov     eax,[esi+8]
-        mov     eax,[eax]
-        shr     eax,8
-        stos    dword [edi]
-        xor     eax,eax
-        push    _edx
-        mov     edx,[esi+4]
-        add     edx,[image_base]
-        xchg    eax,[edx]
-        stos    dword [edi]
-        cmp     byte [esi],1
-        je      addend_64bit
-        pop     _edx
-        sar     eax,31
-        stos    dword [edi]
-        jmp     relocation_entry_ok
-      addend_64bit:
-        xor     eax,eax
-        xchg    eax,[edx+4]
-        stos    dword [edi]
-        pop     _edx
-      relocation_entry_ok:
-        add     esi,0Ch
-        jmp     convert_relocations
-      store_elf_machine_word:
-        stos    dword [edi]
-        test    [format_flags],8
-        jz      elf_machine_word_ok
-        and     dword [edi],0
-        add     edi,4
-      elf_machine_word_ok:
-        ret
-      relocations_converted:
-        cmp     edi,ebp
-        xchg    _edi,[_esp]
-        je      rel_section_ok
-        mov     eax,[ebx]
-        sub     eax,4
-        test    [format_flags],8
-        jz      store_relocations_name_offset
-        dec     eax
-      store_relocations_name_offset:
-        stos    dword [edi]
-        test    [format_flags],8
-        jnz     rela_section
-        mov     eax,9
-        jmp     store_relocations_type
-      rela_section:
-        mov     eax,4
-      store_relocations_type:
-        stos    dword [edi]
-        xor     al,al
-        call    store_elf_machine_word
-        call    store_elf_machine_word
-        mov     eax,ebp
-        sub     eax,[code_start]
-        call    store_elf_machine_word
-        mov     _eax,[_esp]
-        sub     eax,ebp
-        call    store_elf_machine_word
-        mov     eax,[current_section]
-        stos    dword [edi]
-        mov     eax,ecx
-        stos    dword [edi]
-        inc     ecx
-        test    [format_flags],8
-        jnz     finish_elf64_rela_section
-        mov     eax,4
-        stos    dword [edi]
-        mov     al,8
-        stos    dword [edi]
-        jmp     rel_section_ok
-      finish_elf64_rela_section:
-        mov     eax,8
-        stos    dword [edi]
-        xor     al,al
-        stos    dword [edi]
-        mov     al,24
-        stos    dword [edi]
-        xor     al,al
-        stos    dword [edi]
-      rel_section_ok:
-        cmp     _esi,cell[free_additional_memory]
-        jne     make_section_entry
-        pop     _eax
-        mov     ebx,[code_start]
-        sub     eax,ebx
-        mov     [code_size],eax
-        mov     ecx,20h
-        test    [format_flags],8
-        jz      adjust_elf_section_headers_offset
-        mov     ecx,28h
-      adjust_elf_section_headers_offset:
-        add     [ebx+ecx],eax
-        mov     eax,1
-        stos    dword [edi]
-        mov     al,2
-        stos    dword [edi]
-        xor     al,al
-        call    store_elf_machine_word
-        call    store_elf_machine_word
-        mov     eax,[code_size]
-        call    store_elf_machine_word
-        mov     eax,[edx+1]
-        sub     _eax,cell[free_additional_memory]
-        call    store_elf_machine_word
-        mov     eax,[current_section]
-        inc     eax
-        stos    dword [edi]
-        mov     eax,[number_of_sections]
-        inc     eax
-        stos    dword [edi]
-        test    [format_flags],8
-        jnz     finish_elf64_sym_section
-        mov     eax,4
-        stos    dword [edi]
-        mov     al,10h
-        stos    dword [edi]
-        jmp     sym_section_ok
-      finish_elf64_sym_section:
-        mov     eax,8
-        stos    dword [edi]
-        xor     al,al
-        stos    dword [edi]
-        mov     al,18h
-        stos    dword [edi]
-        xor     al,al
-        stos    dword [edi]
-      sym_section_ok:
-        mov     al,1+8
-        stos    dword [edi]
-        mov     al,3
-        stos    dword [edi]
-        xor     al,al
-        call    store_elf_machine_word
-        call    store_elf_machine_word
-        mov     eax,[edx+1]
-        sub     _eax,cell[free_additional_memory]
-        add     eax,[code_size]
-        call    store_elf_machine_word
-        mov     eax,[edx+1+8]
-        sub     eax,[edx+1]
-        call    store_elf_machine_word
-        xor     eax,eax
-        stos    dword [edi]
-        stos    dword [edi]
-        mov     al,1
-        call    store_elf_machine_word
-        xor     eax,eax
-        call    store_elf_machine_word
-        mov     eax,'tab'
-        mov     dword [edx+1],'.sym'
-        mov     [edx+1+4],eax
-        mov     dword [edx+1+8],'.str'
-        mov     [edx+1+8+4],eax
-        mov     [resource_data],edx
-        mov     [written_size],0
-        mov     edx,[output_file]
-        call    create
-        jc      write_failed
-        call    write_code
-        mov     ecx,edi
-        mov     _edx,cell[free_additional_memory]
-        sub     ecx,edx
-        add     [written_size],ecx
-        call    write
-        jc      write_failed
-        jmp     output_written
-
-format_elf_exe:
-        add     esi,2
-        or      [format_flags],1
-        cmp     byte [esi],'('
-        jne     elf_exe_brand_ok
-        inc     esi
-        cmp     byte [esi],'.'
-        je      invalid_value
-        push    _edx
-        call    get_byte_value
-        cmp     [value_type],0
-        jne     invalid_use_of_symbol
-        pop     _edx
-        mov     [edx+7],al
-      elf_exe_brand_ok:
-        mov     [image_base],8048000h
-        cmp     byte [esi],80h
-        jne     elf_exe_base_ok
-        lods    word [esi]
-        cmp     ah,'('
-        jne     invalid_argument
-        cmp     byte [esi],'.'
-        je      invalid_value
-        push    _edx
-        call    get_dword_value
-        cmp     [value_type],0
-        jne     invalid_use_of_symbol
-        mov     [image_base],eax
-        pop     _edx
-      elf_exe_base_ok:
-        mov     byte [edx+10h],2
-        mov     byte [edx+2Ah],20h
-        mov     ebx,edi
-        mov     ecx,20h shr 2
-        cmp     [current_pass],0
-        je      init_elf_segments
-        imul    ecx,[number_of_sections]
-      init_elf_segments:
-        xor     eax,eax
-        rep     stos dword [edi]
-        and     [number_of_sections],0
-        mov     byte [ebx],1
-        mov     word [ebx+1Ch],1000h
-        mov     byte [ebx+18h],111b
-        mov     eax,edi
-        xor     ebp,ebp
-        xor     cl,cl
-        sub     eax,[code_start]
-        sbb     ebp,0
-        sbb     cl,0
-        mov     [ebx+4],eax
-        add     eax,[image_base]
-        adc     ebp,0
-        adc     cl,0
-        mov     [ebx+8],eax
-        mov     [ebx+0Ch],eax
-        mov     [edx+18h],eax
-        not     eax
-        not     ebp
-        not     cl
-        add     eax,1
-        adc     ebp,0
-        adc     cl,0
-        add     eax,edi
-        adc     ebp,0
-        adc     cl,0
-        mov     edx,ebp
-      elf_exe_addressing_setup:
-        push    _eax
-        call    init_addressing_space
-        pop     _eax
-        mov     [ebx],eax
-        mov     [ebx+4],edx
-        mov     [ebx+8],cl
-        mov     [symbols_stream],edi
-        jmp     format_defined
-      format_elf64_exe:
-        add     esi,2
-        or      [format_flags],1
-        cmp     byte [esi],'('
-        jne     elf64_exe_brand_ok
-        inc     esi
-        cmp     byte [esi],'.'
-        je      invalid_value
-        push    _edx
-        call    get_byte_value
-        cmp     [value_type],0
-        jne     invalid_use_of_symbol
-        pop     _edx
-        mov     [edx+7],al
-      elf64_exe_brand_ok:
-        mov     [image_base],400000h
-        and     [image_base_high],0
-        cmp     byte [esi],80h
-        jne     elf64_exe_base_ok
-        lods    word [esi]
-        cmp     ah,'('
-        jne     invalid_argument
-        cmp     byte [esi],'.'
-        je      invalid_value
-        push    _edx
-        call    get_qword_value
-        cmp     [value_type],0
-        jne     invalid_use_of_symbol
-        mov     [image_base],eax
-        mov     [image_base_high],edx
-        pop     _edx
-      elf64_exe_base_ok:
-        mov     byte [edx+10h],2
-        mov     byte [edx+36h],38h
-        mov     ebx,edi
-        mov     ecx,38h shr 2
-        cmp     [current_pass],0
-        je      init_elf64_segments
-        imul    ecx,[number_of_sections]
-      init_elf64_segments:
-        xor     eax,eax
-        rep     stos dword [edi]
-        and     [number_of_sections],0
-        mov     byte [ebx],1
-        mov     word [ebx+30h],1000h
-        mov     byte [ebx+4],111b
-        push    _edx
-        mov     eax,edi
-        sub     eax,[code_start]
-        mov     [ebx+8],eax
-        xor     edx,edx
-        xor     cl,cl
-        add     eax,[image_base]
-        adc     edx,[image_base_high]
-        adc     cl,0
-        mov     [ebx+10h],eax
-        mov     [ebx+10h+4],edx
-        mov     [ebx+18h],eax
-        mov     [ebx+18h+4],edx
-        pop     _ebx
-        mov     [ebx+18h],eax
-        mov     [ebx+18h+4],edx
-        not     eax
-        not     edx
-        not     cl
-        add     eax,1
-        adc     edx,0
-        adc     cl,0
-        add     eax,edi
-        adc     edx,0
-        adc     cl,0
-        jmp     elf_exe_addressing_setup
-elf_entry:
-        lods    byte [esi]
-        cmp     al,'('
-        jne     invalid_argument
-        cmp     byte [esi],'.'
-        je      invalid_value
-        test    [format_flags],8
-        jnz     elf64_entry
-        call    get_dword_value
-        cmp     [value_type],0
-        jne     invalid_use_of_symbol
-        mov     edx,[code_start]
-        mov     [edx+18h],eax
-        jmp     instruction_assembled
-      elf64_entry:
-        call    get_qword_value
-        cmp     [value_type],0
-        jne     invalid_use_of_symbol
-        mov     ebx,[code_start]
-        mov     [ebx+18h],eax
-        mov     [ebx+1Ch],edx
-        jmp     instruction_assembled
-elf_segment:
-        bt      [format_flags],0
-        jnc     illegal_instruction
-        test    [format_flags],8
-        jnz     elf64_segment
-        call    close_elf_segment
-        push    _eax
-        call    create_addressing_space
-        mov     ebp,ebx
-        mov     ebx,[number_of_sections]
-        shl     ebx,5
-        add     ebx,[code_start]
-        add     ebx,34h
-        cmp     ebx,[symbols_stream]
-        jb      new_elf_segment
-        mov     ebx,[symbols_stream]
-        sub     ebx,20h
-        push    _edi
-        mov     edi,ebx
-        mov     ecx,20h shr 2
-        xor     eax,eax
-        rep     stos dword [edi]
-        pop     _edi
-        or      [next_pass_needed],-1
-      new_elf_segment:
-        mov     byte [ebx],1
-        mov     word [ebx+1Ch],1000h
-      elf_segment_flags:
-        cmp     byte [esi],1Eh
-        je      elf_segment_type
-        cmp     byte [esi],19h
-        jne     elf_segment_flags_ok
-        lods    word [esi]
-        sub     ah,28
-        jbe     invalid_argument
-        cmp     ah,1
-        je      mark_elf_segment_flag
-        cmp     ah,3
-        ja      invalid_argument
-        xor     ah,1
-        cmp     ah,2
-        je      mark_elf_segment_flag
-        inc     ah
-      mark_elf_segment_flag:
-        test    [ebx+18h],ah
-        jnz     setting_already_specified
-        or      [ebx+18h],ah
-        jmp     elf_segment_flags
-      elf_segment_type:
-        cmp     byte [ebx],1
-        jne     setting_already_specified
-        lods    word [esi]
-        mov     ecx,[number_of_sections]
-        jecxz   elf_segment_type_ok
-        mov     edx,[code_start]
-        add     edx,34h
-      scan_elf_segment_types:
-        cmp     edx,[symbols_stream]
-        jae     elf_segment_type_ok
-        cmp     [edx],ah
-        je      data_already_defined
-        add     edx,20h
-        loop    scan_elf_segment_types
-      elf_segment_type_ok:
-        mov     [ebx],ah
-        mov     word [ebx+1Ch],1
-        cmp     ah,50h
-        jb      elf_segment_flags
-        or      dword [ebx],6474E500h
-        jmp     elf_segment_flags
-      elf_segment_flags_ok:
-        mov     eax,edi
-        sub     eax,[code_start]
-        mov     [ebx+4],eax
-        pop     _edx
-        and     eax,0FFFh
-        add     edx,eax
-        mov     [ebx+8],edx
-        mov     [ebx+0Ch],edx
-        mov     eax,edx
-        xor     edx,edx
-        xor     cl,cl
-        not     eax
-        not     edx
-        not     cl
-        add     eax,1
-        adc     edx,0
-        adc     cl,0
-        add     eax,edi
-        adc     edx,0
-        adc     cl,0
-      elf_segment_addressing_setup:
-        mov     [ds:ebp],eax
-        mov     [ds:ebp+4],edx
-        mov     [ds:ebp+8],cl
-        inc     [number_of_sections]
-        jmp     instruction_assembled
-      close_elf_segment:
-        cmp     [number_of_sections],0
-        jne     finish_elf_segment
-        cmp     edi,[symbols_stream]
-        jne     first_elf_segment_ok
-        push    _edi
-        mov     edi,[code_start]
-        add     edi,34h
-        mov     ecx,20h shr 2
-        xor     eax,eax
-        rep     stos dword [edi]
-        pop     _edi
-        mov     eax,[image_base]
-        ret
-      first_elf_segment_ok:
-        inc     [number_of_sections]
-      finish_elf_segment:
-        mov     ebx,[number_of_sections]
-        dec     ebx
-        shl     ebx,5
-        add     ebx,[code_start]
-        add     ebx,34h
-        mov     eax,edi
-        sub     eax,[code_start]
-        sub     eax,[ebx+4]
-        mov     edx,edi
-        cmp     edi,[undefined_data_end]
-        jne     elf_segment_size_ok
-        mov     edi,[undefined_data_start]
-      elf_segment_size_ok:
-        mov     [ebx+14h],eax
-        add     eax,edi
-        sub     eax,edx
-        mov     [ebx+10h],eax
-        and     [undefined_data_end],0
-        mov     eax,[ebx+8]
-        cmp     byte [ebx],1
-        jne     elf_segment_position_ok
-        add     eax,[ebx+14h]
-        add     eax,0FFFh
-      elf_segment_position_ok:
-        and     eax,not 0FFFh
-        ret
-      elf64_segment:
-        call    close_elf64_segment
-        push    _eax _edx
-        call    create_addressing_space
-        mov     ebp,ebx
-        mov     ebx,[number_of_sections]
-        imul    ebx,38h
-        add     ebx,[code_start]
-        add     ebx,40h
-        cmp     ebx,[symbols_stream]
-        jb      new_elf64_segment
-        mov     ebx,[symbols_stream]
-        sub     ebx,38h
-        push    _edi
-        mov     edi,ebx
-        mov     ecx,38h shr 2
-        xor     eax,eax
-        rep     stos dword [edi]
-        pop     _edi
-        or      [next_pass_needed],-1
-      new_elf64_segment:
-        mov     byte [ebx],1
-        mov     word [ebx+30h],1000h
-      elf64_segment_flags:
-        cmp     byte [esi],1Eh
-        je      elf64_segment_type
-        cmp     byte [esi],19h
-        jne     elf64_segment_flags_ok
-        lods    word [esi]
-        sub     ah,28
-        jbe     invalid_argument
-        cmp     ah,1
-        je      mark_elf64_segment_flag
-        cmp     ah,3
-        ja      invalid_argument
-        xor     ah,1
-        cmp     ah,2
-        je      mark_elf64_segment_flag
-        inc     ah
-      mark_elf64_segment_flag:
-        test    [ebx+4],ah
-        jnz     setting_already_specified
-        or      [ebx+4],ah
-        jmp     elf64_segment_flags
-      elf64_segment_type:
-        cmp     byte [ebx],1
-        jne     setting_already_specified
-        lods    word [esi]
-        mov     ecx,[number_of_sections]
-        jecxz   elf64_segment_type_ok
-        mov     edx,[code_start]
-        add     edx,40h
-      scan_elf64_segment_types:
-        cmp     edx,[symbols_stream]
-        jae     elf64_segment_type_ok
-        cmp     [edx],ah
-        je      data_already_defined
-        add     edx,38h
-        loop    scan_elf64_segment_types
-      elf64_segment_type_ok:
-        mov     [ebx],ah
-        mov     word [ebx+30h],1
-        cmp     ah,50h
-        jb      elf64_segment_flags
-        or      dword [ebx],6474E500h
-        jmp     elf64_segment_flags
-      elf64_segment_flags_ok:
-        mov     ecx,edi
-        sub     ecx,[code_start]
-        mov     [ebx+8],ecx
-        pop     _edx _eax
-        and     ecx,0FFFh
-        add     eax,ecx
-        adc     edx,0
-        mov     [ebx+10h],eax
-        mov     [ebx+10h+4],edx
-        mov     [ebx+18h],eax
-        mov     [ebx+18h+4],edx
-        xor     cl,cl
-        not     eax
-        not     edx
-        not     cl
-        add     eax,1
-        adc     edx,0
-        adc     cl,0
-        add     eax,edi
-        adc     edx,0
-        adc     cl,0
-        jmp     elf_segment_addressing_setup
-      close_elf64_segment:
-        cmp     [number_of_sections],0
-        jne     finish_elf64_segment
-        cmp     edi,[symbols_stream]
-        jne     first_elf64_segment_ok
-        push    _edi
-        mov     edi,[code_start]
-        add     edi,40h
-        mov     ecx,38h shr 2
-        xor     eax,eax
-        rep     stos dword [edi]
-        pop     _edi
-        mov     eax,[image_base]
-        mov     edx,[image_base_high]
-        ret
-      first_elf64_segment_ok:
-        inc     [number_of_sections]
-      finish_elf64_segment:
-        mov     ebx,[number_of_sections]
-        dec     ebx
-        imul    ebx,38h
-        add     ebx,[code_start]
-        add     ebx,40h
-        mov     eax,edi
-        sub     eax,[code_start]
-        sub     eax,[ebx+8]
-        mov     edx,edi
-        cmp     edi,[undefined_data_end]
-        jne     elf64_segment_size_ok
-        mov     edi,[undefined_data_start]
-      elf64_segment_size_ok:
-        mov     [ebx+28h],eax
-        add     eax,edi
-        sub     eax,edx
-        mov     [ebx+20h],eax
-        and     [undefined_data_end],0
-        mov     eax,[ebx+10h]
-        mov     edx,[ebx+10h+4]
-        cmp     byte [ebx],1
-        jne     elf64_segment_position_ok
-        add     eax,[ebx+28h]
-        adc     edx,0
-        add     eax,0FFFh
-        adc     edx,0
-      elf64_segment_position_ok:
-        and     eax,not 0FFFh
-        ret
-close_elf_exe:
-        test    [format_flags],8
-        jnz     close_elf64_exe
-        call    close_elf_segment
-        mov     edx,[code_start]
-        mov     eax,[number_of_sections]
-        mov     byte [edx+1Ch],34h
-        mov     [edx+2Ch],ax
-        shl     eax,5
-        add     eax,edx
-        add     eax,34h
-        cmp     eax,[symbols_stream]
-        je      elf_exe_ok
-        or      [next_pass_needed],-1
-      elf_exe_ok:
-        ret
-      close_elf64_exe:
-        call    close_elf64_segment
-        mov     edx,[code_start]
-        mov     eax,[number_of_sections]
-        mov     byte [edx+20h],40h
-        mov     [edx+38h],ax
-        imul    eax,38h
-        add     eax,edx
-        add     eax,40h
-        cmp     eax,[symbols_stream]
-        je      elf64_exe_ok
-        or      [next_pass_needed],-1
-      elf64_exe_ok:
-        ret
-
+		
 simple_instruction_except64:
         cmp     [code_type],64
         je      illegal_instruction
@@ -23672,8 +21909,8 @@ avx_ss_instruction_3a_imm8_noevex:
 avx_sd_instruction_3a_imm8_noevex:
         mov     cl,8
         jmp     avx_instruction_3a_imm8_noevex
-avx_single_source_128bit_instruction_3a_imm8_noevex:
-        or      [operand_flags],2
+		ret
+		
 avx_128bit_instruction_3a_imm8_noevex:
         mov     cl,16
         jmp     avx_instruction_3a_imm8_noevex
@@ -24136,17 +22373,7 @@ kmov_instruction:
         jmp     kmov_with_reg
 avx512_pmov_m2_instruction_w1:
         or      [rex_prefix],8
-avx512_pmov_m2_instruction:
-        or      [vex_required],8
-        call    setup_f3_0f_38
-        call    take_avx_register
-        mov     [postbyte_register],al
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        call    take_mask_register
-        mov     bl,al
-        jmp     nomem_instruction_ready
+		
 avx512_pmov_2m_instruction_w1:
         or      [rex_prefix],8
 avx512_pmov_2m_instruction:
@@ -24538,151 +22765,7 @@ avx512_pmovwb_instruction:
         cmp     al,16
         jne     invalid_operand_size
         jmp     nomem_instruction_ready
-
-avx_broadcast_128_instruction_noevex:
-        or      [vex_required],2
-        mov     cl,10h
-        jmp     avx_broadcast_instruction
-avx512_broadcast_32x2_instruction:
-        mov     cl,08h
-        jmp     avx_broadcast_instruction_evex
-avx512_broadcast_32x4_instruction:
-        mov     cl,10h
-        jmp     avx_broadcast_instruction_evex
-avx512_broadcast_32x8_instruction:
-        mov     cl,20h
-        jmp     avx_broadcast_instruction_evex
-avx512_broadcast_64x2_instruction:
-        mov     cl,10h
-        jmp     avx_broadcast_instruction_w1_evex
-avx512_broadcast_64x4_instruction:
-        mov     cl,20h
-      avx_broadcast_instruction_w1_evex:
-        or      [rex_prefix],8
-      avx_broadcast_instruction_evex:
-        or      [vex_required],8
-        jmp     avx_broadcast_instruction
-avx_broadcastss_instruction:
-        mov     cl,4
-        jmp     avx_broadcast_instruction
-avx_broadcastsd_instruction:
-        or      [rex_prefix],80h
-        mov     cl,8
-        jmp     avx_broadcast_instruction
-avx_pbroadcastb_instruction:
-        mov     cl,1
-        jmp     avx_broadcast_pi_instruction
-avx_pbroadcastw_instruction:
-        mov     cl,2
-        jmp     avx_broadcast_pi_instruction
-avx_pbroadcastd_instruction:
-        mov     cl,4
-        jmp     avx_broadcast_pi_instruction
-avx_pbroadcastq_instruction:
-        mov     cl,8
-        or      [rex_prefix],80h
-      avx_broadcast_pi_instruction:
-        or      [operand_flags],40h
-      avx_broadcast_instruction:
-        mov     [opcode_prefix],66h
-        mov     [supplemental_code],al
-        mov     al,38h
-        mov     [mmx_size],cl
-        mov     [base_code],0Fh
-        mov     [extended_code],al
-        or      [vex_required],1
-        call    take_avx_register
-        cmp     ah,[mmx_size]
-        je      invalid_operand_size
-        test    [operand_flags],40h
-        jnz     avx_broadcast_destination_size_ok
-        cmp     [mmx_size],4
-        je      avx_broadcast_destination_size_ok
-        cmp     [supplemental_code],59h
-        je      avx_broadcast_destination_size_ok
-        cmp     ah,16
-        je      invalid_operand_size
-      avx_broadcast_destination_size_ok:
-        xor     ah,ah
-        xchg    ah,[operand_size]
-        push    _eax
-        call    take_avx512_mask
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        lods    byte [esi]
-        call    get_size_operator
-        cmp     al,10h
-        je      avx_broadcast_reg_reg
-        cmp     al,'['
-        jne     invalid_operand
-        call    get_address
-        pop     _eax
-        xchg    ah,[operand_size]
-        mov     [postbyte_register],al
-        mov     al,[broadcast_size]
-        mov     al,[mmx_size]
-        cmp     al,ah
-        je      instruction_ready
-        or      al,al
-        jz      instruction_ready
-        or      ah,ah
-        jz      instruction_ready
-        jmp     invalid_operand_size
-      avx_broadcast_reg_reg:
-        lods    byte [esi]
-        test    [operand_flags],40h
-        jz      avx_broadcast_reg_avx_reg
-        cmp     al,60h
-        jb      avx_broadcast_reg_general_reg
-        cmp     al,80h
-        jb      avx_broadcast_reg_avx_reg
-        cmp     al,0C0h
-        jb      avx_broadcast_reg_general_reg
-      avx_broadcast_reg_avx_reg:
-        call    convert_avx_register
-        mov     bl,al
-        mov     al,[mmx_size]
-        or      al,al
-        jz      avx_broadcast_reg_avx_reg_size_ok
-        cmp     ah,16
-        jne     invalid_operand_size
-        cmp     al,ah
-        jae     invalid_operand
-      avx_broadcast_reg_avx_reg_size_ok:
-        pop     _eax
-        xchg    ah,[operand_size]
-        mov     [postbyte_register],al
-        test    [vex_required],2
-        jnz     invalid_operand
-        jmp     nomem_instruction_ready
-      avx_broadcast_reg_general_reg:
-        call    convert_register
-        mov     bl,al
-        mov     al,[mmx_size]
-        or      al,al
-        jz      avx_broadcast_reg_general_reg_size_ok
-        cmp     al,ah
-        je      avx_broadcast_reg_general_reg_size_ok
-        ja      invalid_operand_size
-        cmp     ah,4
-        jne     invalid_operand_size
-      avx_broadcast_reg_general_reg_size_ok:
-        cmp     al,4
-        jb      avx_broadcast_reg_general_reg_ready
-        cmp     al,8
-        mov     al,3
-        jne     avx_broadcast_reg_general_reg_ready
-        or      [rex_prefix],8
-      avx_broadcast_reg_general_reg_ready:
-        add     al,7Ah-1
-        mov     [supplemental_code],al
-        or      [vex_required],8
-        pop     _eax
-        xchg    ah,[operand_size]
-        mov     [postbyte_register],al
-        jmp     nomem_instruction_ready
-
+		
 avx512_extract_64x4_instruction:
         or      [rex_prefix],8
 avx512_extract_32x8_instruction:
@@ -26388,7 +24471,6 @@ single_operand_operators:
  db 3,'bsf',0E0h
  db 3,'bsr',0E1h
  db 3,'not',0D0h
- db 3,'plt',0F1h
  db 3,'rva',0F0h
  db 0
 
@@ -26504,7 +24586,6 @@ symbols_3:
  db 'edx',10h,42h
  db 'efi',1Bh,10
  db 'eip',10h,94h
- db 'elf',18h,50h
  db 'esi',10h,46h
  db 'esp',10h,44h
  db 'far',12h,3
@@ -26570,7 +24651,6 @@ symbols_4:
  db 'bnd3',14h,63h
  db 'byte',11h,1
  db 'code',19h,5
- db 'coff',18h,40h
  db 'cr10',14h,0Ah
  db 'cr11',14h,0Bh
  db 'cr12',14h,0Ch
@@ -26586,7 +24666,6 @@ symbols_4:
  db 'dr15',14h,1Fh
  db 'ms64',1Ch,49h
  db 'near',12h,2
- db 'note',1Eh,4
  db 'pe64',18h,3Ch
  db 'r10b',10h,1Ah
  db 'r10d',10h,4Ah
@@ -26646,7 +24725,6 @@ symbols_4:
 symbols_5:
  db '1to16',1Fh,14h
  db 'dword',11h,4
- db 'elf64',18h,58h
  db 'fword',11h,6
  db 'large',1Bh,82h
  db 'pword',11h,6
@@ -26741,8 +24819,6 @@ symbols_7:
  db 'dynamic',1Eh,2
  db 'efiboot',1Bh,11
 symbols_8:
- db 'gnustack',1Eh,51h
- db 'linkinfo',19h,9
  db 'readable',19h,30
  db 'resource',1Ah,2
  db 'writable',19h,31
@@ -26752,11 +24828,8 @@ symbols_9:
 symbols_10:
  db 'efiruntime',1Bh,12
  db 'executable',19h,29
- db 'gnuehframe',1Eh,50h
- db 'linkremove',19h,11
 symbols_11:
  db 'discardable',19h,25
- db 'interpreter',1Eh,3
  db 'notpageable',19h,27
 symbols_end:
 
@@ -27020,10 +25093,6 @@ instructions_4:
  dw simple_instruction_32bit-instruction_handler
  db 'data',0
  dw data_directive-instruction_handler
- db 'dppd',41h
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'dpps',40h
- dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'else',0
  dw else_directive-instruction_handler
  db 'emms',77h
@@ -27232,8 +25301,6 @@ instructions_4:
  dw pm_word_instruction-instruction_handler
  db 'verw',5
  dw pm_word_instruction-instruction_handler
- db 'vpor',0EBh
- dw avx_pd_instruction_noevex-instruction_handler
  db 'wait',9Bh
  dw simple_instruction-instruction_handler
  db 'xadd',0C0h
@@ -27245,20 +25312,8 @@ instructions_4:
  db 'xlat',0D7h
  dw xlat_instruction-instruction_handler
 instructions_5:
- db 'addpd',58h
- dw sse_pd_instruction-instruction_handler
- db 'addps',58h
- dw sse_ps_instruction-instruction_handler
- db 'addsd',58h
- dw sse_sd_instruction-instruction_handler
- db 'addss',58h
- dw sse_ss_instruction-instruction_handler
  db 'align',0
  dw align_directive-instruction_handler
- db 'andpd',54h
- dw sse_pd_instruction-instruction_handler
- db 'andps',54h
- dw sse_ps_instruction-instruction_handler
  db 'bextr',0F7h
  dw bextr_instruction-instruction_handler
  db 'blcic',15h
@@ -27317,20 +25372,12 @@ instructions_5:
  dw simple_extended_instruction-instruction_handler
  db 'crc32',0
  dw crc32_instruction-instruction_handler
- db 'divpd',5Eh
- dw sse_pd_instruction-instruction_handler
- db 'divps',5Eh
- dw sse_ps_instruction-instruction_handler
- db 'divsd',5Eh
- dw sse_sd_instruction-instruction_handler
  db 'divss',5Eh
  dw sse_ss_instruction-instruction_handler
  db 'enter',0
  dw enter_instruction-instruction_handler
  db 'entry',0
  dw entry_directive-instruction_handler
- db 'extrn',0
- dw extrn_directive-instruction_handler
  db 'extrq',0
  dw extrq_instruction-instruction_handler
  db 'f2xm1',110000b
@@ -27477,22 +25524,6 @@ instructions_5:
  dw loop_instruction-instruction_handler
  db 'lzcnt',0BDh
  dw popcnt_instruction-instruction_handler
- db 'maxpd',5Fh
- dw sse_pd_instruction-instruction_handler
- db 'maxps',5Fh
- dw sse_ps_instruction-instruction_handler
- db 'maxsd',5Fh
- dw sse_sd_instruction-instruction_handler
- db 'maxss',5Fh
- dw sse_ss_instruction-instruction_handler
- db 'minpd',5Dh
- dw sse_pd_instruction-instruction_handler
- db 'minps',5Dh
- dw sse_ps_instruction-instruction_handler
- db 'minsd',5Dh
- dw sse_sd_instruction-instruction_handler
- db 'minss',5Dh
- dw sse_ss_instruction-instruction_handler
  db 'movbe',0F0h
  dw movbe_instruction-instruction_handler
  db 'movsb',0A4h
@@ -27509,10 +25540,6 @@ instructions_5:
  dw movx_instruction-instruction_handler
  db 'movzx',0B6h
  dw movx_instruction-instruction_handler
- db 'mulpd',59h
- dw sse_pd_instruction-instruction_handler
- db 'mulps',59h
- dw sse_ps_instruction-instruction_handler
  db 'mulsd',59h
  dw sse_sd_instruction-instruction_handler
  db 'mulss',59h
@@ -27525,12 +25552,6 @@ instructions_5:
  dw simple_instruction_32bit-instruction_handler
  db 'outsw',6Fh
  dw simple_instruction_16bit-instruction_handler
- db 'pabsb',1Ch
- dw ssse3_instruction-instruction_handler
- db 'pabsd',1Eh
- dw ssse3_instruction-instruction_handler
- db 'pabsw',1Dh
- dw ssse3_instruction-instruction_handler
  db 'paddb',0FCh
  dw basic_mmx_instruction-instruction_handler
  db 'paddd',0FEh
@@ -27547,28 +25568,6 @@ instructions_5:
  dw basic_mmx_instruction-instruction_handler
  db 'pavgw',0E3h
  dw basic_mmx_instruction-instruction_handler
- db 'pf2id',1Dh
- dw amd3dnow_instruction-instruction_handler
- db 'pf2iw',1Ch
- dw amd3dnow_instruction-instruction_handler
- db 'pfacc',0AEh
- dw amd3dnow_instruction-instruction_handler
- db 'pfadd',9Eh
- dw amd3dnow_instruction-instruction_handler
- db 'pfmax',0A4h
- dw amd3dnow_instruction-instruction_handler
- db 'pfmin',94h
- dw amd3dnow_instruction-instruction_handler
- db 'pfmul',0B4h
- dw amd3dnow_instruction-instruction_handler
- db 'pfrcp',96h
- dw amd3dnow_instruction-instruction_handler
- db 'pfsub',9Ah
- dw amd3dnow_instruction-instruction_handler
- db 'pi2fd',0Dh
- dw amd3dnow_instruction-instruction_handler
- db 'pi2fw',0Ch
- dw amd3dnow_instruction-instruction_handler
  db 'popad',61h
  dw simple_instruction_32bit_except64-instruction_handler
  db 'popaw',61h
@@ -27603,8 +25602,6 @@ instructions_5:
  dw basic_mmx_instruction-instruction_handler
  db 'psubw',0F9h
  dw basic_mmx_instruction-instruction_handler
- db 'ptest',17h
- dw sse4_instruction_66_38-instruction_handler
  db 'pusha',60h
  dw simple_instruction_except64-instruction_handler
  db 'pushd',4
@@ -27615,10 +25612,6 @@ instructions_5:
  dw push_instruction-instruction_handler
  db 'pushw',2
  dw push_instruction-instruction_handler
- db 'rcpps',53h
- dw sse_ps_instruction-instruction_handler
- db 'rcpss',53h
- dw sse_ss_instruction-instruction_handler
  db 'rdmsr',32h
  dw simple_extended_instruction-instruction_handler
  db 'rdpid',7
@@ -27695,44 +25688,16 @@ instructions_5:
  dw simple_instruction_64bit-instruction_handler
  db 'stosw',0ABh
  dw simple_instruction_16bit-instruction_handler
- db 'subpd',5Ch
- dw sse_pd_instruction-instruction_handler
- db 'subps',5Ch
- dw sse_ps_instruction-instruction_handler
- db 'subsd',5Ch
- dw sse_sd_instruction-instruction_handler
- db 'subss',5Ch
- dw sse_ss_instruction-instruction_handler
  db 'times',0
  dw times_directive-instruction_handler
  db 'tzcnt',0BCh
  dw popcnt_instruction-instruction_handler
  db 'tzmsk',14h
  dw tbm_instruction-instruction_handler
- db 'vdppd',41h
- dw avx_128bit_instruction_3a_imm8_noevex-instruction_handler
- db 'vdpps',40h
- dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
- db 'vmovd',0
- dw avx_movd_instruction-instruction_handler
- db 'vmovq',0
- dw avx_movq_instruction-instruction_handler
  db 'vmrun',0D8h
  dw simple_svm_instruction-instruction_handler
  db 'vmxon',6
  dw vmxon_instruction-instruction_handler
- db 'vorpd',56h
- dw avx_pd_instruction-instruction_handler
- db 'vorps',56h
- dw avx_ps_instruction-instruction_handler
- db 'vpand',0DBh
- dw avx_pd_instruction_noevex-instruction_handler
- db 'vpord',0EBh
- dw avx_d_instruction_evex-instruction_handler
- db 'vporq',0EBh
- dw avx_q_instruction_evex-instruction_handler
- db 'vpxor',0EFh
- dw avx_pd_instruction_noevex-instruction_handler
  db 'while',0
  dw while_directive-instruction_handler
  db 'wrmsr',30h
@@ -27748,12 +25713,6 @@ instructions_5:
  db 'xtest',0D6h
  dw simple_instruction_0f_01-instruction_handler
 instructions_6:
- db 'aesdec',0DEh
- dw sse4_instruction_66_38-instruction_handler
- db 'aesenc',0DCh
- dw sse4_instruction_66_38-instruction_handler
- db 'aesimc',0DBh
- dw sse4_instruction_66_38-instruction_handler
  db 'andnpd',55h
  dw sse_pd_instruction-instruction_handler
  db 'andnps',55h
@@ -27984,18 +25943,6 @@ instructions_6:
  dw pextrq_instruction-instruction_handler
  db 'pextrw',15h
  dw pextrw_instruction-instruction_handler
- db 'pfnacc',8Ah
- dw amd3dnow_instruction-instruction_handler
- db 'pfsubr',0AAh
- dw amd3dnow_instruction-instruction_handler
- db 'phaddd',2
- dw ssse3_instruction-instruction_handler
- db 'phaddw',1
- dw ssse3_instruction-instruction_handler
- db 'phsubd',6
- dw ssse3_instruction-instruction_handler
- db 'phsubw',5
- dw ssse3_instruction-instruction_handler
  db 'pinsrb',20h
  dw pinsrb_instruction-instruction_handler
  db 'pinsrd',22h
@@ -28004,54 +25951,24 @@ instructions_6:
  dw pinsrq_instruction-instruction_handler
  db 'pinsrw',0C4h
  dw pinsrw_instruction-instruction_handler
- db 'pmaxsb',3Ch
- dw sse4_instruction_66_38-instruction_handler
- db 'pmaxsd',3Dh
- dw sse4_instruction_66_38-instruction_handler
  db 'pmaxsw',0EEh
  dw basic_mmx_instruction-instruction_handler
  db 'pmaxub',0DEh
  dw basic_mmx_instruction-instruction_handler
- db 'pmaxud',3Fh
- dw sse4_instruction_66_38-instruction_handler
- db 'pmaxuw',3Eh
- dw sse4_instruction_66_38-instruction_handler
- db 'pminsb',38h
- dw sse4_instruction_66_38-instruction_handler
- db 'pminsd',39h
- dw sse4_instruction_66_38-instruction_handler
  db 'pminsw',0EAh
  dw basic_mmx_instruction-instruction_handler
  db 'pminub',0DAh
  dw basic_mmx_instruction-instruction_handler
- db 'pminud',3Bh
- dw sse4_instruction_66_38-instruction_handler
- db 'pminuw',3Ah
- dw sse4_instruction_66_38-instruction_handler
- db 'pmuldq',28h
- dw sse4_instruction_66_38-instruction_handler
  db 'pmulhw',0E5h
  dw basic_mmx_instruction-instruction_handler
- db 'pmulld',40h
- dw sse4_instruction_66_38-instruction_handler
  db 'pmullw',0D5h
  dw basic_mmx_instruction-instruction_handler
  db 'popcnt',0B8h
  dw popcnt_instruction-instruction_handler
- db 'psadbw',0F6h
- dw basic_mmx_instruction-instruction_handler
- db 'pshufb',0
- dw ssse3_instruction-instruction_handler
  db 'pshufd',66h
  dw pshufd_instruction-instruction_handler
  db 'pshufw',0
  dw pshufw_instruction-instruction_handler
- db 'psignb',8
- dw ssse3_instruction-instruction_handler
- db 'psignd',0Ah
- dw ssse3_instruction-instruction_handler
- db 'psignw',9
- dw ssse3_instruction-instruction_handler
  db 'pslldq',111b
  dw pslldq_instruction-instruction_handler
  db 'psrldq',011b
@@ -28062,8 +25979,6 @@ instructions_6:
  dw basic_mmx_instruction-instruction_handler
  db 'pswapd',0BBh
  dw amd3dnow_instruction-instruction_handler
- db 'public',0
- dw public_directive-instruction_handler
  db 'pushad',60h
  dw simple_instruction_32bit_except64-instruction_handler
  db 'pushaw',60h
@@ -28106,152 +26021,26 @@ instructions_6:
  dw skinit_instruction-instruction_handler
  db 'slwpcb',1
  dw llwpcb_instruction-instruction_handler
- db 'sqrtpd',51h
- dw sse_pd_instruction-instruction_handler
- db 'sqrtps',51h
- dw sse_ps_instruction-instruction_handler
- db 'sqrtsd',51h
- dw sse_sd_instruction-instruction_handler
- db 'sqrtss',51h
- dw sse_ss_instruction-instruction_handler
  db 'swapgs',0F8h
  dw swapgs_instruction-instruction_handler
  db 'sysret',07h
  dw simple_extended_instruction-instruction_handler
  db 't1mskc',17h
  dw tbm_instruction-instruction_handler
- db 'vaddpd',58h
- dw avx_pd_instruction_er-instruction_handler
- db 'vaddps',58h
- dw avx_ps_instruction_er-instruction_handler
- db 'vaddsd',58h
- dw avx_sd_instruction_er-instruction_handler
- db 'vaddss',58h
- dw avx_ss_instruction_er-instruction_handler
- db 'vandpd',54h
- dw avx_pd_instruction-instruction_handler
- db 'vandps',54h
- dw avx_ps_instruction-instruction_handler
- db 'vcmppd',-1
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpps',-1
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpsd',-1
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpss',-1
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vdivpd',5Eh
- dw avx_pd_instruction_er-instruction_handler
- db 'vdivps',5Eh
- dw avx_ps_instruction_er-instruction_handler
- db 'vdivsd',5Eh
- dw avx_sd_instruction_er-instruction_handler
- db 'vdivss',5Eh
- dw avx_ss_instruction_er-instruction_handler
- db 'vlddqu',0F0h
- dw avx_lddqu_instruction-instruction_handler
- db 'vmaxpd',5Fh
- dw avx_pd_instruction_sae-instruction_handler
- db 'vmaxps',5Fh
- dw avx_ps_instruction_sae-instruction_handler
- db 'vmaxsd',5Fh
- dw avx_sd_instruction_sae-instruction_handler
- db 'vmaxss',5Fh
- dw avx_ss_instruction_sae-instruction_handler
  db 'vmcall',0C1h
  dw simple_instruction_0f_01-instruction_handler
  db 'vmfunc',0D4h
  dw simple_instruction_0f_01-instruction_handler
- db 'vminpd',5Dh
- dw avx_pd_instruction_sae-instruction_handler
- db 'vminps',5Dh
- dw avx_ps_instruction_sae-instruction_handler
- db 'vminsd',5Dh
- dw avx_sd_instruction_sae-instruction_handler
- db 'vminss',5Dh
- dw avx_ss_instruction_sae-instruction_handler
  db 'vmload',0DAh
  dw simple_svm_instruction-instruction_handler
- db 'vmovsd',0
- dw avx_movsd_instruction-instruction_handler
- db 'vmovss',0
- dw avx_movss_instruction-instruction_handler
  db 'vmread',0
  dw vmread_instruction-instruction_handler
  db 'vmsave',0DBh
  dw simple_svm_instruction-instruction_handler
- db 'vmulpd',59h
- dw avx_pd_instruction_er-instruction_handler
- db 'vmulps',59h
- dw avx_ps_instruction_er-instruction_handler
- db 'vmulsd',59h
- dw avx_sd_instruction_er-instruction_handler
- db 'vmulss',59h
- dw avx_ss_instruction_er-instruction_handler
  db 'vmxoff',0C4h
  dw simple_instruction_0f_01-instruction_handler
- db 'vpabsb',1Ch
- dw avx_single_source_bw_instruction_38-instruction_handler
- db 'vpabsd',1Eh
- dw avx_single_source_d_instruction_38-instruction_handler
- db 'vpabsq',1Fh
- dw avx_single_source_q_instruction_38_evex-instruction_handler
- db 'vpabsw',1Dh
- dw avx_single_source_bw_instruction_38-instruction_handler
- db 'vpaddb',0FCh
- dw avx_bw_instruction-instruction_handler
- db 'vpaddd',0FEh
- dw avx_d_instruction-instruction_handler
- db 'vpaddq',0D4h
- dw avx_q_instruction-instruction_handler
- db 'vpaddw',0FDh
- dw avx_bw_instruction-instruction_handler
- db 'vpandd',0DBh
- dw avx_d_instruction_evex-instruction_handler
- db 'vpandn',0DFh
- dw avx_pd_instruction_noevex-instruction_handler
- db 'vpandq',0DBh
- dw avx_q_instruction_evex-instruction_handler
- db 'vpavgb',0E0h
- dw avx_bw_instruction-instruction_handler
- db 'vpavgw',0E3h
- dw avx_bw_instruction-instruction_handler
  db 'vpcmov',0A2h
  dw vpcmov_instruction-instruction_handler
- db 'vpcmpb',-1
- dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpd',-1
- dw avx512_cmp_d_instruction-instruction_handler
- db 'vpcmpq',-1
- dw avx512_cmp_q_instruction-instruction_handler
- db 'vpcmpw',-1
- dw avx512_cmp_w_instruction-instruction_handler
- db 'vpcomb',-1
- dw xop_pcom_b_instruction-instruction_handler
- db 'vpcomd',-1
- dw xop_pcom_d_instruction-instruction_handler
- db 'vpcomq',-1
- dw xop_pcom_q_instruction-instruction_handler
- db 'vpcomw',-1
- dw xop_pcom_w_instruction-instruction_handler
- db 'vpermb',8Dh
- dw avx_bw_instruction_38_evex-instruction_handler
- db 'vpermd',36h
- dw avx_permd_instruction-instruction_handler
- db 'vpermq',0
- dw avx_permq_instruction-instruction_handler
- db 'vpermw',8Dh
- dw avx_bw_instruction_38_w1_evex-instruction_handler
- db 'vpperm',0A3h
- dw xop_128bit_instruction-instruction_handler
- db 'vprold',1
- dw avx512_rotate_d_instruction-instruction_handler
- db 'vprolq',1
- dw avx512_rotate_q_instruction-instruction_handler
- db 'vprord',0
- dw avx512_rotate_d_instruction-instruction_handler
- db 'vprorq',0
- dw avx512_rotate_q_instruction-instruction_handler
  db 'vprotb',90h
  dw xop_shift_instruction-instruction_handler
  db 'vprotd',92h
@@ -28276,54 +26065,6 @@ instructions_6:
  dw xop_shift_instruction-instruction_handler
  db 'vpshlw',95h
  dw xop_shift_instruction-instruction_handler
- db 'vpslld',0F2h
- dw avx_shift_d_instruction-instruction_handler
- db 'vpsllq',0F3h
- dw avx_shift_q_instruction-instruction_handler
- db 'vpsllw',0F1h
- dw avx_shift_bw_instruction-instruction_handler
- db 'vpsrad',0E2h
- dw avx_shift_d_instruction-instruction_handler
- db 'vpsraq',0E2h
- dw avx_shift_q_instruction_evex-instruction_handler
- db 'vpsraw',0E1h
- dw avx_shift_bw_instruction-instruction_handler
- db 'vpsrld',0D2h
- dw avx_shift_d_instruction-instruction_handler
- db 'vpsrlq',0D3h
- dw avx_shift_q_instruction-instruction_handler
- db 'vpsrlw',0D1h
- dw avx_shift_bw_instruction-instruction_handler
- db 'vpsubb',0F8h
- dw avx_bw_instruction-instruction_handler
- db 'vpsubd',0FAh
- dw avx_d_instruction-instruction_handler
- db 'vpsubq',0FBh
- dw avx_q_instruction-instruction_handler
- db 'vpsubw',0F9h
- dw avx_bw_instruction-instruction_handler
- db 'vptest',17h
- dw avx_single_source_instruction_38_noevex-instruction_handler
- db 'vpxord',0EFh
- dw avx_d_instruction_evex-instruction_handler
- db 'vpxorq',0EFh
- dw avx_q_instruction_evex-instruction_handler
- db 'vrcpps',53h
- dw avx_single_source_ps_instruction_noevex-instruction_handler
- db 'vrcpss',53h
- dw avx_ss_instruction_noevex-instruction_handler
- db 'vsubpd',5Ch
- dw avx_pd_instruction_er-instruction_handler
- db 'vsubps',5Ch
- dw avx_ps_instruction_er-instruction_handler
- db 'vsubsd',5Ch
- dw avx_sd_instruction_er-instruction_handler
- db 'vsubss',5Ch
- dw avx_ss_instruction_er-instruction_handler
- db 'vxorpd',57h
- dw avx_pd_instruction-instruction_handler
- db 'vxorps',57h
- dw avx_ps_instruction-instruction_handler
  db 'wbinvd',9
  dw simple_extended_instruction-instruction_handler
  db 'wrmsrq',30h
@@ -28347,10 +26088,6 @@ instructions_6:
 instructions_7:
  db 'blcfill',11h
  dw tbm_instruction-instruction_handler
- db 'blendpd',0Dh
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'blendps',0Ch
- dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'blsfill',12h
  dw tbm_instruction-instruction_handler
  db 'clflush',111b
@@ -28479,8 +26216,6 @@ instructions_7:
  dw movntss_instruction-instruction_handler
  db 'movq2dq',0
  dw movq2dq_instruction-instruction_handler
- db 'mpsadbw',42h
- dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'paddusb',0DCh
  dw basic_mmx_instruction-instruction_handler
  db 'paddusw',0DDh
@@ -28489,40 +26224,20 @@ instructions_7:
  dw palignr_instruction-instruction_handler
  db 'pavgusb',0BFh
  dw amd3dnow_instruction-instruction_handler
- db 'pblendw',0Eh
- dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'pcmpeqb',74h
  dw basic_mmx_instruction-instruction_handler
  db 'pcmpeqd',76h
  dw basic_mmx_instruction-instruction_handler
- db 'pcmpeqq',29h
- dw sse4_instruction_66_38-instruction_handler
  db 'pcmpeqw',75h
  dw basic_mmx_instruction-instruction_handler
  db 'pcmpgtb',64h
  dw basic_mmx_instruction-instruction_handler
  db 'pcmpgtd',66h
  dw basic_mmx_instruction-instruction_handler
- db 'pcmpgtq',37h
- dw sse4_instruction_66_38-instruction_handler
  db 'pcmpgtw',65h
  dw basic_mmx_instruction-instruction_handler
  db 'pcommit',0F8h
  dw pcommit_instruction-instruction_handler
- db 'pfcmpeq',0B0h
- dw amd3dnow_instruction-instruction_handler
- db 'pfcmpge',90h
- dw amd3dnow_instruction-instruction_handler
- db 'pfcmpgt',0A0h
- dw amd3dnow_instruction-instruction_handler
- db 'pfpnacc',8Eh
- dw amd3dnow_instruction-instruction_handler
- db 'pfrsqrt',97h
- dw amd3dnow_instruction-instruction_handler
- db 'phaddsw',3
- dw ssse3_instruction-instruction_handler
- db 'phsubsw',7
- dw ssse3_instruction-instruction_handler
  db 'pmaddwd',0F5h
  dw basic_mmx_instruction-instruction_handler
  db 'pmulhrw',0B7h
@@ -28539,22 +26254,8 @@ instructions_7:
  dw basic_mmx_instruction-instruction_handler
  db 'psubusw',0D9h
  dw basic_mmx_instruction-instruction_handler
- db 'roundpd',9
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'roundps',8
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'roundsd',0Bh
- dw sse4_sd_instruction_66_3a_imm8-instruction_handler
- db 'roundss',0Ah
- dw sse4_ss_instruction_66_3a_imm8-instruction_handler
- db 'rsqrtps',52h
- dw sse_ps_instruction-instruction_handler
- db 'rsqrtss',52h
- dw sse_ss_instruction-instruction_handler
  db 'section',0
  dw section_directive-instruction_handler
- db 'segment',0
- dw segment_directive-instruction_handler
  db 'stmxcsr',11b
  dw stmxcsr_instruction-instruction_handler
  db 'syscall',05h
@@ -28567,28 +26268,6 @@ instructions_7:
  dw comisd_instruction-instruction_handler
  db 'ucomiss',2Eh
  dw comiss_instruction-instruction_handler
- db 'vaesdec',0DEh
- dw avx_128bit_instruction_38_noevex-instruction_handler
- db 'vaesenc',0DCh
- dw avx_128bit_instruction_38_noevex-instruction_handler
- db 'vaesimc',0DBh
- dw avx_single_source_128bit_instruction_38_noevex-instruction_handler
- db 'valignd',3
- dw avx_d_instruction_3a_imm8_evex-instruction_handler
- db 'valignq',3
- dw avx_q_instruction_3a_imm8_evex-instruction_handler
- db 'vandnpd',55h
- dw avx_pd_instruction-instruction_handler
- db 'vandnps',55h
- dw avx_ps_instruction-instruction_handler
- db 'vcomisd',2Fh
- dw avx_comisd_instruction-instruction_handler
- db 'vcomiss',2Fh
- dw avx_comiss_instruction-instruction_handler
- db 'vexp2pd',0C8h
- dw avx512_exp2pd_instruction-instruction_handler
- db 'vexp2ps',0C8h
- dw avx512_exp2ps_instruction-instruction_handler
  db 'vfrczpd',81h
  dw xop_single_source_instruction-instruction_handler
  db 'vfrczps',80h
@@ -28597,62 +26276,18 @@ instructions_7:
  dw xop_single_source_sd_instruction-instruction_handler
  db 'vfrczss',82h
  dw xop_single_source_ss_instruction-instruction_handler
- db 'vhaddpd',07Ch
- dw avx_pd_instruction_noevex-instruction_handler
- db 'vhaddps',07Ch
- dw avx_ps_instruction_noevex-instruction_handler
- db 'vhsubpd',07Dh
- dw avx_pd_instruction_noevex-instruction_handler
- db 'vhsubps',07Dh
- dw avx_ps_instruction_noevex-instruction_handler
  db 'virtual',0
  dw virtual_directive-instruction_handler
  db 'vmclear',6
  dw vmclear_instruction-instruction_handler
  db 'vmmcall',0D9h
  dw simple_instruction_0f_01-instruction_handler
- db 'vmovapd',28h
- dw avx_movpd_instruction-instruction_handler
- db 'vmovaps',28h
- dw avx_movps_instruction-instruction_handler
- db 'vmovdqa',6Fh
- dw avx_movdqa_instruction-instruction_handler
- db 'vmovdqu',6Fh
- dw avx_movdqu_instruction-instruction_handler
- db 'vmovhpd',16h
- dw avx_movlpd_instruction-instruction_handler
- db 'vmovhps',16h
- dw avx_movlps_instruction-instruction_handler
- db 'vmovlpd',12h
- dw avx_movlpd_instruction-instruction_handler
- db 'vmovlps',12h
- dw avx_movlps_instruction-instruction_handler
- db 'vmovupd',10h
- dw avx_movpd_instruction-instruction_handler
- db 'vmovups',10h
- dw avx_movps_instruction-instruction_handler
  db 'vmptrld',6
  dw vmx_instruction-instruction_handler
  db 'vmptrst',7
  dw vmx_instruction-instruction_handler
  db 'vmwrite',0
  dw vmwrite_instruction-instruction_handler
- db 'vpaddsb',0ECh
- dw avx_bw_instruction-instruction_handler
- db 'vpaddsw',0EDh
- dw avx_bw_instruction-instruction_handler
- db 'vpandnd',0DFh
- dw avx_d_instruction_evex-instruction_handler
- db 'vpandnq',0DFh
- dw avx_q_instruction_evex-instruction_handler
- db 'vpcmpub',-1
- dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpud',-1
- dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpuq',-1
- dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpuw',-1
- dw avx512_cmp_uw_instruction-instruction_handler
  db 'vpcomub',-1
  dw xop_pcom_ub_instruction-instruction_handler
  db 'vpcomud',-1
@@ -28661,227 +26296,11 @@ instructions_7:
  dw xop_pcom_uq_instruction-instruction_handler
  db 'vpcomuw',-1
  dw xop_pcom_uw_instruction-instruction_handler
- db 'vpermpd',1
- dw avx_permq_instruction-instruction_handler
- db 'vpermps',16h
- dw avx_permd_instruction-instruction_handler
- db 'vpextrb',14h
- dw avx_extract_b_instruction-instruction_handler
- db 'vpextrd',16h
- dw avx_extract_d_instruction-instruction_handler
- db 'vpextrq',16h
- dw avx_extract_q_instruction-instruction_handler
- db 'vpextrw',15h
- dw avx_extract_w_instruction-instruction_handler
- db 'vphaddd',2
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vphaddw',1
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vphsubd',6
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vphsubw',5
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vpinsrb',20h
- dw avx_pinsrb_instruction-instruction_handler
- db 'vpinsrd',22h
- dw avx_pinsrd_instruction-instruction_handler
- db 'vpinsrq',22h
- dw avx_pinsrq_instruction-instruction_handler
- db 'vpinsrw',0C4h
- dw avx_pinsrw_instruction-instruction_handler
- db 'vpmaxsb',3Ch
- dw avx_bw_instruction_38-instruction_handler
- db 'vpmaxsd',3Dh
- dw avx_d_instruction_38-instruction_handler
- db 'vpmaxsq',3Dh
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpmaxsw',0EEh
- dw avx_bw_instruction-instruction_handler
- db 'vpmaxub',0DEh
- dw avx_bw_instruction-instruction_handler
- db 'vpmaxud',3Fh
- dw avx_d_instruction_38-instruction_handler
- db 'vpmaxuq',3Fh
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpmaxuw',3Eh
- dw avx_bw_instruction_38-instruction_handler
- db 'vpminsb',38h
- dw avx_bw_instruction_38-instruction_handler
- db 'vpminsd',39h
- dw avx_d_instruction_38-instruction_handler
- db 'vpminsq',39h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpminsw',0EAh
- dw avx_bw_instruction-instruction_handler
- db 'vpminub',0DAh
- dw avx_bw_instruction-instruction_handler
- db 'vpminud',3Bh
- dw avx_d_instruction_38-instruction_handler
- db 'vpminuq',3Bh
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpminuw',3Ah
- dw avx_bw_instruction_38-instruction_handler
- db 'vpmovdb',31h
- dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovdw',33h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovqb',32h
- dw avx512_pmovqb_instruction-instruction_handler
- db 'vpmovqd',35h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovqw',34h
- dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovwb',30h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmuldq',28h
- dw avx_q_instruction_38-instruction_handler
- db 'vpmulhw',0E5h
- dw avx_bw_instruction-instruction_handler
- db 'vpmulld',40h
- dw avx_d_instruction_38-instruction_handler
- db 'vpmullq',40h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpmullw',0D5h
- dw avx_bw_instruction-instruction_handler
- db 'vprolvd',15h
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vprolvq',15h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vprorvd',14h
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vprorvq',14h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpsadbw',0F6h
- dw avx_bw_instruction-instruction_handler
- db 'vpshufb',0
- dw avx_bw_instruction_38-instruction_handler
- db 'vpshufd',70h
- dw avx_single_source_d_instruction_imm8-instruction_handler
- db 'vpsignb',8
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vpsignd',0Ah
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vpsignw',9
- dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vpslldq',111b
- dw avx_shift_dq_instruction-instruction_handler
- db 'vpsllvd',47h
- dw avx_d_instruction_38-instruction_handler
- db 'vpsllvq',47h
- dw avx_q_instruction_38_w1-instruction_handler
- db 'vpsllvw',12h
- dw avx_bw_instruction_38_w1_evex-instruction_handler
- db 'vpsravd',46h
- dw avx_d_instruction_38-instruction_handler
- db 'vpsravq',46h
- dw avx_q_instruction_38_w1_evex-instruction_handler
- db 'vpsravw',11h
- dw avx_bw_instruction_38_w1_evex-instruction_handler
- db 'vpsrldq',011b
- dw avx_shift_dq_instruction-instruction_handler
- db 'vpsrlvd',45h
- dw avx_d_instruction_38-instruction_handler
- db 'vpsrlvq',45h
- dw avx_q_instruction_38_w1-instruction_handler
- db 'vpsrlvw',10h
- dw avx_bw_instruction_38_w1_evex-instruction_handler
- db 'vpsubsb',0E8h
- dw avx_bw_instruction-instruction_handler
- db 'vpsubsw',0E9h
- dw avx_bw_instruction-instruction_handler
- db 'vshufpd',0C6h
- dw avx_pd_instruction_imm8-instruction_handler
- db 'vshufps',0C6h
- dw avx_ps_instruction_imm8-instruction_handler
- db 'vsqrtpd',51h
- dw avx_single_source_pd_instruction_er-instruction_handler
- db 'vsqrtps',51h
- dw avx_single_source_ps_instruction_er-instruction_handler
- db 'vsqrtsd',51h
- dw avx_sd_instruction_er-instruction_handler
- db 'vsqrtss',51h
- dw avx_ss_instruction_er-instruction_handler
- db 'vtestpd',0Fh
- dw avx_single_source_instruction_38_noevex-instruction_handler
- db 'vtestps',0Eh
- dw avx_single_source_instruction_38_noevex-instruction_handler
  db 'xrstors',3
  dw xsaves_instruction-instruction_handler
  db 'xsave64',100b
  dw fxsave_instruction_64bit-instruction_handler
 instructions_8:
- db 'addsubpd',0D0h
- dw sse_pd_instruction-instruction_handler
- db 'addsubps',0D0h
- dw cvtpd2dq_instruction-instruction_handler
- db 'blendvpd',15h
- dw sse4_instruction_66_38_xmm0-instruction_handler
- db 'blendvps',14h
- dw sse4_instruction_66_38_xmm0-instruction_handler
- db 'cmpneqpd',4
- dw cmp_pd_instruction-instruction_handler
- db 'cmpneqps',4
- dw cmp_ps_instruction-instruction_handler
- db 'cmpneqsd',4
- dw cmp_sd_instruction-instruction_handler
- db 'cmpneqss',4
- dw cmp_ss_instruction-instruction_handler
- db 'cmpnlepd',6
- dw cmp_pd_instruction-instruction_handler
- db 'cmpnleps',6
- dw cmp_ps_instruction-instruction_handler
- db 'cmpnlesd',6
- dw cmp_sd_instruction-instruction_handler
- db 'cmpnless',6
- dw cmp_ss_instruction-instruction_handler
- db 'cmpnltpd',5
- dw cmp_pd_instruction-instruction_handler
- db 'cmpnltps',5
- dw cmp_ps_instruction-instruction_handler
- db 'cmpnltsd',5
- dw cmp_sd_instruction-instruction_handler
- db 'cmpnltss',5
- dw cmp_ss_instruction-instruction_handler
- db 'cmpordpd',7
- dw cmp_pd_instruction-instruction_handler
- db 'cmpordps',7
- dw cmp_ps_instruction-instruction_handler
- db 'cmpordsd',7
- dw cmp_sd_instruction-instruction_handler
- db 'cmpordss',7
- dw cmp_ss_instruction-instruction_handler
- db 'cvtdq2pd',0E6h
- dw cvtdq2pd_instruction-instruction_handler
- db 'cvtdq2ps',5Bh
- dw sse_ps_instruction-instruction_handler
- db 'cvtpd2dq',0E6h
- dw cvtpd2dq_instruction-instruction_handler
- db 'cvtpd2pi',2Dh
- dw cvtpd2pi_instruction-instruction_handler
- db 'cvtpd2ps',5Ah
- dw sse_pd_instruction-instruction_handler
- db 'cvtpi2pd',2Ah
- dw cvtpi2pd_instruction-instruction_handler
- db 'cvtpi2ps',2Ah
- dw cvtpi2ps_instruction-instruction_handler
- db 'cvtps2dq',5Bh
- dw sse_pd_instruction-instruction_handler
- db 'cvtps2pd',5Ah
- dw cvtps2pd_instruction-instruction_handler
- db 'cvtps2pi',2Dh
- dw cvtps2pi_instruction-instruction_handler
- db 'cvtsd2si',2Dh
- dw cvtsd2si_instruction-instruction_handler
- db 'cvtsd2ss',5Ah
- dw sse_sd_instruction-instruction_handler
- db 'cvtsi2sd',2Ah
- dw cvtsi2sd_instruction-instruction_handler
- db 'cvtsi2ss',2Ah
- dw cvtsi2ss_instruction-instruction_handler
- db 'cvtss2sd',5Ah
- dw sse_ss_instruction-instruction_handler
- db 'cvtss2si',2Dh
- dw cvtss2si_instruction-instruction_handler
  db 'fcmovnbe',0D0h
  dw fcomi_instruction-instruction_handler
  db 'fnstenvd',6
@@ -28940,18 +26359,8 @@ instructions_8:
  dw basic_mmx_instruction-instruction_handler
  db 'packsswb',63h
  dw basic_mmx_instruction-instruction_handler
- db 'packusdw',2Bh
- dw sse4_instruction_66_38-instruction_handler
  db 'packuswb',67h
  dw basic_mmx_instruction-instruction_handler
- db 'pblendvb',10h
- dw sse4_instruction_66_38_xmm0-instruction_handler
- db 'pfrcpit1',0A6h
- dw amd3dnow_instruction-instruction_handler
- db 'pfrcpit2',0B6h
- dw amd3dnow_instruction-instruction_handler
- db 'pfrsqit1',0A7h
- dw amd3dnow_instruction-instruction_handler
  db 'pmovmskb',0D7h
  dw pmovmskb_instruction-instruction_handler
  db 'pmovsxbd',21h
@@ -28978,74 +26387,14 @@ instructions_8:
  dw pmovsxwd_instruction-instruction_handler
  db 'pmovzxwq',34h
  dw pmovsxwq_instruction-instruction_handler
- db 'pmulhrsw',0Bh
- dw ssse3_instruction-instruction_handler
- db 'prefetch',0
- dw amd_prefetch_instruction-instruction_handler
  db 'rdfsbase',0
  dw rdfsbase_instruction-instruction_handler
  db 'rdgsbase',1
  dw rdfsbase_instruction-instruction_handler
- db 'sha1msg1',0C9h
- dw sse4_instruction_38-instruction_handler
- db 'sha1msg2',0CAh
- dw sse4_instruction_38-instruction_handler
  db 'sysenter',34h
  dw simple_extended_instruction-instruction_handler
  db 'sysexitq',35h
  dw simple_extended_instruction_64bit-instruction_handler
- db 'unpckhpd',15h
- dw sse_pd_instruction-instruction_handler
- db 'unpckhps',15h
- dw sse_ps_instruction-instruction_handler
- db 'unpcklpd',14h
- dw sse_pd_instruction-instruction_handler
- db 'unpcklps',14h
- dw sse_ps_instruction-instruction_handler
- db 'vblendpd',0Dh
- dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
- db 'vblendps',0Ch
- dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
- db 'vcmpeqpd',0
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpeqps',0
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpeqsd',0
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpeqss',0
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpgepd',0Dh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpgeps',0Dh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpgesd',0Dh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpgess',0Dh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpgtpd',0Eh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpgtps',0Eh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpgtsd',0Eh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpgtss',0Eh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmplepd',2
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpleps',2
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmplesd',2
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpless',2
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpltpd',1
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpltps',1
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpltsd',1
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpltss',1
- dw avx_cmp_ss_instruction-instruction_handler
  db 'vfmaddpd',69h
  dw fma4_instruction_p-instruction_handler
  db 'vfmaddps',68h
@@ -29066,50 +26415,6 @@ instructions_8:
  dw vldmxcsr_instruction-instruction_handler
  db 'vmlaunch',0C2h
  dw simple_instruction_0f_01-instruction_handler
- db 'vmovddup',12h
- dw avx_movddup_instruction-instruction_handler
- db 'vmovdqu8',6Fh
- dw avx512_movdqu8_instruction-instruction_handler
- db 'vmovhlps',12h
- dw avx_movhlps_instruction-instruction_handler
- db 'vmovlhps',16h
- dw avx_movhlps_instruction-instruction_handler
- db 'vmovntdq',0E7h
- dw avx_movntdq_instruction-instruction_handler
- db 'vmovntpd',2Bh
- dw avx_movntpd_instruction-instruction_handler
- db 'vmovntps',2Bh
- dw avx_movntps_instruction-instruction_handler
- db 'vmpsadbw',42h
- dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
- db 'vmresume',0C3h
- dw simple_instruction_0f_01-instruction_handler
- db 'vpaddusb',0DCh
- dw avx_bw_instruction-instruction_handler
- db 'vpaddusw',0DDh
- dw avx_bw_instruction-instruction_handler
- db 'vpalignr',0Fh
- dw avx_pi_instruction_3a_imm8-instruction_handler
- db 'vpblendd',2
- dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
- db 'vpblendw',0Eh
- dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
- db 'vpcmpeqb',74h
- dw avx_cmpeqb_instruction-instruction_handler
- db 'vpcmpeqd',76h
- dw avx_cmpeqd_instruction-instruction_handler
- db 'vpcmpeqq',29h
- dw avx_cmpeqq_instruction-instruction_handler
- db 'vpcmpeqw',75h
- dw avx_cmpeqb_instruction-instruction_handler
- db 'vpcmpgtb',64h
- dw avx_cmpeqb_instruction-instruction_handler
- db 'vpcmpgtd',66h
- dw avx_cmpeqd_instruction-instruction_handler
- db 'vpcmpgtq',37h
- dw avx_cmpeqq_instruction-instruction_handler
- db 'vpcmpgtw',65h
- dw avx_cmpeqb_instruction-instruction_handler
  db 'vpcmpleb',2
  dw avx512_cmp_b_instruction-instruction_handler
  db 'vpcmpled',2
@@ -29166,22 +26471,6 @@ instructions_8:
  dw xop_pcom_q_instruction-instruction_handler
  db 'vpcomltw',0
  dw xop_pcom_w_instruction-instruction_handler
- db 'vpermi2b',75h
- dw avx_bw_instruction_38_evex-instruction_handler
- db 'vpermi2d',76h
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vpermi2q',76h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpermi2w',75h
- dw avx_bw_instruction_38_w1_evex-instruction_handler
- db 'vpermt2b',7Dh
- dw avx_bw_instruction_38_evex-instruction_handler
- db 'vpermt2d',7Eh
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vpermt2q',7Eh
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpermt2w',7Dh
- dw avx_bw_instruction_38_w1_evex-instruction_handler
  db 'vphaddbd',0C2h
  dw xop_single_source_128bit_instruction-instruction_handler
  db 'vphaddbq',0C3h
@@ -29190,8 +26479,6 @@ instructions_8:
  dw xop_single_source_128bit_instruction-instruction_handler
  db 'vphadddq',0CBh
  dw xop_single_source_128bit_instruction-instruction_handler
- db 'vphaddsw',3
- dw avx_pi_instruction_38_noevex-instruction_handler
  db 'vphaddwd',0C6h
  dw xop_single_source_128bit_instruction-instruction_handler
  db 'vphaddwq',0C7h
@@ -29200,112 +26487,16 @@ instructions_8:
  dw xop_single_source_128bit_instruction-instruction_handler
  db 'vphsubdq',0E3h
  dw xop_single_source_128bit_instruction-instruction_handler
- db 'vphsubsw',7
- dw avx_pi_instruction_38_noevex-instruction_handler
  db 'vphsubwd',0E2h
  dw xop_single_source_128bit_instruction-instruction_handler
- db 'vplzcntd',44h
- dw avx_single_source_d_instruction_38_evex-instruction_handler
- db 'vplzcntq',44h
- dw avx_single_source_q_instruction_38_evex-instruction_handler
  db 'vpmacsdd',9Eh
  dw xop_triple_source_128bit_instruction-instruction_handler
  db 'vpmacswd',96h
  dw xop_triple_source_128bit_instruction-instruction_handler
  db 'vpmacsww',95h
  dw xop_triple_source_128bit_instruction-instruction_handler
- db 'vpmaddwd',0F5h
- dw avx_bw_instruction-instruction_handler
- db 'vpmovb2m',29h
- dw avx512_pmov_2m_instruction-instruction_handler
- db 'vpmovd2m',39h
- dw avx512_pmov_2m_instruction-instruction_handler
- db 'vpmovm2b',28h
- dw avx512_pmov_m2_instruction-instruction_handler
- db 'vpmovm2d',38h
- dw avx512_pmov_m2_instruction-instruction_handler
- db 'vpmovm2q',38h
- dw avx512_pmov_m2_instruction_w1-instruction_handler
- db 'vpmovm2w',28h
- dw avx512_pmov_m2_instruction_w1-instruction_handler
- db 'vpmovq2m',39h
- dw avx512_pmov_2m_instruction_w1-instruction_handler
- db 'vpmovsdb',21h
- dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovsdw',23h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovsqb',22h
- dw avx512_pmovqb_instruction-instruction_handler
- db 'vpmovsqd',25h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovsqw',24h
- dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovswb',20h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovw2m',29h
- dw avx512_pmov_2m_instruction_w1-instruction_handler
- db 'vpmulhuw',0E4h
- dw avx_bw_instruction-instruction_handler
- db 'vpmuludq',0F4h
- dw avx_q_instruction-instruction_handler
- db 'vpshufhw',0F3h
- dw avx_pshuf_w_instruction-instruction_handler
- db 'vpshuflw',0F2h
- dw avx_pshuf_w_instruction-instruction_handler
- db 'vpsubusb',0D8h
- dw avx_bw_instruction-instruction_handler
- db 'vpsubusw',0D9h
- dw avx_bw_instruction-instruction_handler
- db 'vptestmb',26h
- dw avx512_ptestmb_instruction-instruction_handler
- db 'vptestmd',27h
- dw avx512_ptestmd_instruction-instruction_handler
- db 'vptestmq',27h
- dw avx512_ptestmq_instruction-instruction_handler
- db 'vptestmw',26h
- dw avx512_ptestmw_instruction-instruction_handler
- db 'vrangepd',50h
- dw avx512_pd_instruction_sae_imm8-instruction_handler
- db 'vrangeps',50h
- dw avx512_ps_instruction_sae_imm8-instruction_handler
- db 'vrangesd',51h
- dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vrangess',51h
- dw avx512_ss_instruction_sae_imm8-instruction_handler
- db 'vrcp14pd',4Ch
- dw avx512_single_source_pd_instruction-instruction_handler
- db 'vrcp14ps',4Ch
- dw avx512_single_source_ps_instruction-instruction_handler
- db 'vrcp14sd',4Dh
- dw avx512_sd_instruction-instruction_handler
- db 'vrcp14ss',4Dh
- dw avx512_ss_instruction-instruction_handler
- db 'vrcp28pd',0CAh
- dw avx512_exp2pd_instruction-instruction_handler
- db 'vrcp28ps',0CAh
- dw avx512_exp2ps_instruction-instruction_handler
- db 'vrcp28sd',0CBh
- dw avx512_sd_instruction_sae-instruction_handler
- db 'vrcp28ss',0CBh
- dw avx512_ss_instruction_sae-instruction_handler
- db 'vroundpd',9
- dw avx_single_source_instruction_3a_imm8_noevex-instruction_handler
- db 'vroundps',8
- dw avx_single_source_instruction_3a_imm8_noevex-instruction_handler
- db 'vroundsd',0Bh
- dw avx_sd_instruction_3a_imm8_noevex-instruction_handler
- db 'vroundss',0Ah
- dw avx_ss_instruction_3a_imm8_noevex-instruction_handler
- db 'vrsqrtps',52h
- dw avx_single_source_ps_instruction_noevex-instruction_handler
- db 'vrsqrtss',52h
- dw avx_ss_instruction_noevex-instruction_handler
  db 'vstmxcsr',11b
  dw vldmxcsr_instruction-instruction_handler
- db 'vucomisd',2Eh
- dw avx_comisd_instruction-instruction_handler
- db 'vucomiss',2Eh
- dw avx_comiss_instruction-instruction_handler
  db 'vzeroall',77h
  dw vzeroall_instruction-instruction_handler
  db 'wrfsbase',2
@@ -29345,14 +26536,6 @@ instructions_9:
  dw fxsave_instruction_64bit-instruction_handler
  db 'pclmulqdq',-1
  dw pclmulqdq_instruction-instruction_handler
- db 'pcmpestri',61h
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'pcmpestrm',60h
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'pcmpistri',63h
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'pcmpistrm',62h
- dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'pmaddubsw',4
  dw ssse3_instruction-instruction_handler
  db 'prefetchw',1
@@ -29369,116 +26552,6 @@ instructions_9:
  dw basic_mmx_instruction-instruction_handler
  db 'punpcklwd',61h
  dw basic_mmx_instruction-instruction_handler
- db 'sha1nexte',0C8h
- dw sse4_instruction_38-instruction_handler
- db 'sha1rnds4',0CCh
- dw sse4_instruction_3a_imm8-instruction_handler
- db 'useavx256',0
- dw set_evex_mode-instruction_handler
- db 'useavx512',1
- dw set_evex_mode-instruction_handler
- db 'vaddsubpd',0D0h
- dw avx_pd_instruction_noevex-instruction_handler
- db 'vaddsubps',0D0h
- dw avx_ps_instruction_noevex-instruction_handler
- db 'vblendmpd',65h
- dw avx_pd_instruction_38_evex-instruction_handler
- db 'vblendmps',65h
- dw avx_ps_instruction_66_38_evex-instruction_handler
- db 'vblendvpd',4Bh
- dw avx_triple_source_instruction_3a_noevex-instruction_handler
- db 'vblendvps',4Ah
- dw avx_triple_source_instruction_3a_noevex-instruction_handler
- db 'vcmpneqpd',4
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpneqps',4
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpneqsd',4
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpneqss',4
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpngepd',9
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpngeps',9
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpngesd',9
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpngess',9
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpngtpd',0Ah
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpngtps',0Ah
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpngtsd',0Ah
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpngtss',0Ah
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpnlepd',6
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpnleps',6
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpnlesd',6
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpnless',6
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpnltpd',5
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpnltps',5
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpnltsd',5
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpnltss',5
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpordpd',7
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpordps',7
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpordsd',7
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpordss',7
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcvtdq2pd',0E6h
- dw avx_cvtdq2pd_instruction-instruction_handler
- db 'vcvtdq2ps',5Bh
- dw avx_single_source_ps_instruction_er-instruction_handler
- db 'vcvtpd2dq',0E6h
- dw avx_cvtpd2dq_instruction-instruction_handler
- db 'vcvtpd2ps',5Ah
- dw avx_cvtpd2ps_instruction-instruction_handler
- db 'vcvtpd2qq',7Bh
- dw avx_single_source_pd_instruction_er_evex-instruction_handler
- db 'vcvtph2ps',13h
- dw avx_cvtph2ps_instruction-instruction_handler
- db 'vcvtps2dq',5Bh
- dw avx_cvtps2dq_instruction-instruction_handler
- db 'vcvtps2pd',5Ah
- dw avx_cvtps2pd_instruction-instruction_handler
- db 'vcvtps2ph',1Dh
- dw avx_cvtps2ph_instruction-instruction_handler
- db 'vcvtps2qq',7Bh
- dw avx_cvtps2qq_instruction-instruction_handler
- db 'vcvtqq2pd',0E6h
- dw avx_cvtqq2pd_instruction-instruction_handler
- db 'vcvtqq2ps',5Bh
- dw avx_cvtpd2udq_instruction-instruction_handler
- db 'vcvtsd2si',2Dh
- dw avx_cvtsd2si_instruction-instruction_handler
- db 'vcvtsd2ss',5Ah
- dw avx_sd_instruction_er-instruction_handler
- db 'vcvtsi2sd',2Ah
- dw avx_cvtsi2sd_instruction-instruction_handler
- db 'vcvtsi2ss',2Ah
- dw avx_cvtsi2ss_instruction-instruction_handler
- db 'vcvtss2sd',5Ah
- dw avx_ss_instruction_sae-instruction_handler
- db 'vcvtss2si',2Dh
- dw avx_cvtss2si_instruction-instruction_handler
- db 'vdbpsadbw',42h
- dw avx_d_instruction_3a_imm8_evex-instruction_handler
- db 'vexpandpd',88h
- dw avx_single_source_q_instruction_38_evex-instruction_handler
- db 'vexpandps',88h
- dw avx_single_source_d_instruction_38_evex-instruction_handler
  db 'vfnmaddpd',79h
  dw fma4_instruction_p-instruction_handler
  db 'vfnmaddps',78h
@@ -29495,94 +26568,6 @@ instructions_9:
  dw fma4_instruction_sd-instruction_handler
  db 'vfnmsubss',7Eh
  dw fma4_instruction_ss-instruction_handler
- db 'vgetexppd',42h
- dw avx512_single_source_pd_instruction_sae-instruction_handler
- db 'vgetexpps',42h
- dw avx512_single_source_ps_instruction_sae-instruction_handler
- db 'vgetexpsd',43h
- dw avx512_sd_instruction_sae-instruction_handler
- db 'vgetexpss',43h
- dw avx512_ss_instruction_sae-instruction_handler
- db 'vinsertps',21h
- dw avx_insertps_instruction-instruction_handler
- db 'vmovdqa32',6Fh
- dw avx512_movdqa32_instruction-instruction_handler
- db 'vmovdqa64',6Fh
- dw avx512_movdqa64_instruction-instruction_handler
- db 'vmovdqu16',6Fh
- dw avx512_movdqu16_instruction-instruction_handler
- db 'vmovdqu32',6Fh
- dw avx512_movdqu32_instruction-instruction_handler
- db 'vmovdqu64',6Fh
- dw avx512_movdqu64_instruction-instruction_handler
- db 'vmovmskpd',0
- dw avx_movmskpd_instruction-instruction_handler
- db 'vmovmskps',0
- dw avx_movmskps_instruction-instruction_handler
- db 'vmovntdqa',2Ah
- dw avx_movntdqa_instruction-instruction_handler
- db 'vmovshdup',16h
- dw avx_movshdup_instruction-instruction_handler
- db 'vmovsldup',12h
- dw avx_movshdup_instruction-instruction_handler
- db 'vpackssdw',6Bh
- dw avx_d_instruction-instruction_handler
- db 'vpacksswb',63h
- dw avx_bw_instruction-instruction_handler
- db 'vpackusdw',2Bh
- dw avx_d_instruction_38-instruction_handler
- db 'vpackuswb',67h
- dw avx_bw_instruction-instruction_handler
- db 'vpblendmb',66h
- dw avx_bw_instruction_38_evex-instruction_handler
- db 'vpblendmd',64h
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vpblendmq',64h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpblendmw',66h
- dw avx_bw_instruction_38_w1_evex-instruction_handler
- db 'vpblendvb',4Ch
- dw avx_triple_source_instruction_3a_noevex-instruction_handler
- db 'vpcmpleub',2
- dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpleud',2
- dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpleuq',2
- dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpleuw',2
- dw avx512_cmp_uw_instruction-instruction_handler
- db 'vpcmpltub',1
- dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpltud',1
- dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpltuq',1
- dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpltuw',1
- dw avx512_cmp_uw_instruction-instruction_handler
- db 'vpcmpneqb',4
- dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpneqd',4
- dw avx512_cmp_d_instruction-instruction_handler
- db 'vpcmpneqq',4
- dw avx512_cmp_q_instruction-instruction_handler
- db 'vpcmpneqw',4
- dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpnleb',6
- dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpnled',6
- dw avx512_cmp_d_instruction-instruction_handler
- db 'vpcmpnleq',6
- dw avx512_cmp_q_instruction-instruction_handler
- db 'vpcmpnlew',6
- dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpnltb',5
- dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpnltd',5
- dw avx512_cmp_d_instruction-instruction_handler
- db 'vpcmpnltq',5
- dw avx512_cmp_q_instruction-instruction_handler
- db 'vpcmpnltw',5
- dw avx512_cmp_b_instruction-instruction_handler
  db 'vpcomequb',4
  dw xop_pcom_ub_instruction-instruction_handler
  db 'vpcomequd',4
@@ -29631,22 +26616,6 @@ instructions_9:
  dw xop_pcom_q_instruction-instruction_handler
  db 'vpcomneqw',5
  dw xop_pcom_w_instruction-instruction_handler
- db 'vpermi2pd',77h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpermi2ps',77h
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vpermilpd',5
- dw avx_permilpd_instruction-instruction_handler
- db 'vpermilps',4
- dw avx_permilps_instruction-instruction_handler
- db 'vpermt2pd',7Fh
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpermt2ps',7Fh
- dw avx_d_instruction_38_evex-instruction_handler
- db 'vpexpandd',89h
- dw avx_single_source_d_instruction_38_evex-instruction_handler
- db 'vpexpandq',89h
- dw avx_single_source_q_instruction_38_evex-instruction_handler
  db 'vphaddubd',0D2h
  dw xop_single_source_128bit_instruction-instruction_handler
  db 'vphaddubq',0D3h
@@ -29671,85 +26640,9 @@ instructions_9:
  dw xop_triple_source_128bit_instruction-instruction_handler
  db 'vpmadcswd',0B6h
  dw xop_triple_source_128bit_instruction-instruction_handler
- db 'vpmovmskb',0D7h
- dw avx_pmovmskb_instruction-instruction_handler
- db 'vpmovsxbd',21h
- dw avx_pmovsxbd_instruction-instruction_handler
- db 'vpmovsxbq',22h
- dw avx_pmovsxbq_instruction-instruction_handler
- db 'vpmovsxbw',20h
- dw avx_pmovsxbw_instruction-instruction_handler
- db 'vpmovsxdq',25h
- dw avx_pmovsxbw_instruction-instruction_handler
- db 'vpmovsxwd',23h
- dw avx_pmovsxbw_instruction-instruction_handler
- db 'vpmovsxwq',24h
- dw avx_pmovsxbd_instruction-instruction_handler
- db 'vpmovusdb',11h
- dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovusdw',13h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovusqb',12h
- dw avx512_pmovqb_instruction-instruction_handler
- db 'vpmovusqd',15h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovusqw',14h
- dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovuswb',10h
- dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovzxbd',31h
- dw avx_pmovsxbd_instruction-instruction_handler
- db 'vpmovzxbq',32h
- dw avx_pmovsxbq_instruction-instruction_handler
- db 'vpmovzxbw',30h
- dw avx_pmovsxbw_instruction-instruction_handler
- db 'vpmovzxdq',35h
- dw avx_pmovsxbw_instruction-instruction_handler
- db 'vpmovzxwd',33h
- dw avx_pmovsxbw_instruction-instruction_handler
- db 'vpmovzxwq',34h
- dw avx_pmovsxbd_instruction-instruction_handler
- db 'vpmulhrsw',0Bh
- dw avx_bw_instruction_38-instruction_handler
- db 'vptestnmb',26h
- dw avx512_ptestnmb_instruction-instruction_handler
- db 'vptestnmd',27h
- dw avx512_ptestnmd_instruction-instruction_handler
- db 'vptestnmq',27h
- dw avx512_ptestnmq_instruction-instruction_handler
- db 'vptestnmw',26h
- dw avx512_ptestnmw_instruction-instruction_handler
- db 'vreducepd',56h
- dw avx512_single_source_pd_instruction_sae_imm8-instruction_handler
- db 'vreduceps',56h
- dw avx512_single_source_ps_instruction_sae_imm8-instruction_handler
- db 'vreducesd',57h
- dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vreducess',57h
- dw avx512_ss_instruction_sae_imm8-instruction_handler
- db 'vscalefpd',2Ch
- dw avx512_pd_instruction_er-instruction_handler
- db 'vscalefps',2Ch
- dw avx512_ps_instruction_er-instruction_handler
- db 'vscalefsd',2Dh
- dw avx512_sd_instruction_er-instruction_handler
- db 'vscalefss',2Dh
- dw avx512_ss_instruction_er-instruction_handler
- db 'vunpckhpd',15h
- dw avx_pd_instruction-instruction_handler
- db 'vunpckhps',15h
- dw avx_ps_instruction-instruction_handler
- db 'vunpcklpd',14h
- dw avx_pd_instruction-instruction_handler
- db 'vunpcklps',14h
- dw avx_ps_instruction-instruction_handler
  db 'xrstors64',3
  dw xsaves_instruction_64bit-instruction_handler
 instructions_10:
- db 'aesdeclast',0DFh
- dw sse4_instruction_66_38-instruction_handler
- db 'aesenclast',0DDh
- dw sse4_instruction_66_38-instruction_handler
  db 'clflushopt',7
  dw clflushopt_instruction-instruction_handler
  db 'cmpunordpd',3
@@ -29768,8 +26661,6 @@ instructions_10:
  dw simple_extended_instruction-instruction_handler
  db 'maskmovdqu',0
  dw maskmovdqu_instruction-instruction_handler
- db 'phminposuw',41h
- dw sse4_instruction_66_38-instruction_handler
  db 'prefetcht0',1
  dw prefetch_instruction-instruction_handler
  db 'prefetcht1',2
@@ -29780,64 +26671,6 @@ instructions_10:
  dw sse_pd_instruction-instruction_handler
  db 'punpcklqdq',6Ch
  dw sse_pd_instruction-instruction_handler
- db 'sha256msg1',0CCh
- dw sse4_instruction_38-instruction_handler
- db 'sha256msg2',0CDh
- dw sse4_instruction_38-instruction_handler
- db 'vcmptruepd',0Fh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmptrueps',0Fh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmptruesd',0Fh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmptruess',0Fh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcvtpd2udq',79h
- dw avx_cvtpd2udq_instruction-instruction_handler
- db 'vcvtpd2uqq',79h
- dw avx_single_source_pd_instruction_er_evex-instruction_handler
- db 'vcvtps2udq',79h
- dw avx_single_source_ps_instruction_er_evex-instruction_handler
- db 'vcvtps2uqq',79h
- dw avx_cvtps2qq_instruction-instruction_handler
- db 'vcvtsd2usi',79h
- dw avx_cvtsd2usi_instruction-instruction_handler
- db 'vcvtss2usi',79h
- dw avx_cvtss2usi_instruction-instruction_handler
- db 'vcvttpd2dq',0E6h
- dw avx_cvttpd2dq_instruction-instruction_handler
- db 'vcvttpd2qq',7Ah
- dw avx_single_source_pd_instruction_sae_evex-instruction_handler
- db 'vcvttps2dq',5Bh
- dw avx_cvttps2dq_instruction-instruction_handler
- db 'vcvttps2qq',7Ah
- dw avx_cvttps2qq_instruction-instruction_handler
- db 'vcvttsd2si',2Ch
- dw avx_cvttsd2si_instruction-instruction_handler
- db 'vcvttss2si',2Ch
- dw avx_cvttss2si_instruction-instruction_handler
- db 'vcvtudq2pd',7Ah
- dw avx_cvtudq2pd_instruction-instruction_handler
- db 'vcvtudq2ps',7Ah
- dw avx_cvtudq2ps_instruction-instruction_handler
- db 'vcvtuqq2pd',7Ah
- dw avx_cvtqq2pd_instruction-instruction_handler
- db 'vcvtuqq2ps',7Ah
- dw avx_cvtuqq2ps_instruction-instruction_handler
- db 'vcvtusi2sd',7Bh
- dw avx_cvtusi2sd_instruction-instruction_handler
- db 'vcvtusi2ss',7Bh
- dw avx_cvtusi2ss_instruction-instruction_handler
- db 'vextractps',17h
- dw avx_extract_d_instruction-instruction_handler
- db 'vfpclasspd',66h
- dw avx512_fpclasspd_instruction-instruction_handler
- db 'vfpclassps',66h
- dw avx512_fpclassps_instruction-instruction_handler
- db 'vfpclasssd',67h
- dw avx512_fpclasssd_instruction-instruction_handler
- db 'vfpclassss',67h
- dw avx512_fpclassss_instruction-instruction_handler
  db 'vgatherdpd',92h
  dw gather_pd_instruction-instruction_handler
  db 'vgatherdps',92h
@@ -29846,52 +26679,6 @@ instructions_10:
  dw gather_pd_instruction-instruction_handler
  db 'vgatherqps',93h
  dw gather_ps_instruction-instruction_handler
- db 'vgetmantpd',26h
- dw avx512_single_source_pd_instruction_sae_imm8-instruction_handler
- db 'vgetmantps',26h
- dw avx512_single_source_ps_instruction_sae_imm8-instruction_handler
- db 'vgetmantsd',27h
- dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vgetmantss',27h
- dw avx512_ss_instruction_sae_imm8-instruction_handler
- db 'vmaskmovpd',2Dh
- dw avx_maskmov_instruction-instruction_handler
- db 'vmaskmovps',2Ch
- dw avx_maskmov_instruction-instruction_handler
- db 'vpclmulqdq',-1
- dw avx_pclmulqdq_instruction-instruction_handler
- db 'vpcmpestri',61h
- dw avx_single_source_128bit_instruction_3a_imm8_noevex-instruction_handler
- db 'vpcmpestrm',60h
- dw avx_single_source_128bit_instruction_3a_imm8_noevex-instruction_handler
- db 'vpcmpistri',63h
- dw avx_single_source_128bit_instruction_3a_imm8_noevex-instruction_handler
- db 'vpcmpistrm',62h
- dw avx_single_source_128bit_instruction_3a_imm8_noevex-instruction_handler
- db 'vpcmpnequb',4
- dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpnequd',4
- dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpnequq',4
- dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpnequw',4
- dw avx512_cmp_uw_instruction-instruction_handler
- db 'vpcmpnleub',6
- dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpnleud',6
- dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpnleuq',6
- dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpnleuw',6
- dw avx512_cmp_uw_instruction-instruction_handler
- db 'vpcmpnltub',5
- dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpnltud',5
- dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpnltuq',5
- dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpnltuw',5
- dw avx512_cmp_uw_instruction-instruction_handler
  db 'vpcomnequb',5
  dw xop_pcom_ub_instruction-instruction_handler
  db 'vpcomnequd',5
@@ -29908,10 +26695,6 @@ instructions_10:
  dw xop_pcom_q_instruction-instruction_handler
  db 'vpcomtruew',7
  dw xop_pcom_w_instruction-instruction_handler
- db 'vperm2f128',6
- dw avx_perm2f128_instruction-instruction_handler
- db 'vperm2i128',46h
- dw avx_perm2f128_instruction-instruction_handler
  db 'vpermil2pd',49h
  dw vpermil2_instruction-instruction_handler
  db 'vpermil2ps',48h
@@ -29930,52 +26713,6 @@ instructions_10:
  dw xop_triple_source_128bit_instruction-instruction_handler
  db 'vpmadcsswd',0A6h
  dw xop_triple_source_128bit_instruction-instruction_handler
- db 'vpmaddubsw',4
- dw avx_bw_instruction_38-instruction_handler
- db 'vpmaskmovd',8Ch
- dw avx_maskmov_instruction-instruction_handler
- db 'vpmaskmovq',8Ch
- dw avx_maskmov_w1_instruction-instruction_handler
- db 'vpternlogd',25h
- dw avx_d_instruction_3a_imm8_evex-instruction_handler
- db 'vpternlogq',25h
- dw avx_q_instruction_3a_imm8_evex-instruction_handler
- db 'vpunpckhbw',68h
- dw avx_bw_instruction-instruction_handler
- db 'vpunpckhdq',6Ah
- dw avx_d_instruction-instruction_handler
- db 'vpunpckhwd',69h
- dw avx_bw_instruction-instruction_handler
- db 'vpunpcklbw',60h
- dw avx_bw_instruction-instruction_handler
- db 'vpunpckldq',62h
- dw avx_d_instruction-instruction_handler
- db 'vpunpcklwd',61h
- dw avx_bw_instruction-instruction_handler
- db 'vrsqrt14pd',4Eh
- dw avx512_single_source_pd_instruction-instruction_handler
- db 'vrsqrt14ps',4Eh
- dw avx512_single_source_ps_instruction-instruction_handler
- db 'vrsqrt14sd',4Fh
- dw avx512_sd_instruction-instruction_handler
- db 'vrsqrt14ss',4Fh
- dw avx512_ss_instruction-instruction_handler
- db 'vrsqrt28pd',0CCh
- dw avx512_exp2pd_instruction-instruction_handler
- db 'vrsqrt28ps',0CCh
- dw avx512_exp2ps_instruction-instruction_handler
- db 'vrsqrt28sd',0CDh
- dw avx512_sd_instruction_sae-instruction_handler
- db 'vrsqrt28ss',0CDh
- dw avx512_ss_instruction_sae-instruction_handler
- db 'vshuff32x4',23h
- dw avx512_shuf_d_instruction-instruction_handler
- db 'vshuff64x2',23h
- dw avx512_shuf_q_instruction-instruction_handler
- db 'vshufi32x4',43h
- dw avx512_shuf_d_instruction-instruction_handler
- db 'vshufi64x2',43h
- dw avx512_shuf_q_instruction-instruction_handler
  db 'vzeroupper',77h
  dw vzeroupper_instruction-instruction_handler
  db 'xsaveopt64',110b
@@ -29987,118 +26724,6 @@ instructions_11:
  dw pclmulqdq_instruction-instruction_handler
  db 'prefetchnta',0
  dw prefetch_instruction-instruction_handler
- db 'prefetchwt1',2
- dw amd_prefetch_instruction-instruction_handler
- db 'sha256rnds2',0CBh
- dw sse4_instruction_38_xmm0-instruction_handler
- db 'vaesdeclast',0DFh
- dw avx_128bit_instruction_38_noevex-instruction_handler
- db 'vaesenclast',0DDh
- dw avx_128bit_instruction_38_noevex-instruction_handler
- db 'vcmpeq_ospd',10h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpeq_osps',10h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpeq_ossd',10h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpeq_osss',10h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpeq_uqpd',8
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpeq_uqps',8
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpeq_uqsd',8
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpeq_uqss',8
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpeq_uspd',18h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpeq_usps',18h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpeq_ussd',18h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpeq_usss',18h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpfalsepd',0Bh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpfalseps',0Bh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpfalsesd',0Bh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpfalsess',0Bh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpge_oqpd',1Dh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpge_oqps',1Dh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpge_oqsd',1Dh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpge_oqss',1Dh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpgt_oqpd',1Eh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpgt_oqps',1Eh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpgt_oqsd',1Eh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpgt_oqss',1Eh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmple_oqpd',12h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmple_oqps',12h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmple_oqsd',12h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmple_oqss',12h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmplt_oqpd',11h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmplt_oqps',11h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmplt_oqsd',11h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmplt_oqss',11h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpord_spd',17h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpord_sps',17h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpord_ssd',17h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpord_sss',17h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpunordpd',3
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpunordps',3
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpunordsd',3
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpunordss',3
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcompresspd',8Ah
- dw avx_compress_q_instruction-instruction_handler
- db 'vcompressps',8Ah
- dw avx_compress_d_instruction-instruction_handler
- db 'vcvttpd2udq',78h
- dw avx_cvttpd2udq_instruction-instruction_handler
- db 'vcvttpd2uqq',78h
- dw avx_single_source_pd_instruction_sae_evex-instruction_handler
- db 'vcvttps2udq',78h
- dw avx_cvttps2udq_instruction-instruction_handler
- db 'vcvttps2uqq',78h
- dw avx_cvttps2qq_instruction-instruction_handler
- db 'vcvttsd2usi',78h
- dw avx_cvttsd2usi_instruction-instruction_handler
- db 'vcvttss2usi',78h
- dw avx_cvttss2usi_instruction-instruction_handler
- db 'vfixupimmpd',54h
- dw avx512_pd_instruction_sae_imm8-instruction_handler
- db 'vfixupimmps',54h
- dw avx512_ps_instruction_sae_imm8-instruction_handler
- db 'vfixupimmsd',55h
- dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vfixupimmss',55h
- dw avx512_ss_instruction_sae_imm8-instruction_handler
  db 'vfmadd132pd',98h
  dw fma_instruction_pd-instruction_handler
  db 'vfmadd132ps',98h
@@ -30155,12 +26780,6 @@ instructions_11:
  dw fma4_instruction_p-instruction_handler
  db 'vfmsubaddps',5Eh
  dw fma4_instruction_p-instruction_handler
- db 'vinsertf128',18h
- dw avx_insertf128_instruction-instruction_handler
- db 'vinserti128',38h
- dw avx_insertf128_instruction-instruction_handler
- db 'vmaskmovdqu',0
- dw avx_maskmovdqu_instruction-instruction_handler
  db 'vpcomfalseb',6
  dw xop_pcom_b_instruction-instruction_handler
  db 'vpcomfalsed',6
@@ -30169,10 +26788,6 @@ instructions_11:
  dw xop_pcom_q_instruction-instruction_handler
  db 'vpcomfalsew',6
  dw xop_pcom_w_instruction-instruction_handler
- db 'vpcompressd',8Bh
- dw avx_compress_d_instruction-instruction_handler
- db 'vpcompressq',8Bh
- dw avx_compress_q_instruction-instruction_handler
  db 'vpcomtrueub',7
  dw xop_pcom_ub_instruction-instruction_handler
  db 'vpcomtrueud',7
@@ -30181,16 +26796,6 @@ instructions_11:
  dw xop_pcom_uq_instruction-instruction_handler
  db 'vpcomtrueuw',7
  dw xop_pcom_uw_instruction-instruction_handler
- db 'vpconflictd',0C4h
- dw avx_single_source_d_instruction_38_evex-instruction_handler
- db 'vpconflictq',0C4h
- dw avx_single_source_q_instruction_38_evex-instruction_handler
- db 'vphminposuw',41h
- dw avx_single_source_instruction_38_noevex-instruction_handler
- db 'vpmadd52huq',0B5h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vpmadd52luq',0B4h
- dw avx_q_instruction_38_evex-instruction_handler
  db 'vpscatterdd',0A0h
  dw scatter_ps_instruction-instruction_handler
  db 'vpscatterdq',0A0h
@@ -30199,18 +26804,6 @@ instructions_11:
  dw scatter_ps_instruction-instruction_handler
  db 'vpscatterqq',0A1h
  dw scatter_pd_instruction-instruction_handler
- db 'vpunpckhqdq',6Dh
- dw avx_q_instruction-instruction_handler
- db 'vpunpcklqdq',6Ch
- dw avx_q_instruction-instruction_handler
- db 'vrndscalepd',9
- dw avx512_single_source_pd_instruction_sae_imm8-instruction_handler
- db 'vrndscaleps',8
- dw avx512_single_source_ps_instruction_sae_imm8-instruction_handler
- db 'vrndscalesd',0Bh
- dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vrndscaless',0Ah
- dw avx512_ss_instruction_sae_imm8-instruction_handler
  db 'vscatterdpd',0A2h
  dw scatter_pd_instruction-instruction_handler
  db 'vscatterdps',0A2h
@@ -30228,70 +26821,6 @@ instructions_12:
  dw pclmulqdq_instruction-instruction_handler
  db 'pclmullqlqdq',0
  dw pclmulqdq_instruction-instruction_handler
- db 'vbroadcastsd',19h
- dw avx_broadcastsd_instruction-instruction_handler
- db 'vbroadcastss',18h
- dw avx_broadcastss_instruction-instruction_handler
- db 'vcmpneq_oqpd',0Ch
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpneq_oqps',0Ch
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpneq_oqsd',0Ch
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpneq_oqss',0Ch
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpneq_ospd',1Ch
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpneq_osps',1Ch
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpneq_ossd',1Ch
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpneq_osss',1Ch
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpneq_uspd',14h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpneq_usps',14h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpneq_ussd',14h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpneq_usss',14h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpnge_uqpd',19h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpnge_uqps',19h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpnge_uqsd',19h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpnge_uqss',19h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpngt_uqpd',1Ah
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpngt_uqps',1Ah
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpngt_uqsd',1Ah
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpngt_uqss',1Ah
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpnle_uqpd',16h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpnle_uqps',16h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpnle_uqsd',16h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpnle_uqss',16h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpnlt_uqpd',15h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpnlt_uqps',15h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpnlt_uqsd',15h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpnlt_uqss',15h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vextractf128',19h
- dw avx_extractf128_instruction-instruction_handler
- db 'vextracti128',39h
- dw avx_extractf128_instruction-instruction_handler
  db 'vfnmadd132pd',9Ch
  dw fma_instruction_pd-instruction_handler
  db 'vfnmadd132ps',9Ch
@@ -30340,34 +26869,6 @@ instructions_12:
  dw fma_instruction_sd-instruction_handler
  db 'vfnmsub231ss',0BFh
  dw fma_instruction_ss-instruction_handler
- db 'vinsertf32x4',18h
- dw avx512_insert_32x4_instruction-instruction_handler
- db 'vinsertf32x8',1Ah
- dw avx512_insert_32x8_instruction-instruction_handler
- db 'vinsertf64x2',18h
- dw avx512_insert_64x2_instruction-instruction_handler
- db 'vinsertf64x4',1Ah
- dw avx512_insert_64x4_instruction-instruction_handler
- db 'vinserti32x4',38h
- dw avx512_insert_32x4_instruction-instruction_handler
- db 'vinserti32x8',3Ah
- dw avx512_insert_32x8_instruction-instruction_handler
- db 'vinserti64x2',38h
- dw avx512_insert_64x2_instruction-instruction_handler
- db 'vinserti64x4',3Ah
- dw avx512_insert_64x4_instruction-instruction_handler
- db 'vpbroadcastb',78h
- dw avx_pbroadcastb_instruction-instruction_handler
- db 'vpbroadcastd',58h
- dw avx_pbroadcastd_instruction-instruction_handler
- db 'vpbroadcastq',59h
- dw avx_pbroadcastq_instruction-instruction_handler
- db 'vpbroadcastw',79h
- dw avx_pbroadcastw_instruction-instruction_handler
- db 'vpclmulhqhdq',10001b
- dw avx_pclmulqdq_instruction-instruction_handler
- db 'vpclmullqhdq',10000b
- dw avx_pclmulqdq_instruction-instruction_handler
  db 'vpcomfalseub',6
  dw xop_pcom_ub_instruction-instruction_handler
  db 'vpcomfalseud',6
@@ -30389,71 +26890,7 @@ instructions_12:
  db 'vpermiltd2ps',0
  dw vpermil_2ps_instruction-instruction_handler
 instructions_13:
- db 'vcmptrue_uspd',1Fh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmptrue_usps',1Fh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmptrue_ussd',1Fh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmptrue_usss',1Fh
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpunord_spd',13h
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpunord_sps',13h
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpunord_ssd',13h
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpunord_sss',13h
- dw avx_cmp_ss_instruction-instruction_handler
- db 'vextractf32x4',19h
- dw avx512_extract_32x4_instruction-instruction_handler
- db 'vextractf32x8',1Bh
- dw avx512_extract_32x8_instruction-instruction_handler
- db 'vextractf64x2',19h
- dw avx512_extract_64x2_instruction-instruction_handler
- db 'vextractf64x4',1Bh
- dw avx512_extract_64x4_instruction-instruction_handler
- db 'vextracti32x4',39h
- dw avx512_extract_32x4_instruction-instruction_handler
- db 'vextracti32x8',3Bh
- dw avx512_extract_32x8_instruction-instruction_handler
- db 'vextracti64x2',39h
- dw avx512_extract_64x2_instruction-instruction_handler
- db 'vextracti64x4',3Bh
- dw avx512_extract_64x4_instruction-instruction_handler
- db 'vgatherpf0dpd',1
- dw gatherpf_dpd_instruction-instruction_handler
- db 'vgatherpf0dps',1
- dw gatherpf_dps_instruction-instruction_handler
- db 'vgatherpf0qpd',1
- dw gatherpf_qpd_instruction-instruction_handler
- db 'vgatherpf0qps',1
- dw gatherpf_qps_instruction-instruction_handler
- db 'vgatherpf1dpd',2
- dw gatherpf_dpd_instruction-instruction_handler
- db 'vgatherpf1dps',2
- dw gatherpf_dps_instruction-instruction_handler
- db 'vgatherpf1qpd',2
- dw gatherpf_qpd_instruction-instruction_handler
- db 'vgatherpf1qps',2
- dw gatherpf_qps_instruction-instruction_handler
- db 'vpclmulhqlqdq',1
- dw avx_pclmulqdq_instruction-instruction_handler
- db 'vpclmullqlqdq',0
- dw avx_pclmulqdq_instruction-instruction_handler
 instructions_14:
- db 'vbroadcastf128',1Ah
- dw avx_broadcast_128_instruction_noevex-instruction_handler
- db 'vbroadcasti128',5Ah
- dw avx_broadcast_128_instruction_noevex-instruction_handler
- db 'vcmpfalse_ospd',1Bh
- dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpfalse_osps',1Bh
- dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpfalse_ossd',1Bh
- dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpfalse_osss',1Bh
- dw avx_cmp_ss_instruction-instruction_handler
  db 'vfmaddsub132pd',96h
  dw fma_instruction_pd-instruction_handler
  db 'vfmaddsub132ps',96h
@@ -30478,54 +26915,8 @@ instructions_14:
  dw fma_instruction_pd-instruction_handler
  db 'vfmsubadd231ps',0B7h
  dw fma_instruction_ps-instruction_handler
- db 'vpmultishiftqb',83h
- dw avx_q_instruction_38_evex-instruction_handler
- db 'vscatterpf0dpd',5
- dw gatherpf_dpd_instruction-instruction_handler
- db 'vscatterpf0dps',5
- dw gatherpf_dps_instruction-instruction_handler
- db 'vscatterpf0qpd',5
- dw gatherpf_qpd_instruction-instruction_handler
- db 'vscatterpf0qps',5
- dw gatherpf_qps_instruction-instruction_handler
- db 'vscatterpf1dpd',6
- dw gatherpf_dpd_instruction-instruction_handler
- db 'vscatterpf1dps',6
- dw gatherpf_dps_instruction-instruction_handler
- db 'vscatterpf1qpd',6
- dw gatherpf_qpd_instruction-instruction_handler
- db 'vscatterpf1qps',6
- dw gatherpf_qps_instruction-instruction_handler
 instructions_15:
- db 'aeskeygenassist',0DFh
- dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'vbroadcastf32x2',19h
- dw avx512_broadcast_32x2_instruction-instruction_handler
- db 'vbroadcastf32x4',1Ah
- dw avx512_broadcast_32x4_instruction-instruction_handler
- db 'vbroadcastf32x8',1Bh
- dw avx512_broadcast_32x8_instruction-instruction_handler
- db 'vbroadcastf64x2',1Ah
- dw avx512_broadcast_64x2_instruction-instruction_handler
- db 'vbroadcastf64x4',1Bh
- dw avx512_broadcast_64x4_instruction-instruction_handler
- db 'vbroadcasti32x2',59h
- dw avx512_broadcast_32x2_instruction-instruction_handler
- db 'vbroadcasti32x4',5Ah
- dw avx512_broadcast_32x4_instruction-instruction_handler
- db 'vbroadcasti32x8',5Bh
- dw avx512_broadcast_32x8_instruction-instruction_handler
- db 'vbroadcasti64x2',5Ah
- dw avx512_broadcast_64x2_instruction-instruction_handler
- db 'vbroadcasti64x4',5Bh
- dw avx512_broadcast_64x4_instruction-instruction_handler
- db 'vpbroadcastmb2q',2Ah
- dw avx512_pmov_m2_instruction_w1-instruction_handler
- db 'vpbroadcastmw2d',3Ah
- dw avx512_pmov_m2_instruction-instruction_handler
 instructions_16:
- db 'vaeskeygenassist',0DFh
- dw avx_single_source_128bit_instruction_3a_imm8_noevex-instruction_handler
 instructions_end:
 
 data_directives:
@@ -30538,32 +26929,16 @@ data_directives_2:
  dw data_bytes-instruction_handler
  db 'dd',4
  dw data_dwords-instruction_handler
- db 'df',6
- dw data_pwords-instruction_handler
- db 'dp',6
- dw data_pwords-instruction_handler
  db 'dq',8
  dw data_qwords-instruction_handler
- db 'dt',10
- dw data_twords-instruction_handler
- db 'du',2
- dw data_unicode-instruction_handler
  db 'dw',2
  dw data_words-instruction_handler
  db 'rb',1
  dw reserve_bytes-instruction_handler
  db 'rd',4
  dw reserve_dwords-instruction_handler
- db 'rf',6
- dw reserve_pwords-instruction_handler
- db 'rp',6
- dw reserve_pwords-instruction_handler
  db 'rq',8
  dw reserve_qwords-instruction_handler
- db 'rt',10
- dw reserve_twords-instruction_handler
- db 'rw',2
- dw reserve_words-instruction_handler
 data_directives_3:
 data_directives_4:
  db 'file',1
@@ -30864,4 +27239,4 @@ section '.reloc' fixups data readable discardable
 	if $=$$
 		dd 0,8
 	end if
-; 30867
+; 27242
