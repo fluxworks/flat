@@ -60,7 +60,7 @@ PAGE_NOCACHE	       = 200h
 section '.text' code readable executable
 start:
 
-	mov	eax,STD_OUTPUT_HANDLE
+		mov	eax,STD_OUTPUT_HANDLE
         mov     cell[con_handle],_eax
         mov     esi,_logo
         call    display_string
@@ -17521,16 +17521,7 @@ invlpg_instruction:
         jne     invalid_operand
         call    get_address
         jmp     instruction_ready
-swapgs_instruction:
-        cmp     [code_type],64
-        jne     illegal_instruction
-simple_instruction_0f_01:
-        mov     ah,al
-        mov     al,0Fh
-        stos    byte [edi]
-        mov     al,1
-        stos    word [edi]
-        jmp     instruction_assembled
+		ret
 
 basic_486_instruction:
         mov     [base_code],0Fh
@@ -18513,26 +18504,8 @@ movq2dq_instruction:
         mov     [base_code],0Fh
         mov     [extended_code],0D6h
         jmp     nomem_instruction_ready
-
-sse_ps_instruction_imm8:
-        mov     [immediate_size],1
-sse_ps_instruction:
-        mov     [mmx_size],16
-        jmp     sse_instruction
-sse_pd_instruction_imm8:
-        mov     [immediate_size],1
-sse_pd_instruction:
-        mov     [mmx_size],16
-        mov     [opcode_prefix],66h
-        jmp     sse_instruction
-sse_ss_instruction:
-        mov     [mmx_size],4
-        mov     [opcode_prefix],0F3h
-        jmp     sse_instruction
-sse_sd_instruction:
-        mov     [mmx_size],8
-        mov     [opcode_prefix],0F2h
-        jmp     sse_instruction
+		ret
+		
 cmp_pd_instruction:
         mov     [opcode_prefix],66h
 cmp_ps_instruction:
@@ -19339,42 +19312,7 @@ pmovsxdq_instruction:
         mov     [base_code],0Fh
         mov     [opcode_prefix],66h
         ret
-
-xsaves_instruction_64bit:
-        call    operand_64bit
-xsaves_instruction:
-        mov     ah,0C7h
-        jmp     xsave_common
-fxsave_instruction_64bit:
-        call    operand_64bit
-fxsave_instruction:
-        mov     ah,0AEh
-        xor     cl,cl
-      xsave_common:
-        mov     [base_code],0Fh
-        mov     [extended_code],ah
-        mov     [postbyte_register],al
-        mov     [mmx_size],cl
-        lods    byte [esi]
-        call    get_size_operator
-        cmp     al,'['
-        jne     invalid_operand
-        call    get_address
-        mov     ah,[operand_size]
-        or      ah,ah
-        jz      xsave_size_ok
-        cmp     ah,[mmx_size]
-        jne     invalid_operand_size
-      xsave_size_ok:
-        jmp     instruction_ready
-clflush_instruction:
-        mov     ah,0AEh
-        mov     cl,1
-        jmp     xsave_common
-stmxcsr_instruction:
-        mov     ah,0AEh
-        mov     cl,4
-        jmp     xsave_common
+		
 prefetch_instruction:
         mov     [extended_code],18h
       prefetch_mem_8bit:
@@ -19659,9 +19597,8 @@ crc32_instruction:
         call    operand_autodetect
       crc32_reg_reg_store:
         jmp     nomem_instruction_ready
-popcnt_instruction:
-        mov     [opcode_prefix],0F3h
-        jmp     bs_instruction
+		ret
+		
 movbe_instruction:
         mov     [supplemental_code],al
         mov     [extended_code],38h
@@ -19735,180 +19672,8 @@ rdpid_instruction:
         cmp     ah,8
         jne     invalid_operand_size
         jmp     nomem_instruction_ready
-
-vmclear_instruction:
-        mov     [opcode_prefix],66h
-        jmp     vmx_instruction
-vmxon_instruction:
-        mov     [opcode_prefix],0F3h
-vmx_instruction:
-        mov     [postbyte_register],al
-        mov     [extended_code],0C7h
-        lods    byte [esi]
-        call    get_size_operator
-        cmp     al,'['
-        jne     invalid_operand
-        call    get_address
-        mov     al,[operand_size]
-        or      al,al
-        jz      vmx_size_ok
-        cmp     al,8
-        jne     invalid_operand_size
-      vmx_size_ok:
-        mov     [base_code],0Fh
-        jmp     instruction_ready
-vmread_instruction:
-        mov     [extended_code],78h
-        lods    byte [esi]
-        call    get_size_operator
-        cmp     al,10h
-        je      vmread_nomem
-        cmp     al,'['
-        jne     invalid_operand
-        call    get_address
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        call    take_register
-        mov     [postbyte_register],al
-        call    vmread_check_size
-        jmp     vmx_size_ok
-      vmread_nomem:
-        lods    byte [esi]
-        call    convert_register
-        push    _eax
-        call    vmread_check_size
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        call    take_register
-        mov     [postbyte_register],al
-        call    vmread_check_size
-        pop     _ebx
-        mov     [base_code],0Fh
-        jmp     nomem_instruction_ready
-      vmread_check_size:
-        cmp     [code_type],64
-        je      vmread_long
-        cmp     [operand_size],4
-        jne     invalid_operand_size
-        ret
-      vmread_long:
-        cmp     [operand_size],8
-        jne     invalid_operand_size
-        ret
-vmwrite_instruction:
-        mov     [extended_code],79h
-        call    take_register
-        mov     [postbyte_register],al
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        lods    byte [esi]
-        call    get_size_operator
-        cmp     al,10h
-        je      vmwrite_nomem
-        cmp     al,'['
-        jne     invalid_operand
-        call    get_address
-        call    vmread_check_size
-        jmp     vmx_size_ok
-      vmwrite_nomem:
-        lods    byte [esi]
-        call    convert_register
-        mov     bl,al
-        mov     [base_code],0Fh
-        jmp     nomem_instruction_ready
-vmx_inv_instruction:
-        call    setup_66_0f_38
-        call    take_register
-        mov     [postbyte_register],al
-        call    vmread_check_size
-        mov     [operand_size],0
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        lods    byte [esi]
-        call    get_size_operator
-        cmp     al,'['
-        jne     invalid_operand
-        call    get_address
-        mov     al,[operand_size]
-        or      al,al
-        jz      vmx_size_ok
-        cmp     al,16
-        jne     invalid_operand_size
-        jmp     vmx_size_ok
-simple_svm_instruction:
-        push    _eax
-        mov     [base_code],0Fh
-        mov     [extended_code],1
-        call    take_register
-        or      al,al
-        jnz     invalid_operand
-      simple_svm_detect_size:
-        cmp     ah,2
-        je      simple_svm_16bit
-        cmp     ah,4
-        je      simple_svm_32bit
-        cmp     [code_type],64
-        jne     invalid_operand_size
-        jmp     simple_svm_store
-      simple_svm_16bit:
-        cmp     [code_type],16
-        je      simple_svm_store
-        cmp     [code_type],64
-        je      invalid_operand_size
-        jmp     prefixed_svm_store
-      simple_svm_32bit:
-        cmp     [code_type],32
-        je      simple_svm_store
-      prefixed_svm_store:
-        mov     al,67h
-        stos    byte [edi]
-      simple_svm_store:
-        call    store_classic_instruction_code
-        pop     _eax
-        stos    byte [edi]
-        jmp     instruction_assembled
-skinit_instruction:
-        call    take_register
-        cmp     ax,0400h
-        jne     invalid_operand
-        mov     al,0DEh
-        jmp     simple_instruction_0f_01
-clzero_instruction:
-        call    take_register
-        or      al,al
-        jnz     invalid_operand
-        mov     al,0FCh
-        cmp     [code_type],64
-        je      clzero_64bit
-        cmp     ah,4
-        jne     invalid_operand
-        jmp     simple_instruction_0f_01
-      clzero_64bit:
-        cmp     ah,8
-        jne     invalid_operand
-        jmp     simple_instruction_0f_01
-invlpga_instruction:
-        push    _eax
-        mov     [base_code],0Fh
-        mov     [extended_code],1
-        call    take_register
-        or      al,al
-        jnz     invalid_operand
-        mov     bl,ah
-        mov     [operand_size],0
-        lods    byte [esi]
-        cmp     al,','
-        jne     invalid_operand
-        call    take_register
-        cmp     ax,0401h
-        jne     invalid_operand
-        mov     ah,bl
-        jmp     simple_svm_detect_size
-
+		ret
+		
 rdrand_instruction:
         mov     [base_code],0Fh
         mov     [extended_code],0C7h
@@ -21178,9 +20943,6 @@ vzeroupper_instruction:
         and     [displacement_compression],0
         call    store_vex_instruction_code
         jmp     instruction_assembled
-vldmxcsr_instruction:
-        or      [vex_required],2
-        jmp     fxsave_instruction
 		ret
 
 bmi_instruction:
@@ -21342,15 +21104,6 @@ rorx_instruction:
       rorx_reg_reg:
         call    operand_32or64
         jmp     mmx_nomem_imm8
-
-tbm_instruction:
-        mov     [xop_opcode_map],9
-        mov     ah,al
-        shr     ah,4
-        and     al,111b
-        mov     [base_code],ah
-        mov     [postbyte_register],al
-        jmp     bmi_reg
 
 llwpcb_instruction:
         or      [vex_required],2
@@ -22516,10 +22269,6 @@ instructions_4:
  dw andn_instruction-instruction_handler
  db 'arpl',0
  dw arpl_instruction-instruction_handler
- db 'blci',26h
- dw tbm_instruction-instruction_handler
- db 'blcs',13h
- dw tbm_instruction-instruction_handler
  db 'blsi',3
  dw bmi_instruction-instruction_handler
  db 'blsr',1
@@ -22528,12 +22277,6 @@ instructions_4:
  dw bzhi_instruction-instruction_handler
  db 'call',0
  dw call_instruction-instruction_handler
- db 'cdqe',98h
- dw simple_instruction_64bit-instruction_handler
- db 'clac',0CAh
- dw simple_instruction_0f_01-instruction_handler
- db 'clgi',0DDh
- dw simple_instruction_0f_01-instruction_handler
  db 'clts',6
  dw simple_extended_instruction-instruction_handler
  db 'clwb',6
@@ -22654,10 +22397,6 @@ instructions_4:
  dw movs_instruction-instruction_handler
  db 'mulx',0F6h
  dw pdep_instruction-instruction_handler
- db 'orpd',56h
- dw sse_pd_instruction-instruction_handler
- db 'orps',56h
- dw sse_ps_instruction-instruction_handler
  db 'outs',6Eh
  dw outs_instruction-instruction_handler
  db 'pand',0DBh
@@ -22740,10 +22479,6 @@ instructions_4:
  dw pm_store_word_instruction-instruction_handler
  db 'smsw',14h
  dw pm_store_word_instruction-instruction_handler
- db 'stac',0CBh
- dw simple_instruction_0f_01-instruction_handler
- db 'stgi',0DCh
- dw simple_instruction_0f_01-instruction_handler
  db 'stos',0AAh
  dw stos_instruction-instruction_handler
  db 'test',0
@@ -22758,8 +22493,6 @@ instructions_4:
  dw basic_486_instruction-instruction_handler
  db 'xchg',0
  dw xchg_instruction-instruction_handler
- db 'xend',0D5h
- dw simple_instruction_0f_01-instruction_handler
  db 'xlat',0D7h
  dw xlat_instruction-instruction_handler
 instructions_5:
@@ -22767,10 +22500,6 @@ instructions_5:
  dw align_directive-instruction_handler
  db 'bextr',0F7h
  dw bextr_instruction-instruction_handler
- db 'blcic',15h
- dw tbm_instruction-instruction_handler
- db 'blsic',16h
- dw tbm_instruction-instruction_handler
  db 'bndcl',1Ah
  dw bndcl_instruction-instruction_handler
  db 'bndcn',1Bh
@@ -22823,8 +22552,6 @@ instructions_5:
  dw simple_extended_instruction-instruction_handler
  db 'crc32',0
  dw crc32_instruction-instruction_handler
- db 'divss',5Eh
- dw sse_ss_instruction-instruction_handler
  db 'enter',0
  dw enter_instruction-instruction_handler
  db 'entry',0
@@ -22973,8 +22700,6 @@ instructions_5:
  dw loop_instruction_16bit-instruction_handler
  db 'loopz',0E1h
  dw loop_instruction-instruction_handler
- db 'lzcnt',0BDh
- dw popcnt_instruction-instruction_handler
  db 'movbe',0F0h
  dw movbe_instruction-instruction_handler
  db 'movsb',0A4h
@@ -22991,10 +22716,6 @@ instructions_5:
  dw movx_instruction-instruction_handler
  db 'movzx',0B6h
  dw movx_instruction-instruction_handler
- db 'mulsd',59h
- dw sse_sd_instruction-instruction_handler
- db 'mulss',59h
- dw sse_ss_instruction-instruction_handler
  db 'mwait',0C9h
  dw monitor_instruction-instruction_handler
  db 'outsb',6Eh
@@ -23141,28 +22862,8 @@ instructions_5:
  dw simple_instruction_16bit-instruction_handler
  db 'times',0
  dw times_directive-instruction_handler
- db 'tzcnt',0BCh
- dw popcnt_instruction-instruction_handler
- db 'tzmsk',14h
- dw tbm_instruction-instruction_handler
- db 'vmrun',0D8h
- dw simple_svm_instruction-instruction_handler
- db 'vmxon',6
- dw vmxon_instruction-instruction_handler
  db 'while',0
  dw while_directive-instruction_handler
- db 'wrmsr',30h
- dw simple_extended_instruction-instruction_handler
- db 'xlatb',0D7h
- dw simple_instruction-instruction_handler
- db 'xorpd',57h
- dw sse_pd_instruction-instruction_handler
- db 'xorps',57h
- dw sse_ps_instruction-instruction_handler
- db 'xsave',100b
- dw fxsave_instruction-instruction_handler
- db 'xtest',0D6h
- dw simple_instruction_0f_01-instruction_handler
 instructions_6:
  db 'format',0
  dw format_directive-instruction_handler
@@ -23506,4 +23207,4 @@ section '.reloc' fixups data readable discardable
 	if $=$$
 		dd 0,8
 	end if
-; 23509
+; 23210
