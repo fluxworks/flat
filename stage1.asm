@@ -1,5 +1,37 @@
 /*
-flat compiler | ::stage( 1 ) */
+flat compiler | ::stage( 1 ) 
+
+rax = the
+rbx = of
+rcx = it
+rdx = self
+
+rbp = that
+rsp = this
+
+esi = from
+edi = to
+
+r8 = third
+r9 = fourth
+
+
+stos
+create( u8, esi )
+create( u16, esi )
+create( u32, esi )
+create( u64, esi )
+create( usize, esi )
+
+work on lods | stos mechanics
+lods
+read( u8, esi )
+read( u16, esi )
+read( u32, esi )
+read( u64, esi )
+read( usize, esi )
+
+*/
 WIN64 = 1
 display '::stage( 1 )'
 format  PE64 console
@@ -115,7 +147,7 @@ start:
 		call strands.emit
 		call    cell[GetTickCount]
 		sub     eax,[start_time]
-		xor     edx,edx
+		xor     edx,edx ; xor of, of | reset of
 		mov     ebx,100
 		div     ebx
 		or      eax,eax
@@ -156,28 +188,28 @@ start:
 		mov     esi,eax
 		mov     edi,params
 		find_command_start:
-		lodsb
+		read
 		; when( 20h, command_start )
 		cmp     al,20h
 		je      find_command_start
 		cmp     al,22h
 		je      skip_quoted_name
 		skip_name:
-		lodsb
+		read
 		cmp     al,20h
 		je      find_param
 		or      al,al
 		jz      all_params
 		jmp     skip_name
 		skip_quoted_name:
-		lodsb
+		read
 		cmp     al,22h
 		je      find_param
 		or      al,al
 		jz      all_params
 		jmp     skip_quoted_name
 		find_param:
-		lodsb
+		read
 		cmp     al,20h
 		je      find_param
 		cmp     al,'-'
@@ -203,7 +235,7 @@ start:
 		cmp     edi,params+1000h
 		jae     bad_params
 		stosb
-		lodsb
+		read
 		cmp     al,20h
 		je      param_end
 		cmp     al,0Dh
@@ -214,7 +246,7 @@ start:
 		jz      param_end
 		jmp     copy_param
 		string_param:
-		lodsb
+		read
 		cmp     al,22h
 		je      string_param_end
 		cmp     al,0Dh
@@ -226,7 +258,7 @@ start:
 		stosb
 		jmp     string_param
 		option_param:
-		lodsb
+		read
 		cmp     al,'m'
 		je      memory_option
 		cmp     al,'M'
@@ -251,7 +283,7 @@ start:
 		xor     eax,eax
 		mov     edx,eax
 		get_option_digit:
-		lodsb
+		read
 		cmp     al,20h
 		je      option_value_ok
 		cmp     al,0Dh
@@ -275,7 +307,7 @@ start:
 		stc
 		ret
 		memory_option:
-		lodsb
+		read
 		cmp     al,20h
 		je      memory_option
 		cmp     al,0Dh
@@ -291,7 +323,7 @@ start:
 		mov     [memory_setting ], edx
 		jmp     find_param
 		passes_option:
-		lodsb
+		read
 		cmp     al,20h
 		je      passes_option
 		cmp     al,0Dh
@@ -307,7 +339,7 @@ start:
 		mov     [passes_limit ], dx
 		jmp     find_param
 		definition_option:
-		lodsb
+		read
 		cmp     al,20h
 		je      definition_option
 		cmp     al,0Dh
@@ -325,7 +357,7 @@ start:
 		symbols_option:
 		mov     [symbols_file ], edi
 		find_symbols_file_name:
-		lodsb
+		read
 		cmp     al,20h
 		jne     process_param
 		jmp     find_symbols_file_name
@@ -352,7 +384,7 @@ start:
 		xor     al,al
 		stosb
 		copy_definition_name:
-		lodsb
+		read
 		cmp     al,'='
 		je      copy_definition_value
 		cmp     al,20h
@@ -370,7 +402,7 @@ start:
 		stc
 		ret
 		copy_definition_value:
-		lodsb
+		read
 		cmp     al,20h
 		je      definition_value_end
 		cmp     al,0Dh
@@ -381,7 +413,7 @@ start:
 		jne     definition_value_character
 		cmp     byte [ esi ], 20h
 		jne     definition_value_character
-		lodsb
+		read
 		definition_value_character:
 		cmp     edi,predefinitions+1000h
 		jae     bad_definition_option
@@ -2195,7 +2227,7 @@ lex: ret
 		/*
 		flat | lex::test */
 		.test_for_symbols:
-			lodsb
+			read
 			mov	byte [ edi+eax ], 0
 			loop	.test_for_symbols
 			mov	edi,locals_counter
@@ -7564,7 +7596,7 @@ finals:
 		sub     eax,100h
 		cmp     edi,eax
 		ja      errors.oom
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1
 		je      assemble_instruction
 		jb      source_end
@@ -7579,14 +7611,14 @@ finals:
 		je      code_type_setting
 		cmp     al,10h
 		jne     errors.illegal_instruction
-		lods    byte [ esi]
+		lods byte [ esi ]
 		jmp     segment_prefix
 		code_type_setting:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     [code_type ], al
 		jmp     instruction_assembled
 		new_line:
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     cell[current_line ], _eax
 		and     [prefix_flags ], 0
 		cmp     [symbols_file ], 0
@@ -7611,12 +7643,12 @@ finals:
 		je      line_assembled
 		jmp     assemble_line
 		define_label:
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
 		je      errors.reserved_word_used_as_symbol
 		mov     ebx,eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     [label_size ], al
 		call    make_label
 		jmp     continue_line
@@ -7720,7 +7752,7 @@ finals:
 		or      byte [ ebx+8 ], 1
 		ret
 		define_constant:
-		lods    dword [esi]
+		lods dword [ esi ]
 		inc     esi
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
@@ -7803,7 +7835,7 @@ finals:
 		or      byte [ ebx+8 ], 1+2
 		jmp     instruction_assembled
 		label_addressing_space:
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
 		je      errors.reserved_word_used_as_symbol
@@ -7862,7 +7894,7 @@ finals:
 		ret
 
 		org_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -7905,24 +7937,24 @@ finals:
 		bts     [format_flags ], 0
 		jmp     instruction_assembled
 		label_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,2
 		jne     errors.invalid_argument
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
 		je      errors.reserved_word_used_as_symbol
 		inc     esi
 		mov     ebx,eax
 		mov     [label_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,':'
 		je      get_label_size
 		dec     esi
 		cmp     al,11h
 		jne     label_size_ok
 		get_label_size:
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     al,11h
 		jne     errors.invalid_argument
 		mov     [label_size ], ah
@@ -7933,7 +7965,7 @@ finals:
 		jmp     instruction_assembled
 		get_free_label_value:
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		push    _ebx _ecx
@@ -7967,10 +7999,10 @@ finals:
 		call    finish_label_symbol
 		jmp     instruction_assembled
 		load_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,2
 		jne     errors.invalid_argument
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
 		je      errors.reserved_word_used_as_symbol
@@ -7979,15 +8011,15 @@ finals:
 		mov     al,1
 		cmp     byte [ esi ], 11h
 		jne     load_size_ok
-		lods    byte [ esi]
-		lods    byte [ esi]
+		lods byte [ esi ]
+		lods byte [ esi ]
 		load_size_ok:
 		cmp     al,8
 		ja      errors.invalid_value
 		mov     [operand_size ], al
 		and     dword [value ], 0
 		and     dword [value+4 ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,82h
 		jne     errors.invalid_argument
 		call    get_data_point
@@ -8009,7 +8041,7 @@ finals:
 		mov     ecx,edi
 		sub     ecx,[ebx+18h]
 		mov     [ebx+1Ch ], ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], 11h
@@ -8017,7 +8049,7 @@ finals:
 		cmp     word [esi+1+4 ], '):'
 		jne     get_data_address
 		inc     esi
-		lods    dword [esi]
+		lods dword [ esi ]
 		add     esi,2
 		cmp     byte [ esi ], '('
 		jne     errors.invalid_argument
@@ -8082,7 +8114,7 @@ finals:
 		store_directive:
 		cmp     byte [ esi ], 11h
 		je      sized_store
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		call    get_byte_value
@@ -8098,7 +8130,7 @@ finals:
 		jne     errors.invalid_use_of_symbol
 		mov     dword [value ], eax
 		mov     dword [value+4 ], edx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,80h
 		jne     errors.invalid_argument
 		call    get_data_point
@@ -8117,13 +8149,13 @@ finals:
 		jmp     instruction_assembled
 
 		display_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], 0
 		jne     display_byte
 		inc     esi
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     ecx,eax
 		push    _edi
 		mov     edi,[tagged_blocks]
@@ -8154,7 +8186,7 @@ finals:
 		display_next:
 		cmp     edi,[tagged_blocks]
 		ja      errors.oom
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		je      display_directive
 		dec     esi
@@ -8193,7 +8225,7 @@ finals:
 		jz      addressing_space_written
 		xor     ebx,ebx
 		copy_output_path:
-		lodsb
+		read
 		cmp     edi,[structures_buffer]
 		jae     errors.oom
 		stosb
@@ -8241,7 +8273,7 @@ finals:
 		jmp     skip_block
 
 		times_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -8282,12 +8314,12 @@ finals:
 		jmp     instruction_assembled
 
 		virtual_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      continue_virtual_area
 		cmp     al,80h
 		jne     virtual_at_current
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -8336,7 +8368,7 @@ finals:
 		push    _ebx
 		mov     ebx, chars
 		get_extension:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		stos    byte [ edi]
 		xlat    byte [ ebx]
 		test    al,al
@@ -8406,7 +8438,7 @@ finals:
 		cmp     byte [ esi+1+4 ], ')'
 		jne     errors.invalid_argument
 		inc     esi
-		lods    dword [esi]
+		lods dword [ esi ]
 		inc     esi
 		cmp     eax,0Fh
 		jbe     errors.reserved_word_used_as_symbol
@@ -8534,7 +8566,7 @@ finals:
 		repeat_directive:
 		test    [prefix_flags ], 1
 		jnz     errors.unexpected_instruction
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -8726,10 +8758,10 @@ finals:
 		find_end_directive:
 		call    skip_symbol
 		jnc     find_end_directive
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,0Fh
 		jne     no_end_directive
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     cell[current_line ], _eax
 		skip_labels:
 		cmp     byte [ esi ], 2
@@ -8793,10 +8825,10 @@ finals:
 		if_block_skipped:
 		ret
 		end_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1
 		jne     errors.invalid_argument
-		lods    word [esi]
+		lods word [ esi ]
 		inc     esi
 		cmp     ax,virtual_directive-instruction_handler
 		je      end_virtual
@@ -8872,7 +8904,7 @@ finals:
 		jae     errors.oom
 		clc
 		call    near cell [_esp+16]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		je      duplicated_values
 		cmp     al,92h
@@ -8913,7 +8945,7 @@ finals:
 		clc
 		call    near cell [_esp]
 		data_defined:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		je      define_data
 		dec     esi
@@ -8922,7 +8954,7 @@ finals:
 		data_bytes:
 		call    define_data
 		jc      instruction_assembled
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      get_byte
 		cmp     al,'?'
@@ -8939,7 +8971,7 @@ finals:
 		ret
 		get_string:
 		inc     esi
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     ecx,eax
 		lea     eax,[edi+ecx]
 		cmp     eax,[tagged_blocks]
@@ -8967,7 +8999,7 @@ finals:
 		define_words:
 		call    define_data
 		jc      instruction_assembled
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      get_word
 		cmp     al,'?'
@@ -8989,7 +9021,7 @@ finals:
 		ret
 		word_string:
 		inc     esi
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     ecx,eax
 		jecxz   word_string_ok
 		lea     eax,[edi+ecx*2]
@@ -8997,7 +9029,7 @@ finals:
 		ja      errors.oom
 		xor     ah,ah
 		copy_word_string:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		stos    word [edi]
 		loop    copy_word_string
 		word_string_ok:
@@ -9006,7 +9038,7 @@ finals:
 		data_dwords:
 		call    define_data
 		jc      instruction_assembled
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      get_dword
 		cmp     al,'?'
@@ -9031,7 +9063,7 @@ finals:
 		call    get_word_value
 		push    _eax
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		mov     al,[value_type]
@@ -9050,7 +9082,7 @@ finals:
 		data_pwords:
 		call    define_data
 		jc      instruction_assembled
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      get_pword
 		cmp     al,'?'
@@ -9079,7 +9111,7 @@ finals:
 		call    get_word_value
 		push    _eax
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		mov     al,[value_type]
@@ -9098,7 +9130,7 @@ finals:
 		data_qwords:
 		call    define_data
 		jc      instruction_assembled
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      get_qword
 		cmp     al,'?'
@@ -9119,7 +9151,7 @@ finals:
 		data_twords:
 		call    define_data
 		jc      instruction_assembled
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		je      get_tword
 		cmp     al,'?'
@@ -9200,7 +9232,7 @@ finals:
 		cmp     byte [ esi ], ':'
 		jne     errors.invalid_operand
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		mov     al,[value_type]
@@ -9219,7 +9251,7 @@ finals:
 		stos    word [edi]
 		ret
 		data_file:
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     ax,'('
 		jne     errors.invalid_argument
 		add     esi,4
@@ -9272,7 +9304,7 @@ finals:
 		call system.read
 		jc      errors.error_reading_file
 		call system.signal
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		je      data_file
 		dec     esi
@@ -9288,7 +9320,7 @@ finals:
 		mov     eax,[eax+8]
 		jmp     find_current_source_path
 		get_current_path:
-		lodsb
+		read
 		stosb
 		or      al,al
 		jnz     get_current_path
@@ -9337,7 +9369,7 @@ finals:
 		pop     _esi
 		ret
 		reserve_bytes:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9370,7 +9402,7 @@ finals:
 		call    undefined_data
 		jmp     instruction_assembled
 		reserve_words:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9398,7 +9430,7 @@ finals:
 		rep     stos dword [edi]
 		jmp     reserved_data
 		reserve_dwords:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9424,7 +9456,7 @@ finals:
 		rep     stos dword [edi]
 		jmp     reserved_data
 		reserve_pwords:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9447,7 +9479,7 @@ finals:
 		lea     edi,[edi+ecx*2]
 		jmp     reserved_data
 		reserve_qwords:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9471,7 +9503,7 @@ finals:
 		lea     edi,[edi+ecx*4]
 		jmp     reserved_data
 		reserve_twords:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9494,7 +9526,7 @@ finals:
 		lea     edi,[edi+ecx*2]
 		jmp     reserved_data
 		align_directive:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -9593,7 +9625,7 @@ finals:
 		sub     eax,0Ch
 		cmp     eax,edi
 		jbe     errors.oom
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1
 		je      get_byte_number
 		cmp     al,2
@@ -9669,7 +9701,7 @@ finals:
 		ret
 		get_byte_number:
 		xor     eax,eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		stos    dword [edi]
 		xor     al,al
 		stos    dword [edi]
@@ -9681,7 +9713,7 @@ finals:
 		jmp     calculation_loop
 		get_word_number:
 		xor     eax,eax
-		lods    word [esi]
+		lods word [ esi ]
 		stos    dword [edi]
 		xor     ax,ax
 		stos    dword [edi]
@@ -9698,7 +9730,7 @@ finals:
 		get_register:
 		mov     byte [ edi+9 ], 0
 		and     word [edi+12 ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     [edi+8 ], al
 		mov     byte [ edi+10 ], 1
 		xor     eax,eax
@@ -9712,7 +9744,7 @@ finals:
 		mov     [edi+8 ], eax
 		mov     [edi+12 ], eax
 		mov     [edi+20 ], eax
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      predefined_label
 		je      errors.reserved_word_used_as_symbol
@@ -10747,7 +10779,7 @@ finals:
 		ret
 		get_string_value:
 		inc     esi
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     ecx,eax
 		cmp     ecx,8
 		ja      errors.value_out_of_range
@@ -10915,7 +10947,7 @@ finals:
 		ret
 		get_value:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		jne     errors.invalid_value
@@ -11333,7 +11365,7 @@ finals:
 		get_value_for_comparison:
 		mov     [value_size ], 8
 		or      [operand_flags ], 1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    calculate_expression
 		cmp     byte [ edi+8 ], 0
 		jne     first_register_size_ok
@@ -11516,11 +11548,11 @@ finals:
 		jmp     return_false
 		check_for_defined:
 		or      bl,-1
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     ah,'('
 		jne     errors.invalid_expression
 		check_expression:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		or      al,al
 		jz      defined_string
 		cmp     al,'.'
@@ -11547,12 +11579,12 @@ finals:
 		add     esi,12+1
 		jmp     expression_checked
 		defined_string:
-		lods    dword [esi]
+		lods dword [ esi ]
 		add     esi,eax
 		inc     esi
 		jmp     expression_checked
 		check_if_symbol_defined:
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,-1
 		je      errors.invalid_expression
 		cmp     eax,0Fh
@@ -11586,10 +11618,10 @@ finals:
 		mov     al,bl
 		jmp     logical_value_ok
 		check_for_used:
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     ah,2
 		jne     errors.invalid_expression
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
 		je      errors.reserved_word_used_as_symbol
@@ -11618,14 +11650,14 @@ finals:
 		or      al,-1
 		jmp     logical_value_ok
 		logical_expression:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     dl,[logical_value_wrapping]
 		push    _edx
 		call    calculate_embedded_logical_expression
 		pop     _edx
 		mov     [logical_value_wrapping ], dl
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,92h
 		jne     errors.invalid_expression
 		pop     _eax
@@ -11635,7 +11667,7 @@ finals:
 		ret
 
 		skip_symbol:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		or      al,al
 		jz      nothing_to_skip
 		cmp     al,0Fh
@@ -11677,7 +11709,7 @@ finals:
 		inc     esi
 		jmp     skip_address
 		skip_expression:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		or      al,al
 		jz      skip_string
 		cmp     al,'.'
@@ -11708,7 +11740,7 @@ finals:
 		add     esi,12
 		jmp     skip_done
 		skip_string:
-		lods    dword [esi]
+		lods dword [ esi ]
 		add     esi,eax
 		inc     esi
 		jmp     skip_done
@@ -11718,7 +11750,7 @@ finals:
 		ret
 
 		expand_path:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'%'
 		je      environment_variable
 		stos    byte [ edi]
@@ -11730,7 +11762,7 @@ finals:
 		environment_variable:
 		mov     ebx,esi
 		find_variable_end:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		or      al,al
 		jz      not_environment_variable
 		cmp     al,'%'
@@ -11748,7 +11780,7 @@ finals:
 		mov     esi,ebx
 		jmp     expand_path
 		get_include_directory:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,';'
 		je      include_directory_ok
 		stos    byte [ edi]
@@ -11773,7 +11805,7 @@ finals:
 		mov     esi,[input_file]
 		mov     _edi,cell[free_additional_memory]
 		duplicate_output_path:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     edi,[structures_buffer]
 		jae     errors.oom
 		stos    byte [ edi]
@@ -11868,7 +11900,7 @@ finals:
 		stos    byte [ edi]
 		mov     esi,[file_extension]
 		copy_extension:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		stos    byte [ edi]
 		test    al,al
 		jnz     copy_extension
@@ -11963,12 +11995,12 @@ finals:
 		jnz     errors.unexpected_instruction
 		cmp     [output_format ], 0
 		jne     errors.unexpected_instruction
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Ch
 		je      format_prefix
 		cmp     al,18h
 		jne     errors.invalid_argument
-		lods    byte [ esi]
+		lods byte [ esi ]
 		select_format:
 		mov     dl,al
 		shr     al,4
@@ -11988,12 +12020,12 @@ finals:
 		lea     esi,[esi+eax+1]
 		jmp     instruction_assembled
 		format_prefix:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,18h
 		jne     errors.invalid_argument
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     edx,eax
 		shr     dl,4
 		shr     dh,4
@@ -12085,10 +12117,10 @@ finals:
 		pop     _ebx _eax
 		ret
 		mz_segment:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,2
 		jne     errors.invalid_argument
-		lods    dword [esi]
+		lods dword [ esi ]
 		cmp     eax,0Fh
 		jb      errors.invalid_use_of_symbol
 		je      errors.reserved_word_used_as_symbol
@@ -12118,7 +12150,7 @@ finals:
 		cmp     byte [ esi ], 13h
 		jne     segment_type_ok
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		segment_type_ok:
 		mov     [code_type ], al
 		mov     eax,edx
@@ -12130,7 +12162,7 @@ finals:
 		mov     cell[address_symbol ], _edx
 		jmp     make_free_label
 		mz_entry:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		call    get_word_value
@@ -12140,10 +12172,10 @@ finals:
 		initial_cs_ok:
 		mov     _edx,cell[additional_memory]
 		mov     [edx+16h ], ax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,':'
 		jne     errors.invalid_argument
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		ja      errors.invalid_address
@@ -12162,7 +12194,7 @@ finals:
 		ignore_invalid_address:
 		ret
 		mz_stack:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		call    get_word_value
@@ -12182,10 +12214,10 @@ finals:
 		initial_ss_ok:
 		mov     _edx,cell[additional_memory]
 		mov     [edx+0Eh ], ax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,':'
 		jne     errors.invalid_argument
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		call    get_word_value
@@ -12198,7 +12230,7 @@ finals:
 		mz_heap:
 		cmp     [output_format ], 2
 		jne     errors.illegal_instruction
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     ah,1
 		je      errors.invalid_value
@@ -12467,8 +12499,8 @@ finals:
 		je      get_pe_base
 		cmp     byte [ esi ], 1Bh
 		jne     pe_settings_ok
-		lods    byte [ esi]
-		lods    byte [ esi]
+		lods byte [ esi ]
+		lods byte [ esi ]
 		test    al,80h+40h
 		jz      subsystem_setting
 		cmp     al,80h
@@ -12552,7 +12584,7 @@ finals:
 		get_pe_base:
 		bts     [format_flags ], 10
 		jc      errors.setting_already_specified
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     ah,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -12575,11 +12607,11 @@ finals:
 		cmp     byte [ esi ], 84h
 		jne     pe_settings_ok
 		get_stub_name:
-		lods    byte [ esi]
-		lods    word [esi]
+		lods byte [ esi ]
+		lods word [ esi ]
 		cmp     ax,'('
 		jne     errors.invalid_argument
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     edx,esi
 		add     esi,eax
 		inc     esi
@@ -12773,7 +12805,7 @@ finals:
 		pop     _edi
 		new_section:
 		mov     [ebx+0Ch ], eax
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     ax,'('
 		jne     errors.invalid_argument
 		lea     edx,[esi+4]
@@ -12825,7 +12857,7 @@ finals:
 		mov     [ds:ebp+4 ], ecx
 		mov     [ds:ebp+18h ], edi
 		get_section_flags:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Ah
 		je      set_directory
 		cmp     al,19h
@@ -12852,7 +12884,7 @@ finals:
 		pop     _edx _ebx
 		jmp     get_section_flags
 		section_flag:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,9
 		je      errors.invalid_argument
 		cmp     al,11
@@ -12939,7 +12971,7 @@ finals:
 		data_directive:
 		cmp     [output_format ], 3
 		jne     errors.illegal_instruction
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Ah
 		je      predefined_data_type
 		cmp     al,'('
@@ -12994,7 +13026,7 @@ finals:
 		mov     [edx+88h+eax*8+4 ], ecx
 		jmp     remove_structure_data
 		pe_entry:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13038,7 +13070,7 @@ finals:
 		mov     [ecx+28h ], eax
 		jmp     instruction_assembled
 		pe_stack:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13050,8 +13082,8 @@ finals:
 		mov     [edx+60h ], eax
 		cmp     byte [ esi ], ','
 		jne     default_stack_commit
-		lods    byte [ esi]
-		lods    byte [ esi]
+		lods byte [ esi ]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13078,8 +13110,8 @@ finals:
 		mov     [ecx+64h ], edx
 		cmp     byte [ esi ], ','
 		jne     default_peplus_stack_commit
-		lods    byte [ esi]
-		lods    byte [ esi]
+		lods byte [ esi ]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13106,7 +13138,7 @@ finals:
 		mov     dword [ecx+68h ], eax
 		jmp     instruction_assembled
 		pe_heap:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13118,8 +13150,8 @@ finals:
 		mov     [edx+68h ], eax
 		cmp     byte [ esi ], ','
 		jne     instruction_assembled
-		lods    byte [ esi]
-		lods    byte [ esi]
+		lods byte [ esi ]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13139,8 +13171,8 @@ finals:
 		mov     [ecx+74h ], edx
 		cmp     byte [ esi ], ','
 		jne     instruction_assembled
-		lods    byte [ esi]
-		lods    byte [ esi]
+		lods byte [ esi ]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_argument
 		cmp     byte [ esi ], '.'
@@ -13266,10 +13298,10 @@ finals:
 		cmp     byte [ esi ], 82h
 		jne     resource_done
 		inc     esi
-		lods    word [esi]
+		lods word [ esi ]
 		cmp     ax,'('
 		jne     errors.invalid_argument
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     edx,esi
 		lea     esi,[esi+eax+1]
 		cmp     [next_pass_needed ], 0
@@ -14237,7 +14269,7 @@ finals:
 		mov     esi,[esi+4]
 		or      esi,esi
 		jz      default_name
-		lods    dword [esi]
+		lods dword [ esi ]
 		mov     ecx,eax
 		cmp     ecx,8
 		ja      add_string
@@ -14330,7 +14362,7 @@ finals:
 		or      [prefix_flags ], 1 + 10h
 		jmp     continue_line
 		int_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     ah,1
 		ja      errors.invalid_operand_size
@@ -14369,7 +14401,7 @@ finals:
 
 		basic_instruction:
 		mov     [base_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      basic_reg
@@ -14378,17 +14410,17 @@ finals:
 		basic_mem:
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      basic_mem_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
 		basic_mem_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
 		pop     _ecx _ebx _edx
@@ -14488,13 +14520,13 @@ finals:
 		get_simm32_ok:
 		ret
 		basic_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      basic_reg_reg
@@ -14514,7 +14546,7 @@ finals:
 		add     [base_code ], 2
 		jmp     instruction_ready
 		basic_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,[postbyte_register]
 		mov     [postbyte_register ], al
@@ -14640,7 +14672,7 @@ finals:
 		single_operand_instruction:
 		mov     [base_code ], 0F6h
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      single_reg
@@ -14660,7 +14692,7 @@ finals:
 		single_mem_8bit:
 		jmp     instruction_ready
 		single_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,ah
@@ -14672,7 +14704,7 @@ finals:
 		jmp     nomem_instruction_ready
 		mov_instruction:
 		mov     [base_code ], 88h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      mov_reg
@@ -14683,17 +14715,17 @@ finals:
 		mov_mem:
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      mov_mem_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
 		mov_mem_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,30h
 		jb      mov_mem_general_reg
 		cmp     al,40h
@@ -14849,7 +14881,7 @@ finals:
 		call    store_instruction_with_imm32
 		jmp     instruction_assembled
 		mov_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		sub     ah,10h
 		and     ah,al
@@ -14857,10 +14889,10 @@ finals:
 		jnz     mov_sreg
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      mov_reg_mem
@@ -14871,7 +14903,7 @@ finals:
 		cmp     al,10h
 		jne     errors.invalid_operand
 		mov_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		sub     ah,10h
 		and     ah,al
@@ -14913,7 +14945,7 @@ finals:
 		mov     [base_code ], 8Ch
 		jmp     nomem_instruction_ready
 		mov_reg_creg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     bl,al
 		shr     al,4
 		cmp     al,4
@@ -15105,17 +15137,17 @@ finals:
 		cmp     al,2
 		je      errors.illegal_instruction
 		dec     [postbyte_register]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      mov_sreg_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
 		mov_sreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		or      ah,ah
 		jz      mov_sreg_reg_size_ok
@@ -15136,7 +15168,7 @@ finals:
 		mov     [base_code ], 8Eh
 		jmp     instruction_ready
 		mov_creg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		shr     ah,4
 		cmp     ah,4
@@ -15146,7 +15178,7 @@ finals:
 		and     al,1111b
 		mov     [postbyte_register ], al
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -15170,7 +15202,7 @@ finals:
 		jmp     errors.invalid_operand_size
 		test_instruction:
 		mov     [base_code ], 84h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      test_reg
@@ -15179,17 +15211,17 @@ finals:
 		test_mem:
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      test_mem_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
 		test_mem_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
 		pop     _ecx _ebx _edx
@@ -15249,13 +15281,13 @@ finals:
 		call    store_instruction_with_imm32
 		jmp     instruction_assembled
 		test_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      test_reg_mem
@@ -15264,7 +15296,7 @@ finals:
 		cmp     al,10h
 		jne     errors.invalid_operand
 		test_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,[postbyte_register]
 		mov     [postbyte_register ], al
@@ -15363,7 +15395,7 @@ finals:
 		jmp     instruction_ready
 		xchg_instruction:
 		mov     [base_code ], 86h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      xchg_reg
@@ -15372,29 +15404,29 @@ finals:
 		xchg_mem:
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      test_mem_reg
 		jmp     errors.invalid_operand
 		xchg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      test_reg_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
 		xchg_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,ah
@@ -15430,7 +15462,7 @@ finals:
 		push_instruction:
 		mov     [push_size ], al
 		push_next:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      push_reg
@@ -15481,7 +15513,7 @@ finals:
 		call    store_instruction
 		jmp     push_done
 		push_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		sub     ah,10h
 		and     ah,al
@@ -15680,7 +15712,7 @@ finals:
 		call    mark_relocation
 		stos    dword [edi]
 		push_done:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		dec     esi
 		cmp     al,0Fh
 		je      instruction_assembled
@@ -15695,7 +15727,7 @@ finals:
 		pop_instruction:
 		mov     [push_size ], al
 		pop_next:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pop_reg
@@ -15744,7 +15776,7 @@ finals:
 		call    store_instruction
 		jmp     pop_done
 		pop_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		sub     ah,10h
 		and     ah,al
@@ -15787,7 +15819,7 @@ finals:
 		pop_reg_store:
 		call    store_classic_instruction_code
 		pop_done:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		dec     esi
 		cmp     al,0Fh
 		je      instruction_assembled
@@ -15877,7 +15909,7 @@ finals:
 		jmp     pop_reg_store
 		inc_instruction:
 		mov     [base_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      inc_reg
@@ -15903,7 +15935,7 @@ finals:
 		mov     [postbyte_register ], al
 		jmp     instruction_ready
 		inc_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,0FEh
@@ -15929,7 +15961,7 @@ finals:
 		set_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      set_reg
@@ -15942,7 +15974,7 @@ finals:
 		mov     [postbyte_register ], 0
 		jmp     instruction_ready
 		set_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,1
 		jne     errors.invalid_operand_size
@@ -15953,14 +15985,14 @@ finals:
 		cmp     [code_type ], 64
 		je      errors.illegal_instruction
 		mov     [base_code ], 63h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      arpl_reg
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -15969,12 +16001,12 @@ finals:
 		jne     errors.invalid_operand_size
 		jmp     instruction_ready
 		arpl_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,2
 		jne     errors.invalid_operand_size
 		mov     bl,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -15985,10 +16017,10 @@ finals:
 		je      errors.illegal_instruction
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -16003,7 +16035,7 @@ finals:
 		mov     [base_code ], 62h
 		jmp     instruction_ready
 		enter_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     ah,2
 		je      enter_imm16_size_ok
@@ -16022,10 +16054,10 @@ finals:
 		enter_imm16_ok:
 		push    _eax
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     ah,1
 		je      enter_imm8_size_ok
@@ -16068,13 +16100,13 @@ finals:
 		and     [prefix_flags ], not 10h
 		ret_common:
 		mov     [base_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		dec     esi
 		or      al,al
 		jz      simple_ret
 		cmp     al,0Fh
 		je      simple_ret
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		or      ah,ah
 		jz      ret_imm
@@ -16122,13 +16154,13 @@ finals:
 		mov     [base_code ], 8Dh
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     al,al
 		xchg    al,[operand_size]
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -16158,11 +16190,11 @@ finals:
 		ls_code_ok:
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		add     [operand_size ], 2
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -16186,7 +16218,7 @@ finals:
 		jmp     instruction_ready
 		sh_instruction:
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      sh_reg
@@ -16198,17 +16230,17 @@ finals:
 		mov     al,[operand_size]
 		push    _eax
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      sh_mem_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
 		sh_mem_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,11h
 		jne     errors.invalid_operand
 		pop     _eax _ecx _ebx _edx
@@ -16257,21 +16289,21 @@ finals:
 		mov     [base_code ], 0D0h
 		jmp     instruction_ready
 		sh_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bx,ax
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      sh_reg_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
 		sh_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,11h
 		jne     errors.invalid_operand
 		mov     al,bh
@@ -16322,7 +16354,7 @@ finals:
 		shd_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      shd_reg
@@ -16331,24 +16363,24 @@ finals:
 		shd_mem:
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     al,ah
 		mov     [operand_size ], 0
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      shd_mem_reg_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,11h
 		jne     errors.invalid_operand
 		pop     _eax _ecx _ebx _edx
@@ -16369,10 +16401,10 @@ finals:
 		call    store_instruction_with_imm8
 		jmp     instruction_assembled
 		shd_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -16380,17 +16412,17 @@ finals:
 		mov     [postbyte_register ], al
 		mov     al,ah
 		push    _eax _ebx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      shd_reg_reg_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,11h
 		jne     errors.invalid_operand
 		pop     _ebx _eax
@@ -16419,11 +16451,11 @@ finals:
 		mov     [postbyte_register ], al
 		mov     al,ah
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movx_reg
@@ -16448,7 +16480,7 @@ finals:
 		call    recoverable_unknown_size
 		jmp     movx_mem_store
 		movx_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		pop     _ebx
 		xchg    bl,al
@@ -16472,11 +16504,11 @@ finals:
 		mov     [postbyte_register ], al
 		cmp     ah,8
 		jne     errors.invalid_operand_size
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movsxd_reg
@@ -16491,7 +16523,7 @@ finals:
 		call    operand_64bit
 		jmp     instruction_ready
 		movsxd_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,4
 		jne     errors.invalid_operand_size
@@ -16504,7 +16536,7 @@ finals:
 		add     al,83h
 		mov     [extended_code ], al
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      bt_reg
@@ -16512,7 +16544,7 @@ finals:
 		jne     errors.invalid_operand
 		call    get_address
 		push    _eax _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		cmp     byte [ esi ], '('
@@ -16532,7 +16564,7 @@ finals:
 		xor     al,al
 		xchg    al,[operand_size]
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		jne     errors.invalid_operand
@@ -16557,10 +16589,10 @@ finals:
 		call    recoverable_unknown_size
 		jmp     bt_mem_imm_store
 		bt_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		cmp     byte [ esi ], '('
@@ -16579,7 +16611,7 @@ finals:
 		xor     al,al
 		xchg    al,[operand_size]
 		push    _eax _ebx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		jne     errors.invalid_operand
@@ -16614,10 +16646,10 @@ finals:
 		get_reg_mem:
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      get_reg_reg
@@ -16627,7 +16659,7 @@ finals:
 		clc
 		ret
 		get_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		stc
@@ -16636,7 +16668,7 @@ finals:
 		imul_instruction:
 		mov     [base_code ], 0F6h
 		mov     [postbyte_register ], 5
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      imul_reg
@@ -16656,7 +16688,7 @@ finals:
 		imul_mem_8bit:
 		jmp     instruction_ready
 		imul_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     byte [ esi ], ','
 		je      imul_reg_
@@ -16678,7 +16710,7 @@ finals:
 		cmp     byte [ esi+2 ], '('
 		je      imul_reg_imm
 		imul_reg_noimm:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      imul_reg_reg
@@ -16697,7 +16729,7 @@ finals:
 		jmp     instruction_ready
 		imul_reg_mem_imm:
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		jne     errors.invalid_operand
@@ -16761,7 +16793,7 @@ finals:
 		dec     esi
 		jmp     imul_reg_reg_imm
 		imul_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		cmp     byte [ esi ], ','
@@ -16773,7 +16805,7 @@ finals:
 		jmp     nomem_instruction_ready
 		imul_reg_reg_imm:
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		jne     errors.invalid_operand
@@ -16846,13 +16878,13 @@ finals:
 		call    take_register
 		or      al,al
 		jnz     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     al,ah
 		push    _eax
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      in_imm
@@ -16860,7 +16892,7 @@ finals:
 		je      in_reg
 		jmp     errors.invalid_operand
 		in_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,22h
 		jne     errors.invalid_operand
 		pop     _eax
@@ -16909,16 +16941,16 @@ finals:
 		stos    byte [ edi]
 		jmp     instruction_assembled
 		out_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'('
 		je      out_imm
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,22h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
@@ -16950,7 +16982,7 @@ finals:
 		out_imm_size_ok:
 		call    get_byte_value
 		mov     dl,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
@@ -16991,7 +17023,7 @@ finals:
 			mov     [extended_code ], 0EAh
 			
 		process_jmp:
-			lods    byte [ esi]
+			lods byte [ esi ]
 			call    get_jump_operator
 			test    [prefix_flags ], 10h
 			jz      jmp_type_ok
@@ -17110,7 +17142,7 @@ finals:
 		jmp_reg:
 		test    [jump_type ], 1
 		jnz     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,ah
@@ -17297,7 +17329,7 @@ finals:
 		call    get_word_value
 		push    _eax
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		mov     al,[value_type]
@@ -17349,7 +17381,7 @@ finals:
 		conditional_jump:
 		mov     [base_code ], al
 		and     [prefix_flags ], not 10h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_jump_operator
 		cmp     [jump_type ], 3
 		je      errors.invalid_operand
@@ -17455,7 +17487,7 @@ finals:
 		jne     errors.illegal_instruction
 		loop_instruction:
 		mov     [base_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_jump_operator
 		cmp     [jump_type ], 1
 		ja      errors.invalid_operand
@@ -17528,7 +17560,7 @@ finals:
 		jmp     make_loop_jump
 
 		movs_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17540,10 +17572,10 @@ finals:
 		cmp     [segment_register ], 1
 		ja      errors.invalid_address
 		push    _ebx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17599,7 +17631,7 @@ finals:
 		call    recoverable_unknown_size
 		jmp     simple_instruction
 		lods_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17631,7 +17663,7 @@ finals:
 		jmp     movs_check_size
 		stos_instruction:
 		mov     [base_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17662,7 +17694,7 @@ finals:
 		mov     al,[base_code]
 		jmp     movs_check_size
 		cmps_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17673,10 +17705,10 @@ finals:
 		jnz     errors.invalid_address
 		mov     al,[segment_register]
 		push    _eax _ebx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17721,7 +17753,7 @@ finals:
 		mov     al,0A6h
 		jmp     movs_check_size
 		ins_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17749,13 +17781,13 @@ finals:
 		ins_store:
 		cmp     [segment_register ], 1
 		ja      errors.invalid_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,22h
 		jne     errors.invalid_operand
 		mov     al,6Ch
@@ -17764,16 +17796,16 @@ finals:
 		jne     movs_check_size
 		jmp     errors.invalid_operand_size
 		outs_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,22h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17804,7 +17836,7 @@ finals:
 		mov     al,6Eh
 		jmp     ins_check_size
 		xlat_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17843,7 +17875,7 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], ah
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pm_reg
@@ -17859,7 +17891,7 @@ finals:
 		pm_mem_store:
 		jmp     instruction_ready
 		pm_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		cmp     ah,2
@@ -17872,11 +17904,11 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], ah
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     pm_mem
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,ah
@@ -17886,7 +17918,7 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 1
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17916,13 +17948,13 @@ finals:
 		mov     [base_code ], 0Fh
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     al,al
 		xchg    al,[operand_size]
 		call    operand_autodetect
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      lar_reg_reg
@@ -17937,7 +17969,7 @@ finals:
 		lar_reg_mem:
 		jmp     instruction_ready
 		lar_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,2
 		jne     errors.invalid_operand_size
@@ -17947,7 +17979,7 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 1
 		mov     [postbyte_register ], 7
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -17967,7 +17999,7 @@ finals:
 		basic_486_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      basic_486_reg
@@ -17975,7 +18007,7 @@ finals:
 		jne     errors.invalid_operand
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -17989,10 +18021,10 @@ finals:
 		basic_486_mem_reg_8bit:
 		jmp     instruction_ready
 		basic_486_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -18030,7 +18062,7 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 0C7h
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18062,7 +18094,7 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 1Fh
 		mov     [postbyte_register ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      extended_nop_reg
@@ -18076,7 +18108,7 @@ finals:
 		extended_nop_store:
 		jmp     instruction_ready
 		extended_nop_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,ah
@@ -18086,7 +18118,7 @@ finals:
 		basic_fpu_instruction:
 		mov     [postbyte_register ], al
 		mov     [base_code ], 0D8h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      basic_fpu_streg
@@ -18116,7 +18148,7 @@ finals:
 		mov     [base_code ], 0DCh
 		jmp     instruction_ready
 		basic_fpu_streg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		mov     bl,al
 		mov     ah,[postbyte_register]
@@ -18130,28 +18162,28 @@ finals:
 		jz      basic_fpu_streg_st0
 		xor     [postbyte_register ], 1
 		basic_fpu_streg_st0:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		or      al,al
 		jnz     errors.invalid_operand
 		mov     [base_code ], 0DCh
 		jmp     nomem_instruction_ready
 		basic_fpu_st0:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		mov     bl,al
 		basic_fpu_single_streg:
@@ -18165,7 +18197,7 @@ finals:
 		jmp     instruction_assembled
 		fi_instruction:
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18186,7 +18218,7 @@ finals:
 		jmp     instruction_ready
 		fld_instruction:
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      fld_streg
@@ -18222,7 +18254,7 @@ finals:
 		mov     [base_code ], 0DBh
 		jmp     instruction_ready
 		fld_streg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		mov     bl,al
 		cmp     [postbyte_register ], 2
@@ -18234,7 +18266,7 @@ finals:
 		jmp     nomem_instruction_ready
 		fild_instruction:
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18273,7 +18305,7 @@ finals:
 		jmp     instruction_ready
 		fbld_instruction:
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18291,7 +18323,7 @@ finals:
 		mov     [postbyte_register ], al
 		mov     [base_code ], 0DEh
 		mov     edx,esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      faddp_streg
@@ -18299,17 +18331,17 @@ finals:
 		mov     bl,1
 		jmp     nomem_instruction_ready
 		faddp_streg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		mov     bl,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		or      al,al
 		jnz     errors.invalid_operand
@@ -18333,7 +18365,7 @@ finals:
 		mov     dh,al
 		fpu_single_operand:
 		mov     ebx,esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      fpu_streg
@@ -18346,7 +18378,7 @@ finals:
 		stos    word [edi]
 		jmp     instruction_assembled
 		fpu_streg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		shl     dh,3
 		or      dh,al
@@ -18392,7 +18424,7 @@ finals:
 		mov     [base_code ], 0DDh
 		fpu_mem:
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18406,7 +18438,7 @@ finals:
 		fldcw_instruction:
 		mov     [postbyte_register ], al
 		mov     [base_code ], 0D9h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18425,7 +18457,7 @@ finals:
 		fnstsw_instruction:
 		mov     [base_code ], 0DDh
 		mov     [postbyte_register ], 7
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      fstsw_reg
@@ -18441,7 +18473,7 @@ finals:
 		fstsw_mem_16bit:
 		jmp     instruction_ready
 		fstsw_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ax,0200h
 		jne     errors.invalid_operand
@@ -18466,11 +18498,11 @@ finals:
 		mov     dh,0DFh
 		fcomi_streg:
 		mov     dl,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		mov     ah,al
 		cmp     byte [ esi ], ','
@@ -18483,11 +18515,11 @@ finals:
 		or      ah,ah
 		jnz     errors.invalid_operand
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_fpu_register
 		mov     ah,al
 		add     ah,dl
@@ -18499,18 +18531,18 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
 		mmx_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		call    make_mmx_prefix
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      mmx_mmreg_mmreg
@@ -18520,26 +18552,26 @@ finals:
 		call    get_address
 		jmp     instruction_ready
 		mmx_mmreg_mmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
 		mmx_bit_shift_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		call    make_mmx_prefix
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      mmx_mmreg_mmreg
@@ -18579,14 +18611,14 @@ finals:
 		pmovmskb_reg_size_ok:
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     bl,al
 		call    make_mmx_prefix
@@ -18597,10 +18629,10 @@ finals:
 		push    _ebx _ecx _edx
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		test    ah,not 1
 		jnz     errors.invalid_operand_size
@@ -18618,10 +18650,10 @@ finals:
 		jmp     instruction_assembled
 		append_imm8:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		test    ah,not 1
 		jnz     errors.invalid_operand_size
@@ -18633,19 +18665,19 @@ finals:
 		pinsrw_instruction:
 		mov     [extended_code ], al
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		call    make_mmx_prefix
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pinsrw_mmreg_reg
@@ -18658,7 +18690,7 @@ finals:
 		jne     errors.invalid_operand_size
 		jmp     mmx_imm8
 		pinsrw_mmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,4
 		jne     errors.invalid_operand_size
@@ -18674,19 +18706,19 @@ finals:
 		pshuf_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 70h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,[mmx_size]
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pshuf_mmreg_mmreg
@@ -18695,14 +18727,14 @@ finals:
 		call    get_address
 		jmp     mmx_imm8
 		pshuf_mmreg_mmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     bl,al
 		jmp     mmx_nomem_imm8
 		movd_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 7Eh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movd_reg
@@ -18714,7 +18746,7 @@ finals:
 		call    get_mmx_source_register
 		jmp     instruction_ready
 		movd_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,0B0h
 		jae     movd_mmreg
 		call    convert_register
@@ -18729,10 +18761,10 @@ finals:
 		mov     [postbyte_register ], al
 		call    make_mmx_prefix
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movd_mmreg_reg
@@ -18743,7 +18775,7 @@ finals:
 		jnz     errors.invalid_operand_size
 		jmp     instruction_ready
 		movd_mmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,4
 		jne     errors.invalid_operand_size
@@ -18751,14 +18783,14 @@ finals:
 		jmp     nomem_instruction_ready
 		get_mmx_source_register:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     [postbyte_register ], al
 		make_mmx_prefix:
@@ -18769,7 +18801,7 @@ finals:
 		ret
 		movq_instruction:
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movq_reg
@@ -18787,7 +18819,7 @@ finals:
 		mov     [extended_code ], al
 		jmp     instruction_ready
 		movq_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,0B0h
 		jae     movq_mmreg
 		call    convert_register
@@ -18808,11 +18840,11 @@ finals:
 		mov     [extended_code ], 7Eh
 		mov     [opcode_prefix ], 0F3h
 		movq_mmreg_:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movq_mmreg_reg
@@ -18823,7 +18855,7 @@ finals:
 		jnz     errors.invalid_operand_size
 		jmp     instruction_ready
 		movq_mmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,0B0h
 		jae     movq_mmreg_mmreg
 		mov     [operand_size ], 0
@@ -18849,33 +18881,33 @@ finals:
 		mov     [opcode_prefix ], al
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 6Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movdq_mmreg
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		mov     [extended_code ], 7Fh
 		jmp     instruction_ready
 		movdq_mmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      movdq_mmreg_mmreg
@@ -18884,22 +18916,22 @@ finals:
 		call    get_address
 		jmp     instruction_ready
 		movdq_mmreg_mmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
 		lddqu_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -18919,24 +18951,24 @@ finals:
 		mov     [opcode_prefix ], 0F3h
 		mov     [mmx_size ], 16
 		movq2dq_:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,[mmx_size]
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		xor     [mmx_size ], 8+16
 		cmp     ah,[mmx_size]
@@ -19013,20 +19045,20 @@ finals:
 		sse_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
 		sse_xmmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		sse_reg:
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      sse_xmmreg_xmmreg
@@ -19067,7 +19099,7 @@ finals:
 		cmp     [extended_code ], 16h
 		je      errors.invalid_operand
 		sse_xmmreg_xmmreg_ok:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     bl,al
 		mov     al,[extended_code]
@@ -19095,10 +19127,10 @@ finals:
 		cmp     byte [ esi ], ','
 		jne     additional_xmm0_ok
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		test    al,al
 		jnz     errors.invalid_operand
@@ -19110,11 +19142,11 @@ finals:
 		mov     [opcode_prefix ], 66h
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 73h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     bl,al
 		jmp     mmx_nomem_imm8
@@ -19143,7 +19175,7 @@ finals:
 		mov     [extended_code ], 10h
 		jmp     sse_mov_instruction
 		sse_mov_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      sse_xmmreg
@@ -19159,14 +19191,14 @@ finals:
 		jne     errors.invalid_operand_size
 		mov     [operand_size ], 0
 		sse_mem_xmmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		jmp     instruction_ready
@@ -19176,35 +19208,35 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
 		mov     [mmx_size ], 8
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     sse_mem
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		jmp     sse_reg_mem
 		movhlps_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
 		mov     [mmx_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      sse_xmmreg_xmmreg_ok
@@ -19218,23 +19250,23 @@ finals:
 		maskmov_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 0F7h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,cl
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
@@ -19253,10 +19285,10 @@ finals:
 		jne     errors.invalid_operand
 		movmskps_reg_ok:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      sse_xmmreg_xmmreg_ok
@@ -19267,18 +19299,18 @@ finals:
 		cvtpi2ps_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      cvtpi_xmmreg_xmmreg
@@ -19292,7 +19324,7 @@ finals:
 		cvtpi_size_ok:
 		jmp     instruction_ready
 		cvtpi_xmmreg_xmmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,8
 		jne     errors.invalid_operand_size
@@ -19306,19 +19338,19 @@ finals:
 		cvtsi_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		cvtsi_xmmreg:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      cvtsi_xmmreg_reg
@@ -19335,7 +19367,7 @@ finals:
 		cvtsi_size_ok:
 		jmp     instruction_ready
 		cvtsi_xmmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,4
 		je      cvtsi_xmmreg_reg_store
@@ -19354,11 +19386,11 @@ finals:
 		cvtpd_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,8
 		jne     errors.invalid_operand_size
@@ -19392,18 +19424,18 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 3Ah
 		mov     [supplemental_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		call    make_mmx_prefix
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      palignr_mmreg_mmreg
@@ -19412,7 +19444,7 @@ finals:
 		call    get_address
 		jmp     mmx_imm8
 		palignr_mmreg_mmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     bl,al
 		jmp     mmx_nomem_imm8
@@ -19420,19 +19452,19 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 0Fh
 		mov     byte [ value ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,8
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      amd3dnow_mmreg_mmreg
@@ -19442,7 +19474,7 @@ finals:
 		call    store_instruction_with_imm8
 		jmp     instruction_assembled
 		amd3dnow_mmreg_mmreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,8
 		jne     errors.invalid_operand_size
@@ -19493,7 +19525,7 @@ finals:
 		jmp     sse4_instruction_66_3a_setup
 		extractps_instruction:
 		call    setup_66_0f_3a
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      extractps_reg
@@ -19507,31 +19539,31 @@ finals:
 		extractps_size_ok:
 		push    _edx _ebx _ecx
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		pop     _ecx _ebx _edx
 		jmp     mmx_imm8
 		extractps_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		push    _eax
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		pop     _ebx
@@ -19551,18 +19583,18 @@ finals:
 		ret
 		insertps_instruction:
 		call    setup_66_0f_3a
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      insertps_xmmreg_reg
@@ -19576,7 +19608,7 @@ finals:
 		insertps_size_ok:
 		jmp     mmx_imm8
 		insertps_xmmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     bl,al
 		jmp     mmx_nomem_imm8
@@ -19593,7 +19625,7 @@ finals:
 		mov     [mmx_size ], 1
 		pextr_instruction:
 		call    setup_66_0f_3a
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pextr_reg
@@ -19612,20 +19644,20 @@ finals:
 		pextr_prefix_ok:
 		push    _edx _ebx _ecx
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		pop     _ecx _ebx _edx
 		jmp     mmx_imm8
 		pextr_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     [mmx_size ], 4
 		ja      pextrq_reg
@@ -19644,14 +19676,14 @@ finals:
 		pextr_reg_size_ok:
 		mov     [operand_size ], 0
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		mov     ebx,eax
 		pop     _eax
@@ -19679,19 +19711,19 @@ finals:
 		call    operand_64bit
 		pinsr_instruction:
 		call    setup_66_0f_3a
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		pinsr_xmmreg:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pinsr_xmmreg_reg
@@ -19705,7 +19737,7 @@ finals:
 		je      mmx_imm8
 		jmp     errors.invalid_operand_size
 		pinsr_xmmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		cmp     [mmx_size ], 8
@@ -19736,18 +19768,18 @@ finals:
 		mov     [mmx_size ], 8
 		pmovsx_instruction:
 		call    setup_66_0f_38
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      pmovsx_xmmreg_reg
@@ -19761,7 +19793,7 @@ finals:
 		jne     errors.invalid_operand_size
 		jmp     instruction_ready
 		pmovsx_xmmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
@@ -19787,7 +19819,7 @@ finals:
 		mov     [extended_code ], ah
 		mov     [postbyte_register ], al
 		mov     [mmx_size ], cl
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -19812,7 +19844,7 @@ finals:
 		prefetch_mem_8bit:
 		mov     [base_code ], 0Fh
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -19854,19 +19886,19 @@ finals:
 		movnt_instruction:
 		mov     [extended_code ], al
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mmx_register
 		cmp     ah,[mmx_size]
 		jne     errors.invalid_operand_size
@@ -19883,7 +19915,7 @@ finals:
 		movnts_instruction:
 		mov     [extended_code ], al
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -19894,15 +19926,15 @@ finals:
 		test    al,al
 		jnz     errors.invalid_operand_size
 		movnts_size_ok:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		jmp     instruction_ready
@@ -19910,12 +19942,12 @@ finals:
 		movnti_instruction:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -19936,7 +19968,7 @@ finals:
 		call    take_register
 		cmp     ax,0400h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -19944,7 +19976,7 @@ finals:
 		jne     errors.invalid_operand
 		cmp     [postbyte_register ], 0C8h
 		jne     monitor_instruction_store
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -19958,17 +19990,17 @@ finals:
 		jmp     instruction_assembled
 		movntdqa_instruction:
 		call    setup_66_0f_38
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -19979,18 +20011,18 @@ finals:
 		mov     [opcode_prefix ], 66h
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 78h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      extrq_xmmreg_xmmreg
@@ -20007,7 +20039,7 @@ finals:
 		jmp     instruction_assembled
 		extrq_xmmreg_xmmreg:
 		inc     [extended_code]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
@@ -20015,22 +20047,22 @@ finals:
 		mov     [opcode_prefix ], 0F2h
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 78h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     bl,al
 		cmp     byte [ esi ], ','
@@ -20057,11 +20089,11 @@ finals:
 		cmp     [code_type ], 64
 		jne     errors.illegal_instruction
 		crc32_reg_size_ok:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      crc32_reg_reg
@@ -20081,7 +20113,7 @@ finals:
 		call    recoverable_unknown_size
 		jmp     crc32_reg_mem_store
 		crc32_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,ah
@@ -20098,19 +20130,19 @@ finals:
 		mov     [supplemental_code ], al
 		mov     [extended_code ], 38h
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      movbe_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_argument
@@ -20122,7 +20154,7 @@ finals:
 		inc     [supplemental_code]
 		call    get_address
 		push    _edx _ebx _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -20176,7 +20208,7 @@ finals:
 		vmx_instruction:
 		mov     [postbyte_register ], al
 		mov     [extended_code ], 0C7h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -20191,14 +20223,14 @@ finals:
 		jmp     instruction_ready
 		vmread_instruction:
 		mov     [extended_code ], 78h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      vmread_nomem
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -20206,11 +20238,11 @@ finals:
 		call    vmread_check_size
 		jmp     vmx_size_ok
 		vmread_nomem:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		push    _eax
 		call    vmread_check_size
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -20233,10 +20265,10 @@ finals:
 		mov     [extended_code ], 79h
 		call    take_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      vmwrite_nomem
@@ -20246,7 +20278,7 @@ finals:
 		call    vmread_check_size
 		jmp     vmx_size_ok
 		vmwrite_nomem:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     [base_code ], 0Fh
@@ -20257,10 +20289,10 @@ finals:
 		mov     [postbyte_register ], al
 		call    vmread_check_size
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -20332,7 +20364,7 @@ finals:
 		jnz     errors.invalid_operand
 		mov     bl,ah
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_register
@@ -20366,7 +20398,7 @@ finals:
 		jmp     nomem_instruction_ready
 
 		xabort_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     ah,1
 		ja      errors.invalid_operand_size
@@ -20380,7 +20412,7 @@ finals:
 		stos    byte [ edi]
 		jmp     instruction_assembled
 		xbegin_instruction:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		mov     al,[code_type]
@@ -20444,16 +20476,16 @@ finals:
 		mov     [postbyte_register ], al
 		call    get_bnd_size
 		mov     [operand_size ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      bndc_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
@@ -20467,7 +20499,7 @@ finals:
 		call    get_bnd_size
 		shl     al,1
 		mov     [operand_size ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		je      bndmov_reg
 		call    get_size_operator
@@ -20475,20 +20507,20 @@ finals:
 		jne     errors.invalid_operand
 		inc     [extended_code]
 		call    get_address_of_required_size
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_bnd_register
 		mov     [postbyte_register ], al
 		jmp     instruction_ready
 		bndmov_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_bnd_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		je      bndmov_reg_reg
 		call    get_size_operator
@@ -20497,15 +20529,15 @@ finals:
 		call    get_address_of_required_size
 		jmp     instruction_ready
 		bndmov_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_bnd_register
 		mov     bl,al
 		jmp     nomem_instruction_ready
 		take_bnd_register:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		convert_bnd_register:
 		mov     ah,al
 		shr     ah,4
@@ -20519,10 +20551,10 @@ finals:
 		mov     [extended_code ], al
 		call    take_bnd_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -20531,10 +20563,10 @@ finals:
 		call    get_address_component
 		cmp     byte [ esi-1 ], ']'
 		je      bndmk_ready
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		or      dl,bl
@@ -20543,7 +20575,7 @@ finals:
 		jnz     errors.invalid_address
 		mov     [address_register ], bh
 		call    get_address_component
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,']'
 		jne     errors.invalid_operand
 		or      bh,bh
@@ -20591,7 +20623,7 @@ finals:
 		mov     [extended_code ], al
 		call    take_bnd_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_bnd_mib
@@ -20600,14 +20632,14 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
 		call    take_bnd_mib
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_bnd_register
 		mov     [postbyte_register ], al
 		jmp     bndmk_ready
 		take_bnd_mib:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_bnd_size
@@ -20615,16 +20647,16 @@ finals:
 		call    get_address_component
 		cmp     byte [ esi-1 ], ']'
 		je      bnd_mib_ok
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		mov     al,[address_sign]
 		push    _eax _ebx _ecx _edx cell[address_symbol]
 		call    get_address_component
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,']'
 		jne     errors.invalid_operand
 		or      dl,bl
@@ -20651,11 +20683,11 @@ finals:
 		ret
 
 		take_register:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		convert_register:
 		mov     ah,al
 		shr     ah,4
@@ -20720,7 +20752,7 @@ finals:
 		cmp     al,11h
 		jne     no_size_operator
 		mov     [size_declared ], 1
-		lods    word [esi]
+		lods word [ esi ]
 		xchg    al,ah
 		or      [operand_flags ], 1
 		cmp     ah,[operand_size]
@@ -20740,7 +20772,7 @@ finals:
 		mov     [jump_type ], 0
 		cmp     al,12h
 		jne     jump_operator_ok
-		lods    word [esi]
+		lods word [ esi ]
 		mov     [jump_type ], al
 		mov     al,ah
 		jump_operator_ok:
@@ -20792,7 +20824,7 @@ finals:
 		and     al,11110000b
 		cmp     al,60h
 		jne     get_address_size_prefix
-		lods    byte [ esi]
+		lods byte [ esi ]
 		sub     al,60h
 		mov     [segment_register ], al
 		mov     al,[esi]
@@ -20800,7 +20832,7 @@ finals:
 		get_address_size_prefix:
 		cmp     al,70h
 		jne     address_size_prefix_ok
-		lods    byte [ esi]
+		lods byte [ esi ]
 		sub     al,70h
 		cmp     al,2
 		jb      errors.invalid_address_size
@@ -21599,19 +21631,19 @@ finals:
 		mov     [extended_code ], al
 		avx_xop_common:
 		or      [vex_required ], 1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
 		avx_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
 		avx_vex_reg:
 		test    [operand_flags ], 2
 		jnz     avx_vex_reg_ok
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -21629,7 +21661,7 @@ finals:
 		cmp     ah,16
 		jne     errors.invalid_operand_size
 		avx_regs_size_ok:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		avx_regs_rm:
@@ -21665,7 +21697,7 @@ finals:
 		jb      nomem_instruction_ready
 		cmp     al,-4
 		je      sse_cmp_nomem_ok
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     al,bl
@@ -21698,14 +21730,14 @@ finals:
 		take_avx_rm:
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      take_avx_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
 		mov     [operand_size ], cl
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		or      cl,cl
 		jnz     avx_reg_ok
@@ -21725,7 +21757,7 @@ finals:
 		cmp     byte [ esi ], '{'
 		jne     avx_mem_ok
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Fh
 		jne     errors.invalid_operand
 		mov     al,[esi]
@@ -21741,7 +21773,7 @@ finals:
 		mov     al,[broadcast_size]
 		mov     [mmx_size ], al
 		mov     ah,cl
-		lods    byte [ esi]
+		lods byte [ esi ]
 		and     al,1111b
 		mov     cl,al
 		mov     al,[broadcast_size]
@@ -21757,13 +21789,13 @@ finals:
 		jz      errors.invalid_operand
 		mov     ah,[broadcast_size]
 		sub     ah,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		and     al,1111b
 		cmp     al,ah
 		jne     errors.invalid_operand_size
 		avx_mem_broadcast_ok:
 		or      [vex_required ], 40h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'}'
 		jne     errors.invalid_operand
 		avx_mem_ok:
@@ -21803,10 +21835,10 @@ finals:
 		cmp     [immediate_size ], -3
 		jne     imm4_ok
 		push    _ebx _ecx _edx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'('
 		jne     errors.invalid_operand
 		call    get_byte_value
@@ -21822,10 +21854,10 @@ finals:
 		test    [operand_flags ], 10h
 		jnz     errors.invalid_operand
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		shr     ah,4
 		cmp     ah,5
@@ -21835,7 +21867,7 @@ finals:
 		and     al,111b
 		mov     [mask_register ], al
 		or      [vex_required ], 20h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'}'
 		jne     errors.invalid_operand
 		cmp     byte [ esi ], '{'
@@ -21843,14 +21875,14 @@ finals:
 		test    [operand_flags ], 20h
 		jnz     errors.invalid_operand
 		inc     esi
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Fh
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		or      al,al
 		jnz     errors.invalid_operand
 		or      [mask_register ], 80h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'}'
 		jne     errors.invalid_operand
 		avx512_masking_ok:
@@ -21872,27 +21904,27 @@ finals:
 		or      [vex_required ], 40h+80h
 		test    [operand_flags ], 8
 		jz      take_sae
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Fh
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		mov     ah,al
 		shr     ah,4
 		cmp     ah,2
 		jne     errors.invalid_operand
 		and     al,11b
 		mov     [rounding_mode ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'-'
 		jne     errors.invalid_operand
 		take_sae:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,1Fh
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,30h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,'}'
 		jne     errors.invalid_operand
 		avx512_rounding_done:
@@ -21936,7 +21968,7 @@ finals:
 		xor     al,al
 		mov     [mmx_size ], al
 		mov     [broadcast_size ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_reg
@@ -21950,7 +21982,7 @@ finals:
 		call    get_address
 		or      [operand_flags ], 20h
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -21966,7 +21998,7 @@ finals:
 		or      [vex_required ], 1
 		or      [operand_flags ], 10h
 		mov     [mmx_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		jmp     avx_mem
 		avx_compress_q_instruction:
@@ -21975,15 +22007,15 @@ finals:
 		or      [vex_required ], 8
 		mov     [mmx_size ], 0
 		call    setup_66_0f_38
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     avx_mem
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     bl,al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -22000,10 +22032,10 @@ finals:
 		or      [vex_required ], 1
 		call    take_avx_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -22025,7 +22057,7 @@ finals:
 		mov     [opcode_prefix ], 66h
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 7Eh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_movd_reg
@@ -22036,14 +22068,14 @@ finals:
 		not     al
 		and     [operand_size ], al
 		jnz     errors.invalid_operand_size
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,16
 		jne     errors.invalid_operand_size
@@ -22055,7 +22087,7 @@ finals:
 		mov     [extended_code ], 0D6h
 		jmp     instruction_ready
 		avx_movd_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,0C0h
 		jae     avx_movd_xmmreg
 		call    convert_register
@@ -22063,14 +22095,14 @@ finals:
 		jne     errors.invalid_operand_size
 		mov     [operand_size ], 0
 		mov     bl,al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,16
 		jne     errors.invalid_operand_size
@@ -22088,10 +22120,10 @@ finals:
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_movd_xmmreg_reg
@@ -22108,7 +22140,7 @@ finals:
 		jnz     errors.invalid_operand_size
 		jmp     instruction_ready
 		avx_movd_xmmreg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,0C0h
 		jae     avx_movq_xmmreg_xmmreg
 		call    convert_register
@@ -22140,11 +22172,11 @@ finals:
 		xor     al,al
 		mov     [mmx_size ], al
 		mov     [broadcast_size ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     [postbyte_register ], al
 		cmp     ah,16
@@ -22162,14 +22194,14 @@ finals:
 		mov     [mmx_size ], 8
 		mov     [broadcast_size ], 0
 		or      [vex_required ], 1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     avx_movlps_mem
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -22177,7 +22209,7 @@ finals:
 		cmp     [operand_size ], 16
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_rm
@@ -22195,7 +22227,7 @@ finals:
 		jne     errors.invalid_operand_size
 		mov     [operand_size ], 0
 		avx_movlps_mem_size_ok:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -22212,12 +22244,12 @@ finals:
 		cmp     ah,16
 		jne     errors.invalid_operand
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -22237,11 +22269,11 @@ finals:
 		or      [vex_required ], 1
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 10h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     avx_movs_mem
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,16
 		jne     errors.invalid_operand
@@ -22249,18 +22281,18 @@ finals:
 		call    take_avx512_mask
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     avx_movs_reg_mem
 		mov     [operand_size ], cl
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -22564,7 +22596,7 @@ finals:
 		mov     [broadcast_size ], ch
 		mov     [extended_code ], al
 		mov     [base_code ], 0Fh
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,14h
 		je      avx_maskreg
@@ -22576,7 +22608,7 @@ finals:
 		cmp     [operand_size ], 0
 		jne     errors.invalid_operand_size
 		or      [vex_required ], 8
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mask_register
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
@@ -22600,7 +22632,7 @@ finals:
 		or      [operand_flags ], 2
 		call    setup_66_0f_3a
 		mov     [immediate_size ], 1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		je      avx_maskreg
 		jmp     errors.invalid_operand
@@ -22675,13 +22707,13 @@ finals:
 		mov     [postbyte_register ], al
 		test    [operand_flags ], 2
 		jnz     mask_instruction_nds_ok
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_mask_register
 		mov     [vex_register ], al
 		mask_instruction_nds_ok:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_mask_register
@@ -22690,10 +22722,10 @@ finals:
 		jne     mmx_nomem_imm8
 		jmp     nomem_instruction_ready
 		take_mask_register:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		convert_mask_register:
 		mov     ah,al
 		shr     ah,4
@@ -22706,7 +22738,7 @@ finals:
 		or      [vex_required ], 1
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 90h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		je      kmov_maskreg
 		cmp     al,10h
@@ -22716,7 +22748,7 @@ finals:
 		cmp     al,'['
 		jne     errors.invalid_argument
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_mask_register
@@ -22742,13 +22774,13 @@ finals:
 		kmov_prefix_ok:
 		ret
 		kmov_maskreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mask_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,14h
 		je      kmov_maskreg_maskreg
 		cmp     al,10h
@@ -22759,7 +22791,7 @@ finals:
 		call    get_address
 		jmp     kmov_with_mem
 		kmov_maskreg_maskreg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_mask_register
 		mov     bl,al
 		mov     ah,[mmx_size]
@@ -22767,7 +22799,7 @@ finals:
 		jmp     nomem_instruction_ready
 		kmov_maskreg_reg:
 		add     [extended_code ], 2
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		kmov_with_reg:
 		mov     bl,al
@@ -22795,10 +22827,10 @@ finals:
 		jmp     nomem_instruction_ready
 		kmov_reg:
 		add     [extended_code ], 3
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_mask_register
@@ -22810,7 +22842,7 @@ finals:
 		call    setup_f3_0f_38
 		call    take_avx_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_mask_register
@@ -22823,7 +22855,7 @@ finals:
 		call    setup_f3_0f_38
 		call    take_mask_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -22908,7 +22940,7 @@ finals:
 		avx_permil_size_ok:
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_rm
@@ -22980,28 +23012,28 @@ finals:
 		call    take_avx_register
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      avx_shift_reg_mem
 		mov     [operand_size ], cl
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		push    _esi
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_shift_reg_reg_reg
@@ -23029,7 +23061,7 @@ finals:
 		ret
 		avx_shift_reg_reg_reg:
 		pop     _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		xchg    cl,[operand_size]
 		mov     bl,al
@@ -23037,7 +23069,7 @@ finals:
 		avx_shift_reg_reg_mem:
 		mov     [mmx_size ], 16
 		push    _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		call    get_address
 		pop     _eax
@@ -23061,16 +23093,16 @@ finals:
 		mov     [mmx_size ], 0
 		call    take_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      avx_shift_dq_reg_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     bl,al
 		jmp     mmx_nomem_imm8
@@ -23113,7 +23145,7 @@ finals:
 		call    take_avx_register
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     al,al
@@ -23122,7 +23154,7 @@ finals:
 		sub     cl,4
 		shl     [mmx_size ], cl
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_pmovsx_reg_reg
@@ -23137,7 +23169,7 @@ finals:
 		jne     errors.invalid_operand_size
 		jmp     instruction_ready
 		avx_pmovsx_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     bl,al
 		cmp     ah,[mmx_size]
@@ -23164,7 +23196,7 @@ finals:
 		mov     [supplemental_code ], al
 		mov     [base_code ], 0Fh
 		mov     [opcode_prefix ], 0F3h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx512_pmov_reg
@@ -23183,7 +23215,7 @@ finals:
 		xor     al,al
 		xchg    al,[operand_size]
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23197,7 +23229,7 @@ finals:
 		pop     _eax
 		ret
 		avx512_pmov_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     bl,al
 		call    avx512_pmov_common
@@ -23276,10 +23308,10 @@ finals:
 		xchg    ah,[operand_size]
 		push    _eax
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_broadcast_reg_reg
@@ -23299,7 +23331,7 @@ finals:
 		jz      instruction_ready
 		jmp     errors.invalid_operand_size
 		avx_broadcast_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		test    [operand_flags ], 40h
 		jz      avx_broadcast_reg_avx_reg
 		cmp     al,60h
@@ -23370,7 +23402,7 @@ finals:
 		avx_extractf_instruction:
 		mov     [mmx_size ], cl
 		call    setup_66_0f_3a
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_extractf_reg
@@ -23385,7 +23417,7 @@ finals:
 		jne     errors.invalid_operand_size
 		avx_extractf_mem_size_ok:
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23394,14 +23426,14 @@ finals:
 		mov     [postbyte_register ], al
 		jmp     mmx_imm8
 		avx_extractf_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,[mmx_size]
 		jne     errors.invalid_operand_size
 		push    _eax
 		call    take_avx512_mask
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23434,7 +23466,7 @@ finals:
 		jbe     errors.invalid_operand
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23442,10 +23474,10 @@ finals:
 		mov     al,[mmx_size]
 		xchg    al,[operand_size]
 		push    _eax
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_insertf_reg_reg_reg
@@ -23456,7 +23488,7 @@ finals:
 		mov     [operand_size ], al
 		jmp     mmx_imm8
 		avx_insertf_reg_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     bl,al
 		pop     _eax
@@ -23478,7 +23510,7 @@ finals:
 		mov     [mmx_size ], cl
 		call    setup_66_0f_3a
 		or      [vex_required ], 1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      avx_extractps_reg
@@ -23489,21 +23521,21 @@ finals:
 		not     al
 		and     [operand_size ], al
 		jnz     errors.invalid_operand_size
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,16
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
 		jmp     mmx_imm8
 		avx_extractps_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		mov     al,[mmx_size]
@@ -23520,14 +23552,14 @@ finals:
 		or      [rex_prefix ], 8
 		avx_extractps_reg_size_ok:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,16
 		jne     errors.invalid_operand_size
@@ -23572,7 +23604,7 @@ finals:
 		cmp     ah,16
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23604,7 +23636,7 @@ finals:
 		call    take_avx_register
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     ecx,ecx
@@ -23612,14 +23644,14 @@ finals:
 		mov     al,cl
 		shr     al,1
 		mov     [mmx_size ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      avx_cvt_d_reg_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		cmp     ah,[mmx_size]
 		je      avx_cvt_d_reg_reg_size_ok
@@ -23661,7 +23693,7 @@ finals:
 		mov     [postbyte_register ], al
 		push    _eax
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     al,al
@@ -23718,7 +23750,7 @@ finals:
 		call    setup_66_0f_3a
 		or      [vex_required ], 1
 		or      [operand_flags ], 4
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      vcvtps2ph_reg
@@ -23726,7 +23758,7 @@ finals:
 		jne     errors.invalid_operand
 		call    get_address
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		shl     [operand_size ], 1
@@ -23736,14 +23768,14 @@ finals:
 		mov     [mmx_size ], ah
 		jmp     mmx_imm8
 		vcvtps2ph_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     bl,al
 		call    take_avx512_mask
 		xor     cl,cl
 		xchg    cl,[operand_size]
 		shl     cl,1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23788,11 +23820,11 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
 		or      [vex_required ], 1
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
@@ -23802,7 +23834,7 @@ finals:
 		jne     errors.invalid_operand_size
 		call    operand_64bit
 		avx_cvt_2si_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_rm
@@ -23832,22 +23864,22 @@ finals:
 		cmp     ah,16
 		jne     errors.invalid_operand_size
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      avx_cvtsi_reg_reg_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		cmp     ah,4
@@ -23881,22 +23913,22 @@ finals:
 		call    setup_66_0f_38
 		mov     [mmx_size ], 0
 		or      [vex_required ], 2
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     avx_maskmov_mem
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_avx_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_operand
@@ -23906,12 +23938,12 @@ finals:
 		cmp     al,'['
 		jne     errors.invalid_operand
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23924,11 +23956,11 @@ finals:
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], 50h
 		or      [vex_required ], 2
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
 		cmp     ah,4
@@ -23939,7 +23971,7 @@ finals:
 		jne     errors.invalid_operand
 		avx_movmskps_reg_ok:
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23953,11 +23985,11 @@ finals:
 		mov     [opcode_prefix ], 66h
 		mov     [base_code ], 0Fh
 		mov     [extended_code ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,4
 		je      avx_pmovmskb_reg_size_ok
@@ -23968,7 +24000,7 @@ finals:
 		avx_pmovmskb_reg_size_ok:
 		mov     [postbyte_register ], al
 		mov     [operand_size ], 0
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		call    take_avx_register
@@ -23984,13 +24016,13 @@ finals:
 		call    take_avx_register
 		mov     [postbyte_register ], al
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     cl,cl
 		xchg    cl,[operand_size]
 		push    _ecx
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_argument
@@ -24074,13 +24106,13 @@ finals:
 		call    setup_66_0f_38
 		or      [vex_required ], 4+8
 		or      [operand_flags ], 20h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_argument
 		call    get_address
 		call    take_avx512_mask
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     al,al
@@ -24113,7 +24145,7 @@ finals:
 		call    setup_66_0f_38
 		or      [vex_required ], 4+8
 		or      [operand_flags ], 20h
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		jne     errors.invalid_argument
@@ -24147,17 +24179,17 @@ finals:
 		mov     [postbyte_register ], al
 		bmi_reg:
 		or      [vex_required ], 2
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      bmi_reg_reg
@@ -24167,7 +24199,7 @@ finals:
 		call    operand_32or64
 		jmp     instruction_ready
 		bmi_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		call    operand_32or64
@@ -24193,14 +24225,14 @@ finals:
 		mov     [extended_code ], 38h
 		mov     [supplemental_code ], al
 		or      [vex_required ], 2
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		jmp     bmi_reg
@@ -24229,14 +24261,14 @@ finals:
 		call    operand_32or64
 		jmp     nomem_instruction_ready
 		get_vex_source_register:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     no_vex_source_register
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [vex_register ], al
 		clc
@@ -24314,11 +24346,11 @@ finals:
 		mov     [xop_opcode_map ], 9
 		mov     [base_code ], 12h
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     bl,al
 		call    operand_32or64
@@ -24328,19 +24360,19 @@ finals:
 		mov     [xop_opcode_map ], 0Ah
 		mov     [base_code ], 12h
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		je      lwpins_reg_reg
@@ -24358,7 +24390,7 @@ finals:
 		call    prepare_lwpins
 		jmp     store_instruction_with_imm32
 		lwpins_reg_reg:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_register
 		cmp     ah,4
 		jne     errors.invalid_operand_size
@@ -24367,10 +24399,10 @@ finals:
 		call    prepare_lwpins
 		jmp     store_nomem_instruction_with_imm32
 		prepare_lwpins:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_imm32
 		call    operand_32or64
 		mov     al,[vex_register]
@@ -24456,25 +24488,25 @@ finals:
 		cmp     ah,16
 		jne     errors.invalid_operand
 		mov     [postbyte_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,'['
 		je      xop_shift_reg_mem
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    convert_xmm_register
 		mov     [vex_register ], al
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		push    _esi
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		pop     _esi
 		xchg    cl,[operand_size]
@@ -24488,7 +24520,7 @@ finals:
 		jmp     nomem_instruction_ready
 		xop_shift_reg_reg_mem:
 		or      [rex_prefix ], 8
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		call    get_address
 		jmp     instruction_ready
@@ -24503,13 +24535,13 @@ finals:
 		jmp     mmx_nomem_imm8
 		xop_shift_reg_mem:
 		call    get_address
-		lods    byte [ esi]
+		lods byte [ esi ]
 		cmp     al,','
 		jne     errors.invalid_operand
 		push    _esi
 		xor     cl,cl
 		xchg    cl,[operand_size]
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		pop     _esi
 		xchg    cl,[operand_size]
@@ -24531,11 +24563,11 @@ finals:
 		jmp     instruction_assembled
 
 		take_avx_register:
-		lods    byte [ esi]
+		lods byte [ esi ]
 		call    get_size_operator
 		cmp     al,10h
 		jne     errors.invalid_operand
-		lods    byte [ esi]
+		lods byte [ esi ]
 		convert_avx_register:
 		mov     ah,al
 		and     al,1Fh
@@ -24865,7 +24897,7 @@ errors: ret
 	/*
 	flat | errors::edit */
 	.edit_instruction:
-		lodsb
+		read
 		cmp	al,1Ah
 		je .edit_symbol
 		cmp	al,22h
@@ -24888,7 +24920,7 @@ errors: ret
 	.edited_symbol:
 		cmp	al,22h
 		je .edit_quote
-		lodsb
+		read
 		movzx	ecx,al
 		rep	movsb
 		or	dl,-1
@@ -24910,7 +24942,7 @@ errors: ret
 	/*
 	flat | errors::emit */
 	.emit_quote:
-		lodsb
+		read
 		stosb
 		cmp	al,27h
 		jne	.emit_quoted
@@ -26425,7 +26457,7 @@ errors: ret
 		dw lddqu_instruction-instruction_handler
 		db 'leave',0C9h
 		dw simple_instruction-instruction_handler
-		db 'lodsb',0ACh
+		db 'read',0ACh
 		dw simple_instruction-instruction_handler
 		db 'lodsd',0ADh
 		dw simple_instruction_32bit-instruction_handler
