@@ -568,6 +568,7 @@ display_string:
 	call	qword[WriteFile]
 	add	rsp,56
 	ret
+	
 display_character:
 	push	_ebx
 	mov	[character],dl
@@ -22419,6 +22420,8 @@ instructions_4:
  dw push_instruction-instruction_handler
  db 'pxor',0EFh
  dw basic_mmx_instruction-instruction_handler
+ db 'read',0ACh
+ dw simple_instruction-instruction_handler
  db 'repe',0F3h
  dw prefix_instruction-instruction_handler
  db 'repz',0F3h
@@ -22681,8 +22684,6 @@ instructions_5:
  db 'lddqu',0
  dw lddqu_instruction-instruction_handler
  db 'leave',0C9h
- dw simple_instruction-instruction_handler
- db 'lodsb',0ACh
  dw simple_instruction-instruction_handler
  db 'lodsd',0ADh
  dw simple_instruction_32bit-instruction_handler
@@ -23207,4 +23208,4 @@ section '.reloc' fixups data readable discardable
 	if $=$$
 		dd 0,8
 	end if
-; 23210
+; 23211
