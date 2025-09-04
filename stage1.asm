@@ -113,6 +113,12 @@ macro read.then_emit_character
 	call characters.emit_character
 }
 
+macro reads_byte
+{
+	mov r14, rax
+	lods byte [ esi ]
+}
+
 section '.text' code readable executable
 start:
 		sub rsp, 128
@@ -1108,7 +1114,7 @@ symbols: ret
 			ret
 		
 		.edit_symbol:
-			lods byte [ esi ]
+			reads_byte
 			stos byte [ edi ]
 			xlat byte [ ebx ]
 			or al, al
@@ -1168,7 +1174,7 @@ symbols: ret
 			ret
 			
 		.edit_section_name:
-			lods byte [ esi ]
+			reads_byte
 			cmp	edi,[ tagged_blocks]
 			jae	errors.oom
 			stos	byte [ edi]
@@ -1204,7 +1210,7 @@ symbols: ret
 			ret
 		
 		.edit_backslashed_symbols:
-			lods byte [ esi ]
+			reads_byte
 			cmp	al, 5Ch
 			jne symbols.create_backslashed_symbol
 			stos	byte [ edi]
@@ -1220,7 +1226,7 @@ symbols: ret
 			jz	found_separator
 			inc	byte [ ecx]
 			jz	errors.name_too_long
-			lods byte [ esi ]
+			reads_byte
 			jmp	symbols.edit_backslashed_symbol
 			ret
 	/*
@@ -1302,7 +1308,7 @@ symbols: ret
 	.signal_skip_line:
 		add	esi,16
 	.signal_skip_line_content:
-		lods byte [ esi ]
+		reads_byte
 		cmp	al, 1Ah
 		je .signal_skip_symbol
 		cmp	al, ';'
@@ -1320,7 +1326,7 @@ symbols: ret
 		ret
 		
 	.signal_skip_symbol:
-		lods byte [ esi ]
+		reads_byte
 		movzx	eax,al
 		add	esi,eax
 		jmp	.signal_skip_line_content
@@ -1339,7 +1345,7 @@ characters: ret
 		
 		.create_backslash_character:
 			mov	byte [ edi ], 0
-			lods byte [ esi ]
+			reads_byte
 			cmp	al, ' '
 			je lines.append
 			cmp	al, 9
@@ -1354,7 +1360,7 @@ characters: ret
 			je lines.append_carriage_return
 			cmp	al, '/'
 			jne	@f
-			lods byte [ esi ]
+			reads_byte
 			cmp	al, 2Ah
 			je lex.signal_skip_multiline_comment
 			dec	esi
@@ -1387,7 +1393,7 @@ characters: ret
 			ret
 		
 		.create_linefeed_character:
-			lods byte [ esi ]
+			reads_byte
 			cmp al, 0Dh
 			je lines.signal_end_of_line
 			dec	esi
@@ -1395,7 +1401,7 @@ characters: ret
 			ret
 		
 		.create_cr_character:
-			lods byte [ esi ]
+			reads_byte
 			cmp al, 0Ah
 			je lines.signal_end_of_line
 			dec	esi
@@ -1407,12 +1413,12 @@ characters: ret
 			je lex.signal_ignore_comment
 			cmp	al, '/'
 			jne	@f
-			lods byte [ esi ]
+			reads_byte
 			cmp	al, 2Ah
 			je lex.create_multiline_comment
 			dec	esi
 			dec	esi
-			lods byte [ esi ]
+			reads_byte
 		@@:	
 			cmp	al, '\'
 			je characters.create_backslash_character
@@ -1436,7 +1442,7 @@ characters: ret
 	/*
 	flat | characters::edit */
 	.edit_case:
-		lods byte [ esi ]
+		reads_byte
 		xlat	byte [ ebx]
 		stos	byte [ edi]
 		loop characters.edit_case
@@ -1503,7 +1509,7 @@ characters: ret
 		
 		
 		copy_string:
-			lods byte [ esi ]
+			reads_byte
 			stos	byte [ edi]
 			cmp al, 0Ah
 			je no_end_quote
@@ -1515,7 +1521,7 @@ characters: ret
 			je no_end_quote
 			cmp	al,ah
 			jne	copy_string
-			lods byte [ esi ]
+			reads_byte
 			cmp	al,ah
 			je copy_string
 			dec	esi
@@ -1536,7 +1542,7 @@ strands: ret
 		/*
 		flat | strands::create */
 		.create:
-			lods	byte [ esi ]
+			reads_byte
 			stos	byte [ edi ]
 			test	al, al
 			jnz	.create
@@ -1950,7 +1956,7 @@ lex: ret
 		.create_definition:
 			cmp	_edi,cell[memory_end]
 			jae	errors.oom
-			lods byte [ esi ]
+			reads_byte
 			or al, al
 			jz	lex.created_definition
 			cmp	al, ' '
@@ -2017,7 +2023,7 @@ lex: ret
 			ret
 		
 		.create_definition_symbol:
-			lods byte [ esi ]
+			reads_byte
 			stos	byte [ edi]
 			xlat	byte [ ebx]
 			or al, al
@@ -2060,7 +2066,7 @@ lex: ret
 			ret
 			
 		.create_definition_strand:
-			lods byte [ esi ]
+			reads_byte
 			stos	byte [ edi]
 			or al, al
 			jz	errors.invalid_definition
@@ -2078,7 +2084,7 @@ lex: ret
 			ret
 		
 		.create_definition_backslashes:
-			lods byte [ esi ]
+			reads_byte
 			cmp	al, 5Ch
 			jne	lex.create_definition_backslash_symbol
 			stos	byte [ edi]
@@ -2088,7 +2094,7 @@ lex: ret
 			
 		.create_definition_backslash:
 			mov	byte [ edi ], 0
-			lods byte [ esi ]
+			reads_byte
 			or al, al
 			jz	errors.invalid_definition
 			cmp	al, ' '
