@@ -1283,32 +1283,32 @@ dump_symbols:
       write_symbols:
 	mov	edx,[symbols_file]
 	call	create
-	jc	write_failed
+	jc	write_symbols_write_failed
 	mov	edx,[code_start]
 	mov	ecx,[edx+14h]
 	add	ecx,40h
 	call	write
-	jc	write_failed
+	jc	write_symbols_write_failed
 	mov	edx,[tagged_blocks]
 	mov	_ecx,cell[memory_end]
 	sub	ecx,[labels_list]
 	call	write
-	jc	write_failed
+	jc	write_symbols_write_failed
 	mov	_edx,cell[memory_start]
 	mov	ecx,[source_start]
 	sub	ecx,edx
 	call	write
-	jc	write_failed
+	jc	write_symbols_write_failed
 	mov	edx,ebp
 	mov	ecx,edi
 	sub	ecx,edx
 	call	write
-	jc	write_failed
+	jc	write_symbols_write_failed
 	mov	_edx,cell[free_additional_memory]
 	mov	ecx,[number_of_sections]
 	shl	ecx,2
 	call	write
-	jc	write_failed
+	jc	write_symbols_write_failed
 	mov	esi,[labels_list]
 	mov	_edi,cell[memory_start]
       make_references_dump:
@@ -1324,6 +1324,13 @@ dump_symbols:
 	jne	make_references_dump
 	mov	edx,[esi]
 	jmp	make_references_dump
+	ret
+		
+	write_symbols_write_failed:
+		pushstr 'references_dump_ok( write failed )!'
+		jmp	fatal_error
+		ret
+	
       dump_reference:
 	mov	_eax,cell[memory_end]
 	sub	eax,[esi]
@@ -1347,9 +1354,15 @@ dump_symbols:
 	mov	ecx,edi
 	sub	ecx,edx
 	call	write
-	jc	write_failed
+	jc references_dump_ok_write_failed
 	call	close
 	ret
+		
+	references_dump_ok_write_failed:
+		pushstr 'references_dump_ok( write failed )!'
+		jmp	fatal_error
+		ret
+		
       setup_dump_header:
 	xor	eax,eax
 	mov	ecx,40h shr 2
@@ -1454,18 +1467,23 @@ dump_preprocessed_source:
 	mov	[ebx-40h+24h],esi
 	mov	edx,[symbols_file]
 	call	create
-	jc	write_failed
+	jc	dump_preprocessed_source_write_failed
 	mov	_edx,cell[free_additional_memory]
 	mov	ecx,[edx+14h]
 	add	ecx,40h
 	call	write
-	jc	write_failed
+	jc	dump_preprocessed_source_write_failed
 	mov	_edx,cell[memory_start]
 	mov	ecx,esi
 	call	write
-	jc	write_failed
+	jc	dump_preprocessed_source_write_failed
 	call	close
 	ret
+		
+	dump_preprocessed_source_write_failed:
+		pushstr 'dump_preprocessed_source( write failed )!'
+		jmp	fatal_error
+		ret
 		
 	dump_preprocessed_source_oom:
 		pushstr 'dump_preprocessed_source( out of memory )!'
@@ -8222,16 +8240,21 @@ show_display_buffer:
         stos    byte [edi]
         mov     _edx,cell[free_additional_memory]
         call    create
-        jc      write_failed
+        jc      append_extension_write_failed
         mov     _esi,[_esp]
         mov     edx,[esi+18h]
         mov     ecx,[esi+1Ch]
         call    write
-        jc      write_failed
+        jc      append_extension_write_failed
         call    close
       addressing_space_written:
         pop     _esi
         jmp     skip_block
+		ret
+		
+	append_extension_write_failed:
+		pushstr 'append_extension( write failed )!'
+		jmp	fatal_error
 		ret
 		
 	append_extension_oom:
@@ -12120,7 +12143,7 @@ formatter:
         and     [written_size],0
         mov     edx,[output_file]
         call    create
-        jc      write_failed
+        jc      calculate_code_size_write_failed
         cmp     [output_format],3
         jne     stub_written
         mov     edx,[code_start]
@@ -12139,6 +12162,13 @@ formatter:
         cmp     [symbols_file],0
         jne     dump_symbols
         ret
+		
+	calculate_code_size_write_failed:
+		pushstr 'calculate_code_size( write failed )!'
+		jmp	fatal_error
+		ret
+		
+		
       write_code:
         mov     eax,[written_size]
         mov     [headers_size],eax
@@ -12147,8 +12177,14 @@ formatter:
         add     [written_size],ecx
         lea     eax,[edx+ecx]
         call    write
-        jc      write_failed
+        jc      write_code_write_failed
         ret
+		
+	write_code_write_failed:
+		pushstr 'write_code( write failed )!'
+		jmp	fatal_error
+		ret
+		
 format_directive:
         cmp     edi,[code_start]
         jne     unexpected_instruction
@@ -12632,8 +12668,13 @@ write_mz_header:
         mov     word [edx+18h],1Ch      ; offset of relocation table
         add     [written_size],ecx
         call    write
-        jc      write_failed
+        jc      mz_size_ok_write_failed
         ret
+		
+	mz_size_ok_write_failed:
+		pushstr 'mz_size_ok( write failed )!'
+		jmp	fatal_error
+		ret
 
 make_stub:
         mov     [stub_file],edx
@@ -15002,13 +15043,20 @@ coff_formatter:
         and     [written_size],0
         mov     edx,[output_file]
         call    create
-        jc      write_failed
+        jc      symbols_table_ok_write_failed
         mov     _edx,cell[free_additional_memory]
         pop     _ecx
         add     [written_size],ecx
         call    write
-        jc      write_failed
+        jc      symbols_table_ok_write_failed
         jmp     write_output
+		ret
+		
+	symbols_table_ok_write_failed:
+		pushstr 'symbols_table_ok( write failed )!'
+		jmp	fatal_error
+		ret
+		
       store_symbol_name:
         push    _esi
         mov     esi,[esi+4]
@@ -15822,15 +15870,21 @@ elf_formatter:
         mov     [written_size],0
         mov     edx,[output_file]
         call    create
-        jc      write_failed
+        jc      sym_section_ok_write_failed
         call    write_code
         mov     ecx,edi
         mov     _edx,cell[free_additional_memory]
         sub     ecx,edx
         add     [written_size],ecx
         call    write
-        jc      write_failed
+        jc      sym_section_ok_write_failed
         jmp     output_written
+		ret
+		
+	sym_section_ok_write_failed:
+		pushstr 'sym_section_ok( write failed )!'
+		jmp	fatal_error
+		ret
 
 format_elf_exe:
         add     esi,2
