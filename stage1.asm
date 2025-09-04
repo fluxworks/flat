@@ -2172,7 +2172,7 @@ preprocess_line:
 	mov	_eax,_esp
 	sub	_eax,cell[stack_limit]
 	cmp	eax,100h
-	jb	stack_overflow
+	jb preprocess_line_stack_overflow
 	push	_ecx _esi
       preprocess_current_line:
 	mov	_esi,cell[current_line]
@@ -2204,6 +2204,13 @@ preprocess_line:
       not_fix_constant:
 	call	process_fix_constants
 	jmp	initial_preprocessing_ok
+	ret
+		
+	preprocess_line_stack_overflow:
+		pushstr 'preprocess_line( stack overflow )!'
+		jmp	fatal_error
+		ret
+	
       macro_preprocessing:
 	call	process_macro_operators
       initial_preprocessing_ok:
@@ -4718,7 +4725,7 @@ parser:
 	mov	_eax,_esp
 	sub	_eax,cell[stack_limit]
 	cmp	eax,100h
-	jb	stack_overflow
+	jb parse_block_stack_overflow
 	push	cell[current_line]
 	mov	ax,bx
 	shl	eax,16
@@ -4730,6 +4737,14 @@ parser:
 	je	parse_while
 	call	parse_line_contents
 	jmp	parse_next_line
+	ret
+		
+	parse_block_stack_overflow:
+		pushstr 'parse_block( stack overflow )!'
+		jmp	fatal_error
+		ret
+	
+	
       parse_end_directive:
 	cmp	byte [esi],1Ah
 	jne	common_parse
@@ -4923,13 +4938,20 @@ parser:
 	mov	_eax,_esp
 	sub	_eax,cell[stack_limit]
 	cmp	eax,100h
-	jb	stack_overflow
+	jb skip_parsing_block_stack_overflow
 	push	cell[current_line]
 	mov	ax,bx
 	shl	eax,16
 	push	_eax
 	inc	[blocks_stack]
 	jmp	skip_parsing_contents
+	ret
+		
+	skip_parsing_block_stack_overflow:
+		pushstr 'skip_parsing_block( stack overflow )!'
+		jmp	fatal_error
+		ret
+	
       skip_parsing_end_directive:
 	cmp	byte [esi],1Ah
 	jne	skip_parsing_contents
@@ -5387,13 +5409,20 @@ parse_line_contents:
 	mov	_eax,_esp
 	sub	_eax,cell[stack_limit]
 	cmp	eax,100h
-	jb	stack_overflow
+	jb not_string_stack_overflow
 	push	_esi _edi
 	inc	esi
 	mov	al,91h
 	stos	byte [edi]
 	inc	[parenthesis_stack]
 	jmp	parse_argument
+	ret
+		
+	not_string_stack_overflow:
+		pushstr 'not_string( stack overflow )!'
+		jmp	fatal_error
+		ret
+	
       expression_comparator:
 	stos	byte [edi]
 	jmp	forced_expression
@@ -6115,7 +6144,7 @@ convert_number:
 	mov	_eax,_esp
 	sub	_eax,cell[stack_limit]
 	cmp	eax,100h
-	jb	stack_overflow
+	jb check_memory_for_number_stack_overflow
 	cmp	byte [esi],'('
 	je	expression_value
 	inc	edi
@@ -6125,6 +6154,11 @@ convert_number:
 	jz	valid_number
 	mov	byte [edi-1],0Fh
 	ret
+		
+	check_memory_for_number_stack_overflow:
+		pushstr 'check_memory_for_number( stack overflow )!'
+		jmp	fatal_error
+		ret
 		
 	check_memory_for_number_oom:
 		pushstr 'check_memory_for_number( out of memory )!'
@@ -8226,7 +8260,7 @@ times_directive:
         mov     _eax,_esp
         sub     _eax,cell[stack_limit]
         cmp     eax,100h
-        jb      stack_overflow
+        jb times_loop_stack_overflow
         push    _esi
         or      [prefix_flags],1
         call    continue_line
@@ -8236,6 +8270,13 @@ times_directive:
         inc     [counter]
         pop     _esi
         jmp     times_loop
+		ret
+		
+	times_loop_stack_overflow:
+		pushstr 'times_loop( stack overflow )!'
+		jmp	fatal_error
+		ret
+		
       times_done:
         pop     _eax
         pop     cell[counter_limit]
