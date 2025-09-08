@@ -156,28 +156,28 @@ start:
 		mov     esi,eax
 		mov     edi,params
 		find_command_start:
-		lodsb
+		read
 		; when( 20h, command_start )
 		cmp     al,20h
 		je      find_command_start
 		cmp     al,22h
 		je      skip_quoted_name
 		skip_name:
-		lodsb
+		read
 		cmp     al,20h
 		je      find_param
 		or      al,al
 		jz      all_params
 		jmp     skip_name
 		skip_quoted_name:
-		lodsb
+		read
 		cmp     al,22h
 		je      find_param
 		or      al,al
 		jz      all_params
 		jmp     skip_quoted_name
 		find_param:
-		lodsb
+		read
 		cmp     al,20h
 		je      find_param
 		cmp     al,'-'
@@ -203,7 +203,7 @@ start:
 		cmp     edi,params+1000h
 		jae     bad_params
 		stosb
-		lodsb
+		read
 		cmp     al,20h
 		je      param_end
 		cmp     al,0Dh
@@ -214,7 +214,7 @@ start:
 		jz      param_end
 		jmp     copy_param
 		string_param:
-		lodsb
+		read
 		cmp     al,22h
 		je      string_param_end
 		cmp     al,0Dh
@@ -226,7 +226,7 @@ start:
 		stosb
 		jmp     string_param
 		option_param:
-		lodsb
+		read
 		cmp     al,'m'
 		je      memory_option
 		cmp     al,'M'
@@ -251,7 +251,7 @@ start:
 		xor     eax,eax
 		mov     edx,eax
 		get_option_digit:
-		lodsb
+		read
 		cmp     al,20h
 		je      option_value_ok
 		cmp     al,0Dh
@@ -275,7 +275,7 @@ start:
 		stc
 		ret
 		memory_option:
-		lodsb
+		read
 		cmp     al,20h
 		je      memory_option
 		cmp     al,0Dh
@@ -291,7 +291,7 @@ start:
 		mov     [memory_setting ], edx
 		jmp     find_param
 		passes_option:
-		lodsb
+		read
 		cmp     al,20h
 		je      passes_option
 		cmp     al,0Dh
@@ -307,7 +307,7 @@ start:
 		mov     [passes_limit ], dx
 		jmp     find_param
 		definition_option:
-		lodsb
+		read
 		cmp     al,20h
 		je      definition_option
 		cmp     al,0Dh
@@ -325,7 +325,7 @@ start:
 		symbols_option:
 		mov     [symbols_file ], edi
 		find_symbols_file_name:
-		lodsb
+		read
 		cmp     al,20h
 		jne     process_param
 		jmp     find_symbols_file_name
@@ -352,7 +352,7 @@ start:
 		xor     al,al
 		stosb
 		copy_definition_name:
-		lodsb
+		read
 		cmp     al,'='
 		je      copy_definition_value
 		cmp     al,20h
@@ -370,7 +370,7 @@ start:
 		stc
 		ret
 		copy_definition_value:
-		lodsb
+		read
 		cmp     al,20h
 		je      definition_value_end
 		cmp     al,0Dh
@@ -381,7 +381,7 @@ start:
 		jne     definition_value_character
 		cmp     byte [ esi ], 20h
 		jne     definition_value_character
-		lodsb
+		read
 		definition_value_character:
 		cmp     edi,predefinitions+1000h
 		jae     bad_definition_option
@@ -1538,19 +1538,31 @@ system: ret
 	/*
 	flat | system::create */
 	.create:
-		sub	rsp,72
+		sub	rsp, 72		
 		mov	qword[rsp+48 ], 0
 		mov	qword[rsp+40 ], 0
 		mov	qword[rsp+32 ], CREATE_ALWAYS
-		mov	r9d,0
-		mov	r8d,FILE_SHARE_READ
-		mov	rcx,rdx
-		mov	rdx,GENERIC_WRITE
+		mov	r9d, 0
+		mov	r8d, FILE_SHARE_READ		
+		mov	rcx,  rdx
+		
+		lea  rax, cell[ current_file_handle ]
+		push rax
+		pop  cell[ previous_file_handle ]
+		
+		mov	rdx, GENERIC_WRITE
+		
 		call qword[CreateFile]
 		add	rsp,72
+		
 		cmp	eax,-1
 		je .signal_create_file_error
-		mov	ebx,eax
+		
+		mov	rbx, rax
+		lea  rax, cell[ rax ]
+		push rax
+		pop  cell[ current_file_handle ]
+		
 		clc
 		ret
 		
@@ -1565,18 +1577,29 @@ system: ret
 	/*
 	flat | system::read */
 	.read:
-		mov	ebp,ecx
+		mov	ebp, ecx
 		sub	rsp,56
-		mov	qword[rsp+32 ], 0
-		mov	r9d,bytes_count
+		mov	qword[ rsp+32 ], 0
+		mov	r9d, bytes_count
 		mov	r8,rcx
-		mov	rcx,rbx
+		mov	rcx, rbx
 		call qword[ReadFile]
 		add	rsp,56
+		
 		or	eax,eax
 		jz	.signal_read_nothing_error
-		cmp	ebp,[bytes_count]
+		cmp	ebp, [bytes_count]
 		jne	.signal_read_bytes_mismatch_error
+		
+		xor rax, rax
+		lea  rax, cell[ r8 ]
+		push rax
+		pop  cell[ current_file_buffer ]
+		
+		lea  rax, cell[ r9 ]
+		push rax
+		pop  cell[ current_file_bytes_read ]
+		
 		clc
 		ret
 		
@@ -1598,10 +1621,24 @@ system: ret
 		mov	r9d,eax
 		mov	r8d,0
 		mov	rcx,rbx
+		
+		lea  rax, cell[ current_file_handle ]
+		push rax
+		pop  cell[ previous_file_handle ] 
+		
 		call qword[SetFilePointer]
 		add	rsp,40
 		cmp	eax,-1
 		je .signal_read_from_offset_error
+		
+		push rax
+		pop  rcx
+		xor rax, rax
+		lea rax, cell[ rcx ]
+		push rax
+		pop  cell[ current_file_handle ]
+		mov rax, rcx
+		
 		clc
 		ret
 	/*
@@ -2162,34 +2199,7 @@ lex: ret
 			xor	ecx,ecx
 			mov	ebx,esi
 			xor r10, r10
-			call lex.read_from_source
-			
 			jmp lex.read_source
-			ret
-			
-		.read_line_indices:
-			push rsi rdi
-			push rsi rdi
-			pop r9 r8
-			
-		.read_line_index:	
-			lodsb
-			cmp al, 0x0A ; LF
-			je 
-			jmp .read_line_index
-			pop rdi rsi
-			ret
-			
-		.read_from_lines:
-			jmp .read_from_lines
-			ret
-			
-		.read_from_line:
-			jmp .read_from_line
-			ret
-			
-		.read_from_character:
-			jmp .read_from_character
 			ret
 		
 			
@@ -2224,7 +2234,7 @@ lex: ret
 		/*
 		flat | lex::test */
 		.test_for_symbols:
-			lodsb
+			read
 			mov	byte [ edi+eax ], 0
 			loop	.test_for_symbols
 			mov	edi,locals_counter
@@ -8222,7 +8232,7 @@ finals:
 		jz      addressing_space_written
 		xor     ebx,ebx
 		copy_output_path:
-		lodsb
+		read
 		cmp     edi,[structures_buffer]
 		jae     errors.oom
 		stosb
@@ -9317,7 +9327,7 @@ finals:
 		mov     eax,[eax+8]
 		jmp     find_current_source_path
 		get_current_path:
-		lodsb
+		read
 		stosb
 		or      al,al
 		jnz     get_current_path
@@ -24894,7 +24904,7 @@ errors: ret
 	/*
 	flat | errors::edit */
 	.edit_instruction:
-		lodsb
+		read
 		cmp	al,1Ah
 		je .edit_symbol
 		cmp	al,22h
@@ -24917,7 +24927,7 @@ errors: ret
 	.edited_symbol:
 		cmp	al,22h
 		je .edit_quote
-		lodsb
+		read
 		movzx	ecx,al
 		rep	movsb
 		or	dl,-1
@@ -24939,7 +24949,7 @@ errors: ret
 	/*
 	flat | errors::emit */
 	.emit_quote:
-		lodsb
+		read
 		stosb
 		cmp	al,27h
 		jne	.emit_quoted
@@ -26454,7 +26464,7 @@ errors: ret
 		dw lddqu_instruction-instruction_handler
 		db 'leave',0C9h
 		dw simple_instruction-instruction_handler
-		db 'lodsb',0ACh
+		db 'read',0ACh
 		dw simple_instruction-instruction_handler
 		db 'lodsd',0ADh
 		dw simple_instruction_32bit-instruction_handler
@@ -29797,8 +29807,25 @@ errors: ret
 		options rb 1000h
 		predefinitions rb 1000h
 		buffer rb 4000h
-
 		stack 10000h
+		
+		previous_file_handle dq ?
+		current_file_handle dq ?
+		
+		previous_file_buffer dq ?
+		current_file_buffer dq ?
+		
+		previous_file_bytes_read dq ?
+		current_file_bytes_read dq ?
+		
+		previous_file_overlap dq ?
+		current_file_overlap dq ?
+		
+		previous_file_name dq ?
+		current_file_name dq ?
+		
+		previous_file_pointer dw ?
+		current_file_pointer dw ?
 
 		section '.idata' import data readable writeable
 
@@ -29858,4 +29885,4 @@ errors: ret
 		dd 0,8
 		end if
 /* 
-29861 */
+29888 */
