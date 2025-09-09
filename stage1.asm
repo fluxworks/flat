@@ -64,14 +64,21 @@ macro when from, to
 		cmp al, from
 		je to
 }
-
-macro pushstr string  ;does same job as previous macro
+/*
+pushstr | Push a strand address to the stack and jump beyond its address definition. */
+macro pushstr string
 {
   local addr, behind
   push addr
   jmp behind
   addr db string, 0
   behind:
+}
+/*
+peek | Copy 4 characters from the 32bit source register by index. */
+macro peek register, index
+{
+	mov al, byte [ register + index ]
 }
 
 section '.text' code readable executable
@@ -286,7 +293,7 @@ start:
 		call    get_option_value
 		or      edx, edx
 		jz      bad_params
-		cmp     edx, 1 shl (32-10)
+		cmp     edx, 1 shl 32-10
 		jae     bad_params
 		mov     [memory_setting ], edx
 		jmp     find_param
@@ -2203,16 +2210,79 @@ lex: ret
 				ret
 				
 			.read_file_contents:
-				push rax rcx
+				push rax rcx rdx
+				xor rdx, rdx
 				xor rcx, rcx
+				xor rax, rax
+				
 			.read_file_contents_characters:
 				cmp  ecx, dword [ bytes_count ]
 				je   lex.read_file_contents_ok
-				;read
+				mov byte[ previous_character ], al
+				peek rsi, rcx
+				mov byte[ current_character ], al
 				inc  rcx
+				cmp al, '('
+				je   lex.read_file_contents_find_open
 				jmp  lex.read_file_contents_characters
-			.read_file_contents_ok:	
-				pop  rcx rax
+				
+			.read_file_contents_find_open:
+				cmp byte [ previous_character ], 0x7A ; z...
+				ja lex.read_file_contents_characters
+				
+				cmp byte [ previous_character ], 0x61 ; a...
+				ja lex.read_file_contents_found_open
+				
+				cmp byte [ previous_character ], 0x5F ; _
+				je lex.read_file_contents_found_open
+				
+				cmp byte [ previous_character ], 0x5B ; ...
+				jae lex.read_file_contents_characters
+				
+				cmp byte [ previous_character ], 0x40 ; @...
+				jae lex.read_file_contents_found_open
+				
+				cmp byte [ previous_character ], 0x3A ; :...
+				jae lex.read_file_contents_characters
+				
+				cmp byte [ previous_character ], 0x30 ; @...
+				jae lex.read_file_contents_found_open
+				
+				cmp byte [ previous_character ], 0x20 ; [SPACE]...
+				je lex.read_file_contents_found_open				
+				jmp  lex.read_file_contents_characters
+				
+				
+			.read_file_contents_found_open:
+				inc dl
+				mov byte [ rsi + rcx - 1 ], ' '
+				mov byte[ previous_character ], al
+				jmp .read_file_contents_find_close
+				
+			.read_file_contents_found_open_scope:
+				inc dl
+				mov byte [ rsi + rcx ], ' '
+				mov byte[ previous_character ], al
+				
+			.read_file_contents_find_close:
+				inc  rcx
+				peek rsi, rcx
+				mov byte[ current_character ], al
+				cmp al, '('
+				je   lex.read_file_contents_found_open_scope
+				cmp al, ')'
+				jne   lex.read_file_contents_find_close
+			
+			.read_file_contents_found_close:
+				dec dl
+				mov byte [ rsi + rcx ], ' '
+				mov byte[ previous_character ], al
+				cmp dl, 0
+				jne lex.read_file_contents_find_close
+				jmp lex.read_file_contents_characters
+			
+			.read_file_contents_ok:
+				pop  rdx rcx rax
 				ret
 			
 		.read_file_ok:
@@ -29839,6 +29909,11 @@ errors: ret
 		
 		previous_file_pointer dw ?
 		current_file_pointer dw ?
+		
+		previous_character db ?
+		current_character db ?
+		
+		scope db 0
 
 		section '.idata' import data readable writeable
 
@@ -29898,4 +29973,4 @@ errors: ret
 		dd 0, 8
 		end if
 /* 
-29901 */
+29976 */
