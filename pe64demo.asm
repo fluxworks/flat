@@ -99,7 +99,7 @@ start:
 	
 	pusha
 	popa
-	pushstr 'line1', 13, 10, 'line2', 'line2', 'line2', 'line2'
+	pushstr( 'line1', 13, ( 5*2 ), 'line2', 'line2', 'line2', 'line2' )
 .a:
 	mov	ecx,eax
 	call	[ExitProcess]
@@ -108,7 +108,7 @@ section '.data' data readable writeable
 
   _caption db 'Win64 assembly program',0
   _message db 'Hello World!',0
-  define_bytes <1,1>,2
+  define_bytes( <1,1>, 2 )
 
 section '.idata' import data readable writeable
 	triplet equ 0, 0, 0
