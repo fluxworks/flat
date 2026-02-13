@@ -1,100 +1,10 @@
 /*
-(.+){1}:
-\s+(.+){1}
-\s+ret
-
-    skip_match_ok                              | add	esi, eax
-    
-    elf64_segment_position_ok                  | and	eax, not 0FFFh
-    elf_segment_position_ok
-    elf64_segment_position_ok
-
-    local_label_name                           | call	get_label_id
-
-    block_closed                               | clc
-    number_done
-    logical_value_skipped
-    line_assembled
-    else_found
-    skip_done
-    no_short_jump
-    avx_mem_size_ok
-
-    argument_value_end                         | dec	esi
-
-    default_section_ok                         | inc	[number_of_sections]
-
-    word_string_ok                             | inc	esi
-
-
-    preprocessing_finished( source_start )     | mov	[value], edi
-    undefined_data_ok( undefined_data_end )
-
-    argument_value_length_ok                   | mov	[edx+8], ecx
-
-    bnd_size_ok                                | mov	[address_size], al
-
-    div_ok                                     | mov	[esi+13], bl
-
-    truncated_value                            | mov	[value_sign],0
-
-    fp_zero                                    | mov	dword [edi+8], 8000h
-
-    get_directive_handler_base                 | mov	eax, [esp]
-
-    get_counter_id(1)                          | mov	eax, (value)
-    get_timestamp_id(2)
-    get_org_origin_id(3)
-    get_file_offset_id(4)
-    get_actual_file_offset_id(5)
-
-    address64_required(1)                      | mov	al, (value)
-    address64_simm32(-1)
-
-    displacement_compression_ok                | mov	ecx, ebp
-
-    no_more_macro_operators                    | mov	edi, ebp
-    expression_negation_ok
-
-    vex_f2(11b)                                | or	al, value
-    vex_f3(10b)
-    vex_66(1)
-
-    new_label                                  | or	byte [ebx+8], 1
-
-    structure_end                              | pop	[error_line]
-
-    expression_converted                       | pop	ebp
-
-    fixup_ok                                   | pop	ebx eax
-
-    line_preprocessed                          | pop	esi ecx
-    
-    movsw_ok                                   | rep	movs dword [edi], [esi]
-
-    bad_params                                 | stc
-    invalid_option_value
-    bad_definition_option
-    file_error
-    cannot_match
-    no_such_macro_symbol
-    no_such_structure
-    short_jump
-    avx_reg_ok
-    no_vex_source_register
-
-    section_index_ok                          | stos	dword [edi]
-
-    no_simple_operator                        | xor	al, al
-    get_current_offset_id                     | xor	eax, eax
-    zero_count
-
-    anonymous_ok                              | xor	ebx, ebx
 */
 #![allow
 (
     static_mut_refs,
     unused_assignments,
+    unused_mut,
     unused_unsafe,
     unused_variables,
 )]
@@ -31918,15 +31828,102 @@
     paths rb 10000h
 */
 */
+
+pub use std::arch::{*};
+
 pub mod api
 {
    /*
     Monotonic Functions Grokked From FASM
     skip_match_ok     | add	esi, eax */
-    pub unsafe fn add_from_the_to_the_source( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> ( usize, usize, usize, usize )
+    pub unsafe fn add_from_the_to_the_source( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
     {
-        (rcx, rdx, r8, r9)
+        unsafe
+        {
+            let _ = crate::asm!
+            (
+                "add esi, eax",
+                inlateout("rsi") rcx => rcx,
+                inlateout("rax") rdx => rdx,
+                inlateout("r8")  r8  => r8,
+                inlateout("r9")  r9  => r9,
+            );
+
+            (rcx, rdx, r8, r9)
+        }
     } 
+    /*
+    elf64_segment_position_ok     | add	esi, eax
+    elf_segment_position_ok                   */
+    pub unsafe fn and_from_the_to_naught( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+    {
+        unsafe
+        {
+            let naught:usize = 0xFFF;
+            let _ = crate::asm!
+            (
+                "and eax, not 0xFFF",
+                inlateout("rax") rcx => rcx,
+            );
+
+            (rcx, rdx, r8, r9)
+        }
+    }
+
+    pub unsafe fn get( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+    {
+        unsafe
+        {
+            let _ = crate::asm!
+            (
+                "stc"
+            );
+
+            (rcx, rdx, r8, r9)
+        }
+    }
+
+    pub unsafe fn forget( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+    {
+        unsafe
+        {
+            let _ = crate::asm!
+            (
+                "clc"
+            );
+
+            (rcx, rdx, r8, r9)
+        }
+    }
+
+    pub unsafe fn decrease( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+    {
+        unsafe
+        {
+            let _ = crate::asm!
+            (
+                "dec esi"
+            );
+
+            (rcx, rdx, r8, r9)
+        }
+    } 
+
+    pub unsafe fn increase( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+    {
+        unsafe
+        {
+            let _ = crate::asm!
+            (
+                "inc esi",
+                inlateout("rsi") rcx => rcx,
+            );
+
+            (rcx, rdx, r8, r9)
+        }
+    }
+    /*
+    */ 
 }
 
 pub mod env
@@ -31941,12 +31938,21 @@ pub mod mem
 
 pub static mut ARGUMENTS:Vec<&'static str> = Vec::new();
 
-pub unsafe fn flat( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> ( usize, usize, usize, usize )
+pub unsafe fn flat( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
-        let added = api::add_from_the_to_the_source( rcx, rdx, r8, r9 );
-        added
+        rcx = 3;
+        rdx = 5;
+        let ( mut rcx, mut rdx, mut r8, mut r9 ) = api::get( rcx, rdx, r8, r9 );
+        let ( mut rcx, mut rdx, mut r8, mut r9 ) = api::forget( rcx, rdx, r8, r9 );
+        let ( mut rcx, mut rdx, mut r8, mut r9 ) = api::add_from_the_to_the_source( rcx, rdx, r8, r9 );
+        let ( mut rcx, mut rdx, mut r8, mut r9 ) = api::increase( 8, rdx, r8, r9 );
+        let ( mut rcx, mut rdx, mut r8, mut r9 ) = api::decrease( rcx, rdx, r8, r9 );
+        let and = api::add_from_the_to_the_source( rcx, rdx, r8, r9 );
+        let ( mut rcx, mut rdx, mut r8, mut r9 ) = and; 
+        println!( r#"{:?}"#, and );
+        ( rcx, rdx, r8, r9 )
     }
 }
 
@@ -31954,8 +31960,6 @@ pub unsafe fn domain( from:() )
 {
     unsafe
     {
-        println!( r#"{:?}"#, from );
-
         if ARGUMENTS.len() > 1 
         {
             for argument in ARGUMENTS.clone()
