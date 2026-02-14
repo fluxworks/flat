@@ -95,6 +95,7 @@
 (
     static_mut_refs,
     unused_assignments,
+    unused_mut,
     unused_unsafe,
     unused_variables,
 )]
@@ -31936,8 +31937,1171 @@ pub mod api
 
             (rcx, rdx, r8, r9)   
         }
-    } 
+    }
 }
+
+#[unsafe(no_mangle)] pub unsafe fn display_string( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn display_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn display_character( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn display_characters( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn display_user_messages( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn display_error_message( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn display_buffer( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+} 
+
+
+#[unsafe(no_mangle)] pub unsafe fn get_option_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn convert_definition_option( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn initialize( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preprocess( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn parse( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn assemble( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn format( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn collect_path( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn adapt_path( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn open_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn open_binary_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn create_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn open_offset( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn read_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn read_environment_variable( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn write_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn close_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn dump_preprocessed_source( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn prepare_preprocessed_source( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn restore_preprocessed_source( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn copy_asciiz( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn write_quoted_symbol_name( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn setup_dump_header( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_preprocessed_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_preprocessor_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn add_preprocessor_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preprocess_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn use_postponed_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn convert_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preprocess_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn lowercase( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_directive_handler_base( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn process_fix_constants( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn process_macro_operators( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn move_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn replace_symbolic_constant( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn process_equ_constants( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_hash( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_macro_argument_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn process_symbolic_constants( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_current_line_from_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_number_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_macro_argument( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn add_macro_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn finish_macro_argument( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_foreign_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn process_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn precalculate_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn convert_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn exact_match( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_match_element( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn match_elements( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_foreign_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_macro_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn close_macro_block( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_macro_symbol_leaf( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn expand_path( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_include_directory( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_data_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn parse_line_contents( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn identify_label( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_label_id( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn parse_argument( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preevaluate_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_operator( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn parse_address( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn parse_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn allocate_label( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_fp_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn fp_optimize( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn fp_mul( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn fp_add( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn fp_div( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn div_64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn convert_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn change_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preevaluate_logical_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_logical_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preevaluate_embedded_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn init_addressing_space( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn assemble_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn close_pass( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn error_handler( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn make_label( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn recoverable_overflow( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn instruction_handler( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_qword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn close_virtual_addressing_space( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_address_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn finish_label_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_data_point( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_label_reference( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn recoverable_invalid_address( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_relative_offset( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_byte_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_count_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn continue_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn allocate_virtual_structure_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn allocate_structure_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_structure_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn remove_structure_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_end_repeat( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_structure_end( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_end_while( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_else( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn find_end_if( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_if_block( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn define_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_word_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_pword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn mark_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn undefined_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn recoverable_misuse( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn make_timestamp( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn add_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn sub_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_byte_scale( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_size_operator( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_address_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_logical_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_value_for_comparison( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_embedded_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_segment_prefix( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn take_byte_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn convert_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn operand_autodetect( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn operand_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_simm32( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
 
 pub mod env
 {
@@ -31998,4 +33162,4 @@ pub fn main()
     }
 }
 /*
-31991 */
+33165 */
