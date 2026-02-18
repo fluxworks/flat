@@ -27,6 +27,22 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn memory_option( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn definition_option( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn display_string( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -101,6 +117,38 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn initialize( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn high_break( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn exit_program( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_environment_variable( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn end_of_variable_name( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -220,6 +268,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn fatal_error( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn dump_preprocessed_source( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -260,6 +316,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn symbol_out_of_scope( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn setup_dump_header( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -269,6 +333,22 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn skip_preprocessed_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_preprocessed_string( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn skip_preprocessed_line_content( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -758,13 +838,21 @@ pub mod api
     }
 }
 
-#[unsafe(no_mangle)] pub unsafe fn skip_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+#[unsafe(no_mangle)] pub unsafe fn negation_skipped( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
         return ( rcx, rdx, r8, r9 )
     }
 }
+
+#[unsafe(no_mangle)] pub unsafe fn skip_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+} 
 
 #[unsafe(no_mangle)] pub unsafe fn preevaluate_embedded_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -1614,6 +1702,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn preevaluated_expression_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn number_done( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2133,6 +2229,16 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn compare_symbols( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+
 #[unsafe(no_mangle)] pub unsafe fn elements_mismatch( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2395,6 +2501,8 @@ pub mod api
     }
 }
 
+
+
 #[unsafe(no_mangle)] pub unsafe fn no_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2566,6 +2674,14 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn return_false_or_true( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn preevaluated_true( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3067,14 +3183,6 @@ complex_dword
     }
 }
 
-#[unsafe(no_mangle)] pub unsafe fn skip_preprocessed_line_content( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-
 #[unsafe(no_mangle)] pub unsafe fn restore_next_preprocessed_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3285,6 +3393,14 @@ complex_dword
 }
 
 #[unsafe(no_mangle)] pub unsafe fn no_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn compare_symbol_types( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
