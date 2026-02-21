@@ -180,6 +180,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn compress_displacement( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn format( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -838,7 +846,15 @@ pub mod api
     }
 }
 
-#[unsafe(no_mangle)] pub unsafe fn parse_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+#[unsafe(no_mangle)] pub unsafe fn parse_term( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn parse_terms( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -1088,6 +1104,32 @@ pub mod api
     }
 }
 
+
+
+#[unsafe(no_mangle)] pub unsafe fn address_immediate_sib( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn address_immediate_sib_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn address_relative_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn finish_label_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -1103,8 +1145,6 @@ pub mod api
         return ( rcx, rdx, r8, r9 )
     }
 }
-
-
 
 #[unsafe(no_mangle)] pub unsafe fn div_done( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -1356,6 +1396,30 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn write_output( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn format_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn extrn_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn mark_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -1488,8 +1552,6 @@ pub mod api
     }
 }
 
-
-
 #[unsafe(no_mangle)] pub unsafe fn address_sizes_do_not_match( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -1546,7 +1608,13 @@ pub mod api
     }
 }
 
-
+#[unsafe(no_mangle)] pub unsafe fn segment_prefix_86( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
 
 #[unsafe(no_mangle)] pub unsafe fn int_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -1557,6 +1625,39 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn take_byte_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx512_rounding_allowed( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+#[unsafe(no_mangle)] pub unsafe fn avx512_rounding_done( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn take_sae( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx_movd_xmmreg_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2004,6 +2105,16 @@ pub mod api
     }
 }
 
+
+
+#[unsafe(no_mangle)] pub unsafe fn avx_regs_reg_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn avx_reg_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2020,7 +2131,21 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn bmi_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
 
+#[unsafe(no_mangle)] pub unsafe fn bmi_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
 
 #[unsafe(no_mangle)] pub unsafe fn operand_32or64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -2038,7 +2163,13 @@ pub mod api
     }
 }
 
-
+#[unsafe(no_mangle)] pub unsafe fn simple_address( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
 
 #[unsafe(no_mangle)] pub unsafe fn simple_address_8bit_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -2048,7 +2179,7 @@ pub mod api
     }
 }
 
-#[unsafe(no_mangle)] pub unsafe fn simple_address( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+#[unsafe(no_mangle)] pub unsafe fn address_16bit_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2057,6 +2188,14 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn address_immediate( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_address_32bit_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2088,6 +2227,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn address_immediate_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn address_32bit_prefix( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2112,6 +2259,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn bextr_reg_mem_imm32( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn store_instruction_with_imm32( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2121,6 +2276,30 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn convert_mask_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx512_pmov_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx_cvt_q_reg_mem( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn take_avx_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2145,6 +2324,32 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn take_imm4_if_needed( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+
+#[unsafe(no_mangle)] pub unsafe fn avx_mem_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx_mem_size_deciding( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx_mem_size_enforced( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2275,6 +2480,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn mark_coff_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn relative_coff_64bit_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2292,6 +2505,48 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn prepare_default_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+
+#[unsafe(no_mangle)] pub unsafe fn format_pe( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn close_pe_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn align_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn align_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn finish_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2331,13 +2586,21 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn store_extended_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn store_supplemental_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
         return ( rcx, rdx, r8, r9 )
     }
-} 
+}
 
 #[unsafe(no_mangle)] pub unsafe fn preprocessor_symbol_found( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -2440,6 +2703,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn invalid_operand( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn source_end( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2488,6 +2759,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn fixups_ready( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn fixups_done( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2521,6 +2800,32 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn cet_dword( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+
+#[unsafe(no_mangle)] pub unsafe fn setup_kmov_prefix( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx512_pmov_2m_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn avx_vex_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2717,6 +3022,80 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn word_data_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn scatter_pd_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn scatter_ps_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+
+#[unsafe(no_mangle)] pub unsafe fn gather_reg_mem_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn gather_double( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn gather_vr128( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn gather_mem_size_check( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn gatherpf_dpd_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn gatherpf_qps_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn gatherpf_dps_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -2957,14 +3336,6 @@ pub mod api
     }
 }
 
-#[unsafe(no_mangle)] pub unsafe fn take_bnd_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-
 #[unsafe(no_mangle)] pub unsafe fn convert_bnd_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -2974,14 +3345,6 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn retf_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-
-#[unsafe(no_mangle)] pub unsafe fn get_pword( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3184,6 +3547,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn bzhi_reg_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn store_instruction_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3199,6 +3570,24 @@ pub mod api
         return ( rcx, rdx, r8, r9 )
     }
 }
+
+#[unsafe(no_mangle)] pub unsafe fn nomem_instruction_ready( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn nomem_rm_code_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
 
 #[unsafe(no_mangle)] pub unsafe fn address_bp( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -3232,6 +3621,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn sib_address_32bit_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn sib_address( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3241,6 +3638,16 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn address_64bit_relocation_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+
+
+#[unsafe(no_mangle)] pub unsafe fn write_mz_header( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3288,6 +3695,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn pe_relocation_type_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn generate_pe_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3321,6 +3736,14 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn make_virtual_label( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn instruction_ready( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3376,8 +3799,6 @@ pub mod api
     }
 }
 
-
-
 #[unsafe(no_mangle)] pub unsafe fn plt_relative_offset( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3411,14 +3832,6 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn mmap_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-
-#[unsafe(no_mangle)] pub unsafe fn end_of_variable_name( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3514,6 +3927,32 @@ pub mod api
     }
 }
 
+
+
+#[unsafe(no_mangle)] pub unsafe fn compare_with_previous_resource_name( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn resource_data_alignment_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn calculate_checksum( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn reuse_symbol_entry( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3554,14 +3993,6 @@ pub mod api
     }
 }
 
-#[unsafe(no_mangle)] pub unsafe fn macro_symbol_not_found( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-
 #[unsafe(no_mangle)] pub unsafe fn file_opened( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3594,6 +4025,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn address_32bit_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn address_32bit_relocation_ok( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3602,6 +4041,21 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn bextr_reg_reg_imm32( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_nomem_instruction_with_imm32( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
 
 #[unsafe(no_mangle)] pub unsafe fn get_imm32( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -3643,7 +4097,145 @@ pub mod api
     }
 }
 
+
+
+#[unsafe(no_mangle)] pub unsafe fn rorx_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn rorx_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn tbm_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn llwpcb_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn lwpins_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn lwpins_reg_reg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn prepare_lwpins( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn xop_single_source_sd_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn store_vex_instruction_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_vex_source_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn amx_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn amx_int8_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn take_tile_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn tilezero_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn tilerelease_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn ldtilecfg_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn xsave_common( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn prepare_vex( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3667,6 +4259,14 @@ pub mod api
     }
 }
 
+#[unsafe(no_mangle)] pub unsafe fn store_vex_0f3a_instruction_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
 #[unsafe(no_mangle)] pub unsafe fn check_vex( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -3676,6 +4276,14 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn store_xop_instruction_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn store_evex_instruction_code( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -3764,6 +4372,14 @@ pub mod api
 }
 
 #[unsafe(no_mangle)] pub unsafe fn elf_segment_position_move_and_align( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn elf_relocation_relative( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
