@@ -1608,7 +1608,8 @@ restore_preprocessed_source:
             return ( rcx, rdx, r8, r9 )
         }
 }
-
+/*
+*/
 #[unsafe(no_mangle)] pub unsafe fn dump_preprocessed_source( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -1674,6 +1675,7156 @@ preprocessor:
 
             return ( rcx, rdx, r8, r9 )
         }
+}
+/*
+preprocess_file:
+    preprocess_source:
+    next_line:
+    file_end:
+*/
+#[unsafe(no_mangle)] pub unsafe fn preprocess_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+        {
+            match rcx
+            {
+                0 =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+
+                _ =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+            }
+
+            return ( rcx, rdx, r8, r9 )
+        }
+}
+/*
+convert_line:
+     convert_line_data:
+     convert_symbol:
+     found_separator:
+     convert_separator:
+     symbol_character:
+     control_character:
+     lf_character:
+     cr_character:
+     convert_string:
+     copy_string:
+     backslash_character:
+     group_backslashes:
+     no_end_quote:
+     backslashed_symbol:
+     convert_backslashed_symbol:
+     backslashed_symbol_character:
+     concatenate_lines:
+     find_concatenated_line:
+     concatenate_lf:
+     concatenate_cr:
+     concatenate_ok:
+     ignore_comment:
+     line_end:
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+        {
+            match rcx
+            {
+                0 =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+
+                _ =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+            }
+
+            return ( rcx, rdx, r8, r9 )
+        }
+}
+/*
+lower_case:
+    convert_case:
+    case_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn lower_case( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+        {
+            match rcx
+            {
+                0 =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+
+                _ =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+            }
+
+            return ( rcx, rdx, r8, r9 )
+        }
+}
+/*
+get_directive:
+    scan_directives:
+    next_directive:
+    no_directive:
+    directive_found:
+    directive_handler:
+    get_directive_handler_base:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+        {
+            match rcx
+            {
+                0 =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+
+                _ =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+            }
+
+            return ( rcx, rdx, r8, r9 )
+        }
+}
+/*
+preprocess_line:
+    preprocess_current_line:
+    line_start_ok:
+    not_fix_constant:
+    macro_preprocessing:
+    initial_preprocessing_ok:
+    preprocess_instruction:
+    not_preprocessor_directive:
+    not_macro:
+    not_symbolic_constant:
+    struc_name_ok:
+    preprocess_label:
+    symbolic_constant_in_label:
+    check_for_broken_label:
+    label_broken:
+    label_constant_ok:
+    move_rest_of_line_up:
+    replace_label:
+    not_preprocessor_symbol:
+    line_preprocessed:
+*/
+#[unsafe(no_mangle)] pub unsafe fn preprocess_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+        {
+            match rcx
+            {
+                0 =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+
+                _ =>
+                    {
+                        return ( rcx, rdx, r8, r9 )
+                    }
+            }
+
+            return ( rcx, rdx, r8, r9 )
+        }
+}
+/*
+get_preprocessor_symbol:
+    preprocessor_special_symbol_not_recognized:
+    no_preprocessor_special_symbol:
+    follow_hashes_roots:
+    follow_hashes_tree:
+    compare_with_preprocessor_symbol:
+    next_equal_hash:
+    preprocessor_symbol_not_found:
+    preprocessor_symbol_found:
+    calculate_hash:
+    fnv1a_hash:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_preprocessor_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+add_preprocessor_symbol:
+    preprocessor_symbol_name_ok:
+    reshape_hash:
+    find_leave_for_symbol:
+    find_entry_to_reuse:
+    add_symbol_entry:
+    reuse_symbol_entry:
+    extend_hashes_tree:
+*/
+#[unsafe(no_mangle)] pub unsafe fn add_preprocessor_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_fix_constant( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+define_equ_constant:
+    define_preprocessor_constant:
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_equ_constant( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_symbolic_constant( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_struc( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+define_macro:
+    make_macro:
+    skip_macro_arguments:
+    skip_macro_argument:
+    macro_argument_end:
+    macro_arguments_finisher:
+    end_macro_arguments:
+    macro_argument_with_default_value:
+    skip_macro_argument_value:
+    enclosed_argument:
+    enclosed_symbol:
+    enclosed_string:
+    enclosed_argument_end:
+    simple_argument:
+    argument_symbol:
+    argument_string:
+    argument_value_end:
+    find_macro_block:
+    found_macro_block:
+    skip_macro_block:
+    skip_macro_symbol:
+    skip_macro_string:
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn postpone_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn rept_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn irp_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn irps_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn irpv_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn match_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+define_instant_macro:
+    skip_parameters:
+    skip_quoted_parameter:
+    parameters_skipped:
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_instant_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+prepare_match:
+    skip_pattern:
+    skip_symbol_in_pattern:
+    skip_quoted_string_in_pattern:
+    pattern_skipped:
+*/
+#[unsafe(no_mangle)] pub unsafe fn prepare_match( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn purge_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn purge_struc( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+restore_equ_constant:
+    restore_preprocessor_symbol:
+    no_symbol_to_restore:
+    symbol_restored:
+*/
+#[unsafe(no_mangle)] pub unsafe fn restore_equ_constant( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn process_fix_constants( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+process_equ_constants:
+    process_symbolic_constants:
+    ignore_string:
+    check_brace:
+    no_replacing:
+    check_symbol:
+    replace_symbolic_constant:
+    process_after_replaced:
+    move_data:
+    movsb_ok:
+    movsw_ok:
+    string_after_replaced:
+    brace_after_replaced:
+    symbol_after_replaced:
+    replace_special_symbolic_constant:
+    preprocessed_file_value:
+    preprocessed_line_value:
+    get_current_line_from_file:
+    find_line_from_file:
+    line_from_file_found:
+*/
+#[unsafe(no_mangle)] pub unsafe fn process_equ_constants( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+process_macro_operators:
+    before_macro_operators:
+    no_more_macro_operators:
+    symbol_before_macro_operators:
+    symbol_before_macro_operators_ok:
+    string_before_macro_operators:
+    escaped_symbol:
+    reduce_symbol_conversion:
+    symbol_conversion:
+    symbol_character_conversion:
+    convert_to_quoted_string:
+    shift_line_data:
+    concatenation:
+    no_concatenation:
+    symbol_concatenation:
+    do_symbol_concatenation:
+    concatenate_escaped_symbol:
+    string_concatenation:
+    concatenate_converted_symbol:
+    finish_concatenating_converted_symbol:
+    concatenate_converted_symbol_character:
+    do_string_concatenation:
+    after_macro_operators:
+    symbol_after_macro_operators:
+    symbol_after_macro_operatorss_ok:
+    string_after_macro_operators:
+*/
+#[unsafe(no_mangle)] pub unsafe fn process_macro_operators( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+use_macro:
+    process_macro_arguments:
+    get_macro_arguments:
+    next_argument:
+    next_arguments_group:
+    get_macro_argument:
+    get_default_value:
+    required_value:
+    default_value_ok:
+    greedy_macro_argument:
+    got_macro_argument:
+    macro_argument_ok:
+    finish_macro_argument:
+    argument_value_length_ok:
+    arguments_end:
+*/
+#[unsafe(no_mangle)] pub unsafe fn use_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+use_instant_macro:
+    add_rept_counter:
+    rept_counter_added:
+    rept_counters_ok:
+    instant_macro_parameters_ok:
+    instant_macro_finish:
+    instant_macro_done:
+    instant_macro_attached_line:
+    precalculate_value:
+    value_precalculated:
+*/
+#[unsafe(no_mangle)] pub unsafe fn use_instant_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+do_irp:
+    irp_name_ok:
+    irp_with_default_value:
+    irps_name_ok:
+    irp_parameters_start:
+    get_irp_parameter:
+    irp_parameters_end:
+    get_irps_parameter:
+    irps_quoted_string:
+    irps_symbol:
+    irps_parameter_ok:
+    irps_parameters_end:
+    get_irpv_parameter:
+    mark_variable_value:
+    next_variable_value:
+    variable_values_marked:
+    add_irpv_value:
+    collect_next_variable_value:
+    variable_values_collected:
+*/
+#[unsafe(no_mangle)] pub unsafe fn do_irp( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+do_match:
+    free_match:
+    find_exact_match:
+    try_different_matching:
+    match_more_elements:
+    skip_match_element:
+    skip_match_quoted_string:
+    skip_match_symbol:
+    skip_match_ok:
+    cannot_match:
+    exact_match:
+    exact_match_complete:
+    match_verbatim:
+    match_elements:
+    symbol_characters_matched:
+    match_quoted_strings:
+    match_symbols:
+    compare_elements:
+    elements_mismatch:
+    end_matching:
+    matched_pattern:
+    add_matched_symbol:
+    matched_symbols_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn do_match( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+process_macro:
+     find_macro_instructions:
+     macro_instructions_start:
+     process_macro_line:
+     instant_macro_line_header:
+     find_defining_directive:
+     defining_directive_ok:
+     macro_line_header_ok:
+     process_macro_line_element:
+     copy_macro_string:
+     process_macro_symbol:
+     process_macro_directive:
+     not_macro_directive:
+     replace_macro_symbol:
+     group_macro_symbol:
+     multiple_macro_symbol_values:
+     enclose_macro_symbol_value:
+     macro_symbol_value_ok:
+     multiple_macro_symbol_values_ok:
+     replace_macro_counter:
+     group_macro_counter:
+     multiple_macro_counter_values:
+     store_number_symbol:
+     numer_symbol_sign_ok:
+     store_number_digits:
+     store_number_digit:
+     number_digit_ok:
+     not_macro_symbol:
+     copy_raw_symbol:
+     copy_struc_name:
+     disable_replaced_struc_name:
+     skip_foreign_symbol:
+     skip_foreign_line:
+     skip_foreign_string:
+     macro_foreign_line:
+     macro_line_processed:
+     process_next_line:
+     macro_block_processed:
+*/
+#[unsafe(no_mangle)] pub unsafe fn process_macro( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+local_symbols:
+    make_local_symbol:
+    counter_loop:
+    letter_digit:
+    small_letter_digit:
+    counter_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn local_symbols( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn common_block( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn forward_block( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+reverse_block:
+     new_macro_block:
+*/
+#[unsafe(no_mangle)] pub unsafe fn reverse_block( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+close_macro_block:
+     reverse_counter:
+     continue_block:
+     block_closed:
+*/
+#[unsafe(no_mangle)] pub unsafe fn close_macro_block( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_macro_symbol:
+     try_macro_symbol:
+     macro_symbol_found:
+     macro_symbol_not_found:
+     find_macro_symbol_leaf:
+     follow_macro_symbols_tree:
+     no_such_macro_symbol:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_macro_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+add_macro_symbol:
+     make_macro_symbol:
+     extend_macro_symbol_tree:
+*/
+#[unsafe(no_mangle)] pub unsafe fn add_macro_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+include_file:
+     find_current_file_path:
+     copy_current_file_path:
+     cut_current_file_name:
+     current_file_path_ok:
+     try_include_directories:
+     try_in_current_directory:
+     include_path_ok:
+     copy_preprocessed_path:
+*/
+#[unsafe(no_mangle)] pub unsafe fn include_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+parser:
+     parser_loop:
+     parse_line:
+     no_data_label:
+     simple_label:
+     block_label:
+     constant_label:
+     data_label:
+     main_instruction_identified:
+     common_parse:
+     empty_instruction:
+     empty_line:
+     skip_rest_of_line:
+     parse_next_line:
+     source_parsed:
+     blocks_stack_ok:
+     parse_block:
+     parse_end_directive:
+     parse_end_block:
+     close_parsing_block:
+     parse_if:
+     parse_while:
+     parse_false_condition_block:
+     parse_true_condition_block:
+     parse_else:
+     parse_assert:
+     skip_true_condition_else:
+     parse_pure_else:
+     skip_parsing:
+     skip_parsing_line:
+     skip_parsing_label:
+     skip_parsing_instruction:
+     skip_parsing_contents:
+     skip_parsing_symbol:
+     skip_parsing_string:
+     skip_parsing_block:
+     skip_parsing_end_directive:
+     skip_parsing_end_block:
+     close_skip_parsing_block:
+     skip_parsing_else:
+     parse_else_if:
+     skip_parsing_pure_else:
+*/
+#[unsafe(no_mangle)] pub unsafe fn parser( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+parse_line_contents:
+     parse_instruction_arguments:
+     parse_formatter_argument:
+     parse_argument:
+     not_a_separator:
+     foreign_argument:
+     symbol_argument:
+     operator_argument:
+     instruction_separator:
+     allow_embedded_instruction:
+     embedded_instruction:
+     parse_times_directive:
+     parse_segment_directive:
+     parse_label_directive:
+     non_label_identified:
+     parse_load_directive:
+     parse_public_directive:
+     parse_public_label:
+     parse_extrn_directive:
+     parse_label_operator:
+     parse_from_operator:
+     parse_at_operator:
+     parse_quoted_extrn:
+     ptr_argument:
+     check_argument:
+     not_instruction:
+     expression_argument:
+     string_argument:
+     string_movsb_ok:
+     string_movsw_ok:
+     parse_expression:
+     not_string:
+     expression_comparator:
+     greater:
+     less:
+     not_equal:
+     expression:
+     forced_expression:
+     forced_expression_parsed:
+     forced_multipart_expression:
+     address_argument:
+     divided_address:
+     address_parsed:
+     parse_address:
+     unknown_segment_prefix:
+     convert_address:
+     forced_parenthesis:
+     unallowed_character:
+     open_decorator:
+     close_decorator:
+     close_parenthesis:
+     separator:
+     argument_parsed:
+     expression_argument_parsed:
+     contents_parsed:
+     contents_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn parse_line_contents( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+identify_label:
+     label_identified:
+     anonymous_label_name:
+     anonymous_label_name_ok:
+     local_label_name:
+*/
+#[unsafe(no_mangle)] pub unsafe fn identify_label( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_operator:
+     check_operator:
+     next_operator:
+     no_operator:
+     no_simple_operator:
+     operator_found:
+     get_simple_operator:
+     simple_operator:
+     simple_next_operator:
+     simple_operator_found:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_operator( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_symbol:
+     scan_symbols:
+     symbol_ok:
+     decorator_symbol:
+     no_symbol:
+     symbols_down:
+     symbols_up:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_data_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_instruction:
+     scan_instructions:
+     no_instruction:
+     instructions_down:
+     instructions_up:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_label_id:
+     composed_label_id_ok:
+     anonymous_label:
+     anonymous_ok:
+     anonymous_back:
+     bogus_anonymous:
+     new_anonymous:
+     new_anonymous_ok:
+     standard_label:
+     current_address_label:
+     get_current_offset_id:
+     get_counter_id:
+     get_timestamp_id:
+     get_org_origin_id:
+     get_file_offset_id:
+     current_address_label_3_characters:
+     get_actual_file_offset_id:
+     get_predefined_id:
+     find_label:
+     hash_label:
+     follow_tree:
+     compare_labels:
+     label_found:
+     extend_tree:
+     add_label:
+     name_first_char_ok:
+     numeric_name:
+     reserved_word:
+     check_for_reserved_word:
+     label_name_ok:
+     allocate_label:
+     initialize_label:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_label_id( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+convert_expression:
+     expression_loop:
+     expression_element:
+     expression_number:
+     expression_operator:
+     operators_loop:
+     push_operator:
+     expression_end:
+     expression_converted:
+     fp_expression:
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+convert_number:
+     check_memory_for_number:
+     valid_number:
+     byte_number:
+     qword_number:
+     dword_number:
+     word_number:
+     expression_value:
+     subexpression_closed:
+     symbol_value:
+     no_address_register:
+     store_label_value:
+     broken_value:
+     register_value:
+     preprocessor_value:
+     special_preprocessor_value:
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_number:
+     number_begin:
+     get_dec_number:
+     get_dec_digit:
+     next_dec_digit:
+     dec_out_of_range:
+     dec_out_of_range_finished:
+     bad_number:
+     invalid_number:
+     not_number:
+     get_bin_number:
+     get_bin_digit:
+     bin_digit_high:
+     bin_out_of_range:
+     bin_digit_skip:
+     pascal_hex_number:
+     get_hex_number:
+     get_hex_digit:
+     hex_letter_digit_ok:
+     hex_digit_ok:
+     hex_digit_high:
+     hex_out_of_range:
+     hex_digit_skip:
+     get_oct_number:
+     get_oct_digit:
+     oct_digit_ok:
+     oct_range_ok:
+     oct_digit_wrap:
+     oct_digit_high:
+     oct_digit_skip:
+     oct_out_of_range:
+     hex_number_ok:
+     pascal_hex_ok:
+     number_ok:
+     number_done:
+     get_text_number:
+     get_text_character:
+     text_character_high:
+     text_out_of_range:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_fp_value:
+     fp_value_start:
+     check_fp_value:
+     digit_expected:
+     fp_character_dot:
+     not_fp_value:
+     fp_last_character:
+     fp_character_exp:
+     fp_exp_sign:
+     fp_character_ok:
+     fp_get_sign:
+     fp_get:
+     fp_before_dot:
+     fp_dot:
+     fp_after_dot:
+     fp_counter_ok:
+     fp_exponent:
+     fp_exponent_sign:
+     get_exponent:
+     exponent_ok:
+     fp_power:
+     fp_negative_power:
+     fp_done:
+     fp_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_fp_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fp_mul:
+    .loop:
+    .done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fp_mul( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fp_div:
+     .loop:
+     .exp_ok:
+     .done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fp_div( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fp_add:
+     .exp_ok:
+     .done:
+     .copy:
+     .change_exp:
+     .exp_loop:
+     .exp_done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fp_add( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fp_optimize:
+     .loop:
+     .done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fp_optimize( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fp_zero( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn preevaluate_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+preevaluate_embedded_logical_expression:
+   preevaluation_loop:
+   preevaluation_done:
+   preevaluate_or:
+   preevaluate_and:
+   leave_only_following:
+   leave_only_preceding:
+   quick_true:
+   quick_false:
+   invalid_logical_expression:
+*/
+#[unsafe(no_mangle)] pub unsafe fn preevaluate_embedded_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+skip_logical_value:
+   negation_skipped:
+   skip_logical_expression:
+   logical_value_skipped:
+   wrongly_structured_logical_expression:
+   skip_simple_logical_value:
+   find_simple_logical_value_end:
+   skip_logical_value_internal_parenthesis:
+   skip_logical_value_symbol:
+*/
+#[unsafe(no_mangle)] pub unsafe fn skip_logical_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+preevaluate_logical_value:
+   preevaluate_negation:
+   preevaluate_negation_ok:
+   preevaluated_expression_value:
+   expression_negation_ok:
+   invalid_logical_value:
+   preevaluate_simple_logical_value:
+   find_logical_value_boundaries:
+   preevaluable_logical_operator:
+   next_symbol_in_logical_value:
+   logical_value_internal_parentheses:
+   logical_value_boundaries_parenthesis_close:
+   logical_value_boundaries_found:
+   non_preevaluable_logical_value:
+   leave_logical_value_intact:
+   compare_symbols:
+   preevaluated_false:
+   store_false:
+   preevaluated_true:
+   store_true:
+   compare_symbol_types:
+   type_comparison:
+   equal_type:
+   types_compared:
+   different_type:
+   scan_symbols_list:
+   get_next_from_list:
+   get_from_list:
+   compare_in_list:
+   skip_rest_of_list:
+   check_list_end:
+   not_equal_in_list:
+   not_equal_length_in_list:
+   invalid_symbols_list:
+*/
+#[unsafe(no_mangle)] pub unsafe fn preevaluate_logical_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+assembler:
+     assembler_loop:
+     pass_loop:
+     pass_done:
+     check_symbols:
+     symbol_defined_ok:
+     check_use_prediction:
+     use_misprediction:
+     use_prediction_ok:
+     check_define_prediction:
+     define_misprediction:
+     check_next_symbol:
+     symbols_checked:
+     error_confirmed:
+     error_handler:
+     next_pass:
+     assemble_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn assembler( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+create_addressing_space:
+     init_addressing_space:
+*/
+#[unsafe(no_mangle)] pub unsafe fn create_addressing_space( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+assemble_line:
+     code_type_setting:
+     new_line:
+     continue_line:
+     define_label:
+     make_label:
+     label_value_ok:
+     make_virtual_label:
+     finish_label:
+     finish_label_symbol:
+     label_symbol_ok:
+     requalified_label:
+     label_made:
+     new_label:
+     define_constant:
+     make_constant:
+     constant_symbol_ok:
+     redeclare_constant:
+     requalified_constant:
+     new_constant:
+     label_addressing_space:
+     make_addressing_space_label:
+     assemble_instruction:
+     instruction_handler:
+     instruction_assembled:
+     line_assembled:
+     source_end:
+*/
+#[unsafe(no_mangle)] pub unsafe fn assemble_line( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+org_directive:
+     in_virtual:
+     org_space_ok:
+     org_value_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn org_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+label_directive:
+     get_label_size:
+     label_size_ok:
+     get_free_label_value:
+     make_free_label:
+*/
+#[unsafe(no_mangle)] pub unsafe fn label_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+load_directive:
+     load_size_ok:
+     value_loaded:
+     get_data_point:
+     get_addressing_space:
+     get_data_address:
+     data_address_type_ok:
+     addressing_space_unavailable:
+     bad_data_address:
+     get_data_offset:
+     data_offset_ok:
+     data_offset_from_virtual:
+*/
+#[unsafe(no_mangle)] pub unsafe fn load_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+store_directive:
+     sized_store:
+     store_value_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn store_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+display_directive:
+     display_byte:
+     display_next:
+*/
+#[unsafe(no_mangle)] pub unsafe fn display_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+show_display_buffer:
+     display_messages:
+     skip_block:
+     display_done:
+     write_addressing_space:
+     copy_output_path:
+     new_path_segment:
+     output_path_copied:
+     append_extension:
+     addressing_space_written:
+*/
+#[unsafe(no_mangle)] pub unsafe fn show_display_buffer( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+times_directive:
+     times_argument_ok:
+     times_loop:
+     times_done:
+     zero_times:
+*/
+#[unsafe(no_mangle)] pub unsafe fn times_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+virtual_directive:
+     virtual_at_current:
+     virtual_fallback:
+     set_virtual:
+     non_virtual_end_ok:
+     get_extension:
+     addressing_space_extension_ok:
+     allocate_structure_data:
+     find_structure_data:
+     scan_structures:
+     structure_data_found:
+     no_such_structure:
+     allocate_virtual_structure_data:
+     continue_virtual_area:
+     virtual_area_unavailable:
+     end_virtual:
+     remove_structure_data:
+     close_virtual_addressing_space:
+     virtual_byte_ok:
+     virtual_word_ok:
+     addressing_space_closed:
+*/
+#[unsafe(no_mangle)] pub unsafe fn virtual_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+repeat_directive:
+    end_repeat:
+    stop_repeat:
+    continue_repeating:
+    zero_repeat:
+    find_end_repeat:
+*/
+#[unsafe(no_mangle)] pub unsafe fn repeat_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+while_directive:
+     do_while:
+     stop_while:
+     while_true:
+     end_while:
+     find_end_while:
+*/
+#[unsafe(no_mangle)] pub unsafe fn while_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+if_directive:
+     if_true:
+     make_if_structure:
+     else_true:
+     else_directive:
+     found_else:
+     skip_else:
+     end_if:
+     find_else:
+     else_found:
+     find_end_if:
+     find_structure_end:
+     find_end_directive:
+     skip_labels:
+     labels_ok:
+     structure_end:
+     no_end_directive:
+     skip_repeat:
+     skip_while:
+     skip_if:
+     skip_if_block:
+     skip_after_else:
+     if_block_skipped:
+*/
+#[unsafe(no_mangle)] pub unsafe fn if_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn end_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+break_directive:
+     find_breakable_structure:
+     break_if:
+     break_repeat:
+     break_while:
+*/
+#[unsafe(no_mangle)] pub unsafe fn break_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+define_data:
+     duplicate_data:
+     duplicated_values:
+     duplicate_single_data_value:
+     duplicate_zero_times:
+     skip_data_value:
+     skip_single_data_value:
+     simple_data_value:
+     data_defined:
+*/
+#[unsafe(no_mangle)] pub unsafe fn define_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_bytes:
+     get_byte:
+     get_string:
+     undefined_data:
+     mark_undefined_data:
+     undefined_data_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_bytes( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_unicode( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_words:
+    define_words:
+    get_word:
+    word_data_value:
+    word_string:
+    copy_word_string:
+    word_string_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_words( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_dwords:
+    get_dword:
+    complex_dword:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_dwords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_pwords:
+    get_pword:
+    complex_pword:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_pwords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_qwords:
+    get_qword:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_qwords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_twords:
+    get_tword:
+    large_shift:
+    tword_mantissa_shift_done:
+    store_shifted_mantissa:
+    tword_exp_ok:
+    fp_zero_tword:
+    complex_tword:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_twords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_file:
+    position_ok:
+    size_ok:
+    open_binary_file:
+    find_current_source_path:
+    get_current_path:
+    cut_current_path:
+    current_path_ok:
+    search_in_include_paths:
+    file_opened:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_file( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+reserve_bytes:
+    zero_bytes:
+    bytes_stosb_ok:
+    bytes_stosw_ok:
+    reserved_data:
+*/
+#[unsafe(no_mangle)] pub unsafe fn reserve_bytes( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+reserve_words:
+    zero_words:
+    words_stosw_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn reserve_words( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+reserve_dwords:
+    zero_dwords:
+*/
+#[unsafe(no_mangle)] pub unsafe fn reserve_dwords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn reserve_pwords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn reserve_qwords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn reserve_twords( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+align_directive:
+    object_alignment:
+    pe_alignment:
+    make_alignment:
+    invalid_align_value:
+    nops:
+    nops_stosb_ok:
+    nops_stosw_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn align_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn err_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn assert_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_expression:
+    calculation_loop:
+    absolute_values_calculation:
+    expression_calculated:
+    expression_value_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_byte_number:
+    got_number:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_byte_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn get_word_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_dword_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_qword_number( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_register( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_label:
+     unadjusted_label:
+     got_label:
+     labeled_registers_ok:
+     check_size:
+     actual_file_offset_label:
+     use_undefined_data_offset:
+     current_file_offset_label:
+     use_current_offset:
+     make_file_offset_label:
+     current_offset_label:
+     make_current_offset_label:
+     current_offset_label_ok:
+     org_origin_label:
+     counter_label:
+     make_dword_label_value:
+     timestamp_label:
+     make_qword_label_value:
+     predefined_label:
+     label_out_of_scope:
+     label_undefined:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_label( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn error_undefined( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn force_next_pass( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+
+#[unsafe(no_mangle)] pub unsafe fn undefined_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_add:
+     invalid_add:
+     add_relocatable:
+     add_values:
+     add_sign_ok:
+     add_register:
+     add_register_start:
+     add_in_second_slot:
+     create_in_first_slot:
+     create_in_second_slot:
+     add_register_done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_add( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn out_of_range( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_sub:
+     invalid_sub:
+     negate_relocatable:
+     sub_values:
+     sub_sign_ok:
+     sub_register:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_sub( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_mul:
+     swap_values:
+     mul_start:
+     mul_first_sign_ok:
+     mul_first_register_sign_ok:
+     mul_second_register_sign_ok:
+     mul_second_sign_ok:
+     mul_numbers:
+     mul_ok:
+     mul_first_register_ok:
+     mul_calculated:
+     mul_overflow:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_mul( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_byte_scale( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_div:
+     div_first_register_ok:
+     div_calculated:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_div( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_mod( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_and( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_or( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_xor:
+     shr_negative:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_xor( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_shl:
+     shl_over:
+     shl_max:
+     shl_high:
+     shl_done:
+     shl_overflow:
+     shl_negative:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_shl( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_shr:
+     shr_high:
+     shr_over:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_shr( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_not:
+     not_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_not( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_bsf:
+     bsf_ok:
+     bs_overflow:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_bsf( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_bsr:
+     bsr_ok:
+     finish_bs:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_bsr( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_neg:
+     neg_first_register_ok:
+     neg_second_register_ok:
+     neg_sign_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_neg( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_rva:
+     rva_type_ok:
+     rva_ok:
+     finish_rva:
+     rva_finished:
+     pe64_rva:
+     pe64_rva_type_ok:
+     pe64_rva_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_rva( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_gotoff( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_coff_rva:
+     incorrect_change_of_value_type:
+     change_value_type:
+     calculate_elf_dyn_rva:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_coff_rva( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_plt:
+     check_value_for_plt:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_plt( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+div_64:
+     divider_ok:
+     div_first_sign_ok:
+     div_second_sign_ok:
+     div_high:
+     div_high_loop:
+     div_high_correction:
+     div_high_done:
+     div_high_large_correction:
+     div_high_small_correction:
+     div_done:
+     remainder_ok:
+     div_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn div_64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+store_label_reference:
+     label_reference_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn store_label_reference( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_fp( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+convert_fp_qword:
+     fp_qword_ok:
+     fp_qword_small_shift:
+     fp_qword_shift_done:
+     fp_qword_exp_ok:
+     fp_qword_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_fp_qword( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+convert_fp_word:
+     fp_word_ok:
+     fp_word_exp_ok:
+     fp_word_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_fp_word( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+convert_fp_dword:
+     fp_dword_ok:
+     fp_dword_exp_ok:
+     fp_dword_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn convert_fp_dword( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_string_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_byte_value:
+     check_byte_value:
+     byte_positive:
+     return_byte_value:
+     range_exceeded:
+     recoverable_overflow:
+     ignore_overflow:
+     recoverable_misuse:
+     ignore_misuse:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_byte_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_word_value:
+     check_word_value:
+     word_positive:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_word_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_dword_value:
+     check_dword_value:
+     dword_positive:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_dword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_pword_value:
+     check_pword_value:
+     pword_positive:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_pword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_qword_value:
+     check_qword_value:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_qword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_count_value:
+     check_count_value:
+     invalid_count_value:
+     zero_count:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_count_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_value:
+     calculate_value:
+     value_qword:
+     truncated_value:
+     value_pword:
+     value_dword:
+     value_word:
+     value_byte:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_address_word_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_address_dword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_address_qword_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_address_value:
+     calculate_address:
+     get_address_symbol_size:
+     invalid_address_type:
+     special_address_type_32bit:
+     address_symbol_ok:
+     address_sizes_mixed:
+     address_sizes_mixed_type_ok:
+     address_size_ok:
+     check_address_registers:
+     address_registers_sizes_ok:
+     address_sizes_do_not_match:
+     check_ip_relative_address:
+     check_rip_relative_address:
+     get_address_register:
+     address_register_ok:
+     scaled_register:
+     sib_allowed:
+     special_index_scale:
+     check_immediate_address:
+     check_index_with_base:
+     check_for_ebp_base:
+     swap_base_with_index:
+     check_for_rbp_base:
+     check_index_scale:
+     check_vsib:
+     check_vsib_base:
+     check_vsib_base_size:
+     check_vsib_index:
+     swap_vsib_registers:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_address_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_relative_offset:
+     origin_registers_ok:
+     relative_offset_unallowed:
+     set_relative_offset_type:
+     relative_offset_ok:
+     plt_relative_offset:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_relative_offset( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+calculate_embedded_logical_expression:
+     logical_loop:
+     logical_or:
+     logical_and:
+     logical_value_already_determined:
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_embedded_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_value_for_comparison:
+     first_register_size_ok:
+     second_register_size_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_value_for_comparison( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_logical_value:
+     check_for_negation:
+     negation_ok:
+     check_values_registers:
+     values_not_relative:
+     invalid_comparison:
+     values_relative:
+     check_less_or_greater:
+     check_equal:
+     check_greater:
+     check_less:
+     check_not_less:
+     check_not_greater:
+     check_not_equal:
+     logical_number:
+     invalid_logical_number:
+     logical_number_ok:
+     check_for_earlier_defined:
+     check_for_defined:
+     check_if_expression_defined:
+     check_expression:
+     defined_register:
+     defined_fp_value:
+     defined_string:
+     check_if_symbol_defined:
+     no_prediction:
+     symbol_predicted_undefined:
+     symbol_undefined:
+     expression_checked:
+     check_for_used:
+     not_used:
+     given_false:
+     return_false:
+     given_true:
+     return_true:
+     logical_expression:
+     logical_value_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_logical_value( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+skip_symbol:
+     skip_done:
+     skip_label:
+     skip_instruction:
+     skip_assembler_symbol:
+     skip_special_label:
+     skip_address:
+     skip_expression:
+     skip_label_value:
+     skip_register:
+     skip_fp_value:
+     skip_string:
+     nothing_to_skip:
+*/
+#[unsafe(no_mangle)] pub unsafe fn skip_symbol( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+expand_path:
+     environment_variable:
+     find_variable_end:
+     not_environment_variable:
+*/
+#[unsafe(no_mangle)] pub unsafe fn expand_path( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+get_include_directory:
+     include_directory_ok:
+     path_separator_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn get_include_directory( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn calculate_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_except64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_only64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_16bit_except64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+simple_instruction_16bit:
+     size_prefix:
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_32bit_except64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_32bit:( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_extended_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_extended_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_extended_instruction_f3( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn iret_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn prefix_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+prefix_instruction:
+    segment_prefix:
+*/
+#[unsafe(no_mangle)] pub unsafe fn prefix_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn bnd_prefix_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+int_instruction:
+     int_imm_ok:
+     take_byte_value:
+*/
+#[unsafe(no_mangle)] pub unsafe fn int_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+aa_instruction:
+     aa_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn aa_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+basic_instruction:
+     basic_mem:
+     basic_mem_reg:
+     instruction_ready:
+     basic_mem_imm:
+     basic_mem_imm_64bit:
+     basic_mem_imm_nosize:
+     basic_mem_imm_8bit:
+     basic_mem_imm_16bit:
+     basic_mem_imm_16bit_store:
+     basic_mem_simm_8bit:
+     basic_mem_imm_32bit:
+     basic_mem_imm_32bit_ok:
+     basic_mem_imm_32bit_store:
+     get_simm32:
+     simm32_range_ok:
+     get_simm32_ok:
+     basic_reg:
+     basic_reg_mem:
+     basic_reg_mem_8bit:
+     basic_reg_reg:
+     nomem_instruction_ready:
+     basic_reg_imm:
+     basic_reg_imm_64bit:
+     basic_reg_imm_8bit:
+     basic_al_imm:
+     basic_reg_imm_16bit:
+     basic_reg_imm_16bit_store:
+     basic_store_imm_16bit:
+     basic_reg_simm_8bit:
+     basic_ax_imm:
+     basic_reg_imm_32bit:
+     basic_reg_imm_32bit_ok:
+     basic_reg_imm_32bit_store:
+     basic_store_imm_32bit:
+     basic_eax_imm:
+     recoverable_unknown_size:
+     ignore_unknown_size:
+*/
+#[unsafe(no_mangle)] pub unsafe fn basic_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+single_operand_instruction:
+     single_mem:
+     single_mem_nosize:
+     single_mem_8bit:
+     single_reg:
+     single_reg_8bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn single_operand_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+mov_instruction:
+     mov_mem:
+     mov_mem_reg:
+     mov_mem_general_reg:
+     mov_mem_reg_8bit:
+     mov_mem_al:
+     mov_mem_address32_al:
+     store_mov_address32:
+     mov_mem_address16_al:
+     store_mov_address16:
+     check_mov_address64:
+     address64_required:
+     address64_simm32:
+     no_address64:
+     mov_mem_address64_al:
+     store_mov_address64:
+     mov_mem_ax:
+     mov_mem_address32_ax:
+     mov_mem_address16_ax:
+     mov_mem_address64_ax:
+     mov_mem_sreg:
+     mov_mem_sreg_store:
+     mov_mem_imm:
+     mov_mem_imm_64bit:
+     mov_mem_imm_nosize:
+     mov_mem_imm_8bit:
+     mov_mem_imm_16bit:
+     mov_mem_imm_32bit:
+     mov_mem_imm_32bit_store:
+     mov_reg:
+     mov_reg_reg:
+     mov_reg_reg_8bit:
+     mov_reg_sreg:
+     mov_reg_sreg64:
+     mov_reg_sreg32:
+     mov_reg_sreg_store:
+     mov_reg_creg:
+     mov_reg_creg_store:
+     mov_reg_creg_64bit:
+     mov_reg_mem:
+     mov_reg_mem_8bit:
+     mov_al_mem:
+     mov_al_mem_address32:
+     mov_al_mem_address16:
+     mov_al_mem_address64:
+     mov_ax_mem:
+     mov_ax_mem_address32:
+     mov_ax_mem_address16:
+     mov_ax_mem_address64:
+     mov_reg_imm:
+     mov_reg_imm_64bit:
+     mov_reg_imm_64bit_store:
+     mov_reg_imm_8bit:
+     mov_reg_imm_16bit:
+     mov_reg_imm_32bit:
+     mov_store_imm_32bit:
+     store_mov_reg_imm_code:
+     mov_reg_imm_prefix_ok:
+     mov_reg_64bit_imm_32bit:
+     mov_sreg:
+     mov_sreg_reg:
+     mov_sreg_reg_size_ok:
+     mov_sreg_mem:
+     mov_sreg_mem_size_ok:
+     mov_creg:
+     mov_creg_store:
+     mov_creg_64bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn mov_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+test_instruction:
+     test_mem:
+     test_mem_reg:
+     test_mem_reg_8bit:
+     test_mem_imm:
+     test_mem_imm_64bit:
+     test_mem_imm_nosize:
+     test_mem_imm_8bit:
+     test_mem_imm_16bit:
+     test_mem_imm_32bit:
+     test_mem_imm_32bit_store:
+     test_reg:
+     test_reg_reg:
+     test_reg_reg_8bit:
+     test_reg_imm:
+     test_reg_imm_64bit:
+     test_reg_imm_8bit:
+     test_al_imm:
+     test_reg_imm_16bit:
+     test_ax_imm:
+     test_reg_imm_32bit:
+     test_reg_imm_32bit_store:
+     test_eax_imm:
+     test_reg_mem:
+     test_reg_mem_8bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn test_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+xchg_instruction:
+     xchg_mem:
+     xchg_reg:
+     xchg_reg_reg:
+     xchg_ax_reg:
+     xchg_ax_reg_ok:
+     xchg_ax_reg_store:
+     xchg_reg_reg_store:
+     xchg_reg_reg_8bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn xchg_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+push_instruction:
+     push_next:
+     push_mem:
+     push_mem_16bit:
+     push_mem_32bit:
+     push_mem_64bit:
+     push_mem_store:
+     push_reg:
+     push_reg_ok:
+     push_reg_64bit:
+     push_reg_32bit:
+     push_reg_16bit:
+     push_reg_store:
+     push_sreg:
+     push_sreg16:
+     push_sreg32:
+     push_sreg64:
+     push_sreg_store:
+     push_sreg_386:
+     push_imm:
+     push_imm_size_ok:
+     push_imm_optimized_64bit:
+     push_imm_optimized_32bit:
+     push_imm_optimized_16bit:
+     push_imm_8bit:
+     push_imm_16bit:
+     push_imm_16bit_store:
+     push_imm_64bit:
+     push_imm_32bit:
+     push_imm_32bit_store:
+     push_done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn push_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+pop_instruction:
+     pop_next:
+     pop_mem:
+     pop_mem_16bit:
+     pop_mem_32bit:
+     pop_mem_64bit:
+     pop_mem_store:
+     pop_reg:
+     pop_reg_ok:
+     pop_reg_64bit:
+     pop_reg_32bit:
+     pop_reg_16bit:
+     pop_reg_store:
+     pop_done:
+     pop_sreg:
+     pop_sreg16:
+     pop_sreg32:
+     pop_sreg64:
+     pop_sreg_store:
+     pop_cs:
+     pop_cs_store:
+     pop_sreg_386:
+*/
+#[unsafe(no_mangle)] pub unsafe fn pop_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+inc_instruction:
+     inc_mem:
+     inc_mem_nosize:
+     inc_mem_8bit:
+     inc_reg:
+     inc_reg_long_form:
+     inc_reg_8bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn inc_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+set_instruction:
+     set_mem:
+     set_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn set_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+arpl_instruction:
+     arpl_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn arpl_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+bound_instruction:
+     bound_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn bound_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+enter_instruction:
+     enter_imm16_size_ok:
+     enter_imm16_ok:
+     enter_imm8_size_ok:
+     enter_imm8_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn enter_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn ret_instruction_only64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn ret_instruction_32bit_except64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn ret_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn ret_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn ret_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+ret_instruction:
+     ret_common:
+     ret_imm:
+     ret_imm_ok:
+     ret_imm_store:
+     simple_ret:
+*/
+#[unsafe(no_mangle)] pub unsafe fn ret_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn retf_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn retf_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn retf_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn retf_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn lea_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+ls_instruction:
+     les_instruction:
+     lds_instruction:
+     ls_short_code:
+     ls_code_ok:
+     ls_16bit:
+     ls_32bit:
+     ls_64bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn ls_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+sh_instruction:
+     sh_mem:
+     sh_mem_reg:
+     sh_mem_cl_nosize:
+     sh_mem_cl_8bit:
+     sh_mem_imm:
+     sh_mem_imm_size_ok:
+     sh_mem_1:
+     sh_mem_imm_nosize:
+     sh_mem_imm_8bit:
+     sh_mem_1_8bit:
+     sh_reg:
+     sh_reg_reg:
+     sh_reg_cl_8bit:
+     sh_reg_imm:
+     sh_reg_imm_size_ok:
+     sh_reg_1:
+     sh_reg_imm_8bit:
+     sh_reg_1_8bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn sh_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+shd_instruction:
+     shd_mem:
+     shd_mem_reg_imm:
+     shd_mem_reg_imm_size_ok:
+     shd_reg:
+     shd_reg_reg_imm:
+     shd_reg_reg_imm_size_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn shd_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+movx_instruction:
+     movx_mem_store:
+     movx_unknown_size:
+     movx_reg:
+     movx_reg_8bit:
+     movx_reg_16bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn movx_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+movsxd_instruction:
+     movsxd_mem_store:
+     movsxd_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn movsxd_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+bt_instruction:
+     bt_mem_reg:
+     bt_mem_imm:
+     bt_mem_imm_size_ok:
+     bt_mem_imm_store:
+     bt_mem_imm_nosize:
+     bt_reg:
+     bt_reg_reg:
+     bt_reg_imm:
+     bt_reg_imm_size_ok:
+     bt_reg_imm_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn bt_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+bs_instruction:
+     bs_reg_reg:
+     get_reg_mem:
+     get_reg_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn bs_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+ud_instruction:
+     ud_reg_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn ud_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+imul_instruction:
+     imul_mem:
+     imul_mem_nosize:
+     imul_mem_8bit:
+     imul_reg:
+     imul_reg_8bit:
+     imul_reg_:
+     imul_reg_noimm:
+     imul_reg_mem:
+     imul_reg_mem_imm:
+     imul_reg_mem_imm_64bit:
+     imul_reg_mem_imm_16bit:
+     imul_reg_mem_imm_16bit_store:
+     imul_reg_mem_imm_32bit:
+     imul_reg_mem_imm_32bit_ok:
+     imul_reg_mem_imm_32bit_store:
+     imul_reg_mem_imm_8bit_store:
+     imul_reg_imm:
+     imul_reg_reg:
+     imul_reg_reg_imm:
+     imul_reg_reg_imm_64bit:
+     imul_reg_reg_imm_16bit:
+     imul_reg_reg_imm_16bit_store:
+     imul_reg_reg_imm_32bit:
+     imul_reg_reg_imm_32bit_ok:
+     imul_reg_reg_imm_32bit_store:
+     imul_reg_reg_imm_8bit_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn imul_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+in_instruction:
+     in_reg:
+     in_ax_dx:
+     in_al_dx:
+     in_imm:
+     in_imm_size_ok:
+     in_ax_imm:
+     in_al_imm:
+*/
+#[unsafe(no_mangle)] pub unsafe fn in_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+out_instruction:
+     out_dx_ax:
+     out_dx_al:
+     out_imm:
+     out_imm_size_ok:
+     out_imm_ax:
+     out_imm_al:
+*/
+#[unsafe(no_mangle)] pub unsafe fn out_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn call_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+jmp_instruction:
+     process_jmp:
+     jmp_type_ok:
+     jmp_mem:
+     jmp_mem_size_not_specified:
+     jmp_mem_near:
+     jmp_mem_64bit:
+     jmp_mem_far:
+     jmp_mem_48bit:
+     jmp_mem_far_store:
+     jmp_mem_80bit:
+     jmp_mem_far_32bit:
+     jmp_mem_32bit:
+     jmp_mem_near_32bit:
+     jmp_mem_16bit:
+     jmp_reg:
+     jmp_reg_64bit:
+     jmp_reg_32bit:
+     jmp_reg_16bit:
+     jmp_imm:
+     jmp_near:
+     jmp_imm_32bit:
+     jmp_imm_32bit_prefix_ok:
+     jmp_imm_32bit_store:
+     jmp_imm_32bit_ok:
+     jmp_imm_64bit:
+     jmp_short:
+     jmp_imm_16bit:
+     jmp_imm_16bit_prefix_ok:
+     calculate_jump_offset:
+     check_for_short_jump:
+     no_short_jump:
+     forced_short:
+     jmp_short_value_type_ok:
+     short_jump:
+     jump_out_of_range:
+     jmp_far:
+     jmp_far_16bit:
+     jmp_far_segment:
+     jmp_far_32bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn jmp_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+conditional_jump:
+     conditional_jump_32bit:
+     conditional_jump_32bit_prefix_ok:
+     conditional_jump_32bit_store:
+     conditional_jump_32bit_range_ok:
+     conditional_jump_64bit:
+     conditional_jump_short:
+     conditional_jump_16bit:
+     conditional_jump_16bit_prefix_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn conditional_jump( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn loop_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn loop_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn loop_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+loop_instruction:
+     loop_jump_32bit:
+     loop_jump_32bit_prefix_ok:
+     make_loop_jump:
+     loop_counter_size:
+     loop_counter_size_ok:
+     loop_jump_64bit:
+     loop_jump_16bit:
+     loop_jump_16bit_prefix_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn loop_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+movs_instruction:
+     movs_address_32bit:
+     movs_address_16bit:
+     movs_store:
+     movs_check_size:
+*/
+#[unsafe(no_mangle)] pub unsafe fn movs_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+lods_instruction:
+     lods_address_32bit:
+     lods_address_16bit:
+     lods_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn lods_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+stos_instruction:
+     stos_address_32bit:
+     stos_address_16bit:
+     stos_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn stos_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+stos_instruction:
+     stos_address_32bit:
+     stos_address_16bit:
+     stos_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn stos_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+ins_instruction:
+     ins_address_32bit:
+     ins_address_16bit:
+     ins_store:
+     ins_check_size:
+*/
+#[unsafe(no_mangle)] pub unsafe fn ins_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+outs_instruction:
+     outs_address_32bit:
+     outs_address_16bit:
+     outs_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn outs_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+xlat_instruction:
+     xlat_address_32bit:
+     xlat_address_16bit:
+     xlat_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn xlat_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+pm_word_instruction:
+     pm_mem:
+     pm_mem_store:
+     pm_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn pm_word_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn pm_store_word_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+lgdt_instruction:
+     lgdt_mem_80bit:
+     lgdt_mem_48bit:
+     lgdt_mem_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn lgdt_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+lar_instruction:
+     lar_reg_mem:
+     lar_reg_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn lar_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn invlpg_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_f2_0f_01( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_f3_0f_01_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_f3_0f_01( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn swapgs_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_0f_01( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+basic_486_instruction:
+     basic_486_mem_reg_8bit:
+     basic_486_reg:
+     basic_486_reg_reg_8bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn basic_486_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+bswap_instruction:
+     bswap_reg_code_ok:
+     bswap_reg64:
+*/
+#[unsafe(no_mangle)] pub unsafe fn bswap_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+cmpxchgx_instruction:
+     cmpxchgx_size_ok:
+     cmpxchgx_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn cmpxchgx_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+nop_instruction:
+     extended_nop:
+     extended_nop_store:
+     extended_nop_reg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn nop_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+basic_fpu_instruction:
+     basic_fpu_mem:
+     basic_fpu_mem_32bit:
+     basic_fpu_mem_64bit:
+     basic_fpu_streg:
+     basic_fpu_streg_st0:
+     basic_fpu_st0:
+     basic_fpu_single_streg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn basic_fpu_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn simple_fpu_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fi_instruction:
+     fi_mem_32bit:
+     fi_mem_16bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fi_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fld_instruction:
+     fld_mem_32bit:
+     fld_mem_64bit:
+     fld_mem_80bit:
+     fld_mem_80bit_store:
+     fld_streg:
+     fst_streg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fld_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fild_instruction:
+     fild_mem_32bit:
+     fild_mem_16bit:
+     fild_mem_64bit:
+     fild_mem_64bit_store:
+     fisttp_64bit_store:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fild_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fbld_instruction:
+     fbld_mem_80bit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fbld_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+faddp_instruction:
+     faddp_streg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn faddp_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fcompp_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fucompp_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fxch_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn ffreep_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+ffree_instruction:
+     fpu_single_operand:
+     fpu_streg:
+*/
+#[unsafe(no_mangle)] pub unsafe fn ffree_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fstenv_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fldenv_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fstenv_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fldenv_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fstenv_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fldenv_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fsave_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fnsave_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fsave_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fnsave_instruction_16bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn fsave_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+fnsave_instruction:
+     fpu_mem:
+*/
+#[unsafe(no_mangle)] pub unsafe fn fnsave_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
 }
 
 pub mod api
