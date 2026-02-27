@@ -6060,28 +6060,6 @@ get_include_directory:
 }
 /*
 */
-#[unsafe(no_mangle)] pub unsafe fn calculate_logical_expression( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        match rcx
-        {
-            0 =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-
-            _ =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-        }
-
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-/*
-*/
 #[unsafe(no_mangle)] pub unsafe fn simple_instruction_except64( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -6216,7 +6194,7 @@ simple_instruction_16bit:
 }
 /*
 */
-#[unsafe(no_mangle)] pub unsafe fn simple_instruction_32bit:( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+#[unsafe(no_mangle)] pub unsafe fn simple_instruction_32bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -6327,28 +6305,6 @@ simple_instruction_16bit:
 /*
 */
 #[unsafe(no_mangle)] pub unsafe fn iret_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        match rcx
-        {
-            0 =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-
-            _ =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-        }
-
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-/*
-*/
-#[unsafe(no_mangle)] pub unsafe fn prefix_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -7782,32 +7738,6 @@ lods_instruction:
      lods_store:
 */
 #[unsafe(no_mangle)] pub unsafe fn lods_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        match rcx
-        {
-            0 =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-
-            _ =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-        }
-
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-/*
-stos_instruction:
-     stos_address_32bit:
-     stos_address_16bit:
-     stos_store:
-*/
-#[unsafe(no_mangle)] pub unsafe fn stos_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -10782,32 +10712,6 @@ pinsrq_instruction:
     }
 }
 /*
-pmovsxdq_instruction:
-     pmovsx_instruction:
-     pmovsx_xmmreg_reg:
-     setup_66_0f_38:
-*/
-#[unsafe(no_mangle)] pub unsafe fn pmovsxwq_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        match rcx
-        {
-            0 =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-
-            _ =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-        }
-
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-/*
 */
 #[unsafe(no_mangle)] pub unsafe fn xsaves_instruction_64bit( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
@@ -11478,7 +11382,7 @@ movbe_instruction:
 adx_instruction:
      adx_reg_reg:
 */
-#[unsafe(no_mangle)] pub unsafe fn movbe_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+#[unsafe(no_mangle)] pub unsafe fn adx_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -14164,28 +14068,6 @@ avx_pi_instruction_38_noevex:
 }
 /*
 */
-#[unsafe(no_mangle)] pub unsafe fn avx_single_source_instruction_38_noevex( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        match rcx
-        {
-            0 =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-
-            _ =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-        }
-
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-/*
-*/
 #[unsafe(no_mangle)] pub unsafe fn avx_ss_instruction_3a_imm8_noevex( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
@@ -14834,28 +14716,6 @@ avx512_ss_instruction:
      avx512_instruction:
 */
 #[unsafe(no_mangle)] pub unsafe fn avx512_ss_instruction( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
-{
-    unsafe
-    {
-        match rcx
-        {
-            0 =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-
-            _ =>
-            {
-                return ( rcx, rdx, r8, r9 )
-            }
-        }
-
-        return ( rcx, rdx, r8, r9 )
-    }
-}
-/*
-*/
-#[unsafe(no_mangle)] pub unsafe fn avx512_ss_instruction_sae( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
@@ -19849,8 +19709,916 @@ write_mz_header:
     }
 }
 /*
+make_stub:
+     default_stub:
+     default_stub_end:
+     stub_from_file:
+     stub_header_size_ok:
+     read_stub_code:
+     stub_code_ok:
+     stub_ok:
+     binary_stub:
+     binary_heap_ok:
 */
-#[unsafe(no_mangle)] pub unsafe fn mz_heap( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+#[unsafe(no_mangle)] pub unsafe fn make_stub( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+format_pe:
+     pe_settings:
+     dll_flag:
+     wdm_flag:
+     large_flag:
+     nx_flag:
+     subsystem_setting:
+     subsystem_type_ok:
+     version_value_ok:
+     zero_version:
+     subsystem_version_ok:
+     get_pe_base:
+     get_peplus_base:
+     pe_base_ok:
+     get_stub_name:
+     pe_settings_ok:
+     make_pe_stub:
+     pe_stub_ok:
+     zero_pe_header:
+     pe_alignment_ok:
+     init_peplus_specific:
+     pe_header_ok:
+     reserve_space_for_section_headers:
+     pe_entry_init_ok:
+     peplus_org:
+     pe_org_ok:
+     pe64_code:
+     pe_code_type_ok:
+     pe_labels_type_ok:
+     dll_flag_ok:
+     wdm_flag_ok:
+     large_flag_ok:
+     nx_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn format_pe( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+pe_section:
+     new_section:
+     pe_section_code_type_ok:
+     peplus_section_org:
+     pe_section_org_ok:
+     get_section_flags:
+     set_directory:
+     peplus_directory:
+     pe_directory_set:
+     section_flag:
+     close_pe_section:
+     finish_section:
+     align_section:
+     pe_code_sum_ok:
+     pe_data_sum_ok:
+     udata_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn pe_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+data_directive:
+     predefined_data_type:
+     data_type_ok:
+     peplus_data:
+     init_pe_data:
+     end_data:
+     end_peplus_data:
+*/
+#[unsafe(no_mangle)] pub unsafe fn data_directive( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+pe_entry:
+     check_pe_entry_label_type:
+     pe_entry_ok:
+     pe64_entry:
+     check_pe64_entry_label_type:
+     pe64_entry_type_ok:
+     pe64_entry_range_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn pe_entry( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+pe_stack:
+     default_stack_commit:
+     peplus_stack:
+     default_peplus_stack_commit:
+*/
+#[unsafe(no_mangle)] pub unsafe fn pe_stack( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+pe_heap:
+     peplus_heap:
+*/
+#[unsafe(no_mangle)] pub unsafe fn pe_heap( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+mark_pe_relocation:
+     check_standard_pe_relocation_type:
+     pe_relocation_type_ok:
+     fixup_32bit:
+     fixup_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn mark_pe_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+*/
+#[unsafe(no_mangle)] pub unsafe fn generate_pe_data( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+make_pe_fixups:
+     fixups_ready:
+     reserve_forward_fixups:
+     make_fixups:
+     make_fixup:
+     fixups_block:
+     store_fixup:
+     fixups_done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn make_pe_fixups( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+make_pe_resource:
+     reserve_space_for_resource:
+     resource_from_file:
+     read_resource_headers:
+     resource_file_alignment_ok:
+     check_resource_header_type:
+     resource_header_type_ok:
+     check_resource_header_name:
+     resource_header_name_ok:
+     resource_headers_ok:
+     make_type_name_directory:
+     find_type_name:
+     compare_with_previous_type_name:
+     check_this_type_name:
+     compare_with_current_type_name:
+     type_name_found:
+     same_type_name:
+     check_next_type_name:
+     type_name_ok:
+     make_type_name_entry:
+     type_name_directory_done:
+     make_type_id_directory:
+     find_type_id:
+     check_next_type_id:
+     type_id_ok:
+     make_type_id_entry:
+     type_id_directory_done:
+     make_resource_directories:
+     make_resource_name_directory:
+     find_resource_name:
+     compare_with_previous_resource_name:
+     skip_resource_name:
+     skip_unicode_string:
+     check_this_resource_name:
+     compare_with_current_resource_name:
+     resource_name_found:
+     same_resource_name:
+     check_next_resource_name:
+     resource_name_ok:
+     make_resource_name_entry:
+     resource_name_directory_done:
+     make_resource_id_directory:
+     find_resource_id:
+     check_next_resource_id:
+     resource_id_ok:
+     make_resource_id_entry:
+     resource_id_directory_done:
+     resource_directories_ok:
+     update_resource_directories:
+     make_language_directories:
+     make_language_id_directory:
+     find_language_id:
+     get_language_id:
+     check_next_language_id:
+     language_id_ok:
+     make_language_id_entry:
+     language_id_directory_done:
+     language_directories_ok:
+     resource_directories_updated:
+     make_name_strings:
+     process_string_entries:
+     copy_string_data:
+     string_data_copied:
+     string_entries_processed:
+     resource_strings_alignment_ok:
+     update_language_directories:
+     make_data_records:
+     update_data_records:
+     resource_data_alignment_ok:
+     resource_done:
+*/
+#[unsafe(no_mangle)] pub unsafe fn make_pe_resource( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+close_pe:
+     pe_sections_ok:
+     process_directories:
+     section_data:
+     directory_ok:
+     finish_pe_relocations:
+     pe_relocations_ok:
+     calculate_checksum:
+*/
+#[unsafe(no_mangle)] pub unsafe fn close_pe( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+format_coff:
+     flat_section_flags_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn format_coff( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+coff_section:
+     coff_labels_type_ok:
+     coff_section_flags:
+     coff_section_flag_ok:
+     coff_section_alignment:
+     coff_section_settings_ok:
+     close_coff_section:
+     coff_section_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn coff_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+mark_coff_relocation:
+     coff_64bit_relocation:
+     coff_relocation_relative:
+     relative_ok:
+     relative_coff_64bit_relocation:
+     coff_relocation:
+*/
+#[unsafe(no_mangle)] pub unsafe fn mark_coff_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+close_coff:
+     coff_closed:
+*/
+#[unsafe(no_mangle)] pub unsafe fn close_coff( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+coff_formatter:
+     coff_magic_ok:
+     coff_flags_ok:
+     enumerate_symbols:
+     enumerate_section:
+     enumerate_public:
+     enumerate_extrn:
+     prepare_default_section:
+     find_references_to_default_section:
+     next_reference:
+     check_public_reference:
+     skip_other_section:
+     default_section_ok:
+     symbols_enumerated:
+     find_section:
+     section_found:
+     default_section:
+     section_name_ok:
+     section_ptr_ok:
+     find_relocations:
+     add_relocation:
+     next_relocation:
+     section_relocations_done:
+     section_relocations_count_16bit:
+     section_relocations_ok:
+     sections_finished:
+     zero_symbols_table:
+     make_symbols_table:
+     add_section_symbol:
+     add_extrn_symbol:
+     add_public_symbol:
+     undefined_coff_public:
+     check_64bit_public_symbol:
+     public_symbol_type_ok:
+     public_symbol_section_ok:
+     store_symbol_class:
+     alias_symbol:
+     public_constant:
+     symbols_table_ok:
+     store_symbol_name:
+     default_name:
+     add_string:
+*/
+#[unsafe(no_mangle)] pub unsafe fn coff_formatter( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+format_elf:
+     elf_header_ok:
+     format_elf64:
+*/
+#[unsafe(no_mangle)] pub unsafe fn format_elf( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+elf_section:
+     elf_labels_type_ok:
+     elf_section_flags:
+     elf_section_alignment:
+     elf_section_settings_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn elf_section( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+mark_elf_relocation:
+     elf_gotoff_relocation:
+     elf_relocation_relative:
+*/
+#[unsafe(no_mangle)] pub unsafe fn mark_elf_relocation( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+close_elf:
+     elf_closed:
+*/
+#[unsafe(no_mangle)] pub unsafe fn close_elf( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+elf_formatter:
+     align_elf_structures:
+     find_first_section:
+     skip_other_symbol:
+     first_section_found:
+     find_next_section:
+     skip_extrn:
+     skip_public:
+     make_section_symbol:
+     store_section_index:
+     section_index_ok:
+     elf64_section_symbol:
+     section_symbol_ok:
+     find_other_symbols:
+     skip_section:
+     make_public_symbol:
+     undefined_public:
+     elf64_public:
+     public_absolute:
+     section_for_public_ok:
+     elf_public_function:
+     store_elf_public_info:
+     elf64_public_symbol:
+     elf64_public_function:
+     store_elf64_public_info:
+     public_symbol_ok:
+     make_extrn_symbol:
+     elf64_extrn_symbol:
+     extrn_symbol_ok:
+     elf_symbol_table_ok:
+     make_string_table:
+     rel_prefix_ok:
+     make_elf_string:
+     make_elf64_string:
+     elf64_rel_prefix_ok:
+     default_string:
+     elf_string_table_ok:
+     finish_elf64_header:
+     elf_header_finished:
+     elf_null_section_ok:
+     make_section_entry:
+     bss_section:
+     section_type_ok:
+     convert_relocations:
+     make_relocation_entry:
+     make_elf64_relocation_entry:
+     addend_64bit:
+     relocation_entry_ok:
+     store_elf_machine_word:
+     elf_machine_word_ok:
+     relocations_converted:
+     store_relocations_name_offset:
+     rela_section:
+     store_relocations_type:
+     finish_elf64_rela_section:
+     rel_section_ok:
+     adjust_elf_section_headers_offset:
+     finish_elf64_sym_section:
+     sym_section_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn elf_formatter( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+format_elf_exe:
+     elf_exe_brand_ok:
+     elf_exe_base_ok:
+     init_elf_segments:
+     elf_exe_addressing_setup:
+     format_elf64_exe:
+     elf64_exe_brand_ok:
+     elf64_exe_base_ok:
+     init_elf64_segments:
+     setup_elf_exe_labels_type:
+     elf_exe_labels_type_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn format_elf_exe( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+elf_entry:
+     elf64_entry:
+*/
+#[unsafe(no_mangle)] pub unsafe fn elf_entry( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+elf_segment:
+     new_elf_segment:
+     elf_segment_flags:
+     mark_elf_segment_flag:
+     elf_segment_type:
+     scan_elf_segment_types:
+     elf_segment_type_ok:
+     elf_segment_flags_ok:
+     no_elf_segment_merging:
+     elf_segment_addressing_setup:
+     merge_elf_segment:
+     elf_segment_separated_base:
+     merge_elf_header:
+     close_elf_segment:
+     first_elf_segment_ok:
+     finish_elf_segment:
+     elf_segment_size_ok:
+     elf_segment_position_move:
+     elf_segment_position_move_and_align:
+     elf_segment_position_ok:
+     elf64_segment:
+     new_elf64_segment:
+     elf64_segment_flags:
+     mark_elf64_segment_flag:
+     elf64_segment_type:
+     scan_elf64_segment_types:
+     elf64_segment_type_ok:
+     elf64_segment_flags_ok:
+     no_elf64_segment_merging:
+     merge_elf64_segment:
+     elf64_segment_separated_base:
+     merge_elf64_header:
+     close_elf64_segment:
+     first_elf64_segment_ok:
+     finish_elf64_segment:
+     elf64_segment_size_ok:
+     elf64_segment_position_move:
+     elf64_segment_position_move_and_align:
+     elf64_segment_position_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn elf_segment( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
+{
+    unsafe
+    {
+        match rcx
+        {
+            0 =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+
+            _ =>
+            {
+                return ( rcx, rdx, r8, r9 )
+            }
+        }
+
+        return ( rcx, rdx, r8, r9 )
+    }
+}
+/*
+close_elf_exe:
+     elf_exe_ok:
+     close_elf64_exe:
+     elf64_exe_ok:
+*/
+#[unsafe(no_mangle)] pub unsafe fn close_elf_exe( mut rcx:usize, mut rdx:usize, mut r8:usize, mut r9:usize ) -> ( usize, usize, usize, usize )
 {
     unsafe
     {
