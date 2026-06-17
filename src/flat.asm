@@ -31029,7 +31029,6 @@ section '.idata' import data readable writeable
   dd 0,0,0,0,0
 
   kernel_table:
-if WIN64
     ExitProcess dq rva _ExitProcess
     CreateFile dq rva _CreateFileA
     ReadFile dq rva _ReadFile
@@ -31045,23 +31044,6 @@ if WIN64
     GetSystemTime dq rva _GetSystemTime
     GlobalMemoryStatus dq rva _GlobalMemoryStatus
     dq 0
-else
-    ExitProcess dd rva _ExitProcess
-    CreateFile dd rva _CreateFileA
-    ReadFile dd rva _ReadFile
-    WriteFile dd rva _WriteFile
-    CloseHandle dd rva _CloseHandle
-    SetFilePointer dd rva _SetFilePointer
-    GetCommandLine dd rva _GetCommandLineA
-    GetEnvironmentVariable dd rva _GetEnvironmentVariable
-    GetStdHandle dd rva _GetStdHandle
-    VirtualAlloc dd rva _VirtualAlloc
-    VirtualFree dd rva _VirtualFree
-    GetTickCount dd rva _GetTickCount
-    GetSystemTime dd rva _GetSystemTime
-    GlobalMemoryStatus dd rva _GlobalMemoryStatus
-    dd 0
-end if
 
   kernel_name db 'KERNEL32.DLL',0
 
