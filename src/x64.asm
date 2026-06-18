@@ -21,7 +21,7 @@ section '.text' code readable executable
 section '.data' data readable writeable
 
   _caption db 'Win64 assembly program',0
-  _message db 'Hello World!',0
+  _message db 'Hello Operator!',0
 
 section '.idata' import data readable writeable
 
