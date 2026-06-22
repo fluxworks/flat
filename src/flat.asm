@@ -9542,7 +9542,7 @@ fp_qword_small_shift:
     add esi, 13
     ret
 
-    convert_fp_word:
+convert_fp_word:
     xor eax,eax
     cmp u16 [esi+8],8000h
     je fp_word_store
@@ -9557,6 +9557,7 @@ fp_qword_small_shift:
     and ax,1 shl 10 - 1
     inc bx
     shr ax,1
+
     fp_word_ok:
     add bx,0Fh
     cmp bx,01Fh
@@ -9577,6 +9578,7 @@ fp_qword_small_shift:
     jz fp_word_exp_ok
     and ax,1 shl 10 - 1
     inc bx
+
     fp_word_exp_ok:
     shl bx,10
     or ax,bx
@@ -9630,6 +9632,7 @@ fp_qword_small_shift:
     shl ebx,23
     or eax,ebx
     jz value_out_of_range
+
     fp_dword_store:
     mov bl,[esi+11]
     shl ebx,31
@@ -9640,7 +9643,7 @@ fp_qword_small_shift:
     add esi, 13
     ret
 
-    get_string_value:
+get_string_value:
     inc esi
     lods dword [esi]
     mov ecx,eax
@@ -9658,13 +9661,14 @@ fp_qword_small_shift:
     and u16 [edi+12],0
     ret
 
-    get_byte_value:
+get_byte_value:
     mov [value_size],1
     or [operand_flags],1
     call calculate_value
     or al,al
     jz check_byte_value
     call recoverable_misuse
+
     check_byte_value:
     mov eax,[edi]
     mov edx,[edi+4]
@@ -9676,15 +9680,16 @@ fp_qword_small_shift:
     jb range_exceeded
     ret
 
-    byte_positive:
+byte_positive:
     test edx,edx
     jnz range_exceeded
     cmp eax,100h
     jae range_exceeded
+
     return_byte_value:
     ret
 
-    range_exceeded:
+range_exceeded:
     xor eax,eax
     xor edx,edx
     recoverable_overflow:
@@ -9694,25 +9699,28 @@ fp_qword_small_shift:
     pop u64[error_line]
     mov [error],value_out_of_range
     or [value_undefined],-1
+
     ignore_overflow:
     ret
 
-    recoverable_misuse:
+recoverable_misuse:
     cmp [error_line],0
     jne ignore_misuse
     push u64[current_line]
     pop u64[error_line]
     mov [error],invalid_use_of_symbol
+
     ignore_misuse:
     ret
 
-    get_word_value:
+get_word_value:
     mov [value_size],2
     or [operand_flags],1
     call calculate_value
     cmp al,2
     jb check_word_value
     call recoverable_misuse
+
     check_word_value:
     mov eax,[edi]
     mov edx,[edi+4]
@@ -9724,7 +9732,7 @@ fp_qword_small_shift:
     jb range_exceeded
     ret
 
-    word_positive:
+word_positive:
     test edx,edx
     jnz range_exceeded
     cmp eax,10000h
@@ -9748,7 +9756,7 @@ fp_qword_small_shift:
     jne range_exceeded
     ret
 
-    check_dword_value:
+check_dword_value:
     mov eax,[edi]
     mov edx,[edi+4]
     cmp u8 [edi+13],0
@@ -9757,18 +9765,19 @@ fp_qword_small_shift:
     jne range_exceeded
     ret
 
-    dword_positive:
+dword_positive:
     test edx,edx
     jne range_exceeded
     ret
 
-    get_pword_value:
+get_pword_value:
     mov [value_size],6
     or [operand_flags],1
     call calculate_value
     cmp al,4
     jne check_pword_value
     call recoverable_misuse
+
     check_pword_value:
     mov eax,[edi]
     mov edx,[edi+4]
@@ -9778,21 +9787,22 @@ fp_qword_small_shift:
     jb range_exceeded
     ret
 
-    pword_positive:
+pword_positive:
     cmp edx,10000h
     jae range_exceeded
     ret
 
-    get_qword_value:
+get_qword_value:
     mov [value_size],8
     or [operand_flags],1
     call calculate_value
+
     check_qword_value:
     mov eax,[edi]
     mov edx,[edi+4]
     ret
 
-    get_count_value:
+get_count_value:
     mov [value_size],8
     or [operand_flags],1
     call calculate_expression
@@ -9803,6 +9813,7 @@ fp_qword_small_shift:
     or al,al
     jz check_count_value
     call recoverable_misuse
+
     check_count_value:
     cmp u8 [edi+13],0
     jne invalid_count_value
@@ -9812,17 +9823,18 @@ fp_qword_small_shift:
     jnz invalid_count_value
     ret
 
-    invalid_count_value:
+invalid_count_value:
     cmp [error_line],0
     jne zero_count
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov [error],invalid_value
+
     zero_count:
     xor eax,eax
     ret
 
-    get_value:
+get_value:
     mov [operand_size],0
     lods u8 [esi]
     call get_size_operator
@@ -9847,7 +9859,7 @@ fp_qword_small_shift:
     mov edx,[edi+4]
     ret
 
-    calculate_value:
+calculate_value:
     call calculate_expression
     cmp u16 [edi+8],0
     jne invalid_value
@@ -9859,63 +9871,64 @@ fp_qword_small_shift:
     mov [value_type],al
     ret
 
-    value_qword:
+value_qword:
     call get_qword_value
     truncated_value:
     mov [value_sign],0
     ret
 
-    value_pword:
+value_pword:
     call get_pword_value
     movzx edx,dx
     jmp truncated_value
     ret
 
-    value_dword:
+value_dword:
     call get_dword_value
     xor edx,edx
     jmp truncated_value
     ret
 
-    value_word:
+value_word:
     call get_word_value
     xor edx,edx
     movzx eax,ax
     jmp truncated_value
     ret
 
-    value_byte:
+value_byte:
     call get_byte_value
     xor edx,edx
     movzx eax,al
     jmp truncated_value
     ret
 
-    get_address_word_value:
+get_address_word_value:
     mov [address_size],2
     mov [value_size],2
     mov [free_address_range],0
     jmp calculate_address
     ret
 
-    get_address_dword_value:
+get_address_dword_value:
     mov [address_size],4
     mov [value_size],4
     mov [free_address_range],0
     jmp calculate_address
     ret
 
-    get_address_qword_value:
+get_address_qword_value:
     mov [address_size],8
     mov [value_size],8
     mov [free_address_range],0
     jmp calculate_address
     ret
 
-    get_address_value:
+get_address_value:
     mov [address_size],0
     mov [value_size],8
     or [free_address_range],-1
+
     calculate_address:
     cmp u8 [esi],'.'
     je invalid_address
@@ -9930,6 +9943,7 @@ fp_qword_small_shift:
     je address_size_ok
     jg get_address_symbol_size
     neg al
+
     get_address_symbol_size:
     cmp al,6
     je special_address_type_32bit
@@ -9942,10 +9956,11 @@ fp_qword_small_shift:
     jmp address_symbol_ok
     ret
 
-    invalid_address_type:
+invalid_address_type:
     call recoverable_misuse
     special_address_type_32bit:
     mov al,40h
+
     address_symbol_ok:
     mov ah,[address_size]
     or [address_size],al
@@ -9958,10 +9973,12 @@ fp_qword_small_shift:
     je address_sizes_mixed
     cmp ax,0804h
     jne address_sizes_do_not_agree
+
     address_sizes_mixed:
     cmp [value_type],4
     jne address_sizes_mixed_type_ok
     mov [value_type],2
+
     address_sizes_mixed_type_ok:
     mov eax,[edi]
     cdq
@@ -9970,6 +9987,7 @@ fp_qword_small_shift:
     cmp [error_line],0
     jne address_size_ok
     call recoverable_overflow
+
     address_size_ok:
     xor ebx,ebx
     xor ecx,ecx
@@ -9993,6 +10011,7 @@ fp_qword_small_shift:
     jz check_address_registers
     cmp al,ah
     jne check_vsib
+
     check_address_registers:
     or al,ah
     cmp al,0Ch
@@ -10006,6 +10025,7 @@ fp_qword_small_shift:
     jz address_registers_sizes_ok
     cmp al,ah
     jne invalid_address
+
     address_registers_sizes_ok:
     cmp al,4
     je sib_allowed
@@ -10020,13 +10040,14 @@ fp_qword_small_shift:
     jmp check_word_value
     ret
 
-    address_sizes_do_not_match:
+address_sizes_do_not_match:
     cmp al,0Fh
     jne invalid_address
     mov al,bh
     and al,0Fh
     cmp al,ah
     jne invalid_address
+
     check_ip_relative_address:
     or bl,bl
     jnz invalid_address
@@ -10040,7 +10061,7 @@ fp_qword_small_shift:
     mov edx,[edi+4]
     ret
 
-    check_rip_relative_address:
+check_rip_relative_address:
     mov eax,[edi]
     cdq
     cmp edx,[edi+4]
@@ -10049,7 +10070,7 @@ fp_qword_small_shift:
     jne range_exceeded
     ret
 
-    get_address_register:
+get_address_register:
     or al,al
     jz address_register_ok
     cmp dl,1
@@ -10057,10 +10078,11 @@ fp_qword_small_shift:
     or bh,bh
     jnz scaled_register
     mov bh,al
+
     address_register_ok:
     ret
 
-    scaled_register:
+scaled_register:
     or bl,bl
     jnz invalid_address
     mov bl,al
@@ -10068,7 +10090,7 @@ fp_qword_small_shift:
     jmp address_register_ok
     ret
 
-    sib_allowed:
+sib_allowed:
     or bh,bh
     jnz check_index_with_base
     cmp cl,3
@@ -10095,6 +10117,7 @@ fp_qword_small_shift:
     cdq
     cmp edx,[edi+4]
     jne check_immediate_address
+
     special_index_scale:
     mov bh,bl
     dec cl
@@ -10116,7 +10139,7 @@ fp_qword_small_shift:
     jmp check_qword_value
     ret
 
-    check_index_with_base:
+check_index_with_base:
     cmp cl,1
     jne check_index_scale
     cmp bl,44h
@@ -10132,17 +10155,18 @@ fp_qword_small_shift:
     jmp check_immediate_address
     ret
 
-    check_for_ebp_base:
+check_for_ebp_base:
     cmp bh,45h
     jne check_immediate_address
     cmp [segment_register],4
     jne check_immediate_address
+
     swap_base_with_index:
     xchg bl,bh
     jmp check_immediate_address
     ret
 
-    check_for_rbp_base:
+check_for_rbp_base:
     cmp bh,45h
     je swap_base_with_index
     cmp bh,85h
@@ -10150,7 +10174,7 @@ fp_qword_small_shift:
     jmp check_immediate_address
     ret
 
-    check_index_scale:
+check_index_scale:
     test cl,not 1111b
     jnz invalid_address
     mov al,cl
@@ -10160,8 +10184,9 @@ fp_qword_small_shift:
     jmp invalid_address
     ret
 
-    check_vsib:
+check_vsib:
     xor ah,ah
+
     check_vsib_base:
     test bh,bh
     jz check_vsib_index
@@ -10173,12 +10198,14 @@ fp_qword_small_shift:
     jne swap_vsib_registers
     cmp al,8
     jne swap_vsib_registers
+
     check_vsib_base_size:
     mov ah,[address_size]
     and ah,0Fh
     jz check_vsib_index
     cmp al,ah
     jne invalid_address
+
     check_vsib_index:
     mov al,bl
     and al,0E0h
@@ -10189,7 +10216,7 @@ fp_qword_small_shift:
     jmp invalid_address
     ret
 
-    swap_vsib_registers:
+swap_vsib_registers:
     xor ah,-1
     jz invalid_address
     cmp cl,1
@@ -10197,8 +10224,9 @@ fp_qword_small_shift:
     xchg bl,bh
     mov cl,1
     jmp check_vsib_base
+    ret
 
-    calculate_relative_offset:
+calculate_relative_offset:
     cmp [value_undefined],0
     jne relative_offset_ok
     test bh,bh
@@ -10209,6 +10237,7 @@ fp_qword_small_shift:
     xchg ch,cl
     cmp bx,[ds:ebp+10h]
     jne invalid_value
+
     origin_registers_ok:
     cmp cx,[ds:ebp+10h+2]
     jne invalid_value
@@ -10232,8 +10261,10 @@ fp_qword_small_shift:
     je set_relative_offset_type
     cmp bx,0402h
     je set_relative_offset_type
+
     relative_offset_unallowed:
     call recoverable_misuse
+
     set_relative_offset_type:
     cmp [value_type],0
     je relative_offset_ok
@@ -10244,7 +10275,7 @@ fp_qword_small_shift:
     relative_offset_ok:
     ret
 
-    plt_relative_offset:
+plt_relative_offset:
     mov [value_type],7
     cmp u8 [ds:ebp+9],2
     je relative_offset_ok
@@ -10252,11 +10283,12 @@ fp_qword_small_shift:
     jne recoverable_misuse
     ret
 
-    calculate_logical_expression:
+calculate_logical_expression:
     xor al,al
     calculate_embedded_logical_expression:
     mov [logical_value_wrapping],al
     call get_logical_value
+
     logical_loop:
     cmp u8 [esi],'|'
     je logical_or
@@ -10264,7 +10296,7 @@ fp_qword_small_shift:
     je logical_and
     ret
 
-    logical_or:
+logical_or:
     inc esi
     or al,al
     jnz logical_value_already_determined
@@ -10275,7 +10307,7 @@ fp_qword_small_shift:
     jmp logical_loop
     ret
 
-    logical_and:
+logical_and:
     inc esi
     or al,al
     jz logical_value_already_determined
@@ -10286,7 +10318,7 @@ fp_qword_small_shift:
     jmp logical_loop
     ret
 
-    logical_value_already_determined:
+logical_value_already_determined:
     push _eax
     call skip_logical_value
     jc invalid_expression
@@ -10294,7 +10326,7 @@ fp_qword_small_shift:
     jmp logical_loop
     ret
 
-    get_value_for_comparison:
+get_value_for_comparison:
     mov [value_size],8
     or [operand_flags],1
     lods u8 [esi]
@@ -10302,10 +10334,12 @@ fp_qword_small_shift:
     cmp u8 [edi+8],0
     jne first_register_size_ok
     mov u8 [edi+10],0
+
     first_register_size_ok:
     cmp u8 [edi+9],0
     jne second_register_size_ok
     mov u8 [edi+11],0
+
     second_register_size_ok:
     mov eax,[edi+16]
     mov u64[symbol_identifier],_eax
@@ -10317,7 +10351,7 @@ fp_qword_small_shift:
     mov ecx,[edi+8]
     ret
 
-    get_logical_value:
+get_logical_value:
     xor al,al
     check_for_negation:
     cmp u8 [esi],'~'
@@ -10327,7 +10361,7 @@ fp_qword_small_shift:
     jmp check_for_negation
     ret
 
-    negation_ok:
+negation_ok:
     push _eax
     mov al,[esi]
     cmp al,91h
@@ -10370,6 +10404,7 @@ fp_qword_small_shift:
     mov _ebx,u64[symbol_identifier]
     cmp _ebx,[_esp+16]
     jne values_not_relative
+
     check_values_registers:
     cmp _ecx,[_esp]
     je values_relative
@@ -10386,8 +10421,9 @@ fp_qword_small_shift:
     jmp return_false
     ret
 
-    invalid_comparison:
+invalid_comparison:
     call recoverable_misuse
+
     values_relative:
     pop _ebx
     shl ebx,16
@@ -10403,6 +10439,7 @@ fp_qword_small_shift:
     test ebx,0FFFF0000h
     jz check_less_or_greater
     call recoverable_misuse
+
     check_less_or_greater:
     cmp [compare_type],'>'
     je check_greater
@@ -10415,7 +10452,7 @@ fp_qword_small_shift:
     jmp invalid_expression
     ret
 
-    check_equal:
+check_equal:
     cmp bh,[value_sign]
     jne return_false
     cmp eax,ebp
@@ -10425,7 +10462,7 @@ fp_qword_small_shift:
     jmp return_true
     ret
 
-    check_greater:
+check_greater:
     cmp bh,[value_sign]
     jg return_true
     jl return_false
@@ -10435,6 +10472,7 @@ fp_qword_small_shift:
     cmp eax,ebp
     jb return_true
     jae return_false
+
     check_less:
     cmp bh,[value_sign]
     jg return_false
@@ -10445,6 +10483,7 @@ fp_qword_small_shift:
     cmp eax,ebp
     jbe return_false
     ja return_true
+
     check_not_less:
     cmp bh,[value_sign]
     jg return_true
@@ -10455,6 +10494,7 @@ fp_qword_small_shift:
     cmp eax,ebp
     jbe return_true
     ja return_false
+
     check_not_greater:
     cmp bh,[value_sign]
     jg return_false
@@ -10465,6 +10505,7 @@ fp_qword_small_shift:
     cmp eax,ebp
     jb return_false
     jae return_true
+
     check_not_equal:
     cmp bh,[value_sign]
     jne return_true
@@ -10475,14 +10516,16 @@ fp_qword_small_shift:
     jmp return_false
     ret
 
-    logical_number:
+logical_number:
     pop _ecx _ebx _eax _edx _eax
     or bl,bl
     jnz invalid_logical_number
     or cx,cx
     jz logical_number_ok
+
     invalid_logical_number:
     call recoverable_misuse
+
     logical_number_ok:
     test bh,bh
     jnz return_true
@@ -10491,11 +10534,12 @@ fp_qword_small_shift:
     jmp return_false
     ret
 
-    check_for_defined:
+check_for_defined:
     or bl,-1
     lods u16 [esi]
     cmp ah,'('
     jne invalid_expression
+
     check_expression:
     lods u8 [esi]
     or al,al
@@ -10519,24 +10563,24 @@ fp_qword_small_shift:
     jmp check_expression
     ret
 
-    defined_register:
+defined_register:
     inc esi
     jmp check_expression
     ret
 
-    defined_fp_value:
+defined_fp_value:
     add esi, 12+1
     jmp expression_checked
     ret
 
-    defined_string:
+defined_string:
     lods dword [esi]
     add esi, eax
     inc esi
     jmp expression_checked
     ret
 
-    check_if_symbol_defined:
+check_if_symbol_defined:
     lods dword [esi]
     cmp eax,-1
     je invalid_expression
@@ -10556,7 +10600,7 @@ fp_qword_small_shift:
     jmp check_expression
     ret
 
-    no_prediction:
+no_prediction:
     test u8 [eax+8],1
     jz symbol_undefined
     mov cx,[current_pass]
@@ -10565,20 +10609,21 @@ fp_qword_small_shift:
     jmp symbol_undefined
     ret
 
-    symbol_predicted_undefined:
+symbol_predicted_undefined:
     or u8 [eax+8],40h
     and u8 [eax+8],not 80h
+
     symbol_undefined:
     xor bl,bl
     jmp check_expression
     ret
 
-    expression_checked:
+expression_checked:
     mov al,bl
     jmp logical_value_ok
     ret
 
-    check_for_used:
+check_for_used:
     lods u16 [esi]
     cmp ah,2
     jne invalid_expression
@@ -10598,27 +10643,29 @@ fp_qword_small_shift:
     jmp return_true
     ret
 
-    not_used:
+not_used:
     or u8 [eax+8],10h
     and u8 [eax+8],not 20h
     jmp return_false
     ret
 
-    given_false:
+given_false:
     inc esi
+
     return_false:
     xor al,al
     jmp logical_value_ok
     ret
 
-    given_true:
+given_true:
     inc esi
+
     return_true:
     or al,-1
     jmp logical_value_ok
     ret
 
-    logical_expression:
+logical_expression:
     lods u8 [esi]
     mov dl,[logical_value_wrapping]
     push _edx
@@ -10630,12 +10677,13 @@ fp_qword_small_shift:
     cmp al,92h
     jne invalid_expression
     pop _eax
+
     logical_value_ok:
     pop _ebx
     xor al,bl
     ret
 
-    skip_symbol:
+skip_symbol:
     lods u8 [esi]
     or al,al
     jz nothing_to_skip
@@ -10655,25 +10703,28 @@ fp_qword_small_shift:
     je skip_expression
     cmp al,'['
     je skip_address
+
     skip_done:
     clc
     ret
 
-    skip_label:
+skip_label:
     add esi, 2
+
     skip_instruction:
     add esi, 2
+
     skip_assembler_symbol:
     inc esi
     jmp skip_done
     ret
 
-    skip_special_label:
+skip_special_label:
     add esi, 4
     jmp skip_done
     ret
 
-    skip_address:
+skip_address:
     mov al,[esi]
     and al,11110000b
     cmp al,60h
@@ -10684,7 +10735,7 @@ fp_qword_small_shift:
     jmp skip_address
     ret
 
-    skip_expression:
+skip_expression:
     lods u8 [esi]
     or al,al
     jz skip_string
@@ -10709,31 +10760,32 @@ fp_qword_small_shift:
     jmp skip_expression
     ret
 
-    skip_label_value:
+skip_label_value:
     add esi, 3
+
     skip_register:
     inc esi
     jmp skip_expression
     ret
 
-    skip_fp_value:
+skip_fp_value:
     add esi, 12
     jmp skip_done
     ret
 
-    skip_string:
+skip_string:
     lods dword [esi]
     add esi, eax
     inc esi
     jmp skip_done
     ret
 
-    nothing_to_skip:
+nothing_to_skip:
     dec esi
     stc
     ret
 
-    expand_path:
+expand_path:
     lods u8 [esi]
     cmp al,'%'
     je environment_variable
@@ -10744,8 +10796,9 @@ fp_qword_small_shift:
     ja out_of_memory
     ret
 
-    environment_variable:
+environment_variable:
     mov ebx,esi
+
     find_variable_end:
     lods u8 [esi]
     or al,al
@@ -10761,14 +10814,14 @@ fp_qword_small_shift:
     jmp expand_path
     ret
 
-    not_environment_variable:
+not_environment_variable:
     mov al,'%'
     stos u8 [edi]
     mov esi, ebx
     jmp expand_path
     ret
 
-    get_include_directory:
+get_include_directory:
     lods u8 [esi]
     cmp al,';'
     je include_directory_ok
@@ -10777,6 +10830,7 @@ fp_qword_small_shift:
     jnz get_include_directory
     dec esi
     dec edi
+
     include_directory_ok:
     cmp u8 [edi-1],'/'
     je path_separator_ok
@@ -10784,16 +10838,18 @@ fp_qword_small_shift:
     je path_separator_ok
     mov al,'/'
     stos u8 [edi]
+
     path_separator_ok:
     ret
 
-    assembler:
+assembler:
     xor eax,eax
     mov [stub_size],eax
     mov [current_pass],ax
     mov [resolver_flags],eax
     mov [number_of_sections],eax
     mov [actual_fixups_size],eax
+
     assembler_loop:
     mov eax,[labels_list]
     mov [tagged_blocks],eax
@@ -10819,6 +10875,7 @@ fp_qword_small_shift:
     mov [evex_mode],al
     mov [code_type],16
     call init_addressing_space
+
     pass_loop:
     call assemble_line
     jnc pass_loop
@@ -10831,9 +10888,10 @@ fp_qword_small_shift:
     jmp missing_end_directive
     ret
 
-    pass_done:
+pass_done:
     call close_pass
     mov eax,[labels_list]
+
     check_symbols:
     cmp _eax,u64[memory_end]
     jae symbols_checked
@@ -10849,6 +10907,7 @@ fp_qword_small_shift:
     jne symbol_defined_ok
     and u8 [eax+8],not 1
     or [next_pass_needed],-1
+
     symbol_defined_ok:
     test u8 [eax+8],10h
     jz use_prediction_ok
@@ -10863,13 +10922,15 @@ fp_qword_small_shift:
     jmp use_misprediction
     ret
 
-    check_use_prediction:
+check_use_prediction:
     test u8 [eax+8],8
     jz use_misprediction
     cmp cx,[eax+18]
     je use_prediction_ok
+
     use_misprediction:
     or [next_pass_needed],-1
+
     use_prediction_ok:
     test u8 [eax+8],40h
     jz check_next_symbol
@@ -10886,11 +10947,12 @@ fp_qword_small_shift:
     jmp define_misprediction
     ret
 
-    check_define_prediction:
+check_define_prediction:
     test u8 [eax+8],1
     jz define_misprediction
     cmp cx,[eax+16]
     je check_next_symbol
+
     define_misprediction:
     or [next_pass_needed],-1
     check_next_symbol:
@@ -10898,7 +10960,7 @@ fp_qword_small_shift:
     jmp check_symbols
     ret
 
-    symbols_checked:
+symbols_checked:
     cmp [next_pass_needed],0
     jne next_pass
     mov _eax,u64[error_line]
@@ -10912,15 +10974,17 @@ fp_qword_small_shift:
     jz error_confirmed
     test u8 [eax+8],1
     jnz next_pass
+
     error_confirmed:
     call error_handler
+
     error_handler:
     mov _eax,u64[error]
     sub _eax,error_handler
     add [_esp],_eax
     ret
 
-    next_pass:
+next_pass:
     inc [current_pass]
     mov ax,[current_pass]
     cmp ax,[passes_limit]
@@ -10928,10 +10992,10 @@ fp_qword_small_shift:
     jmp assembler_loop
     ret
 
-    assemble_ok:
+assemble_ok:
     ret
 
-    create_addressing_space:
+create_addressing_space:
     mov ebx,[addressing_space]
     test ebx,ebx
     jz init_addressing_space
@@ -10940,6 +11004,7 @@ fp_qword_small_shift:
     mov eax,edi
     sub eax,[ebx+18h]
     mov [ebx+1Ch],eax
+
     init_addressing_space:
     mov ebx,[tagged_blocks]
     mov dword [ebx-4],10h
@@ -10960,7 +11025,7 @@ fp_qword_small_shift:
     mov [ebx+20h],eax
     ret
 
-    assemble_line:
+assemble_line:
     mov eax,[tagged_blocks]
     sub eax,100h
     cmp edi,eax
@@ -10984,13 +11049,13 @@ fp_qword_small_shift:
     jmp segment_prefix
     ret
 
-    code_type_setting:
+code_type_setting:
     lods u8 [esi]
     mov [code_type],al
     jmp instruction_assembled
     ret
 
-    new_line:
+new_line:
     lods dword [esi]
     mov u64[current_line],_eax
     and [prefix_flags],0
@@ -11017,7 +11082,7 @@ fp_qword_small_shift:
     jmp assemble_line
     ret
 
-    define_label:
+define_label:
     lods dword [esi]
     cmp eax,0Fh
     jb invalid_use_of_symbol
@@ -11029,7 +11094,7 @@ fp_qword_small_shift:
     jmp continue_line
     ret
 
-    make_label:
+make_label:
     mov eax,edi
     xor edx,edx
     xor cl,cl
@@ -11039,7 +11104,8 @@ fp_qword_small_shift:
     sbb cl,[ds:ebp+8]
     jp label_value_ok
     call recoverable_overflow
-    label_value_ok:
+
+label_value_ok:
     mov [address_sign],cl
     test u8 [ds:ebp+0Ah],1
     jnz make_virtual_label
@@ -11062,7 +11128,7 @@ fp_qword_small_shift:
     jmp finish_label
     ret
 
-    make_virtual_label:
+make_virtual_label:
     and u8 [ebx+9],not 1
     cmp eax,[ebx]
     mov [ebx],eax
@@ -11071,12 +11137,14 @@ fp_qword_small_shift:
     mov [ebx+4],edx
     setne al
     or ah,al
+
     finish_label:
     mov ebp,[addressing_space]
     mov ch,[ds:ebp+9]
     mov cl,[label_size]
     mov edx,[ds:ebp+14h]
     mov ebp,[ds:ebp+10h]
+
     finish_label_symbol:
     mov al,[address_sign]
     xor al,[ebx+9]
@@ -11101,6 +11169,7 @@ fp_qword_small_shift:
     mov [ebx+20],edx
     setne al
     or ah,al
+
     label_symbol_ok:
     mov cx,[current_pass]
     xchg [ebx+16],cx
@@ -11123,16 +11192,18 @@ fp_qword_small_shift:
     mov cx,[current_pass]
     cmp cx,[ebx+18]
     jne label_made
+
     requalified_label:
     or [next_pass_needed],-1
+
     label_made:
     ret
 
-    new_label:
+new_label:
     or u8 [ebx+8],1
     ret
 
-    define_constant:
+define_constant:
     lods dword [esi]
     inc esi
     cmp eax,0Fh
@@ -11146,6 +11217,7 @@ fp_qword_small_shift:
     mov ch,[value_type]
     cmp ch,3
     je invalid_use_of_symbol
+
     make_constant:
     and u8 [ebx+9],not 1
     cmp eax,[ebx]
@@ -11180,6 +11252,7 @@ fp_qword_small_shift:
     mov [ebx+20],edx
     setne al
     or ah,al
+
     constant_symbol_ok:
     mov cx,[current_pass]
     xchg [ebx+16],cx
@@ -11196,7 +11269,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    redeclare_constant:
+redeclare_constant:
     btr dword [ebx+8],10
     jc requalified_constant
     inc cx
@@ -11211,17 +11284,18 @@ fp_qword_small_shift:
     mov cx,[current_pass]
     cmp cx,[ebx+18]
     jne instruction_assembled
+
     requalified_constant:
     or [next_pass_needed],-1
     jmp instruction_assembled
     ret
 
-    new_constant:
+new_constant:
     or u8 [ebx+8],1+2
     jmp instruction_assembled
     ret
 
-    label_addressing_space:
+label_addressing_space:
     lods dword [esi]
     cmp eax,0Fh
     jb invalid_use_of_symbol
@@ -11234,6 +11308,7 @@ fp_qword_small_shift:
     test u8 [eax+9],4
     jnz make_addressing_space_label
     or [next_pass_needed],-1
+
     make_addressing_space_label:
     mov dx,[eax+8]
     and dx,not (2 or 100h)
@@ -11248,10 +11323,11 @@ fp_qword_small_shift:
     jmp continue_line
     ret
 
-    assemble_instruction:
+assemble_instruction:
     and dword [operand_size],0
     and dword [opcode_prefix],0
     call instruction_handler
+
     instruction_handler:
     movzx ebx, u16 [esi]
     mov al,[esi+2]
@@ -11259,7 +11335,7 @@ fp_qword_small_shift:
     add [_esp],_ebx
     ret
 
-    instruction_assembled:
+instruction_assembled:
     test [prefix_flags],not 1
     jnz illegal_instruction
     mov al,[esi]
@@ -11267,16 +11343,17 @@ fp_qword_small_shift:
     je line_assembled
     or al,al
     jnz extra_characters_on_line
+
     line_assembled:
     clc
     ret
 
-    source_end:
+source_end:
     dec esi
     stc
     ret
 
-    org_directive:
+org_directive:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -11297,10 +11374,11 @@ fp_qword_small_shift:
     jmp org_space_ok
     ret
 
-    in_virtual:
+in_virtual:
     call close_virtual_addressing_space
     call init_addressing_space
     or u8 [ebx+0Ah],1
+
     org_space_ok:
     pop _eax
     mov [ebx+9],cl
@@ -11310,6 +11388,7 @@ fp_qword_small_shift:
     sbb u8 [ebx+8],cl
     jp org_value_ok
     call recoverable_overflow
+
     org_value_ok:
     mov _edx,u64[symbol_identifier]
     mov [ebx+14h],edx
@@ -11323,7 +11402,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    label_directive:
+label_directive:
     lods u8 [esi]
     cmp al,2
     jne invalid_argument
@@ -11340,6 +11419,7 @@ fp_qword_small_shift:
     dec esi
     cmp al,11h
     jne label_size_ok
+
     get_label_size:
     lods u16 [esi]
     cmp al,11h
@@ -11352,7 +11432,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    get_free_label_value:
+get_free_label_value:
     inc esi
     lods u8 [esi]
     cmp al,'('
@@ -11374,6 +11454,7 @@ fp_qword_small_shift:
     mov ch,[value_type]
     test ch,1
     jnz invalid_use_of_symbol
+
     make_free_label:
     and u8 [ebx+9],not 1
     cmp eax,[ebx]
@@ -11389,7 +11470,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    load_directive:
+load_directive:
     lods u8 [esi]
     cmp al,2
     jne invalid_argument
@@ -11404,6 +11485,7 @@ fp_qword_small_shift:
     jne load_size_ok
     lods u8 [esi]
     lods u8 [esi]
+
     load_size_ok:
     cmp al,8
     ja invalid_value
@@ -11420,6 +11502,7 @@ fp_qword_small_shift:
     mov edi,value
     rep movs u8 [edi],[esi]
     pop _edi _esi
+
     value_loaded:
     mov [value_sign],0
     mov eax,dword [value]
@@ -11429,7 +11512,7 @@ fp_qword_small_shift:
     jmp make_constant
     ret
 
-    get_data_point:
+get_data_point:
     mov ebx,[addressing_space]
     mov ecx,edi
     sub ecx,[ebx+18h]
@@ -11463,8 +11546,10 @@ fp_qword_small_shift:
     mov [ebx+18],ax
     or u8 [ebx+8],8
     call store_label_reference
+
     get_addressing_space:
     mov ebx,[ebx]
+
     get_data_address:
     push _ebx
     cmp u8 [esi],'.'
@@ -11477,6 +11562,7 @@ fp_qword_small_shift:
     jne data_address_type_ok
     cmp [value_type],0
     jne invalid_use_of_symbol
+
     data_address_type_ok:
     mov ebx,edi
     xor ecx,ecx
@@ -11493,7 +11579,7 @@ fp_qword_small_shift:
     clc
     ret
 
-    addressing_space_unavailable:
+addressing_space_unavailable:
     cmp [error_line],0
     jne get_data_address
     push u64[current_line]
@@ -11503,12 +11589,12 @@ fp_qword_small_shift:
     jmp get_data_address
     ret
 
-    bad_data_address:
+bad_data_address:
     call recoverable_overflow
     stc
     ret
 
-    store_directive:
+store_directive:
     cmp u8 [esi],11h
     je sized_store
     lods u8 [esi]
@@ -11521,7 +11607,7 @@ fp_qword_small_shift:
     jmp store_value_ok
     ret
 
-    sized_store:
+sized_store:
     or [operand_flags],1
     call get_value
     store_value_ok:
@@ -11546,8 +11632,9 @@ fp_qword_small_shift:
     jbe instruction_assembled
     mov [undefined_data_start],eax
     jmp instruction_assembled
+    ret
 
-    display_directive:
+display_directive:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -11572,7 +11659,7 @@ fp_qword_small_shift:
     jmp display_next
     ret
 
-    display_byte:
+display_byte:
     call get_byte_value
     push _edi
     mov edi,[tagged_blocks]
@@ -11584,6 +11671,7 @@ fp_qword_small_shift:
     dec eax
     stos dword [edi]
     pop _edi
+
     display_next:
     cmp edi,[tagged_blocks]
     ja out_of_memory
@@ -11594,13 +11682,14 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    show_display_buffer:
+show_display_buffer:
     mov eax,[tagged_blocks]
     or eax,eax
     jz display_done
     mov esi, [labels_list]
     cmp esi, eax
     je display_done
+
     display_messages:
     sub esi, 8
     mov eax,[esi+4]
@@ -11613,13 +11702,15 @@ fp_qword_small_shift:
     push _esi
     call display_block
     pop _esi
+
     skip_block:
     cmp esi, [tagged_blocks]
     jne display_messages
+
     display_done:
     ret
 
-    write_addressing_space:
+write_addressing_space:
     mov ecx,[esi+20h]
     jecxz skip_block
     push _esi
@@ -11628,6 +11719,7 @@ fp_qword_small_shift:
     test esi,esi
     jz addressing_space_written
     xor ebx,ebx
+
     copy_output_path:
     lodsb
     cmp edi,[structures_buffer]
@@ -11645,16 +11737,17 @@ fp_qword_small_shift:
     jmp copy_output_path
     ret
 
-    new_path_segment:
+new_path_segment:
     xor ebx,ebx
     jmp copy_output_path
     ret
 
-    output_path_copied:
+output_path_copied:
     test ebx,ebx
     jnz append_extension
     mov u8 [edi-1],'.'
     mov ebx,edi
+
     append_extension:
     mov edi,ebx
     add ebx,ecx
@@ -11676,11 +11769,13 @@ fp_qword_small_shift:
     call write
     jc write_failed
     call close
+
     addressing_space_written:
     pop _esi
     jmp skip_block
+    ret
 
-    times_directive:
+times_directive:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -11692,11 +11787,13 @@ fp_qword_small_shift:
     cmp u8 [esi],':'
     jne times_argument_ok
     inc esi
+
     times_argument_ok:
     push u64[counter]
     push u64[counter_limit]
     mov u64[counter_limit],_eax
     mov [counter],1
+
     times_loop:
     mov _eax,_esp
     sub _eax,u64[stack_limit]
@@ -11713,19 +11810,20 @@ fp_qword_small_shift:
     jmp times_loop
     ret
 
-    times_done:
+times_done:
     pop _eax
     pop u64[counter_limit]
     pop u64[counter]
     jmp instruction_assembled
     ret
 
-    zero_times:
+zero_times:
     call skip_symbol
     jnc zero_times
     jmp instruction_assembled
+    ret
 
-    virtual_directive:
+virtual_directive:
     lods u8 [esi]
     cmp al,'('
     je continue_virtual_area
@@ -11743,8 +11841,9 @@ fp_qword_small_shift:
     jmp set_virtual
     ret
 
-    virtual_at_current:
+virtual_at_current:
     dec esi
+
     virtual_fallback:
     mov ebp,[addressing_space]
     mov al,[ds:ebp+9]
@@ -11761,6 +11860,7 @@ fp_qword_small_shift:
     xchg bh,bl
     xchg ch,cl
     mov ebp,[ds:ebp+14h]
+
     set_virtual:
     xchg bl,bh
     xchg cl,ch
@@ -11781,6 +11881,7 @@ fp_qword_small_shift:
     or u8 [ebx+0Ah],2
     push _ebx
     mov ebx,characters
+
     get_extension:
     lods u8 [esi]
     stos u8 [edi]
@@ -11790,6 +11891,7 @@ fp_qword_small_shift:
     loop get_extension
     inc esi
     pop _ebx
+
     addressing_space_extension_ok:
     pop _eax
     mov cl,[address_sign]
@@ -11814,7 +11916,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    allocate_structure_data:
+allocate_structure_data:
     mov ebx,[structures_buffer]
     sub ebx,18h
     cmp _ebx,u64[free_additional_memory]
@@ -11822,8 +11924,9 @@ fp_qword_small_shift:
     mov [structures_buffer],ebx
     ret
 
-    find_structure_data:
+find_structure_data:
     mov ebx,[structures_buffer]
+
     scan_structures:
     cmp _ebx,u64[additional_memory_end]
     je no_such_structure
@@ -11840,7 +11943,7 @@ fp_qword_small_shift:
     stc
     ret
 
-    allocate_virtual_structure_data:
+allocate_virtual_structure_data:
     call allocate_structure_data
     mov u16 [ebx],virtual_directive-instruction_handler
     mov ecx,[addressing_space]
@@ -11854,7 +11957,7 @@ fp_qword_small_shift:
     mov [ebx+1Ch],eax
     ret
 
-    continue_virtual_area:
+continue_virtual_area:
     cmp u8 [esi],11h
     jne invalid_argument
     cmp u8 [esi+1+4],')'
@@ -11911,7 +12014,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    virtual_area_unavailable:
+virtual_area_unavailable:
     cmp [error_line],0
     jne virtual_fallback
     push u64[current_line]
@@ -11921,7 +12024,7 @@ fp_qword_small_shift:
     jmp virtual_fallback
     ret
 
-    end_virtual:
+end_virtual:
     call find_structure_data
     jc unexpected_instruction
     push _ebx
@@ -11930,6 +12033,7 @@ fp_qword_small_shift:
     mov eax,[ebx+12]
     mov [addressing_space],eax
     mov edi,[ebx+8]
+
     remove_structure_data:
     push _esi _edi
     mov ecx,ebx
@@ -11944,7 +12048,7 @@ fp_qword_small_shift:
     pop _edi _esi
     ret
 
-    close_virtual_addressing_space:
+close_virtual_addressing_space:
     mov ebx,[addressing_space]
     mov eax,edi
     sub eax,[ebx+18h]
@@ -11972,12 +12076,14 @@ fp_qword_small_shift:
     shr ecx,1
     jnc virtual_byte_ok
     movs u8 [edi],[esi]
+
     virtual_byte_ok:
     dec esi
     dec edi
     shr ecx,1
     jnc virtual_word_ok
     movs u16 [edi],[esi]
+
     virtual_word_ok:
     sub esi, 2
     sub edi,2
@@ -11991,7 +12097,7 @@ fp_qword_small_shift:
     addressing_space_closed:
     ret
 
-    repeat_directive:
+repeat_directive:
     test [prefix_flags],1
     jnz unexpected_instruction
     lods u8 [esi]
@@ -12015,7 +12121,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    end_repeat:
+end_repeat:
     test [prefix_flags],1
     jnz unexpected_instruction
     call find_structure_data
@@ -12024,6 +12130,7 @@ fp_qword_small_shift:
     inc [counter]
     cmp dword[counter],eax
     jbe continue_repeating
+
     stop_repeat:
     mov eax,[ebx+10h]
     mov u64[counter_limit],_eax
@@ -12033,12 +12140,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    continue_repeating:
+continue_repeating:
     mov esi, [ebx+8]
     jmp instruction_assembled
     ret
 
-    zero_repeat:
+zero_repeat:
     mov al,[esi]
     or al,al
     jz missing_end_directive
@@ -12048,13 +12155,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    find_end_repeat:
+find_end_repeat:
     call find_structure_end
     cmp ax,repeat_directive-instruction_handler
     jne unexpected_instruction
     ret
 
-    while_directive:
+while_directive:
     test [prefix_flags],1
     jnz unexpected_instruction
     call allocate_structure_data
@@ -12075,6 +12182,7 @@ fp_qword_small_shift:
     jz missing_end_directive
     cmp al,0Fh
     jne extra_characters_on_line
+
     stop_while:
     call find_end_while
     pop _ebx
@@ -12084,12 +12192,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    while_true:
+while_true:
     pop _ebx
     jmp instruction_assembled
     ret
 
-    end_while:
+end_while:
     test [prefix_flags],1
     jnz unexpected_instruction
     call find_structure_data
@@ -12102,13 +12210,13 @@ fp_qword_small_shift:
     jmp do_while
     ret
 
-    find_end_while:
+find_end_while:
     call find_structure_end
     cmp ax,while_directive-instruction_handler
     jne unexpected_instruction
     ret
 
-    if_directive:
+if_directive:
     test [prefix_flags],1
     jnz unexpected_instruction
     call calculate_logical_expression
@@ -12131,8 +12239,9 @@ fp_qword_small_shift:
     jmp if_directive
     ret
 
-    if_true:
+if_true:
     xor al,al
+
     make_if_structure:
     call allocate_structure_data
     mov u16 [ebx],if_directive-instruction_handler
@@ -12142,7 +12251,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    else_true:
+else_true:
     or al,al
     jz missing_end_directive
     cmp al,0Fh
@@ -12151,7 +12260,7 @@ fp_qword_small_shift:
     jmp make_if_structure
     ret
 
-    else_directive:
+else_directive:
     test [prefix_flags],1
     jnz unexpected_instruction
     mov ax,if_directive-instruction_handler
@@ -12159,6 +12268,7 @@ fp_qword_small_shift:
     jc unexpected_instruction
     cmp u8 [ebx+2],0
     jne unexpected_instruction
+
     found_else:
     mov al,[esi]
     cmp al,1
@@ -12172,7 +12282,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    skip_else:
+skip_else:
     or al,al
     jz missing_end_directive
     cmp al,0Fh
@@ -12182,7 +12292,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    end_if:
+end_if:
     test [prefix_flags],1
     jnz unexpected_instruction
     call find_structure_data
@@ -12191,7 +12301,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    find_else:
+find_else:
     call find_structure_end
     cmp ax,else_directive-instruction_handler
     je else_found
@@ -12200,20 +12310,21 @@ fp_qword_small_shift:
     stc
     ret
 
-    else_found:
+else_found:
     clc
     ret
 
-    find_end_if:
+find_end_if:
     call find_structure_end
     cmp ax,if_directive-instruction_handler
     jne unexpected_instruction
     ret
 
-    find_structure_end:
+find_structure_end:
     push u64[error_line]
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
+
     find_end_directive:
     call skip_symbol
     jnc find_end_directive
@@ -12222,6 +12333,7 @@ fp_qword_small_shift:
     jne no_end_directive
     lods dword [esi]
     mov u64[current_line],_eax
+
     skip_labels:
     cmp u8 [esi],2
     jne labels_ok
@@ -12229,7 +12341,7 @@ fp_qword_small_shift:
     jmp skip_labels
     ret
 
-    labels_ok:
+labels_ok:
     cmp u8 [esi],1
     jne find_end_directive
     mov ax,[esi+1]
@@ -12256,32 +12368,33 @@ fp_qword_small_shift:
     je structure_end
     cmp ax,if_directive-instruction_handler
     jne find_end_directive
+
     structure_end:
     pop u64[error_line]
     ret
 
-    no_end_directive:
+no_end_directive:
     mov _eax,u64[error_line]
     mov u64[current_line],_eax
     jmp missing_end_directive
     ret
 
-    skip_repeat:
+skip_repeat:
     call find_end_repeat
     jmp find_end_directive
     ret
 
-    skip_while:
+skip_while:
     call find_end_while
     jmp find_end_directive
     ret
 
-    skip_if:
+skip_if:
     call skip_if_block
     jmp find_end_directive
     ret
 
-    skip_if_block:
+skip_if_block:
     call find_else
     jc if_block_skipped
     cmp u8 [esi],1
@@ -12292,12 +12405,13 @@ fp_qword_small_shift:
     jmp skip_if_block
     ret
 
-    skip_after_else:
+skip_after_else:
     call find_end_if
+
     if_block_skipped:
     ret
 
-    end_directive:
+end_directive:
     lods u8 [esi]
     cmp al,1
     jne invalid_argument
@@ -12316,13 +12430,14 @@ fp_qword_small_shift:
     jmp invalid_argument
     ret
 
-    break_directive:
+break_directive:
     mov ebx,[structures_buffer]
     mov al,[esi]
     or al,al
     jz find_breakable_structure
     cmp al,0Fh
     jne extra_characters_on_line
+
     find_breakable_structure:
     cmp _ebx,u64[additional_memory_end]
     je unexpected_instruction
@@ -12337,7 +12452,7 @@ fp_qword_small_shift:
     jmp find_breakable_structure
     ret
 
-    break_if:
+break_if:
     push u64[current_line]
     mov eax,[ebx+4]
     mov u64[current_line],_eax
@@ -12348,18 +12463,19 @@ fp_qword_small_shift:
     jmp find_breakable_structure
     ret
 
-    break_repeat:
+break_repeat:
     push _ebx
     call find_end_repeat
     pop _ebx
     jmp stop_repeat
     ret
 
-    break_while:
+break_while:
     push _ebx
     jmp stop_while
+    ret
 
-    define_data:
+define_data:
     cmp edi,[tagged_blocks]
     jae out_of_memory
     cmp u8 [esi],'('
@@ -12378,8 +12494,10 @@ fp_qword_small_shift:
     cmp u8 [esi],91h
     jne duplicate_single_data_value
     inc esi
+
     duplicate_data:
     push _eax _esi
+
     duplicated_values:
     cmp edi,[tagged_blocks]
     jae out_of_memory
@@ -12397,7 +12515,7 @@ fp_qword_small_shift:
     jmp duplicate_data
     ret
 
-    duplicate_single_data_value:
+duplicate_single_data_value:
     cmp edi,[tagged_blocks]
     jae out_of_memory
     push _eax _esi
@@ -12410,10 +12528,11 @@ fp_qword_small_shift:
     jmp duplicate_single_data_value
     ret
 
-    duplicate_zero_times:
+duplicate_zero_times:
     cmp u8 [esi],91h
     jne skip_single_data_value
     inc esi
+
     skip_data_value:
     call skip_symbol
     jc invalid_argument
@@ -12423,16 +12542,17 @@ fp_qword_small_shift:
     jmp data_defined
     ret
 
-    skip_single_data_value:
+skip_single_data_value:
     call skip_symbol
     jmp data_defined
     ret
 
-    simple_data_value:
+simple_data_value:
     cmp edi,[tagged_blocks]
     jae out_of_memory
     clc
     call near u64 [_esp]
+
     data_defined:
     lods u8 [esi]
     cmp al,','
@@ -12441,7 +12561,7 @@ fp_qword_small_shift:
     stc
     ret
 
-    data_bytes:
+data_bytes:
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -12455,14 +12575,14 @@ fp_qword_small_shift:
     jmp undefined_data
     ret
 
-    get_byte:
+get_byte:
     cmp u8 [esi],0
     je get_string
     call get_byte_value
     stos u8 [edi]
     ret
 
-    get_string:
+get_string:
     inc esi
     lods dword [esi]
     mov ecx,eax
@@ -12473,27 +12593,29 @@ fp_qword_small_shift:
     inc esi
     ret
 
-    undefined_data:
+undefined_data:
     mov ebp,[addressing_space]
     test u8 [ds:ebp+0Ah],1
     jz mark_undefined_data
     ret
 
-    mark_undefined_data:
+mark_undefined_data:
     cmp eax,[undefined_data_end]
     je undefined_data_ok
     mov [undefined_data_start],eax
+
     undefined_data_ok:
     mov [undefined_data_end],edi
     ret
 
-    data_unicode:
+data_unicode:
     or [base_code],-1
     jmp define_words
     ret
 
-    data_words:
+data_words:
     mov [base_code],0
+
     define_words:
     call define_data
     jc instruction_assembled
@@ -12508,18 +12630,19 @@ fp_qword_small_shift:
     jmp undefined_data
     ret
 
-    get_word:
+get_word:
     cmp [base_code],0
     je word_data_value
     cmp u8 [esi],0
     je word_string
+
     word_data_value:
     call get_word_value
     call mark_relocation
     stos u16 [edi]
     ret
 
-    word_string:
+word_string:
     inc esi
     lods dword [esi]
     mov ecx,eax
@@ -12528,15 +12651,17 @@ fp_qword_small_shift:
     cmp eax,[tagged_blocks]
     ja out_of_memory
     xor ah,ah
+
     copy_word_string:
     lods u8 [esi]
     stos u16 [edi]
     loop copy_word_string
+
     word_string_ok:
     inc esi
     ret
 
-    data_dwords:
+data_dwords:
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -12550,7 +12675,7 @@ fp_qword_small_shift:
     jmp undefined_data
     ret
 
-    get_dword:
+get_dword:
     push _esi
     call get_dword_value
     pop _ebx
@@ -12560,7 +12685,7 @@ fp_qword_small_shift:
     stos dword [edi]
     ret
 
-    complex_dword:
+complex_dword:
     mov esi, ebx
     cmp u8 [esi],'.'
     je invalid_value
@@ -12584,7 +12709,7 @@ fp_qword_small_shift:
     stos u16 [edi]
     ret
 
-    data_pwords:
+data_pwords:
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -12600,7 +12725,7 @@ fp_qword_small_shift:
     jmp undefined_data
     ret
 
-    get_pword:
+get_pword:
     push _esi
     call get_pword_value
     pop _ebx
@@ -12612,7 +12737,7 @@ fp_qword_small_shift:
     stos u16 [edi]
     ret
 
-    complex_pword:
+complex_pword:
     mov esi, ebx
     cmp u8 [esi],'.'
     je invalid_value
@@ -12636,7 +12761,7 @@ fp_qword_small_shift:
     stos u16 [edi]
     ret
 
-    data_qwords:
+data_qwords:
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -12652,7 +12777,7 @@ fp_qword_small_shift:
     jmp undefined_data
     ret
 
-    get_qword:
+get_qword:
     call get_qword_value
     call mark_relocation
     stos dword [edi]
@@ -12660,7 +12785,7 @@ fp_qword_small_shift:
     stos dword [edi]
     ret
 
-    data_twords:
+data_twords:
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -12678,7 +12803,7 @@ fp_qword_small_shift:
     jmp undefined_data
     ret
 
-    get_tword:
+get_tword:
     cmp u8 [esi],'.'
     jne complex_tword
     inc esi
@@ -12719,6 +12844,7 @@ fp_qword_small_shift:
     jnc store_shifted_mantissa
     add eax,1
     adc edx,0
+
     store_shifted_mantissa:
     mov [edi-8],eax
     mov [edi-4],edx
@@ -12734,7 +12860,7 @@ fp_qword_small_shift:
     add esi, 13
     ret
 
-    fp_zero_tword:
+fp_zero_tword:
     xor eax,eax
     stos dword [edi]
     stos dword [edi]
@@ -12744,7 +12870,7 @@ fp_qword_small_shift:
     add esi, 13
     ret
 
-    complex_tword:
+complex_tword:
     call get_word_value
     push _eax
     cmp u8 [esi],':'
@@ -12769,7 +12895,7 @@ fp_qword_small_shift:
     stos u16 [edi]
     ret
 
-    data_file:
+data_file:
     lods u16 [esi]
     cmp ax,'('
     jne invalid_argument
@@ -12830,10 +12956,11 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    open_binary_file:
+open_binary_file:
     push _esi
     push _edi
     mov _eax,u64[current_line]
+
     find_current_source_path:
     mov esi, [eax]
     test u8 [eax+7],80h
@@ -12842,11 +12969,12 @@ fp_qword_small_shift:
     jmp find_current_source_path
     ret
 
-    get_current_path:
+get_current_path:
     lodsb
     stosb
     or al,al
     jnz get_current_path
+
     cut_current_path:
     cmp _edi,[_esp]
     je current_path_ok
@@ -12858,7 +12986,7 @@ fp_qword_small_shift:
     jmp cut_current_path
     ret
 
-    current_path_ok:
+current_path_ok:
     mov _esi,[_esp+8]
     call expand_path
     pop _edx
@@ -12866,6 +12994,7 @@ fp_qword_small_shift:
     call open
     jnc file_opened
     mov edx,[include_paths]
+
     search_in_include_paths:
     push _edx _esi
     mov edi,esi
@@ -12889,12 +13018,13 @@ fp_qword_small_shift:
     mov esi, edx
     call open
     jc file_not_found
+
     file_opened:
     mov edi,esi
     pop _esi
     ret
 
-    reserve_bytes:
+reserve_bytes:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -12914,24 +13044,27 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    zero_bytes:
+zero_bytes:
     xor eax,eax
     shr ecx,1
     jnc bytes_stosb_ok
     stos u8 [edi]
+
     bytes_stosb_ok:
     shr ecx,1
     jnc bytes_stosw_ok
     stos u16 [edi]
+
     bytes_stosw_ok:
     rep stos dword [edi]
+
     reserved_data:
     pop _eax
     call undefined_data
     jmp instruction_assembled
     ret
 
-    reserve_words:
+reserve_words:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -12953,7 +13086,7 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    zero_words:
+zero_words:
     xor eax,eax
     shr ecx,1
     jnc words_stosw_ok
@@ -12963,7 +13096,7 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    reserve_dwords:
+reserve_dwords:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -12987,13 +13120,13 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    zero_dwords:
+zero_dwords:
     xor eax,eax
     rep stos dword [edi]
     jmp reserved_data
     ret
 
-    reserve_pwords:
+reserve_pwords:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13018,7 +13151,7 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    reserve_qwords:
+reserve_qwords:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13044,7 +13177,7 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    reserve_twords:
+reserve_twords:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13069,7 +13202,7 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    align_directive:
+align_directive:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13101,9 +13234,10 @@ fp_qword_small_shift:
     jmp section_not_aligned_enough
     ret
 
-    pe_alignment:
+pe_alignment:
     cmp eax,1000h
     ja section_not_aligned_enough
+
     make_alignment:
     dec eax
     and ecx,eax
@@ -13123,7 +13257,7 @@ fp_qword_small_shift:
     jmp reserved_data
     ret
 
-    invalid_align_value:
+invalid_align_value:
     cmp [error_line],0
     jne instruction_assembled
     mov _eax,u64[current_line]
@@ -13132,7 +13266,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    nops:
+nops:
     mov eax,90909090h
     shr ecx,1
     jnc nops_stosb_ok
@@ -13141,12 +13275,13 @@ fp_qword_small_shift:
     shr ecx,1
     jnc nops_stosw_ok
     stos u16 [edi]
+
     nops_stosw_ok:
     rep stos dword [edi]
     jmp reserved_data
     ret
 
-    err_directive:
+err_directive:
     mov al,[esi]
     cmp al,0Fh
     je invoked_error
@@ -13155,7 +13290,7 @@ fp_qword_small_shift:
     jmp extra_characters_on_line
     ret
 
-    assert_directive:
+assert_directive:
     call calculate_logical_expression
     or al,al
     jnz instruction_assembled
@@ -13166,12 +13301,13 @@ fp_qword_small_shift:
     mov [error],assertion_failed
     jmp instruction_assembled
 
-    formatter:
+formatter:
     mov u64[current_offset],_edi
     cmp [output_file],0
     jne output_path_ok
     mov esi, [input_file]
     mov _edi,u64[free_additional_memory]
+
     duplicate_output_path:
     lods u8 [esi]
     cmp edi,[structures_buffer]
@@ -13181,6 +13317,7 @@ fp_qword_small_shift:
     jnz duplicate_output_path
     dec edi
     mov eax,edi
+
     find_extension:
     dec eax
     cmp _eax,u64[free_additional_memory]
@@ -13192,6 +13329,7 @@ fp_qword_small_shift:
     cmp u8 [eax],'.'
     jne find_extension
     mov edi,eax
+
     extension_found:
     lea eax,[edi+9]
     cmp eax,[structures_buffer]
@@ -13218,17 +13356,17 @@ fp_qword_small_shift:
     jmp make_extension
     ret
 
-    sys_extension:
+sys_extension:
     mov eax,'.sys'
     jmp make_extension
     ret
 
-    efi_extension:
+efi_extension:
     mov eax,'.efi'
     jmp make_extension
     ret
 
-    bin_extension:
+bin_extension:
     mov eax,'.bin'
     bt      [format_flags],0
     jnc make_extension
@@ -13236,22 +13374,24 @@ fp_qword_small_shift:
     jmp make_extension
     ret
 
-    obj_extension:
+obj_extension:
     mov eax,'.obj'
     jmp make_extension
     ret
 
-    o_extension:
+o_extension:
     mov eax,'.o'
     bt      [format_flags],0
     jnc make_extension
+
     no_extension:
     xor eax,eax
     jmp make_extension
     ret
 
-    exe_extension:
+exe_extension:
     mov eax,'.exe'
+
     make_extension:
     xchg eax,[edi]
     scas dword [edi]
@@ -13262,6 +13402,7 @@ fp_qword_small_shift:
     sub edi,9
     xor eax,eax
     mov ebx,characters
+
     adapt_case:
     mov al,[esi]
     or al,al
@@ -13279,16 +13420,18 @@ fp_qword_small_shift:
     jmp extension_ok
     ret
 
-    extension_specified:
+extension_specified:
     mov al,'.'
     stos u8 [edi]
     mov esi, [file_extension]
+
     copy_extension:
     lods u8 [esi]
     stos u8 [edi]
     test al,al
     jnz copy_extension
     dec edi
+
     extension_ok:
     mov esi, edi
     lea ecx,[esi+1]
@@ -13301,6 +13444,7 @@ fp_qword_small_shift:
     inc edi
     mov [structures_buffer],edi
     mov [output_file],edi
+
     output_path_ok:
     cmp [symbols_file],0
     je labels_table_ok
@@ -13315,6 +13459,7 @@ fp_qword_small_shift:
     jbe out_of_memory
     mov [tagged_blocks],edi
     mov _esi,u64[memory_end]
+
     copy_labels:
     sub esi, 32
     cmp esi, [labels_list]
@@ -13333,6 +13478,7 @@ fp_qword_small_shift:
     jne common_formatter
     bt      [format_flags],0
     jnc elf_formatter
+
     common_formatter:
     mov eax,edi
     sub eax,[code_start]
@@ -13340,6 +13486,7 @@ fp_qword_small_shift:
     cmp edi,[undefined_data_end]
     jne calculate_code_size
     mov edi,[undefined_data_start]
+
     calculate_code_size:
     mov u64[current_offset],_edi
     sub edi,[code_start]
@@ -13355,19 +13502,22 @@ fp_qword_small_shift:
     sub edx,ecx
     add [written_size],ecx
     call write
+
     stub_written:
     cmp [output_format],2
     jne write_output
     call write_mz_header
+
     write_output:
     call write_code
+
     output_written:
     call close
     cmp [symbols_file],0
     jne dump_symbols
     ret
 
-    write_code:
+write_code:
     mov eax,[written_size]
     mov [headers_size],eax
     mov edx,[code_start]
@@ -13378,7 +13528,7 @@ fp_qword_small_shift:
     jc write_failed
     ret
 
-    format_directive:
+format_directive:
     cmp edi,[code_start]
     jne unexpected_instruction
     mov ebp,[addressing_space]
@@ -13392,6 +13542,7 @@ fp_qword_small_shift:
     cmp al,18h
     jne invalid_argument
     lods u8 [esi]
+
     select_format:
     mov dl,al
     shr al,4
@@ -13406,6 +13557,7 @@ fp_qword_small_shift:
     je format_coff
     cmp al,5
     je format_elf
+
     format_defined:
     cmp u8 [esi],86h
     jne instruction_assembled
@@ -13418,7 +13570,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    format_prefix:
+format_prefix:
     lods u8 [esi]
     mov ah,al
     lods u8 [esi]
@@ -13434,7 +13586,7 @@ fp_qword_small_shift:
     jmp select_format
     ret
 
-    entry_directive:
+entry_directive:
     bts [format_flags],10h
     jc setting_already_specified
     mov al,[output_format]
@@ -13449,7 +13601,7 @@ fp_qword_small_shift:
     jmp illegal_instruction
     ret
 
-    stack_directive:
+stack_directive:
     bts [format_flags],11h
     jc setting_already_specified
     mov al,[output_format]
@@ -13460,7 +13612,7 @@ fp_qword_small_shift:
     jmp illegal_instruction
     ret
 
-    heap_directive:
+heap_directive:
     bts [format_flags],12h
     jc setting_already_specified
     mov al,[output_format]
@@ -13471,7 +13623,7 @@ fp_qword_small_shift:
     jmp illegal_instruction
     ret
 
-    segment_directive:
+segment_directive:
     mov al,[output_format]
     cmp al,2
     je mz_segment
@@ -13480,7 +13632,7 @@ fp_qword_small_shift:
     jmp illegal_instruction
     ret
 
-    section_directive:
+section_directive:
     mov al,[output_format]
     cmp al,3
     je pe_section
@@ -13491,7 +13643,7 @@ fp_qword_small_shift:
     jmp illegal_instruction
     ret
 
-    public_directive:
+public_directive:
     mov al,[output_format]
     cmp al,4
     je public_allowed
@@ -13512,7 +13664,8 @@ fp_qword_small_shift:
     lods u8 [esi]
     cmp al,2
     jne invalid_argument
-    public_label:
+
+public_label:
     lods dword [esi]
     cmp eax,0Fh
     jb invalid_use_of_symbol
@@ -13546,7 +13699,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    extrn_directive:
+extrn_directive:
     mov al,[output_format]
     cmp al,4
     je extrn_allowed
@@ -13554,6 +13707,7 @@ fp_qword_small_shift:
     jne illegal_instruction
     bt      [format_flags],0
     jc illegal_instruction
+
     extrn_allowed:
     lods u16 [esi]
     cmp ax,'('
@@ -13587,6 +13741,7 @@ fp_qword_small_shift:
     dec esi
     cmp al,11h
     jne extrn_size_ok
+
     get_extrn_size:
     lods u16 [esi]
     cmp al,11h
@@ -13607,7 +13762,7 @@ fp_qword_small_shift:
     jmp make_free_label
     ret
 
-    mark_relocation:
+mark_relocation:
     cmp [value_type],0
     je relocation_ok
     mov ebp,[addressing_space]
@@ -13621,10 +13776,11 @@ fp_qword_small_shift:
     je mark_coff_relocation
     cmp [output_format],5
     je mark_elf_relocation
+
     relocation_ok:
     ret
 
-    close_pass:
+close_pass:
     mov al,[output_format]
     cmp al,3
     je close_pe
@@ -13634,7 +13790,7 @@ fp_qword_small_shift:
     je close_elf
     ret
 
-    format_mz:
+format_mz:
     mov _edx,u64[additional_memory]
     push _edi
     mov edi,edx
@@ -13649,7 +13805,7 @@ fp_qword_small_shift:
     jmp format_defined
     ret
 
-    mark_mz_relocation:
+mark_mz_relocation:
     push _eax _ebx
     inc u16 [number_of_relocations]
     jz format_limitations_exceeded
@@ -13664,6 +13820,7 @@ fp_qword_small_shift:
     jne mz_relocation_ok
     inc u16 [ebx+2]
     sub u16 [ebx],10h
+
     mz_relocation_ok:
     add ebx,4
     cmp ebx,[structures_buffer]
@@ -13672,7 +13829,7 @@ fp_qword_small_shift:
     pop _ebx _eax
     ret
 
-    mz_segment:
+mz_segment:
     lods u8 [esi]
     cmp al,2
     jne invalid_argument
@@ -13707,6 +13864,7 @@ fp_qword_small_shift:
     jne segment_type_ok
     inc esi
     lods u8 [esi]
+
     segment_type_ok:
     mov [code_type],al
     mov eax,edx
@@ -13719,7 +13877,7 @@ fp_qword_small_shift:
     jmp make_free_label
     ret
 
-    mz_entry:
+mz_entry:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13727,6 +13885,7 @@ fp_qword_small_shift:
     cmp [value_type],1
     je initial_cs_ok
     call recoverable_invalid_address
+
     initial_cs_ok:
     mov _edx,u64[additional_memory]
     mov [edx+16h],ax
@@ -13745,16 +13904,17 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    recoverable_invalid_address:
+recoverable_invalid_address:
     cmp [error_line],0
     jne ignore_invalid_address
     push u64[current_line]
     pop u64[error_line]
     mov [error],invalid_address
+
     ignore_invalid_address:
     ret
 
-    mz_stack:
+mz_stack:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13770,10 +13930,11 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    stack_pointer:
+stack_pointer:
     cmp [value_type],1
     je initial_ss_ok
     call recoverable_invalid_address
+
     initial_ss_ok:
     mov _edx,u64[additional_memory]
     mov [edx+0Eh],ax
@@ -13792,7 +13953,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mz_heap:
+mz_heap:
     cmp [output_format],2
     jne illegal_instruction
     lods u8 [esi]
@@ -13824,6 +13985,7 @@ fp_qword_small_shift:
     movzx ecx, u16 [edx+10h]
     add eax,ecx
     mov [real_code_size],eax
+
     mz_stack_ok:
     mov _edi,u64[free_additional_memory]
     mov eax,[number_of_relocations]
@@ -13840,10 +14002,10 @@ fp_qword_small_shift:
     sub _edi,u64[free_additional_memory]
     mov ecx,edi
     shr edi,4
-    mov u16 [edx],'MZ'         ; signature
-    mov [edx+8],di              ; header size in paragraphs
+    mov u16 [edx],'MZ'
+    mov [edx+8],di
     mov eax,[number_of_relocations]
-    mov [edx+6],ax              ; number of relocation entries
+    mov [edx+6],ax
     mov eax,[code_size]
     add eax,ecx
     mov esi, eax
@@ -13853,9 +14015,10 @@ fp_qword_small_shift:
     or ax,ax
     jnz mz_size_ok
     dec si
+
     mz_size_ok:
-    mov [edx+2],ax              ; number of bytes in last page
-    mov [edx+4],si              ; number of pages
+    mov [edx+2],ax
+    mov [edx+4],si
     mov eax,[real_code_size]
     dec eax
     shr eax,4
@@ -13865,18 +14028,18 @@ fp_qword_small_shift:
     shr esi, 4
     inc esi
     sub eax,esi
-    mov [edx+0Ah],ax            ; minimum memory in addition to code
-    add [edx+0Ch],ax            ; maximum memory in addition to code
-    int3    ;salc
+    mov [edx+0Ah],ax
+    add [edx+0Ch],ax
+    int3
     mov ah,al
     or [edx+0Ch],ax
-    mov u16 [edx+18h],1Ch      ; offset of relocation table
+    mov u16 [edx+18h],1Ch
     add [written_size],ecx
     call write
     jc write_failed
     ret
 
-    make_stub:
+make_stub:
     mov [stub_file],edx
     or edx,edx
     jnz stub_from_file
@@ -13904,7 +14067,7 @@ fp_qword_small_shift:
     jmp stub_ok
     ret
 
-    default_stub:
+default_stub:
     use16
     push cs
     pop ds
@@ -13915,8 +14078,10 @@ fp_qword_small_shift:
     int     21h
     stub_message db 'This program cannot be run in DOS mode.',0Dh,0Ah,24h
     rq      1
+
     default_stub_end:
     use64
+
     stub_from_file:
     push _esi
     mov esi, edx
@@ -13960,6 +14125,7 @@ fp_qword_small_shift:
     test edx,edx
     jnz stub_header_size_ok
     mov dx,200h
+
     stub_header_size_ok:
     add ecx,edx
     mov edx,edi
@@ -13977,8 +14143,10 @@ fp_qword_small_shift:
     xor eax,eax
     rep stos dword [edi]
     pop _ecx
+
     read_stub_code:
     call read
+
     stub_code_ok:
     call close
     mov edx,edi
@@ -13994,10 +14162,11 @@ fp_qword_small_shift:
     sub eax,esi
     mov [esi+3Ch],eax
     pop _esi
+
     stub_ok:
     ret
 
-    binary_stub:
+binary_stub:
     mov esi, edi
     mov ecx,40h shr 2
     xor eax,eax
@@ -14025,6 +14194,7 @@ fp_qword_small_shift:
     jbe binary_heap_ok
     shr eax,4
     mov [esi+0Ah],ax
+
     binary_heap_ok:
     mov u16 [esi],'MZ'
     mov u8 [esi+8],4
@@ -14051,7 +14221,7 @@ fp_qword_small_shift:
     pop _esi
     ret
 
-    format_pe:
+format_pe:
     xor edx,edx
     mov [machine],14Ch
     mov [subsystem],3
@@ -14062,6 +14232,7 @@ fp_qword_small_shift:
     jz pe_settings
     mov [machine],8664h
     mov [subsystem_version],5 + 0 shl 16
+
     pe_settings:
     cmp u8 [esi],84h
     je get_stub_name
@@ -14084,19 +14255,19 @@ fp_qword_small_shift:
     jmp pe_settings
     ret
 
-    dll_flag:
+dll_flag:
     bts [format_flags],8
     jc setting_already_specified
     jmp pe_settings
     ret
 
-    wdm_flag:
+wdm_flag:
     bts [format_flags],9
     jc setting_already_specified
     jmp pe_settings
     ret
 
-    large_flag:
+large_flag:
     bts [format_flags],11
     jc setting_already_specified
     test [format_flags],8
@@ -14104,13 +14275,13 @@ fp_qword_small_shift:
     jmp pe_settings
     ret
 
-    nx_flag:
+nx_flag:
     bts [format_flags],12
     jc setting_already_specified
     jmp pe_settings
     ret
 
-    subsystem_setting:
+subsystem_setting:
     bts [format_flags],7
     jc setting_already_specified
     and ax,3Fh
@@ -14118,7 +14289,8 @@ fp_qword_small_shift:
     cmp ax,10
     jb subsystem_type_ok
     or [format_flags],4
-    subsystem_type_ok:
+
+subsystem_type_ok:
     cmp u8 [esi],'('
     jne pe_settings
     inc esi
@@ -14150,14 +14322,16 @@ fp_qword_small_shift:
     shrd eax,edx,24
     jnc version_value_ok
     inc eax
+
     version_value_ok:
     shl eax,16
     mov ax,bx
     jmp subsystem_version_ok
     ret
 
-    zero_version:
+zero_version:
     xor eax,eax
+
     subsystem_version_ok:
     pop _edx
     add esi, 13
@@ -14165,7 +14339,7 @@ fp_qword_small_shift:
     jmp pe_settings
     ret
 
-    get_pe_base:
+get_pe_base:
     bts [format_flags],10
     jc setting_already_specified
     lods u16 [esi]
@@ -14182,16 +14356,18 @@ fp_qword_small_shift:
     jmp pe_base_ok
     ret
 
-    get_peplus_base:
+get_peplus_base:
     call get_qword_value
     mov [image_base],eax
     mov [image_base_high],edx
+
     pe_base_ok:
     pop _edi _edx
     cmp [value_type],0
     jne invalid_use_of_symbol
     cmp u8 [esi],84h
     jne pe_settings_ok
+
     get_stub_name:
     lods u8 [esi]
     lods u16 [esi]
@@ -14201,6 +14377,7 @@ fp_qword_small_shift:
     mov edx,esi
     add esi, eax
     inc esi
+
     pe_settings_ok:
     mov ebp,[stub_size]
     or ebp,ebp
@@ -14209,6 +14386,7 @@ fp_qword_small_shift:
     je pe_stub_ok
     sub edi,[stub_size]
     mov [code_start],edi
+
     make_pe_stub:
     call make_stub
     mov eax,edi
@@ -14216,23 +14394,25 @@ fp_qword_small_shift:
     mov [stub_size],eax
     mov [code_start],edi
     mov ebp,eax
+
     pe_stub_ok:
     mov edx,edi
     mov ecx,18h+0E0h
     test [format_flags],4
     jz zero_pe_header
     add ecx,10h
+
     zero_pe_header:
     add ebp,ecx
     shr ecx,2
     xor eax,eax
     rep stos dword [edi]
-    mov u16 [edx],'PE'         ; signature
+    mov u16 [edx],'PE'
     mov ax,[machine]
     mov u16 [edx+4],ax
-    mov u8 [edx+38h+1],10h    ; section alignment
-    mov u8 [edx+3Ch+1],2      ; file alignment
-    mov u8 [edx+40h],1        ; OS version
+    mov u8 [edx+38h+1],10h
+    mov u8 [edx+3Ch+1],2
+    mov u8 [edx+40h],1
     mov eax,[subsystem_version]
     mov [edx+48h],eax
     mov ax,[subsystem]
@@ -14242,38 +14422,41 @@ fp_qword_small_shift:
     mov eax,20h
     mov dword [edx+38h],eax
     mov dword [edx+3Ch],eax
+
     pe_alignment_ok:
     mov u16 [edx+1Ah],VERSION_MAJOR + VERSION_MINOR shl 8
     test [format_flags],4
     jnz init_peplus_specific
-    mov u8 [edx+14h],0E0h     ; size of optional header
-    mov dword [edx+16h],10B010Fh; flags and magic value
+    mov u8 [edx+14h],0E0h
+    mov dword [edx+16h],10B010Fh
     mov eax,[image_base]
     mov [edx+34h],eax
-    mov u8 [edx+60h+1],10h    ; stack reserve
-    mov u8 [edx+64h+1],10h    ; stack commit
-    mov u8 [edx+68h+2],1      ; heap reserve
-    mov u8 [edx+74h],16       ; number of directories
+    mov u8 [edx+60h+1],10h
+    mov u8 [edx+64h+1],10h
+    mov u8 [edx+68h+2],1
+    mov u8 [edx+74h],16
     jmp pe_header_ok
     ret
 
-    init_peplus_specific:
-    mov u8 [edx+14h],0F0h     ; size of optional header
-    mov dword [edx+16h],20B002Fh; flags and magic value
+init_peplus_specific:
+    mov u8 [edx+14h],0F0h
+    mov dword [edx+16h],20B002Fh
     mov eax,[image_base]
     mov [edx+30h],eax
     mov eax,[image_base_high]
     mov [edx+34h],eax
-    mov u8 [edx+60h+1],10h    ; stack reserve
-    mov u8 [edx+68h+1],10h    ; stack commit
-    mov u8 [edx+70h+2],1      ; heap reserve
-    mov u8 [edx+84h],16       ; number of directories
+    mov u8 [edx+60h+1],10h
+    mov u8 [edx+68h+1],10h
+    mov u8 [edx+70h+2],1
+    mov u8 [edx+84h],16
+
     pe_header_ok:
     bsf ecx,[edx+3Ch]
     imul ebx,[number_of_sections],28h
     or ebx,ebx
     jnz reserve_space_for_section_headers
     mov ebx,28h
+
     reserve_space_for_section_headers:
     add ebx,ebp
     dec ebx
@@ -14292,7 +14475,7 @@ fp_qword_small_shift:
     mov eax,edi
     sub eax,[code_start]
     add eax,[stub_size]
-    mov [edx+54h],eax           ; size of headers
+    mov [edx+54h],eax
     mov ecx,[edx+38h]
     dec ecx
     add eax,ecx
@@ -14300,7 +14483,8 @@ fp_qword_small_shift:
     and eax,ecx
     bt      [format_flags],8
     jc pe_entry_init_ok
-    mov [edx+28h],eax           ; entry point rva
+    mov [edx+28h],eax
+
     pe_entry_init_ok:
     and [number_of_sections],0
     movzx ebx, u16 [edx+14h]
@@ -14330,10 +14514,11 @@ fp_qword_small_shift:
     jmp pe_org_ok
     ret
 
-    peplus_org:
+peplus_org:
     sub eax,[edx+30h]
     sbb ecx,[edx+34h]
     sbb bl,0
+
     pe_org_ok:
     test [format_flags],8
     jnz pe64_code
@@ -14342,13 +14527,15 @@ fp_qword_small_shift:
     jmp pe_code_type_ok
     ret
 
-    pe64_code:
+pe64_code:
     mov bh,4
     mov [code_type],64
+
     pe_code_type_ok:
     bt      [resolver_flags],0
     jc pe_labels_type_ok
     xor bh,bh
+
     pe_labels_type_ok:
     push _eax _ebx
     call init_addressing_space
@@ -14361,6 +14548,7 @@ fp_qword_small_shift:
     bt      [format_flags],8
     jnc dll_flag_ok
     or u8 [edx+16h+1],20h
+
     dll_flag_ok:
     bt      [format_flags],9
     jnc wdm_flag_ok
@@ -14369,15 +14557,17 @@ fp_qword_small_shift:
     bt      [format_flags],11
     jnc large_flag_ok
     or u8 [edx+16h],20h
+
     large_flag_ok:
     bt      [format_flags],12
     jnc nx_ok
     or u8 [edx+5Eh+1],1
+
     nx_ok:
     jmp format_defined
     ret
 
-    pe_section:
+pe_section:
     call close_pe_section
     push _eax _ebx
     call create_addressing_space
@@ -14397,6 +14587,7 @@ fp_qword_small_shift:
     xor eax,eax
     rep stos dword [edi]
     pop _edi
+
     new_section:
     mov [ebx+0Ch],eax
     lods u16 [esi]
@@ -14441,17 +14632,19 @@ fp_qword_small_shift:
     jmp pe_section_org_ok
     ret
 
-    peplus_section_org:
+peplus_section_org:
     sub eax,[edx+30h]
     sbb ecx,[edx+34h]
     sbb u8 [ds:ebp+8],0
     bt      [resolver_flags],0
     jc pe_section_org_ok
     mov u8 [ds:ebp+9],0
+
     pe_section_org_ok:
     mov [ds:ebp],eax
     mov [ds:ebp+4],ecx
     mov [ds:ebp+18h],edi
+
     get_section_flags:
     lods u8 [esi]
     cmp al,1Ah
@@ -14462,7 +14655,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    set_directory:
+set_directory:
     movzx eax, u8 [esi]
     inc esi
     mov ecx,ebx
@@ -14473,10 +14666,11 @@ fp_qword_small_shift:
     jmp pe_directory_set
     ret
 
-    peplus_directory:
+peplus_directory:
     xchg ecx,[edx+88h+eax*8]
     mov dword [edx+88h+eax*8+4],-1
-    pe_directory_set:
+
+pe_directory_set:
     or ecx,ecx
     jnz data_already_defined
     push _ebx _edx
@@ -14485,7 +14679,7 @@ fp_qword_small_shift:
     jmp get_section_flags
     ret
 
-    section_flag:
+section_flag:
     lods u8 [esi]
     cmp al,9
     je invalid_argument
@@ -14500,7 +14694,7 @@ fp_qword_small_shift:
     jmp get_section_flags
     ret
 
-    close_pe_section:
+close_pe_section:
     mov ebx,[current_section]
     mov edx,[code_start]
     mov eax,edi
@@ -14511,13 +14705,14 @@ fp_qword_small_shift:
     mov eax,[ebx+0Ch]
     ret
 
-    finish_section:
+finish_section:
     mov [ebx+8],eax
     cmp edi,[undefined_data_end]
     jne align_section
     cmp dword [edx+38h],1000h
     jb align_section
     mov edi,[undefined_data_start]
+
     align_section:
     and [undefined_data_end],0
     mov ebp,edi
@@ -14543,6 +14738,7 @@ fp_qword_small_shift:
     jne pe_code_sum_ok
     mov eax,[ebx+0Ch]
     mov [edx+2Ch],eax
+
     pe_code_sum_ok:
     test u8 [ebx+24h],40h
     jz pe_data_sum_ok
@@ -14553,6 +14749,7 @@ fp_qword_small_shift:
     jne pe_data_sum_ok
     mov eax,[ebx+0Ch]
     mov [edx+30h],eax
+
     pe_data_sum_ok:
     mov eax,[ebx+8]
     or eax,eax
@@ -14561,6 +14758,7 @@ fp_qword_small_shift:
     jne udata_ok
     or u8 [ebx+24h],80h
     add [edx+24h],ecx
+
     udata_ok:
     mov ecx,[edx+38h]
     dec ecx
@@ -14574,7 +14772,7 @@ fp_qword_small_shift:
     jz format_limitations_exceeded
     ret
 
-    data_directive:
+data_directive:
     cmp [output_format],3
     jne illegal_instruction
     lods u8 [esi]
@@ -14588,9 +14786,10 @@ fp_qword_small_shift:
     jmp invalid_value
     ret
 
-    predefined_data_type:
+predefined_data_type:
     movzx eax, u8 [esi]
     inc esi
+
     data_type_ok:
     mov ebx,[current_section]
     mov ecx,edi
@@ -14603,8 +14802,9 @@ fp_qword_small_shift:
     jmp init_pe_data
     ret
 
-    peplus_data:
+peplus_data:
     xchg ecx,[edx+88h+eax*8]
+
     init_pe_data:
     or ecx,ecx
     jnz data_already_defined
@@ -14617,7 +14817,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    end_data:
+end_data:
     cmp [output_format],3
     jne illegal_instruction
     call find_structure_data
@@ -14635,13 +14835,13 @@ fp_qword_small_shift:
     jmp remove_structure_data
     ret
 
-    end_peplus_data:
+end_peplus_data:
     sub ecx,[edx+88h+eax*8]
     mov [edx+88h+eax*8+4],ecx
     jmp remove_structure_data
     ret
 
-    pe_entry:
+pe_entry:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -14654,6 +14854,7 @@ fp_qword_small_shift:
     bt      [resolver_flags],0
     jc check_pe_entry_label_type
     xor bl,bl
+
     check_pe_entry_label_type:
     cmp [value_type],bl
     je pe_entry_ok
@@ -14668,28 +14869,31 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    pe64_entry:
+pe64_entry:
     call get_qword_value
     mov bl,4
     bt      [resolver_flags],0
     jc check_pe64_entry_label_type
     xor bl,bl
-    check_pe64_entry_label_type:
+
+check_pe64_entry_label_type:
     cmp [value_type],bl
     je pe64_entry_type_ok
     call recoverable_invalid_address
+
     pe64_entry_type_ok:
     mov ecx,[code_start]
     sub eax,[ecx+30h]
     sbb edx,[ecx+34h]
     jz pe64_entry_range_ok
     call recoverable_overflow
+
     pe64_entry_range_ok:
     mov [ecx+28h],eax
     jmp instruction_assembled
     ret
 
-    pe_stack:
+pe_stack:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -14716,7 +14920,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    default_stack_commit:
+default_stack_commit:
     mov dword [edx+64h],1000h
     mov eax,[edx+60h]
     cmp eax,1000h
@@ -14725,7 +14929,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    peplus_stack:
+peplus_stack:
     call get_qword_value
     cmp [value_type],0
     jne invalid_use_of_symbol
@@ -14754,7 +14958,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    default_peplus_stack_commit:
+default_peplus_stack_commit:
     mov dword [ecx+68h],1000h
     cmp dword [ecx+64h],0
     jne instruction_assembled
@@ -14765,7 +14969,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    pe_heap:
+pe_heap:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -14792,7 +14996,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    peplus_heap:
+peplus_heap:
     call get_qword_value
     cmp [value_type],0
     jne invalid_use_of_symbol
@@ -14821,16 +15025,18 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mark_pe_relocation:
+mark_pe_relocation:
     push _eax _ebx
     test [format_flags],4
     jz check_standard_pe_relocation_type
     cmp [value_type],4
     je pe_relocation_type_ok
+
     check_standard_pe_relocation_type:
     cmp [value_type],2
     je pe_relocation_type_ok
     call recoverable_misuse
+
     pe_relocation_type_ok:
     mov ebx,[current_section]
     mov eax,edi
@@ -14849,26 +15055,28 @@ fp_qword_small_shift:
     jmp fixup_ok
     ret
 
-    fixup_32bit:
+fixup_32bit:
     mov u8 [ebx-1],3
+
     fixup_ok:
     pop _ebx _eax
     ret
 
-    generate_pe_data:
+generate_pe_data:
     cmp al,2
     je make_pe_resource
     cmp al,5
     je make_pe_fixups
     ret
 
-    make_pe_fixups:
+make_pe_fixups:
     mov edx,[code_start]
     and u8 [edx+16h],not 1
     or u8 [edx+5Eh],40h
     bts [resolver_flags],0
     jc fixups_ready
     or [next_pass_needed],-1
+
     fixups_ready:
     and [last_fixup_base],0
     call make_fixups
@@ -14876,13 +15084,14 @@ fp_qword_small_shift:
     sub eax,[actual_fixups_size]
     ja reserve_forward_fixups
     xor eax,eax
+
     reserve_forward_fixups:
     mov [reserved_fixups],edi
     add edi,eax
     mov [reserved_fixups_size],eax
     ret
 
-    make_fixups:
+make_fixups:
     push _esi
     xor ecx,ecx
     xchg ecx,[number_of_relocations]
@@ -14894,6 +15103,7 @@ fp_qword_small_shift:
     mov ebx,[last_fixup_header]
     mov ebp,edi
     jecxz fixups_done
+
     make_fixup:
     cmp [esi],edx
     jb store_fixup
@@ -14904,6 +15114,7 @@ fp_qword_small_shift:
     xor ax,ax
     stos u16 [edi]
     add dword [ebx],2
+
     fixups_block:
     mov eax,edx
     add edx,1000h
@@ -14932,7 +15143,7 @@ fp_qword_small_shift:
     sub eax,ebp
     ret
 
-    make_pe_resource:
+make_pe_resource:
     cmp u8 [esi],82h
     jne resource_done
     inc esi
@@ -14947,6 +15158,7 @@ fp_qword_small_shift:
     cmp [current_pass],0
     jne reserve_space_for_resource
     and [resource_size],0
+
     reserve_space_for_resource:
     add edi,[resource_size]
     cmp edi,[tagged_blocks]
@@ -14954,7 +15166,7 @@ fp_qword_small_shift:
     jmp resource_done
     ret
 
-    resource_from_file:
+resource_from_file:
     push _esi
     mov esi, edx
     call open_binary_file
@@ -14978,6 +15190,7 @@ fp_qword_small_shift:
     mov eax,20h
     cmp [esi+4],eax
     jne invalid_file_format
+
     read_resource_headers:
     test eax,11b
     jz resource_file_alignment_ok
@@ -14987,6 +15200,7 @@ fp_qword_small_shift:
     mov al,1
     call lseek
     jc resource_headers_ok
+
     resource_file_alignment_ok:
     mov [esi],eax
     lea edx,[esi+12]
@@ -15011,6 +15225,7 @@ fp_qword_small_shift:
     add ecx,2
     cmp u16 [ecx-2],0FFFFh
     je resource_header_type_ok
+
     check_resource_header_type:
     cmp ecx,esi
     jae invalid_file_format
@@ -15020,7 +15235,7 @@ fp_qword_small_shift:
     jmp check_resource_header_type
     ret
 
-    resource_header_type_ok:
+resource_header_type_ok:
     add ecx,2
     cmp u16 [ecx],0FFFFh
     je resource_header_name_ok
@@ -15033,7 +15248,7 @@ fp_qword_small_shift:
     jmp check_resource_header_name
     ret
 
-    resource_header_name_ok:
+resource_header_name_ok:
     xor al,al
     call lseek
     jnc read_resource_headers
@@ -15054,6 +15269,7 @@ fp_qword_small_shift:
     stos dword [edi]
     stos dword [edi]
     xor ebx,ebx
+
     make_type_name_directory:
     mov _esi,u64[free_additional_memory]
     xor edx,edx
@@ -15066,6 +15282,7 @@ fp_qword_small_shift:
     or ebx,ebx
     jz check_this_type_name
     xor ecx,ecx
+
     compare_with_previous_type_name:
     mov ax,[esi+ecx]
     cmp ax,[ebx+ecx]
@@ -15078,10 +15295,11 @@ fp_qword_small_shift:
     jmp check_next_type_name
     ret
 
-    check_this_type_name:
+check_this_type_name:
     or edx,edx
     jz type_name_found
     xor ecx,ecx
+
     compare_with_current_type_name:
     mov ax,[esi+ecx]
     cmp ax,[edx+ecx]
@@ -15094,20 +15312,22 @@ fp_qword_small_shift:
     jmp same_type_name
     ret
 
-    type_name_found:
+type_name_found:
     mov edx,esi
     same_type_name:
     mov [esi-16],edi
+
     check_next_type_name:
     mov eax,[esi-4]
     add esi, eax
     jmp find_type_name
     ret
 
-    type_name_ok:
+type_name_ok:
     or edx,edx
     jz type_name_directory_done
     mov ebx,edx
+
     make_type_name_entry:
     mov eax,[resource_data]
     inc u16 [eax+12]
@@ -15121,8 +15341,9 @@ fp_qword_small_shift:
     jmp make_type_name_directory
     ret
 
-    type_name_directory_done:
+type_name_directory_done:
     mov ebx,-1
+
     make_type_id_directory:
     mov _esi,u64[free_additional_memory]
     mov edx,10000h
@@ -15139,16 +15360,18 @@ fp_qword_small_shift:
     jg check_next_type_id
     mov edx,eax
     mov [esi-16],edi
+
     check_next_type_id:
     mov eax,[esi-4]
     add esi, eax
     jmp find_type_id
     ret
 
-    type_id_ok:
+type_id_ok:
     cmp edx,10000h
     je type_id_directory_done
     mov ebx,edx
+
     make_type_id_entry:
     mov eax,[resource_data]
     inc u16 [eax+14]
@@ -15162,12 +15385,13 @@ fp_qword_small_shift:
     jmp make_type_id_directory
     ret
 
-    type_id_directory_done:
+type_id_directory_done:
     mov esi, [resource_data]
     add esi, 10h
     mov ecx,[esi-4]
     or cx,cx
     jz resource_directories_ok
+
     make_resource_directories:
     push _ecx
     push _edi
@@ -15187,9 +15411,11 @@ fp_qword_small_shift:
     stos dword [edi]
     mov ebp,esi
     xor ebx,ebx
+
     make_resource_name_directory:
     mov _esi,u64[free_additional_memory]
     xor edx,edx
+
     find_resource_name:
     cmp dword [esi],0
     je resource_name_ok
@@ -15203,6 +15429,7 @@ fp_qword_small_shift:
     or ebx,ebx
     jz check_this_resource_name
     xor ecx,ecx
+
     compare_with_previous_resource_name:
     mov ax,[esi+ecx]
     cmp ax,[ebx+ecx]
@@ -15215,22 +15442,23 @@ fp_qword_small_shift:
     jmp check_next_resource_name
     ret
 
-    skip_resource_name:
+skip_resource_name:
     cmp u16 [esi],0FFFFh
     jne skip_unicode_string
     add esi, 4
     ret
 
-    skip_unicode_string:
+skip_unicode_string:
     add esi, 2
     cmp u16 [esi-2],0
     jne skip_unicode_string
     ret
 
-    check_this_resource_name:
+check_this_resource_name:
     or edx,edx
     jz resource_name_found
     xor ecx,ecx
+
     compare_with_current_resource_name:
     mov ax,[esi+ecx]
     cmp ax,[edx+ecx]
@@ -15243,11 +15471,13 @@ fp_qword_small_shift:
     jmp same_resource_name
     ret
 
-    resource_name_found:
+resource_name_found:
     mov edx,esi
+
     same_resource_name:
     mov _eax,[_esp]
     mov [eax+8],edi
+
     check_next_resource_name:
     pop _esi
     mov eax,[esi+16]
@@ -15255,10 +15485,11 @@ fp_qword_small_shift:
     jmp find_resource_name
     ret
 
-    resource_name_ok:
+resource_name_ok:
     or edx,edx
     jz resource_name_directory_done
     mov ebx,edx
+
     make_resource_name_entry:
     mov _eax,[_esp]
     inc u16 [eax+12]
@@ -15272,11 +15503,13 @@ fp_qword_small_shift:
     jmp make_resource_name_directory
     ret
 
-    resource_name_directory_done:
+resource_name_directory_done:
     mov ebx,-1
+
     make_resource_id_directory:
     mov _esi,u64[free_additional_memory]
     mov edx,10000h
+
     find_resource_id:
     cmp dword [esi],0
     je resource_id_ok
@@ -15295,6 +15528,7 @@ fp_qword_small_shift:
     mov edx,eax
     mov _eax,[_esp]
     mov [_eax+8],edi
+
     check_next_resource_id:
     pop _esi
     mov eax,[esi+16]
@@ -15302,10 +15536,11 @@ fp_qword_small_shift:
     jmp find_resource_id
     ret
 
-    resource_id_ok:
+resource_id_ok:
     cmp edx,10000h
     je resource_id_directory_done
     mov ebx,edx
+
     make_resource_id_entry:
     mov _eax,[_esp]
     inc u16 [eax+14]
@@ -15319,13 +15554,14 @@ fp_qword_small_shift:
     jmp make_resource_id_directory
     ret
 
-    resource_id_directory_done:
+resource_id_directory_done:
     pop _eax
     mov esi, ebp
     pop _ecx
     add esi, 8
     dec cx
     jnz make_resource_directories
+
     resource_directories_ok:
     shr ecx,16
     jnz make_resource_directories
@@ -15335,7 +15571,8 @@ fp_qword_small_shift:
     movzx edx, u16 [esi-2]
     add eax,edx
     lea esi, [esi+eax*8]
-    push _edi                     ; address of language directories
+    push _edi
+
     update_resource_directories:
     cmp _esi,[_esp]
     je resource_directories_updated
@@ -15343,6 +15580,7 @@ fp_qword_small_shift:
     mov ecx,[esi-4]
     or cx,cx
     jz language_directories_ok
+
     make_language_directories:
     push _ecx
     push _edi
@@ -15362,9 +15600,11 @@ fp_qword_small_shift:
     stos dword [edi]
     mov ebp,esi
     mov ebx,-1
+
     make_language_id_directory:
     mov _esi,u64[free_additional_memory]
     mov edx,10000h
+
     find_language_id:
     cmp dword [esi],0
     je language_id_ok
@@ -15379,6 +15619,7 @@ fp_qword_small_shift:
     add eax,esi
     and eax,11b
     add esi, eax
+
     get_language_id:
     movzx eax, u16 [esi+6]
     cmp eax,ebx
@@ -15388,6 +15629,7 @@ fp_qword_small_shift:
     mov edx,eax
     mov _eax,[_esp]
     mov dword [value],eax
+
     check_next_language_id:
     pop _esi
     mov eax,[esi+16]
@@ -15395,10 +15637,11 @@ fp_qword_small_shift:
     jmp find_language_id
     ret
 
-    language_id_ok:
+language_id_ok:
     cmp edx,10000h
     je language_id_directory_done
     mov ebx,edx
+
     make_language_id_entry:
     mov _eax,[_esp]
     inc u16 [eax+14]
@@ -15412,22 +15655,24 @@ fp_qword_small_shift:
     jmp make_language_id_directory
     ret
 
-    language_id_directory_done:
+language_id_directory_done:
     pop _eax
     mov esi, ebp
     pop _ecx
     add esi, 8
     dec cx
     jnz make_language_directories
+
     language_directories_ok:
     shr ecx,16
     jnz make_language_directories
     jmp update_resource_directories
     ret
 
-    resource_directories_updated:
+resource_directories_updated:
     mov esi, [resource_data]
     push _edi
+
     make_name_strings:
     add esi, 10h
     movzx eax, u16 [esi-2]
@@ -15437,6 +15682,7 @@ fp_qword_small_shift:
     push _eax
     or ecx,ecx
     jz string_entries_processed
+
     process_string_entries:
     push _ecx
     mov edx,edi
@@ -15446,6 +15692,7 @@ fp_qword_small_shift:
     mov ebx,edi
     xor ax,ax
     stos u16 [edi]
+
     copy_string_data:
     lea eax,[edi+2]
     cmp eax,[tagged_blocks]
@@ -15459,10 +15706,11 @@ fp_qword_small_shift:
     jmp copy_string_data
     ret
 
-    string_data_copied:
+string_data_copied:
     add esi, 8
     pop _ecx
     loop process_string_entries
+
     string_entries_processed:
     pop _esi
     cmp _esi,[_esp]
@@ -15473,15 +15721,18 @@ fp_qword_small_shift:
     jz resource_strings_alignment_ok
     xor ax,ax
     stos u16 [edi]
+
     resource_strings_alignment_ok:
     pop _edx
-    pop _ebx                     ; address of language directories
+    pop _ebx
     mov ebp,edi
+
     update_language_directories:
     add ebx,10h
     movzx eax, u16 [ebx-2]
     movzx ecx, u16 [ebx-4]
     add ecx,eax
+
     make_data_records:
     push _ecx
     mov esi, edi
@@ -15502,9 +15753,10 @@ fp_qword_small_shift:
     loop make_data_records
     cmp ebx,edx
     jb update_language_directories
-    pop _ebx                     ; file handle
+    pop _ebx
     mov esi, ebp
     mov ebp,edi
+
     update_data_records:
     push _ebp
     mov ecx,edi
@@ -15529,6 +15781,7 @@ fp_qword_small_shift:
     sub ecx,eax
     xor al,al
     rep stos u8 [edi]
+
     resource_data_alignment_ok:
     pop _ebp
     add esi, 16
@@ -15539,10 +15792,11 @@ fp_qword_small_shift:
     mov eax,edi
     sub eax,[resource_data]
     mov [resource_size],eax
+
     resource_done:
     ret
 
-    close_pe:
+close_pe:
     call close_pe_section
     mov edx,[code_start]
     mov [edx+50h],eax
@@ -15563,24 +15817,28 @@ fp_qword_small_shift:
     cmp eax,[edx+54h]
     je pe_sections_ok
     or [next_pass_needed],-1
+
     pe_sections_ok:
     xor ecx,ecx
     add edx,78h
     test [format_flags],4
     jz process_directories
     add edx,10h
+
     process_directories:
     mov eax,[edx+ecx*8]
     or eax,eax
     jz directory_ok
     cmp dword [edx+ecx*8+4],-1
     jne directory_ok
+
     section_data:
     mov ebx,[edx+ecx*8]
     mov eax,[ebx+0Ch]
-    mov [edx+ecx*8],eax         ; directory rva
+    mov [edx+ecx*8],eax
     mov eax,[ebx+8]
-    mov [edx+ecx*8+4],eax       ; directory size
+    mov [edx+ecx*8+4],eax
+
     directory_ok:
     inc cl
     cmp cl,10h
@@ -15596,7 +15854,7 @@ fp_qword_small_shift:
     jmp pe_relocations_ok
     ret
 
-    finish_pe_relocations:
+finish_pe_relocations:
     push _edi
     mov edi,[reserved_fixups]
     call make_fixups
@@ -15605,6 +15863,7 @@ fp_qword_small_shift:
     cmp eax,[reserved_fixups_size]
     je pe_relocations_ok
     or [next_pass_needed],-1
+
     pe_relocations_ok:
     mov ebx,[code_start]
     sub ebx,[stub_size]
@@ -15614,6 +15873,7 @@ fp_qword_small_shift:
     shr ecx,1
     xor eax,eax
     cdq
+
     calculate_checksum:
     mov dx,[ebx]
     add eax,edx
@@ -15627,7 +15887,7 @@ fp_qword_small_shift:
     mov [ebx+58h],eax
     ret
 
-    format_coff:
+format_coff:
     mov _eax,u64[additional_memory]
     mov [symbols_stream],eax
     mov ebx,eax
@@ -15645,6 +15905,7 @@ fp_qword_small_shift:
     bt      [format_flags],0
     jnc flat_section_flags_ok
     or eax,0E0000000h
+
     flat_section_flags_ok:
     mov dword [ebx+14h],eax
     mov [current_section],ebx
@@ -15662,7 +15923,7 @@ fp_qword_small_shift:
     jmp format_defined
     ret
 
-    coff_section:
+coff_section:
     call close_coff_section
     mov _ebx,u64[free_additional_memory]
     lea eax,[ebx+20h]
@@ -15684,6 +15945,7 @@ fp_qword_small_shift:
     test [format_flags],8
     jz coff_labels_type_ok
     mov u8 [edx+9],4
+
     coff_labels_type_ok:
     lods u16 [esi]
     cmp ax,'('
@@ -15693,6 +15955,7 @@ fp_qword_small_shift:
     lea esi, [esi+4+ecx+1]
     cmp ecx,8
     ja name_too_long
+
     coff_section_flags:
     cmp u8 [esi],8Ch
     je coff_section_alignment
@@ -15704,6 +15967,7 @@ fp_qword_small_shift:
     jc coff_section_flag_ok
     cmp al,7
     ja invalid_argument
+
     coff_section_flag_ok:
     mov cl,al
     mov eax,1
@@ -15714,7 +15978,7 @@ fp_qword_small_shift:
     jmp coff_section_flags
     ret
 
-    coff_section_alignment:
+coff_section_alignment:
     bt      [format_flags],0
     jnc invalid_argument
     inc esi
@@ -15744,7 +16008,7 @@ fp_qword_small_shift:
     jmp coff_section_flags
     ret
 
-    coff_section_settings_ok:
+coff_section_settings_ok:
     cmp dword [ebx+10h],0
     jne instruction_assembled
     mov dword [ebx+10h],4
@@ -15754,7 +16018,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    close_coff_section:
+close_coff_section:
     mov ebx,[current_section]
     mov eax,edi
     mov edx,[ebx+8]
@@ -15768,10 +16032,11 @@ fp_qword_small_shift:
     jne coff_section_ok
     mov edi,edx
     or u8 [ebx+14h],80h
+
     coff_section_ok:
     ret
 
-    mark_coff_relocation:
+mark_coff_relocation:
     cmp [value_type],3
     je coff_relocation_relative
     push _ebx _eax
@@ -15786,7 +16051,7 @@ fp_qword_small_shift:
     jmp coff_relocation
     ret
 
-    coff_64bit_relocation:
+coff_64bit_relocation:
     mov al,1
     cmp [value_type],4
     je coff_relocation
@@ -15799,7 +16064,7 @@ fp_qword_small_shift:
     jmp coff_relocation
     ret
 
-    coff_relocation_relative:
+coff_relocation_relative:
     push _ebx
     bt      [format_flags],0
     jnc relative_ok
@@ -15808,6 +16073,7 @@ fp_qword_small_shift:
     sub ebx,edi
     sub eax,ebx
     add eax,4
+
     relative_ok:
     mov ebx,[addressing_space]
     push _eax
@@ -15819,10 +16085,11 @@ fp_qword_small_shift:
     jmp coff_relocation
     ret
 
-    relative_coff_64bit_relocation:
+relative_coff_64bit_relocation:
     mov al,4
     cmp u8 [ebx+9],4
     jne invalid_use_of_symbol
+
     coff_relocation:
     mov _ebx,u64[free_additional_memory]
     add ebx,0Ch
@@ -15840,7 +16107,7 @@ fp_qword_small_shift:
     pop _eax _ebx
     ret
 
-    close_coff:
+close_coff:
     call close_coff_section
     cmp [next_pass_needed],0
     je coff_closed
@@ -15849,7 +16116,7 @@ fp_qword_small_shift:
     coff_closed:
     ret
 
-    coff_formatter:
+coff_formatter:
     sub edi,[code_start]
     mov [code_size],edi
     call prepare_default_section
@@ -15867,11 +16134,13 @@ fp_qword_small_shift:
     test [format_flags],8
     jz coff_magic_ok
     mov u16 [ebx],8664h
+
     coff_magic_ok:
     mov u16 [ebx+12h],104h
     bt      [format_flags],0
     jnc coff_flags_ok
     or u8 [ebx+12h],80h
+
     coff_flags_ok:
     push _ebx
     call make_timestamp
@@ -15882,6 +16151,7 @@ fp_qword_small_shift:
     mov esi, [symbols_stream]
     xor eax,eax
     xor ecx,ecx
+
     enumerate_symbols:
     cmp _esi,u64[free_additional_memory]
     je symbols_enumerated
@@ -15896,7 +16166,7 @@ fp_qword_small_shift:
     jmp enumerate_symbols
     ret
 
-    enumerate_section:
+enumerate_section:
     mov edx,eax
     shl edx,8
     mov [esi],edx
@@ -15907,7 +16177,7 @@ fp_qword_small_shift:
     jmp enumerate_symbols
     ret
 
-    enumerate_public:
+enumerate_public:
     mov edx,eax
     shl edx,8
     mov dl,[esi]
@@ -15926,7 +16196,7 @@ fp_qword_small_shift:
     jmp enumerate_symbols
     ret
 
-    enumerate_extrn:
+enumerate_extrn:
     mov edx,eax
     shl edx,8
     mov dl,[esi]
@@ -15936,20 +16206,21 @@ fp_qword_small_shift:
     jmp enumerate_symbols
     ret
 
-    prepare_default_section:
+prepare_default_section:
     mov ebx,[symbols_stream]
     cmp dword [ebx+0Ch],0
     jne default_section_ok
     cmp [number_of_sections],0
     je default_section_ok
     mov edx,ebx
+
     find_references_to_default_section:
     cmp _ebx,u64[free_additional_memory]
     jne check_reference
     add [symbols_stream],20h
     ret
 
-    check_reference:
+check_reference:
     mov al,[ebx]
     or al,al
     jz skip_other_section
@@ -15959,12 +16230,13 @@ fp_qword_small_shift:
     jae next_reference
     cmp edx,[ebx+8]
     je default_section_ok
+
     next_reference:
     add ebx,0Ch
     jmp find_references_to_default_section
     ret
 
-    check_public_reference:
+check_public_reference:
     mov eax,[ebx+8]
     add ebx,10h
     test u8 [eax+8],1
@@ -15977,22 +16249,23 @@ fp_qword_small_shift:
     jmp find_references_to_default_section
     ret
 
-    skip_other_section:
+skip_other_section:
     add ebx,20h
     jmp find_references_to_default_section
     ret
 
-    default_section_ok:
+default_section_ok:
     inc [number_of_sections]
     ret
 
-    symbols_enumerated:
+symbols_enumerated:
     mov [ebx+0Ch],eax
     mov ebp,edi
     sub ebp,ebx
     push _ebp
     lea edi,[ebx+14h]
     mov esi, [symbols_stream]
+
     find_section:
     cmp _esi,u64[free_additional_memory]
     je sections_finished
@@ -16006,7 +16279,7 @@ fp_qword_small_shift:
     jmp find_section
     ret
 
-    section_found:
+section_found:
     push _esi _edi
     mov esi, [esi+4]
     or esi,esi
@@ -16017,11 +16290,12 @@ fp_qword_small_shift:
     jmp section_name_ok
     ret
 
-    default_section:
+default_section:
     mov al,'.'
     stos u8 [edi]
     mov eax,'flat'
     stos dword [edi]
+
     section_name_ok:
     pop _edi _esi
     mov eax,[esi+0Ch]
@@ -16034,6 +16308,7 @@ fp_qword_small_shift:
     sub eax,[code_start]
     add eax,ebp
     mov [edi+14h],eax
+
     section_ptr_ok:
     mov ebx,[code_start]
     mov edx,[code_size]
@@ -16041,6 +16316,7 @@ fp_qword_small_shift:
     add edx,ebp
     xor ecx,ecx
     add esi, 20h
+
     find_relocations:
     cmp _esi,u64[free_additional_memory]
     je section_relocations_done
@@ -16055,7 +16331,7 @@ fp_qword_small_shift:
     jmp find_relocations
     ret
 
-    add_relocation:
+add_relocation:
     lea eax,[ebx+0Ah]
     cmp eax,[tagged_blocks]
     ja out_of_memory
@@ -16069,12 +16345,13 @@ fp_qword_small_shift:
     mov [ebx+8],ax
     add ebx,0Ah
     inc ecx
+
     next_relocation:
     add esi, 0Ch
     jmp find_relocations
     ret
 
-    section_relocations_done:
+section_relocations_done:
     cmp ecx,10000h
     jb section_relocations_count_16bit
     bt      [format_flags],0
@@ -16102,7 +16379,7 @@ fp_qword_small_shift:
     jmp section_relocations_ok
     ret
 
-    section_relocations_count_16bit:
+section_relocations_count_16bit:
     mov [edi+20h],cx
     jecxz section_relocations_ok
     mov [edi+18h],edx
@@ -16113,7 +16390,7 @@ fp_qword_small_shift:
     jmp find_section
     ret
 
-    sections_finished:
+sections_finished:
     mov _edx,u64[free_additional_memory]
     mov ebx,[code_size]
     add ebp,ebx
@@ -16126,11 +16403,13 @@ fp_qword_small_shift:
     shr ecx,1
     jnc zero_symbols_table
     stos u16 [edi]
+
     zero_symbols_table:
     rep stos dword [edi]
     mov edx,edi
     stos dword [edi]
     mov esi, [symbols_stream]
+
     make_symbols_table:
     cmp _esi,u64[free_additional_memory]
     je symbols_table_ok
@@ -16145,7 +16424,7 @@ fp_qword_small_shift:
     jmp make_symbols_table
     ret
 
-    add_section_symbol:
+add_section_symbol:
     call store_symbol_name
     movzx eax, u16 [esi+1Eh]
     mov [ebx+0Ch],ax
@@ -16155,7 +16434,7 @@ fp_qword_small_shift:
     jmp make_symbols_table
     ret
 
-    add_extrn_symbol:
+add_extrn_symbol:
     call store_symbol_name
     mov u8 [ebx+10h],2
     add esi, 0Ch
@@ -16163,7 +16442,7 @@ fp_qword_small_shift:
     jmp make_symbols_table
     ret
 
-    add_public_symbol:
+add_public_symbol:
     call store_symbol_name
     mov eax,[esi+0Ch]
     mov u64[current_line],_eax
@@ -16183,15 +16462,16 @@ fp_qword_small_shift:
     jmp invalid_use_of_symbol
     ret
 
-    undefined_coff_public:
+undefined_coff_public:
     mov [error_info],eax
     jmp undefined_symbol
     ret
 
-    check_64bit_public_symbol:
+check_64bit_public_symbol:
     cmp cl,4
     jne invalid_use_of_symbol
-    public_symbol_type_ok:
+
+public_symbol_type_ok:
     mov ecx,[eax+20]
     cmp u8 [ecx],80h
     je alias_symbol
@@ -16199,6 +16479,7 @@ fp_qword_small_shift:
     jne invalid_use_of_symbol
     mov cx,[ecx+1Eh]
     mov [ebx+0Ch],cx
+
     public_symbol_section_ok:
     movzx ecx, u8 [eax+9]
     shr cl,1
@@ -16217,6 +16498,7 @@ fp_qword_small_shift:
     cmp u8 [esi],0C1h
     je store_symbol_class
     mov al,105
+
     store_symbol_class:
     mov u8 [ebx+10h],al
     add esi, 10h
@@ -16224,7 +16506,7 @@ fp_qword_small_shift:
     jmp make_symbols_table
     ret
 
-    alias_symbol:
+alias_symbol:
     bt      [format_flags],0
     jnc invalid_use_of_symbol
     mov ecx,[eax]
@@ -16243,12 +16525,12 @@ fp_qword_small_shift:
     jmp make_symbols_table
     ret
 
-    public_constant:
+public_constant:
     mov u16 [ebx+0Ch],0FFFFh
     jmp public_symbol_section_ok
     ret
 
-    symbols_table_ok:
+symbols_table_ok:
     mov eax,edi
     sub eax,edx
     mov [edx],eax
@@ -16266,7 +16548,7 @@ fp_qword_small_shift:
     jmp write_output
     ret
 
-    store_symbol_name:
+store_symbol_name:
     push _esi
     mov esi, [esi+4]
     or esi,esi
@@ -16281,13 +16563,13 @@ fp_qword_small_shift:
     pop _edi _esi
     ret
 
-    default_name:
+default_name:
     mov dword [ebx],'.fla'
     mov dword [ebx+4],'t'
     pop _esi
     ret
 
-    add_string:
+add_string:
     mov eax,edi
     sub eax,edx
     mov [ebx+4],eax
@@ -16296,7 +16578,7 @@ fp_qword_small_shift:
     pop _esi
     ret
 
-    format_elf:
+format_elf:
     test [format_flags],8
     jnz format_elf64
     mov edx,edi
@@ -16318,6 +16600,7 @@ fp_qword_small_shift:
     mov [code_type],32
     cmp u16 [esi],1D19h
     je format_elf_exe
+
     elf_header_ok:
     mov u8 [edx+10h],1
     mov _eax,u64[additional_memory]
@@ -16349,7 +16632,7 @@ fp_qword_small_shift:
     jmp format_defined
     ret
 
-    format_elf64:
+format_elf64:
     mov edx,edi
     mov ecx,40h shr 2
     lea eax,[edi+ecx*4]
@@ -16372,7 +16655,7 @@ fp_qword_small_shift:
     jmp format_elf64_exe
     ret
 
-    elf_section:
+elf_section:
     bt      [format_flags],0
     jc illegal_instruction
     call close_coff_section
@@ -16398,6 +16681,7 @@ fp_qword_small_shift:
     test [format_flags],8
     jz elf_labels_type_ok
     mov u8 [edx+9],4
+
     elf_labels_type_ok:
     lods u16 [esi]
     cmp ax,'('
@@ -16405,6 +16689,7 @@ fp_qword_small_shift:
     mov [ebx+4],esi
     mov ecx,[esi]
     lea esi, [esi+4+ecx+1]
+
     elf_section_flags:
     cmp u8 [esi],8Ch
     je elf_section_alignment
@@ -16425,7 +16710,7 @@ fp_qword_small_shift:
     jmp elf_section_flags
     ret
 
-    elf_section_alignment:
+elf_section_alignment:
     inc esi
     lods u8 [esi]
     cmp al,'('
@@ -16447,7 +16732,7 @@ fp_qword_small_shift:
     jmp elf_section_flags
     ret
 
-    elf_section_settings_ok:
+elf_section_settings_ok:
     cmp dword [ebx+10h],0
     jne instruction_assembled
     mov dword [ebx+10h],4
@@ -16457,7 +16742,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mark_elf_relocation:
+mark_elf_relocation:
     push _ebx
     mov ebx,[addressing_space]
     cmp [value_type],3
@@ -16468,23 +16753,23 @@ fp_qword_small_shift:
     cmp [value_type],5
     je elf_gotoff_relocation
     ja invalid_use_of_symbol
-    mov al,1                    ; R_386_32 / R_AMD64_64
+    mov al,1
     test [format_flags],8
     jz coff_relocation
     cmp [value_type],4
     je coff_relocation
-    mov al,11                   ; R_AMD64_32S
+    mov al,11
     jmp coff_relocation
     ret
 
-    elf_gotoff_relocation:
+elf_gotoff_relocation:
     test [format_flags],8
     jnz invalid_use_of_symbol
-    mov al,9                    ; R_386_GOTOFF
+    mov al,9
     jmp coff_relocation
     ret
 
-    elf_relocation_relative:
+elf_relocation_relative:
     cmp u8 [ebx+9],0
     je invalid_use_of_symbol
     mov ebx,[current_section]
@@ -16492,14 +16777,14 @@ fp_qword_small_shift:
     sub ebx,edi
     sub eax,ebx
     push _eax
-    mov al,2                    ; R_386_PC32 / R_AMD64_PC32
+    mov al,2
     cmp [value_type],3
     je coff_relocation
-    mov al,4                    ; R_386_PLT32 / R_AMD64_PLT32
+    mov al,4
     jmp coff_relocation
     ret
 
-    close_elf:
+close_elf:
     bt      [format_flags],0
     jc close_elf_exe
     call close_coff_section
@@ -16507,10 +16792,11 @@ fp_qword_small_shift:
     je elf_closed
     mov eax,[symbols_stream]
     mov u64[free_additional_memory],_eax
+
     elf_closed:
     ret
 
-    elf_formatter:
+elf_formatter:
     mov ecx,edi
     sub ecx,[code_start]
     neg ecx
@@ -16518,6 +16804,7 @@ fp_qword_small_shift:
     test [format_flags],8
     jnz align_elf_structures
     and ecx,11b
+
     align_elf_structures:
     xor al,al
     rep stos u8 [edi]
@@ -16532,6 +16819,7 @@ fp_qword_small_shift:
     jz find_first_section
     mov ecx,2
     rep stos dword [edi]
+
     find_first_section:
     mov al,[esi]
     or al,al
@@ -16539,17 +16827,19 @@ fp_qword_small_shift:
     cmp al,0C0h
     jb skip_other_symbol
     add esi, 4
+
     skip_other_symbol:
     add esi, 0Ch
     jmp find_first_section
     ret
 
-    first_section_found:
+first_section_found:
     mov ebx,esi
     mov ebp,esi
     add esi, 20h
     xor ecx,ecx
     xor edx,edx
+
     find_next_section:
     cmp _esi,u64[free_additional_memory]
     je make_section_symbol
@@ -16561,17 +16851,18 @@ fp_qword_small_shift:
     cmp al,80h
     jae skip_extrn
     or u8 [ebx+14h],40h
+
     skip_extrn:
     add esi, 0Ch
     jmp find_next_section
     ret
 
-    skip_public:
+skip_public:
     add esi, 10h
     jmp find_next_section
     ret
 
-    make_section_symbol:
+make_section_symbol:
     mov eax,edi
     xchg eax,[ebx+4]
     stos dword [edi]
@@ -16584,7 +16875,7 @@ fp_qword_small_shift:
     jmp section_symbol_ok
     ret
 
-    store_section_index:
+store_section_index:
     inc ecx
     mov eax,ecx
     shl eax,8
@@ -16599,17 +16890,19 @@ fp_qword_small_shift:
     or ah,-1
     inc dx
     jz format_limitations_exceeded
+
     section_index_ok:
     stos dword [edi]
     ret
 
-    elf64_section_symbol:
+elf64_section_symbol:
     call store_section_index
     xor eax,eax
     stos dword [edi]
     stos dword [edi]
     stos dword [edi]
     stos dword [edi]
+
     section_symbol_ok:
     mov ebx,esi
     add esi, 20h
@@ -16619,6 +16912,7 @@ fp_qword_small_shift:
     jz format_limitations_exceeded
     mov [current_section],edx
     mov esi, [symbols_stream]
+
     find_other_symbols:
     cmp _esi,u64[free_additional_memory]
     je elf_symbol_table_ok
@@ -16633,12 +16927,12 @@ fp_qword_small_shift:
     jmp find_other_symbols
     ret
 
-    skip_section:
+skip_section:
     add esi, 20h
     jmp find_other_symbols
     ret
 
-    make_public_symbol:
+make_public_symbol:
     mov eax,[esi+0Ch]
     mov u64[current_line],_eax
     cmp u8 [esi],0C0h
@@ -16664,19 +16958,19 @@ fp_qword_small_shift:
     jmp section_for_public_ok
     ret
 
-    undefined_public:
+undefined_public:
     mov [error_info],ebx
     jmp undefined_symbol
     ret
 
-    elf64_public:
+elf64_public:
     cmp dl,4
     jne invalid_use_of_symbol
     mov dx,[eax+6]
     jmp section_for_public_ok
     ret
 
-    public_absolute:
+public_absolute:
     mov dx,0FFF1h
     section_for_public_ok:
     mov eax,[esi+4]
@@ -16705,14 +16999,15 @@ fp_qword_small_shift:
     jmp store_elf_public_info
     ret
 
-    elf_public_function:
+elf_public_function:
     or al,2
+
     store_elf_public_info:
     stos dword [edi]
     jmp public_symbol_ok
     ret
 
-    elf64_public_symbol:
+elf64_public_symbol:
     mov eax,edx
     shl eax,16
     mov al,10h
@@ -16722,8 +17017,9 @@ fp_qword_small_shift:
     jmp store_elf64_public_info
     ret
 
-    elf64_public_function:
+elf64_public_function:
     or al,2
+
     store_elf64_public_info:
     stos dword [edi]
     mov al,[ebx+9]
@@ -16738,6 +17034,7 @@ fp_qword_small_shift:
     stos dword [edi]
     xor al,al
     stos dword [edi]
+
     public_symbol_ok:
     inc ecx
     mov eax,ecx
@@ -16748,7 +17045,7 @@ fp_qword_small_shift:
     jmp find_other_symbols
     ret
 
-    make_extrn_symbol:
+make_extrn_symbol:
     mov eax,[esi+4]
     stos dword [edi]
     test [format_flags],8
@@ -16762,7 +17059,7 @@ fp_qword_small_shift:
     jmp extrn_symbol_ok
     ret
 
-    elf64_extrn_symbol:
+elf64_extrn_symbol:
     mov eax,10h
     stos dword [edi]
     xor al,al
@@ -16772,7 +17069,8 @@ fp_qword_small_shift:
     stos dword [edi]
     xor eax,eax
     stos dword [edi]
-    extrn_symbol_ok:
+
+extrn_symbol_ok:
     inc ecx
     mov eax,ecx
     shl eax,8
@@ -16782,7 +17080,7 @@ fp_qword_small_shift:
     jmp find_other_symbols
     ret
 
-    elf_symbol_table_ok:
+elf_symbol_table_ok:
     mov edx,edi
     mov _ebx,u64[free_additional_memory]
     xor al,al
@@ -16793,6 +17091,7 @@ fp_qword_small_shift:
     test [format_flags],8
     jz make_string_table
     add ebx,8
+
     make_string_table:
     cmp ebx,edx
     je elf_string_table_ok
@@ -16803,11 +17102,13 @@ fp_qword_small_shift:
     mov u8 [ebx+0Dh],0
     mov eax,'.rel'
     stos dword [edi]
+
     rel_prefix_ok:
     mov esi, edi
     sub esi, edx
     xchg esi,[ebx]
     add ebx,10h
+
     make_elf_string:
     or esi,esi
     jz default_string
@@ -16819,7 +17120,7 @@ fp_qword_small_shift:
     jmp make_string_table
     ret
 
-    make_elf64_string:
+make_elf64_string:
     cmp u8 [ebx+5],0
     je elf64_rel_prefix_ok
     mov u8 [ebx+5],0
@@ -16827,6 +17128,7 @@ fp_qword_small_shift:
     stos dword [edi]
     mov al,'a'
     stos u8 [edi]
+
     elf64_rel_prefix_ok:
     mov esi, edi
     sub esi, edx
@@ -16835,7 +17137,7 @@ fp_qword_small_shift:
     jmp make_elf_string
     ret
 
-    default_string:
+default_string:
     mov eax,'.fla'
     stos dword [edi]
     mov ax,'t'
@@ -16843,7 +17145,7 @@ fp_qword_small_shift:
     jmp make_string_table
     ret
 
-    elf_string_table_ok:
+elf_string_table_ok:
     mov [edx+1+8],edi
     mov ebx,[code_start]
     mov eax,edi
@@ -16865,7 +17167,7 @@ fp_qword_small_shift:
     jmp elf_header_finished
     ret
 
-    finish_elf64_header:
+finish_elf64_header:
     and ecx,111b
     add eax,ecx
     mov [ebx+28h],eax
@@ -16876,6 +17178,7 @@ fp_qword_small_shift:
     inc ax
     jz format_limitations_exceeded
     mov [ebx+3Ch],ax
+
     elf_header_finished:
     xor eax,eax
     add ecx,10*4
@@ -16884,9 +17187,11 @@ fp_qword_small_shift:
     jz elf_null_section_ok
     mov ecx,6*4
     rep stos u8 [edi]
+
     elf_null_section_ok:
     mov esi, ebp
     xor ecx,ecx
+
     make_section_entry:
     mov ebx,edi
     mov eax,[esi+4]
@@ -16899,6 +17204,7 @@ fp_qword_small_shift:
     jz section_type_ok
     bss_section:
     mov al,8
+
     section_type_ok:
     stos dword [edi]
     mov eax,[esi+14h]
@@ -16923,6 +17229,7 @@ fp_qword_small_shift:
     add esi, 20h
     xchg _edi,[_esp]
     mov ebp,edi
+
     convert_relocations:
     cmp _esi,u64[free_additional_memory]
     je relocations_converted
@@ -16979,6 +17286,7 @@ fp_qword_small_shift:
     xchg eax,[edx+4]
     stos dword [edi]
     pop _edx
+
     relocation_entry_ok:
     add esi, 0Ch
     jmp convert_relocations
@@ -16990,6 +17298,7 @@ fp_qword_small_shift:
     jz elf_machine_word_ok
     and dword [edi],0
     add edi,4
+
     elf_machine_word_ok:
     ret
 
@@ -17002,6 +17311,7 @@ fp_qword_small_shift:
     test [format_flags],8
     jz store_relocations_name_offset
     dec eax
+
     store_relocations_name_offset:
     stos dword [edi]
     test [format_flags],8
@@ -17010,7 +17320,7 @@ fp_qword_small_shift:
     jmp store_relocations_type
     ret
 
-    rela_section:
+rela_section:
     mov eax,4
     store_relocations_type:
     stos dword [edi]
@@ -17037,7 +17347,7 @@ fp_qword_small_shift:
     jmp rel_section_ok
     ret
 
-    finish_elf64_rela_section:
+finish_elf64_rela_section:
     mov eax,8
     stos dword [edi]
     xor al,al
@@ -17046,6 +17356,7 @@ fp_qword_small_shift:
     stos dword [edi]
     xor al,al
     stos dword [edi]
+
     rel_section_ok:
     cmp _esi,u64[free_additional_memory]
     jne make_section_entry
@@ -17057,6 +17368,7 @@ fp_qword_small_shift:
     test [format_flags],8
     jz adjust_elf_section_headers_offset
     mov ecx,28h
+
     adjust_elf_section_headers_offset:
     add [ebx+ecx],eax
     mov eax,1
@@ -17086,7 +17398,7 @@ fp_qword_small_shift:
     jmp sym_section_ok
     ret
 
-    finish_elf64_sym_section:
+finish_elf64_sym_section:
     mov eax,8
     stos dword [edi]
     xor al,al
@@ -17095,6 +17407,7 @@ fp_qword_small_shift:
     stos dword [edi]
     xor al,al
     stos dword [edi]
+
     sym_section_ok:
     mov al,1+8
     stos dword [edi]
@@ -17136,7 +17449,7 @@ fp_qword_small_shift:
     jc write_failed
     jmp output_written
 
-    format_elf_exe:
+format_elf_exe:
     add esi, 2
     or [format_flags],1
     cmp u8 [esi],'('
@@ -17150,6 +17463,7 @@ fp_qword_small_shift:
     jne invalid_use_of_symbol
     pop _edx
     mov [edx+7],al
+
     elf_exe_brand_ok:
     mov [image_base],8048000h
     cmp u8 [esi],80h
@@ -17173,6 +17487,7 @@ fp_qword_small_shift:
     cmp [current_pass],0
     je init_elf_segments
     imul ecx,[number_of_sections]
+
     init_elf_segments:
     xor eax,eax
     rep stos dword [edi]
@@ -17203,6 +17518,7 @@ fp_qword_small_shift:
     adc ebp,0
     adc cl,0
     mov edx,ebp
+
     elf_exe_addressing_setup:
     push _eax
     call init_addressing_space
@@ -17214,7 +17530,7 @@ fp_qword_small_shift:
     jmp format_defined
     ret
 
-    format_elf64_exe:
+format_elf64_exe:
     add esi, 2
     or [format_flags],1
     cmp u8 [esi],'('
@@ -17228,6 +17544,7 @@ fp_qword_small_shift:
     jne invalid_use_of_symbol
     pop _edx
     mov [edx+7],al
+
     elf64_exe_brand_ok:
     mov [image_base],400000h
     and [image_base_high],0
@@ -17245,6 +17562,7 @@ fp_qword_small_shift:
     mov [image_base],eax
     mov [image_base_high],edx
     pop _edx
+
     elf64_exe_base_ok:
     mov u8 [edx+10h],2
     mov u8 [edx+36h],38h
@@ -17253,6 +17571,7 @@ fp_qword_small_shift:
     cmp [current_pass],0
     je init_elf64_segments
     imul ecx,[number_of_sections]
+
     init_elf64_segments:
     xor eax,eax
     rep stos dword [edi]
@@ -17288,7 +17607,7 @@ fp_qword_small_shift:
     jmp elf_exe_addressing_setup
     ret
 
-    elf_entry:
+elf_entry:
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -17304,7 +17623,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    elf64_entry:
+elf64_entry:
     call get_qword_value
     cmp [value_type],0
     jne invalid_use_of_symbol
@@ -17314,7 +17633,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    elf_segment:
+elf_segment:
     bt      [format_flags],0
     jnc illegal_instruction
     test [format_flags],8
@@ -17338,6 +17657,7 @@ fp_qword_small_shift:
     rep stos dword [edi]
     pop _edi
     or [next_pass_needed],-1
+
     new_elf_segment:
     mov u8 [ebx],1
     mov u16 [ebx+1Ch],1000h
@@ -17357,6 +17677,7 @@ fp_qword_small_shift:
     cmp ah,2
     je mark_elf_segment_flag
     inc ah
+
     mark_elf_segment_flag:
     test [ebx+18h],ah
     jnz setting_already_specified
@@ -17364,7 +17685,7 @@ fp_qword_small_shift:
     jmp elf_segment_flags
     ret
 
-    elf_segment_type:
+elf_segment_type:
     cmp u8 [ebx],1
     jne setting_already_specified
     lods u16 [esi]
@@ -17372,6 +17693,7 @@ fp_qword_small_shift:
     jecxz elf_segment_type_ok
     mov edx,[code_start]
     add edx,34h
+
     scan_elf_segment_types:
     cmp edx,[symbols_stream]
     jae elf_segment_type_ok
@@ -17388,7 +17710,7 @@ fp_qword_small_shift:
     jmp elf_segment_flags
     ret
 
-    elf_segment_flags_ok:
+elf_segment_flags_ok:
     mov eax,edi
     sub eax,[code_start]
     mov [ebx+4],eax
@@ -17409,6 +17731,7 @@ fp_qword_small_shift:
     add eax,edi
     adc edx,0
     adc cl,0
+
     elf_segment_addressing_setup:
     mov [ds:ebp],eax
     mov [ds:ebp+4],edx
@@ -17417,7 +17740,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    close_elf_segment:
+close_elf_segment:
     cmp [number_of_sections],0
     jne finish_elf_segment
     cmp edi,[symbols_stream]
@@ -17432,8 +17755,9 @@ fp_qword_small_shift:
     mov eax,[image_base]
     ret
 
-    first_elf_segment_ok:
+first_elf_segment_ok:
     inc [number_of_sections]
+
     finish_elf_segment:
     mov ebx,[number_of_sections]
     dec ebx
@@ -17447,6 +17771,7 @@ fp_qword_small_shift:
     cmp edi,[undefined_data_end]
     jne elf_segment_size_ok
     mov edi,[undefined_data_start]
+
     elf_segment_size_ok:
     mov [ebx+14h],eax
     add eax,edi
@@ -17458,11 +17783,12 @@ fp_qword_small_shift:
     jne elf_segment_position_ok
     add eax,[ebx+14h]
     add eax,0FFFh
+
     elf_segment_position_ok:
     and eax,not 0FFFh
     ret
 
-    elf64_segment:
+elf64_segment:
     call close_elf64_segment
     push _eax _edx
     call create_addressing_space
@@ -17482,9 +17808,11 @@ fp_qword_small_shift:
     rep stos dword [edi]
     pop _edi
     or [next_pass_needed],-1
+
     new_elf64_segment:
     mov u8 [ebx],1
     mov u16 [ebx+30h],1000h
+
     elf64_segment_flags:
     cmp u8 [esi],1Eh
     je elf64_segment_type
@@ -17501,6 +17829,7 @@ fp_qword_small_shift:
     cmp ah,2
     je mark_elf64_segment_flag
     inc ah
+
     mark_elf64_segment_flag:
     test [ebx+4],ah
     jnz setting_already_specified
@@ -17508,7 +17837,7 @@ fp_qword_small_shift:
     jmp elf64_segment_flags
     ret
 
-    elf64_segment_type:
+elf64_segment_type:
     cmp u8 [ebx],1
     jne setting_already_specified
     lods u16 [esi]
@@ -17516,6 +17845,7 @@ fp_qword_small_shift:
     jecxz elf64_segment_type_ok
     mov edx,[code_start]
     add edx,40h
+
     scan_elf64_segment_types:
     cmp edx,[symbols_stream]
     jae elf64_segment_type_ok
@@ -17523,6 +17853,7 @@ fp_qword_small_shift:
     je data_already_defined
     add edx,38h
     loop scan_elf64_segment_types
+
     elf64_segment_type_ok:
     mov [ebx],ah
     mov u16 [ebx+30h],1
@@ -17532,7 +17863,7 @@ fp_qword_small_shift:
     jmp elf64_segment_flags
     ret
 
-    elf64_segment_flags_ok:
+elf64_segment_flags_ok:
     mov ecx,edi
     sub ecx,[code_start]
     mov [ebx+8],ecx
@@ -17557,7 +17888,7 @@ fp_qword_small_shift:
     jmp elf_segment_addressing_setup
     ret
 
-    close_elf64_segment:
+close_elf64_segment:
     cmp [number_of_sections],0
     jne finish_elf64_segment
     cmp edi,[symbols_stream]
@@ -17575,6 +17906,7 @@ fp_qword_small_shift:
 
     first_elf64_segment_ok:
     inc [number_of_sections]
+
     finish_elf64_segment:
     mov ebx,[number_of_sections]
     dec ebx
@@ -17588,6 +17920,7 @@ fp_qword_small_shift:
     cmp edi,[undefined_data_end]
     jne elf64_segment_size_ok
     mov edi,[undefined_data_start]
+
     elf64_segment_size_ok:
     mov [ebx+28h],eax
     add eax,edi
@@ -17602,11 +17935,12 @@ fp_qword_small_shift:
     adc edx,0
     add eax,0FFFh
     adc edx,0
+
     elf64_segment_position_ok:
     and eax,not 0FFFh
     ret
 
-    close_elf_exe:
+close_elf_exe:
     test [format_flags],8
     jnz close_elf64_exe
     call close_elf_segment
@@ -17620,10 +17954,11 @@ fp_qword_small_shift:
     cmp eax,[symbols_stream]
     je elf_exe_ok
     or [next_pass_needed],-1
+
     elf_exe_ok:
     ret
 
-    close_elf64_exe:
+close_elf64_exe:
     call close_elf64_segment
     mov edx,[code_start]
     mov eax,[number_of_sections]
@@ -17635,12 +17970,14 @@ fp_qword_small_shift:
     cmp eax,[symbols_stream]
     je elf64_exe_ok
     or [next_pass_needed],-1
+
     elf64_exe_ok:
     ret
 
-    simple_instruction_except64:
+simple_instruction_except64:
     cmp [code_type],64
     je illegal_instruction
+
     simple_instruction:
     stos u8 [edi]
     jmp instruction_assembled
@@ -17652,9 +17989,10 @@ fp_qword_small_shift:
     jmp simple_instruction
     ret
 
-    simple_instruction_16bit_except64:
+simple_instruction_16bit_except64:
     cmp [code_type],64
     je illegal_instruction
+
     simple_instruction_16bit:
     cmp [code_type],16
     jne size_prefix
@@ -17662,16 +18000,17 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    size_prefix:
+size_prefix:
     mov ah,al
     mov al,66h
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
-    simple_instruction_32bit_except64:
+simple_instruction_32bit_except64:
     cmp [code_type],64
     je illegal_instruction
+
     simple_instruction_32bit:
     cmp [code_type],16
     je size_prefix
@@ -17679,9 +18018,10 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    iret_instruction:
+iret_instruction:
     cmp [code_type],64
     jne simple_instruction
+
     simple_instruction_64bit:
     cmp [code_type],64
     jne illegal_instruction
@@ -17691,11 +18031,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    simple_extended_instruction_64bit:
+simple_extended_instruction_64bit:
     cmp [code_type],64
     jne illegal_instruction
     mov u8 [edi],48h
     inc edi
+
     simple_extended_instruction:
     mov ah,al
     mov al,0Fh
@@ -17703,13 +18044,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    prefix_instruction:
+prefix_instruction:
     stos u8 [edi]
     or [prefix_flags],1
     jmp continue_line
     ret
 
-    segment_prefix:
+segment_prefix:
     mov ah,al
     shr ah,4
     cmp ah,3
@@ -17721,13 +18062,13 @@ fp_qword_small_shift:
     jmp continue_line
     ret
 
-    bnd_prefix_instruction:
+bnd_prefix_instruction:
     stos u8 [edi]
     or [prefix_flags],1 + 10h
     jmp continue_line
     ret
 
-    int_instruction:
+int_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp ah,1
@@ -17738,6 +18079,7 @@ fp_qword_small_shift:
     test eax,eax
     jns int_imm_ok
     call recoverable_overflow
+
     int_imm_ok:
     mov ah,al
     mov al,0CDh
@@ -17745,7 +18087,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    aa_instruction:
+aa_instruction:
     cmp [code_type],64
     je illegal_instruction
     push _eax
@@ -17759,6 +18101,7 @@ fp_qword_small_shift:
     ja invalid_operand_size
     call get_byte_value
     mov bl,al
+
     aa_store:
     cmp [operand_size],0
     jne invalid_operand
@@ -17766,8 +18109,9 @@ fp_qword_small_shift:
     mov ah,bl
     stos u16 [edi]
     jmp instruction_assembled
+    ret
 
-    basic_instruction:
+basic_instruction:
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
@@ -17775,6 +18119,7 @@ fp_qword_small_shift:
     je basic_reg
     cmp al,'['
     jne invalid_operand
+
     basic_mem:
     call get_address
     push _edx _ebx _ecx
@@ -17787,6 +18132,7 @@ fp_qword_small_shift:
     je basic_mem_imm
     cmp al,10h
     jne invalid_operand
+
     basic_mem_reg:
     lods u8 [esi]
     call convert_register
@@ -17797,12 +18143,13 @@ fp_qword_small_shift:
     je instruction_ready
     call operand_autodetect
     inc [base_code]
+
     instruction_ready:
     call store_instruction
     jmp instruction_assembled
     ret
 
-    basic_mem_imm:
+basic_mem_imm:
     mov al,[operand_size]
     cmp al,1
     jb basic_mem_imm_nosize
@@ -17813,6 +18160,7 @@ fp_qword_small_shift:
     je basic_mem_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     basic_mem_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -17823,8 +18171,9 @@ fp_qword_small_shift:
     jmp basic_mem_imm_32bit_ok
     ret
 
-    basic_mem_imm_nosize:
+basic_mem_imm_nosize:
     call recoverable_unknown_size
+
     basic_mem_imm_8bit:
     call get_byte_value
     mov u8 [value],al
@@ -17837,7 +18186,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    basic_mem_imm_16bit:
+basic_mem_imm_16bit:
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -17853,22 +18202,24 @@ fp_qword_small_shift:
     jb basic_mem_simm_8bit
     cmp u16 [value],-80h
     jae basic_mem_simm_8bit
+
     basic_mem_imm_16bit_store:
     mov [base_code],81h
     call store_instruction_with_imm16
     jmp instruction_assembled
     ret
 
-    basic_mem_simm_8bit:
+basic_mem_simm_8bit:
     mov [base_code],83h
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
-    basic_mem_imm_32bit:
+basic_mem_imm_32bit:
     call operand_32bit
     call get_dword_value
-    basic_mem_imm_32bit_ok:
+
+basic_mem_imm_32bit_ok:
     mov dword [value],eax
     mov al,[base_code]
     shr al,3
@@ -17882,13 +18233,14 @@ fp_qword_small_shift:
     jb basic_mem_simm_8bit
     cmp dword [value],-80h
     jae basic_mem_simm_8bit
+
     basic_mem_imm_32bit_store:
     mov [base_code],81h
     call store_instruction_with_imm32
     jmp instruction_assembled
     ret
 
-    get_simm32:
+get_simm32:
     call get_qword_value
     mov ecx,edx
     cdq
@@ -17897,10 +18249,11 @@ fp_qword_small_shift:
     cmp [value_type],4
     jne get_simm32_ok
     mov [value_type],2
+
     get_simm32_ok:
     ret
 
-    basic_reg:
+basic_reg:
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -17915,6 +18268,7 @@ fp_qword_small_shift:
     je basic_reg_imm
     cmp al,'['
     jne invalid_operand
+
     basic_reg_mem:
     call get_address
     mov al,[operand_size]
@@ -17925,12 +18279,12 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    basic_reg_mem_8bit:
+basic_reg_mem_8bit:
     add [base_code],2
     jmp instruction_ready
     ret
 
-    basic_reg_reg:
+basic_reg_reg:
     lods u8 [esi]
     call convert_register
     mov bl,[postbyte_register]
@@ -17940,12 +18294,13 @@ fp_qword_small_shift:
     je nomem_instruction_ready
     call operand_autodetect
     inc [base_code]
+
     nomem_instruction_ready:
     call store_nomem_instruction
     jmp instruction_assembled
     ret
 
-    basic_reg_imm:
+basic_reg_imm:
     mov al,[operand_size]
     cmp al,1
     je basic_reg_imm_8bit
@@ -17955,6 +18310,7 @@ fp_qword_small_shift:
     je basic_reg_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     basic_reg_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -17965,7 +18321,7 @@ fp_qword_small_shift:
     jmp basic_reg_imm_32bit_ok
     ret
 
-    basic_reg_imm_8bit:
+basic_reg_imm_8bit:
     call get_byte_value
     mov dl,al
     mov bl,[base_code]
@@ -17980,7 +18336,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    basic_al_imm:
+basic_al_imm:
     mov al,[base_code]
     add al,4
     stos u8 [edi]
@@ -17989,7 +18345,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    basic_reg_imm_16bit:
+basic_reg_imm_16bit:
     call operand_16bit
     call get_word_value
     mov dx,ax
@@ -18004,11 +18360,13 @@ fp_qword_small_shift:
     jb basic_reg_simm_8bit
     cmp dx,-80h
     jae basic_reg_simm_8bit
+
     basic_reg_imm_16bit_store:
     or bl,bl
     jz basic_ax_imm
     mov [base_code],81h
     call store_nomem_instruction
+
     basic_store_imm_16bit:
     mov ax,dx
     call mark_relocation
@@ -18016,7 +18374,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    basic_reg_simm_8bit:
+basic_reg_simm_8bit:
     mov [base_code],83h
     call store_nomem_instruction
     mov al,dl
@@ -18024,15 +18382,16 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    basic_ax_imm:
+basic_ax_imm:
     add [base_code],5
     call store_classic_instruction_code
     jmp basic_store_imm_16bit
     ret
 
-    basic_reg_imm_32bit:
+basic_reg_imm_32bit:
     call operand_32bit
     call get_dword_value
+
     basic_reg_imm_32bit_ok:
     mov edx,eax
     mov bl,[base_code]
@@ -18046,6 +18405,7 @@ fp_qword_small_shift:
     jb basic_reg_simm_8bit
     cmp edx,-80h
     jae basic_reg_simm_8bit
+
     basic_reg_imm_32bit_store:
     or bl,bl
     jz basic_eax_imm
@@ -18058,22 +18418,23 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    basic_eax_imm:
+basic_eax_imm:
     add [base_code],5
     call store_classic_instruction_code
     jmp basic_store_imm_32bit
     ret
 
-    recoverable_unknown_size:
+recoverable_unknown_size:
     cmp [error_line],0
     jne ignore_unknown_size
     push u64[current_line]
     pop u64[error_line]
     mov [error],operand_size_not_specified
+
     ignore_unknown_size:
     ret
 
-    single_operand_instruction:
+single_operand_instruction:
     mov [base_code],0F6h
     mov [postbyte_register],al
     lods u8 [esi]
@@ -18082,6 +18443,7 @@ fp_qword_small_shift:
     je single_reg
     cmp al,'['
     jne invalid_operand
+
     single_mem:
     call get_address
     mov al,[operand_size]
@@ -18093,13 +18455,14 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    single_mem_nosize:
+single_mem_nosize:
     call recoverable_unknown_size
+
     single_mem_8bit:
     jmp instruction_ready
     ret
 
-    single_reg:
+single_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -18108,11 +18471,12 @@ fp_qword_small_shift:
     je single_reg_8bit
     call operand_autodetect
     inc [base_code]
+
     single_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    mov_instruction:
+mov_instruction:
     mov [base_code],88h
     lods u8 [esi]
     call get_size_operator
@@ -18122,6 +18486,7 @@ fp_qword_small_shift:
     je mov_creg
     cmp al,'['
     jne invalid_operand
+
     mov_mem:
     call get_address
     push _edx _ebx _ecx
@@ -18134,12 +18499,14 @@ fp_qword_small_shift:
     je mov_mem_imm
     cmp al,10h
     jne invalid_operand
+
     mov_mem_reg:
     lods u8 [esi]
     cmp al,30h
     jb mov_mem_general_reg
     cmp al,40h
     jb mov_mem_sreg
+
     mov_mem_general_reg:
     call convert_register
     mov [postbyte_register],al
@@ -18156,10 +18523,11 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    mov_mem_reg_8bit:
+mov_mem_reg_8bit:
     or al,bl
     or al,bh
     jnz instruction_ready
+
     mov_mem_al:
     test ch,22h
     jnz mov_mem_address16_al
@@ -18175,20 +18543,23 @@ fp_qword_small_shift:
     je mov_mem_address32_al
     cmp edx,10000h
     jb mov_mem_address16_al
+
     mov_mem_address32_al:
     call store_segment_prefix_if_necessary
     call address_32bit_prefix
     mov [base_code],0A2h
+
     store_mov_address32:
     call store_classic_instruction_code
     call store_address_32bit_value
     jmp instruction_assembled
     ret
 
-    mov_mem_address16_al:
+mov_mem_address16_al:
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A2h
+
     store_mov_address16:
     cmp [code_type],64
     je invalid_address
@@ -18200,16 +18571,17 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_mem_address64_al:
+mov_mem_address64_al:
     call store_segment_prefix_if_necessary
     mov [base_code],0A2h
+
     store_mov_address64:
     call store_classic_instruction_code
     call store_address_64bit_value
     jmp instruction_assembled
     ret
 
-    mov_mem_ax:
+mov_mem_ax:
     test ch,22h
     jnz mov_mem_address16_ax
     test ch,44h
@@ -18224,6 +18596,7 @@ fp_qword_small_shift:
     je mov_mem_address32_ax
     cmp edx,10000h
     jb mov_mem_address16_ax
+
     mov_mem_address32_ax:
     call store_segment_prefix_if_necessary
     call address_32bit_prefix
@@ -18231,20 +18604,20 @@ fp_qword_small_shift:
     jmp store_mov_address32
     ret
 
-    mov_mem_address16_ax:
+mov_mem_address16_ax:
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A3h
     jmp store_mov_address16
     ret
 
-    mov_mem_address64_ax:
+mov_mem_address64_ax:
     call store_segment_prefix_if_necessary
     mov [base_code],0A3h
     jmp store_mov_address64
     ret
 
-    mov_mem_sreg:
+mov_mem_sreg:
     sub al,31h
     mov [postbyte_register],al
     pop _ecx _ebx _edx
@@ -18253,12 +18626,13 @@ fp_qword_small_shift:
     jz mov_mem_sreg_store
     cmp ah,2
     jne invalid_operand_size
+
     mov_mem_sreg_store:
     mov [base_code],8Ch
     jmp instruction_ready
     ret
 
-    mov_mem_imm:
+mov_mem_imm:
     mov al,[operand_size]
     cmp al,1
     jb mov_mem_imm_nosize
@@ -18269,6 +18643,7 @@ fp_qword_small_shift:
     je mov_mem_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     mov_mem_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -18279,8 +18654,9 @@ fp_qword_small_shift:
     jmp mov_mem_imm_32bit_store
     ret
 
-    mov_mem_imm_nosize:
+mov_mem_imm_nosize:
     call recoverable_unknown_size
+
     mov_mem_imm_8bit:
     call get_byte_value
     mov u8 [value],al
@@ -18291,7 +18667,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_mem_imm_16bit:
+mov_mem_imm_16bit:
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -18302,9 +18678,10 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_mem_imm_32bit:
+mov_mem_imm_32bit:
     call operand_32bit
     call get_dword_value
+
     mov_mem_imm_32bit_store:
     mov dword [value],eax
     mov [postbyte_register],0
@@ -18314,7 +18691,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_reg:
+mov_reg:
     lods u8 [esi]
     mov ah,al
     sub ah,10h
@@ -18336,6 +18713,7 @@ fp_qword_small_shift:
     je mov_reg_creg
     cmp al,10h
     jne invalid_operand
+
     mov_reg_reg:
     lods u8 [esi]
     mov ah,al
@@ -18351,11 +18729,12 @@ fp_qword_small_shift:
     je mov_reg_reg_8bit
     call operand_autodetect
     inc [base_code]
+
     mov_reg_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    mov_reg_sreg:
+mov_reg_sreg:
     mov bl,[postbyte_register]
     mov ah,al
     and al,1111b
@@ -18374,19 +18753,19 @@ fp_qword_small_shift:
     jmp mov_reg_sreg_store
     ret
 
-    mov_reg_sreg64:
+mov_reg_sreg64:
     call operand_64bit
     jmp mov_reg_sreg_store
     ret
 
-    mov_reg_sreg32:
+mov_reg_sreg32:
     call operand_32bit
     mov_reg_sreg_store:
     mov [base_code],8Ch
     jmp nomem_instruction_ready
     ret
 
-    mov_reg_creg:
+mov_reg_creg:
     lods u8 [esi]
     mov bl,al
     shr al,4
@@ -18408,17 +18787,18 @@ fp_qword_small_shift:
     mov al,0F0h
     stos u8 [edi]
     mov [postbyte_register],0
+
     mov_reg_creg_store:
     jmp nomem_instruction_ready
     ret
 
-    mov_reg_creg_64bit:
+mov_reg_creg_64bit:
     cmp [operand_size],8
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
-    mov_reg_mem:
+mov_reg_mem:
     call get_address
     mov al,[operand_size]
     cmp al,1
@@ -18432,7 +18812,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    mov_reg_mem_8bit:
+mov_reg_mem_8bit:
     mov al,[postbyte_register]
     or al,bl
     or al,bh
@@ -18441,7 +18821,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    mov_al_mem:
+mov_al_mem:
     test ch,22h
     jnz mov_al_mem_address16
     test ch,44h
@@ -18456,6 +18836,7 @@ fp_qword_small_shift:
     je mov_al_mem_address32
     cmp edx,10000h
     jb mov_al_mem_address16
+
     mov_al_mem_address32:
     call store_segment_prefix_if_necessary
     call address_32bit_prefix
@@ -18463,20 +18844,20 @@ fp_qword_small_shift:
     jmp store_mov_address32
     ret
 
-    mov_al_mem_address16:
+mov_al_mem_address16:
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A0h
     jmp store_mov_address16
     ret
 
-    mov_al_mem_address64:
+mov_al_mem_address64:
     call store_segment_prefix_if_necessary
     mov [base_code],0A0h
     jmp store_mov_address64
     ret
 
-    mov_ax_mem:
+mov_ax_mem:
     test ch,22h
     jnz mov_ax_mem_address16
     test ch,44h
@@ -18491,6 +18872,7 @@ fp_qword_small_shift:
     je mov_ax_mem_address32
     cmp edx,10000h
     jb mov_ax_mem_address16
+
     mov_ax_mem_address32:
     call store_segment_prefix_if_necessary
     call address_32bit_prefix
@@ -18498,20 +18880,20 @@ fp_qword_small_shift:
     jmp store_mov_address32
     ret
 
-    mov_ax_mem_address16:
+mov_ax_mem_address16:
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A1h
     jmp store_mov_address16
     ret
 
-    mov_ax_mem_address64:
+mov_ax_mem_address64:
     call store_segment_prefix_if_necessary
     mov [base_code],0A1h
     jmp store_mov_address64
     ret
 
-    mov_reg_imm:
+mov_reg_imm:
     mov al,[operand_size]
     cmp al,1
     je mov_reg_imm_8bit
@@ -18521,6 +18903,7 @@ fp_qword_small_shift:
     je mov_reg_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     mov_reg_imm_64bit:
     call operand_64bit
     call get_qword_value
@@ -18532,6 +18915,7 @@ fp_qword_small_shift:
     cdq
     cmp ecx,edx
     je mov_reg_64bit_imm_32bit
+
     mov_reg_imm_64bit_store:
     push _eax _ecx
     mov al,0B8h
@@ -18544,7 +18928,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_reg_imm_8bit:
+mov_reg_imm_8bit:
     call get_byte_value
     mov dl,al
     mov al,0B0h
@@ -18554,7 +18938,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_reg_imm_16bit:
+mov_reg_imm_16bit:
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -18566,12 +18950,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mov_reg_imm_32bit:
+mov_reg_imm_32bit:
     call operand_32bit
     call get_dword_value
     mov edx,eax
     mov al,0B8h
     call store_mov_reg_imm_code
+
     mov_store_imm_32bit:
     mov eax,edx
     call mark_relocation
@@ -18579,11 +18964,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    store_mov_reg_imm_code:
+store_mov_reg_imm_code:
     mov ah,[postbyte_register]
     test ah,1000b
     jz mov_reg_imm_prefix_ok
     or [rex_prefix],41h
+
     mov_reg_imm_prefix_ok:
     and ah,111b
     add al,ah
@@ -18591,7 +18977,7 @@ fp_qword_small_shift:
     call store_classic_instruction_code
     ret
 
-    mov_reg_64bit_imm_32bit:
+mov_reg_64bit_imm_32bit:
     mov edx,eax
     mov bl,[postbyte_register]
     mov [postbyte_register],0
@@ -18600,7 +18986,7 @@ fp_qword_small_shift:
     jmp mov_store_imm_32bit
     ret
 
-    mov_sreg:
+mov_sreg:
     mov ah,al
     and al,1111b
     mov [postbyte_register],al
@@ -18619,6 +19005,7 @@ fp_qword_small_shift:
     je mov_sreg_mem
     cmp al,10h
     jne invalid_operand
+
     mov_sreg_reg:
     lods u8 [esi]
     call convert_register
@@ -18627,24 +19014,26 @@ fp_qword_small_shift:
     cmp ah,2
     jne invalid_operand_size
     mov bl,al
+
     mov_sreg_reg_size_ok:
     mov [base_code],8Eh
     jmp nomem_instruction_ready
     ret
 
-    mov_sreg_mem:
+mov_sreg_mem:
     call get_address
     mov al,[operand_size]
     or al,al
     jz mov_sreg_mem_size_ok
     cmp al,2
     jne invalid_operand_size
+
     mov_sreg_mem_size_ok:
     mov [base_code],8Eh
     jmp instruction_ready
     ret
 
-    mov_creg:
+mov_creg:
     lods u8 [esi]
     mov ah,al
     shr ah,4
@@ -18671,17 +19060,18 @@ fp_qword_small_shift:
     mov al,0F0h
     stos u8 [edi]
     mov [postbyte_register],0
+
     mov_creg_store:
     jmp nomem_instruction_ready
     ret
 
-    mov_creg_64bit:
+mov_creg_64bit:
     cmp ah,8
     je mov_creg_store
     jmp invalid_operand_size
     ret
 
-    test_instruction:
+test_instruction:
     mov [base_code],84h
     lods u8 [esi]
     call get_size_operator
@@ -18689,6 +19079,7 @@ fp_qword_small_shift:
     je test_reg
     cmp al,'['
     jne invalid_operand
+
     test_mem:
     call get_address
     push _edx _ebx _ecx
@@ -18701,6 +19092,7 @@ fp_qword_small_shift:
     je test_mem_imm
     cmp al,10h
     jne invalid_operand
+
     test_mem_reg:
     lods u8 [esi]
     call convert_register
@@ -18711,11 +19103,12 @@ fp_qword_small_shift:
     je test_mem_reg_8bit
     call operand_autodetect
     inc [base_code]
+
     test_mem_reg_8bit:
     jmp instruction_ready
     ret
 
-    test_mem_imm:
+test_mem_imm:
     mov al,[operand_size]
     cmp al,1
     jb test_mem_imm_nosize
@@ -18726,6 +19119,7 @@ fp_qword_small_shift:
     je test_mem_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     test_mem_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -18736,7 +19130,7 @@ fp_qword_small_shift:
     jmp test_mem_imm_32bit_store
     ret
 
-    test_mem_imm_nosize:
+test_mem_imm_nosize:
     call recoverable_unknown_size
     test_mem_imm_8bit:
     call get_byte_value
@@ -18748,7 +19142,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_mem_imm_16bit:
+test_mem_imm_16bit:
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -18759,7 +19153,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_mem_imm_32bit:
+test_mem_imm_32bit:
     call operand_32bit
     call get_dword_value
     test_mem_imm_32bit_store:
@@ -18771,7 +19165,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_reg:
+test_reg:
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -18786,6 +19180,7 @@ fp_qword_small_shift:
     je test_reg_imm
     cmp al,10h
     jne invalid_operand
+
     test_reg_reg:
     lods u8 [esi]
     call convert_register
@@ -18796,11 +19191,12 @@ fp_qword_small_shift:
     je test_reg_reg_8bit
     call operand_autodetect
     inc [base_code]
+
     test_reg_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    test_reg_imm:
+test_reg_imm:
     mov al,[operand_size]
     cmp al,1
     je test_reg_imm_8bit
@@ -18810,6 +19206,7 @@ fp_qword_small_shift:
     je test_reg_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     test_reg_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -18820,7 +19217,7 @@ fp_qword_small_shift:
     jmp test_reg_imm_32bit_store
     ret
 
-    test_reg_imm_8bit:
+test_reg_imm_8bit:
     call get_byte_value
     mov dl,al
     mov bl,[postbyte_register]
@@ -18834,7 +19231,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_al_imm:
+test_al_imm:
     mov [base_code],0A8h
     call store_classic_instruction_code
     mov al,dl
@@ -18842,7 +19239,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_reg_imm_16bit:
+test_reg_imm_16bit:
     call operand_16bit
     call get_word_value
     mov dx,ax
@@ -18858,7 +19255,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_ax_imm:
+test_ax_imm:
     mov [base_code],0A9h
     call store_classic_instruction_code
     mov ax,dx
@@ -18866,9 +19263,10 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_reg_imm_32bit:
+test_reg_imm_32bit:
     call operand_32bit
     call get_dword_value
+
     test_reg_imm_32bit_store:
     mov edx,eax
     mov bl,[postbyte_register]
@@ -18883,7 +19281,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_eax_imm:
+test_eax_imm:
     mov [base_code],0A9h
     call store_classic_instruction_code
     mov eax,edx
@@ -18891,18 +19289,19 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    test_reg_mem:
+test_reg_mem:
     call get_address
     mov al,[operand_size]
     cmp al,1
     je test_reg_mem_8bit
     call operand_autodetect
     inc [base_code]
+
     test_reg_mem_8bit:
     jmp instruction_ready
     ret
 
-    xchg_instruction:
+xchg_instruction:
     mov [base_code],86h
     lods u8 [esi]
     call get_size_operator
@@ -18910,6 +19309,7 @@ fp_qword_small_shift:
     je xchg_reg
     cmp al,'['
     jne invalid_operand
+
     xchg_mem:
     call get_address
     push _edx _ebx _ecx
@@ -18923,7 +19323,7 @@ fp_qword_small_shift:
     jmp invalid_operand
     ret
 
-    xchg_reg:
+xchg_reg:
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -18936,6 +19336,7 @@ fp_qword_small_shift:
     je test_reg_mem
     cmp al,10h
     jne invalid_operand
+
     xchg_reg_reg:
     lods u8 [esi]
     call convert_register
@@ -18949,6 +19350,7 @@ fp_qword_small_shift:
     or bl,bl
     jnz xchg_reg_reg_store
     mov bl,[postbyte_register]
+
     xchg_ax_reg:
     cmp [code_type],64
     jne xchg_ax_reg_ok
@@ -18956,11 +19358,13 @@ fp_qword_small_shift:
     jne xchg_ax_reg_ok
     or bl,bl
     jz xchg_reg_reg_store
+
     xchg_ax_reg_ok:
     test bl,1000b
     jz xchg_ax_reg_store
     or [rex_prefix],41h
     and bl,111b
+
     xchg_ax_reg_store:
     add bl,90h
     mov [base_code],bl
@@ -18968,14 +19372,16 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    xchg_reg_reg_store:
+xchg_reg_reg_store:
     inc [base_code]
+
     xchg_reg_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    push_instruction:
+push_instruction:
     mov [push_size],al
+
     push_next:
     lods u8 [esi]
     call get_size_operator
@@ -18985,6 +19391,7 @@ fp_qword_small_shift:
     je push_imm
     cmp al,'['
     jne invalid_operand
+
     push_mem:
     call get_address
     mov al,[operand_size]
@@ -19007,14 +19414,14 @@ fp_qword_small_shift:
     jmp push_mem_store
     ret
 
-    push_mem_16bit:
+push_mem_16bit:
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
     jmp push_mem_store
     ret
 
-    push_mem_32bit:
+push_mem_32bit:
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19023,11 +19430,12 @@ fp_qword_small_shift:
     jmp push_mem_store
     ret
 
-    push_mem_64bit:
+push_mem_64bit:
     test ah,not 8
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
+
     push_mem_store:
     mov [base_code],0FFh
     mov [postbyte_register],110b
@@ -19035,7 +19443,7 @@ fp_qword_small_shift:
     jmp push_done
     ret
 
-    push_reg:
+push_reg:
     lods u8 [esi]
     mov ah,al
     sub ah,10h
@@ -19047,6 +19455,7 @@ fp_qword_small_shift:
     jz push_reg_ok
     or [rex_prefix],41h
     and al,111b
+
     push_reg_ok:
     add al,50h
     mov [base_code],al
@@ -19058,6 +19467,7 @@ fp_qword_small_shift:
     je push_reg_32bit
     cmp al,8
     jne invalid_operand_size
+
     push_reg_64bit:
     test ah,not 8
     jnz invalid_operand_size
@@ -19066,7 +19476,7 @@ fp_qword_small_shift:
     jmp push_reg_store
     ret
 
-    push_reg_32bit:
+push_reg_32bit:
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19075,7 +19485,7 @@ fp_qword_small_shift:
     jmp push_reg_store
     ret
 
-    push_reg_16bit:
+push_reg_16bit:
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19084,7 +19494,7 @@ fp_qword_small_shift:
     jmp push_done
     ret
 
-    push_sreg:
+push_sreg:
     mov bl,al
     mov dl,[operand_size]
     mov dh,[push_size]
@@ -19105,14 +19515,14 @@ fp_qword_small_shift:
     jmp push_sreg_store
     ret
 
-    push_sreg16:
+push_sreg16:
     test dh,not 2
     jnz invalid_operand_size
     call operand_16bit
     jmp push_sreg_store
     ret
 
-    push_sreg32:
+push_sreg32:
     test dh,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19121,11 +19531,12 @@ fp_qword_small_shift:
     jmp push_sreg_store
     ret
 
-    push_sreg64:
+push_sreg64:
     test dh,not 8
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
+
     push_sreg_store:
     mov al,bl
     cmp al,40h
@@ -19142,7 +19553,7 @@ fp_qword_small_shift:
     jmp push_reg_store
     ret
 
-    push_sreg_386:
+push_sreg_386:
     sub al,4
     shl al,3
     add al,0A0h
@@ -19151,7 +19562,7 @@ fp_qword_small_shift:
     jmp push_reg_store
     ret
 
-    push_imm:
+push_imm:
     mov al,[operand_size]
     mov ah,[push_size]
     or al,al
@@ -19160,6 +19571,7 @@ fp_qword_small_shift:
     je push_imm_size_ok
     cmp al,ah
     jne invalid_operand_size
+
     push_imm_size_ok:
     cmp al,2
     je push_imm_16bit
@@ -19179,6 +19591,7 @@ fp_qword_small_shift:
     je push_imm_optimized_16bit
     cmp [code_type],32
     je push_imm_optimized_32bit
+
     push_imm_optimized_64bit:
     cmp [code_type],64
     jne illegal_instruction
@@ -19193,7 +19606,7 @@ fp_qword_small_shift:
     jmp push_imm_8bit
     ret
 
-    push_imm_optimized_32bit:
+push_imm_optimized_32bit:
     cmp [code_type],64
     je illegal_instruction
     call get_dword_value
@@ -19208,7 +19621,7 @@ fp_qword_small_shift:
     jmp push_imm_8bit
     ret
 
-    push_imm_optimized_16bit:
+push_imm_optimized_16bit:
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -19218,6 +19631,7 @@ fp_qword_small_shift:
     jl push_imm_16bit_store
     cmp ax,80h
     jge push_imm_16bit_store
+
     push_imm_8bit:
     mov ah,al
     mov [base_code],6Ah
@@ -19227,10 +19641,11 @@ fp_qword_small_shift:
     jmp push_done
     ret
 
-    push_imm_16bit:
+push_imm_16bit:
     call get_word_value
     mov dx,ax
     call operand_16bit
+
     push_imm_16bit_store:
     mov [base_code],68h
     call store_classic_instruction_code
@@ -19240,7 +19655,7 @@ fp_qword_small_shift:
     jmp push_done
     ret
 
-    push_imm_64bit:
+push_imm_64bit:
     cmp [code_type],64
     jne illegal_instruction
     call get_simm32
@@ -19248,18 +19663,20 @@ fp_qword_small_shift:
     jmp push_imm_32bit_store
     ret
 
-    push_imm_32bit:
+push_imm_32bit:
     cmp [code_type],64
     je illegal_instruction
     call get_dword_value
     mov edx,eax
     call operand_32bit
+
     push_imm_32bit_store:
     mov [base_code],68h
     call store_classic_instruction_code
     mov eax,edx
     call mark_relocation
     stos dword [edi]
+
     push_done:
     lods u8 [esi]
     dec esi
@@ -19267,16 +19684,13 @@ fp_qword_small_shift:
     je instruction_assembled
     or al,al
     jz instruction_assembled
-    ;        mov [operand_size],0
-    ;        mov [operand_flags],0
-    ;        mov [operand_prefix],0
-    ;        mov [rex_prefix],0
     and dword [operand_size],0
     jmp push_next
     ret
 
-    pop_instruction:
+pop_instruction:
     mov [push_size],al
+
     pop_next:
     lods u8 [esi]
     call get_size_operator
@@ -19284,6 +19698,7 @@ fp_qword_small_shift:
     je pop_reg
     cmp al,'['
     jne invalid_operand
+
     pop_mem:
     call get_address
     mov al,[operand_size]
@@ -19306,14 +19721,14 @@ fp_qword_small_shift:
     jmp pop_mem_store
     ret
 
-    pop_mem_16bit:
+pop_mem_16bit:
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
     jmp pop_mem_store
     ret
 
-    pop_mem_32bit:
+pop_mem_32bit:
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19322,11 +19737,12 @@ fp_qword_small_shift:
     jmp pop_mem_store
     ret
 
-    pop_mem_64bit:
+pop_mem_64bit:
     test ah,not 8
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
+
     pop_mem_store:
     mov [base_code],08Fh
     mov [postbyte_register],0
@@ -19334,7 +19750,7 @@ fp_qword_small_shift:
     jmp pop_done
     ret
 
-    pop_reg:
+pop_reg:
     lods u8 [esi]
     mov ah,al
     sub ah,10h
@@ -19346,6 +19762,7 @@ fp_qword_small_shift:
     jz pop_reg_ok
     or [rex_prefix],41h
     and al,111b
+
     pop_reg_ok:
     add al,58h
     mov [base_code],al
@@ -19360,7 +19777,7 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    pop_reg_64bit:
+pop_reg_64bit:
     test ah,not 8
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19368,7 +19785,7 @@ fp_qword_small_shift:
     jmp pop_reg_store
     ret
 
-    pop_reg_32bit:
+pop_reg_32bit:
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19377,12 +19794,14 @@ fp_qword_small_shift:
     jmp pop_reg_store
     ret
 
-    pop_reg_16bit:
+pop_reg_16bit:
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
+
     pop_reg_store:
     call store_classic_instruction_code
+
     pop_done:
     lods u8 [esi]
     dec esi
@@ -19390,15 +19809,11 @@ fp_qword_small_shift:
     je instruction_assembled
     or al,al
     jz instruction_assembled
-    ;        mov [operand_size],0
-    ;        mov [operand_flags],0
-    ;        mov [operand_prefix],0
-    ;        mov [rex_prefix],0
     and dword [operand_size],0
     jmp pop_next
     ret
 
-    pop_sreg:
+pop_sreg:
     mov dl,[operand_size]
     mov dh,[push_size]
     cmp al,32h
@@ -19421,14 +19836,14 @@ fp_qword_small_shift:
     jmp pop_sreg_store
     ret
 
-    pop_sreg16:
+pop_sreg16:
     test dh,not 2
     jnz invalid_operand_size
     call operand_16bit
     jmp pop_sreg_store
     ret
 
-    pop_sreg32:
+pop_sreg32:
     test dh,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19437,11 +19852,12 @@ fp_qword_small_shift:
     jmp pop_sreg_store
     ret
 
-    pop_sreg64:
+pop_sreg64:
     test dh,not 8
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
+
     pop_sreg_store:
     mov al,bl
     cmp al,40h
@@ -19458,7 +19874,7 @@ fp_qword_small_shift:
     jmp pop_reg_store
     ret
 
-    pop_cs:
+pop_cs:
     cmp [code_type],16
     jne illegal_instruction
     cmp dl,2
@@ -19469,6 +19885,7 @@ fp_qword_small_shift:
     je pop_cs_store
     or dh,dh
     jnz illegal_instruction
+
     pop_cs_store:
     test dh,not 2
     jnz invalid_operand_size
@@ -19477,7 +19894,7 @@ fp_qword_small_shift:
     jmp pop_done
     ret
 
-    pop_sreg_386:
+pop_sreg_386:
     sub al,4
     shl al,3
     add al,0A1h
@@ -19486,7 +19903,7 @@ fp_qword_small_shift:
     jmp pop_reg_store
     ret
 
-    inc_instruction:
+inc_instruction:
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
@@ -19495,6 +19912,7 @@ fp_qword_small_shift:
     cmp al,'['
     je inc_mem
     jne invalid_operand
+
     inc_mem:
     call get_address
     mov al,[operand_size]
@@ -19508,8 +19926,9 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    inc_mem_nosize:
+inc_mem_nosize:
     call recoverable_unknown_size
+
     inc_mem_8bit:
     mov al,0FEh
     xchg al,[base_code]
@@ -19517,7 +19936,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    inc_reg:
+inc_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -19539,13 +19958,14 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    inc_reg_long_form:
+inc_reg_long_form:
     inc [base_code]
+
     inc_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    set_instruction:
+set_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -19554,6 +19974,7 @@ fp_qword_small_shift:
     je set_reg
     cmp al,'['
     jne invalid_operand
+
     set_mem:
     call get_address
     cmp [operand_size],1
@@ -19562,7 +19983,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    set_reg:
+set_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,1
@@ -19572,7 +19993,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    arpl_instruction:
+arpl_instruction:
     cmp [code_type],64
     je illegal_instruction
     mov [base_code],63h
@@ -19593,7 +20014,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    arpl_reg:
+arpl_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,2
@@ -19607,7 +20028,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    bound_instruction:
+bound_instruction:
     cmp [code_type],64
     je illegal_instruction
     call take_register
@@ -19625,19 +20046,21 @@ fp_qword_small_shift:
     je bound_store
     cmp al,4
     jne invalid_operand_size
+
     bound_store:
     call operand_autodetect
     mov [base_code],62h
     jmp instruction_ready
     ret
 
-    enter_instruction:
+enter_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp ah,2
     je enter_imm16_size_ok
     or ah,ah
     jnz invalid_operand_size
+
     enter_imm16_size_ok:
     cmp al,'('
     jne invalid_operand
@@ -19648,6 +20071,7 @@ fp_qword_small_shift:
     jne invalid_use_of_symbol
     test eax,eax
     js value_out_of_range
+
     enter_imm16_ok:
     push _eax
     mov [operand_size],0
@@ -19660,6 +20084,7 @@ fp_qword_small_shift:
     je enter_imm8_size_ok
     or ah,ah
     jnz invalid_operand_size
+
     enter_imm8_size_ok:
     cmp al,'('
     jne invalid_operand
@@ -19668,6 +20093,7 @@ fp_qword_small_shift:
     jne enter_imm8_ok
     test eax,eax
     js value_out_of_range
+
     enter_imm8_ok:
     mov dl,al
     pop _ebx
@@ -19680,29 +20106,32 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    ret_instruction_only64:
+ret_instruction_only64:
     cmp [code_type],64
     jne illegal_instruction
     jmp ret_instruction
     ret
 
-    ret_instruction_32bit_except64:
+ret_instruction_32bit_except64:
     cmp [code_type],64
     je illegal_instruction
+
     ret_instruction_32bit:
     call operand_32bit
     jmp ret_instruction
     ret
 
-    ret_instruction_16bit:
+ret_instruction_16bit:
     call operand_16bit
     jmp ret_instruction
     ret
 
-    ret_instruction_64bit:
+ret_instruction_64bit:
     call operand_64bit
+
     ret_instruction:
     and [prefix_flags],not 10h
+
     ret_common:
     mov [base_code],al
     lods u8 [esi]
@@ -19720,7 +20149,7 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    ret_imm:
+ret_imm:
     cmp al,'('
     jne invalid_operand
     call get_word_value
@@ -19730,11 +20159,13 @@ fp_qword_small_shift:
     jne invalid_use_of_symbol
     test eax,eax
     js value_out_of_range
+
     ret_imm_ok:
     cmp [size_declared],0
     jne ret_imm_store
     or ax,ax
     jz simple_ret
+
     ret_imm_store:
     mov dx,ax
     call store_classic_instruction_code
@@ -19743,31 +20174,32 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    simple_ret:
+simple_ret:
     inc [base_code]
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
-    retf_instruction:
+retf_instruction:
     cmp [code_type],64
     jne ret_common
-    retf_instruction_64bit:
+
+retf_instruction_64bit:
     call operand_64bit
     jmp ret_common
     ret
 
-    retf_instruction_32bit:
+retf_instruction_32bit:
     call operand_32bit
     jmp ret_common
     ret
 
-    retf_instruction_16bit:
+retf_instruction_16bit:
     call operand_16bit
     jmp ret_common
     ret
 
-    lea_instruction:
+lea_instruction:
     mov [base_code],8Dh
     call take_register
     mov [postbyte_register],al
@@ -19789,7 +20221,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    ls_instruction:
+ls_instruction:
     or al,al
     jz les_instruction
     cmp al,3
@@ -19800,16 +20232,18 @@ fp_qword_small_shift:
     jmp ls_code_ok
     ret
 
-    les_instruction:
+les_instruction:
     mov [base_code],0C4h
     jmp ls_short_code
     ret
 
-    lds_instruction:
+lds_instruction:
     mov [base_code],0C5h
+
     ls_short_code:
     cmp [code_type],64
     je illegal_instruction
+
     ls_code_ok:
     call take_register
     mov [postbyte_register],al
@@ -19832,22 +20266,22 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    ls_16bit:
+ls_16bit:
     call operand_16bit
     jmp instruction_ready
     ret
 
-    ls_32bit:
+ls_32bit:
     call operand_32bit
     jmp instruction_ready
     ret
 
-    ls_64bit:
+ls_64bit:
     call operand_64bit
     jmp instruction_ready
     ret
 
-    sh_instruction:
+sh_instruction:
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -19855,6 +20289,7 @@ fp_qword_small_shift:
     je sh_reg
     cmp al,'['
     jne invalid_operand
+
     sh_mem:
     call get_address
     push _edx _ebx _ecx
@@ -19870,6 +20305,7 @@ fp_qword_small_shift:
     je sh_mem_imm
     cmp al,10h
     jne invalid_operand
+
     sh_mem_reg:
     lods u8 [esi]
     cmp al,11h
@@ -19883,19 +20319,21 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    sh_mem_cl_nosize:
+sh_mem_cl_nosize:
     call recoverable_unknown_size
+
     sh_mem_cl_8bit:
     mov [base_code],0D2h
     jmp instruction_ready
     ret
 
-    sh_mem_imm:
+sh_mem_imm:
     mov al,[operand_size]
     or al,al
     jz sh_mem_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     sh_mem_imm_size_ok:
     call get_byte_value
     mov u8 [value],al
@@ -19911,13 +20349,14 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    sh_mem_1:
+sh_mem_1:
     mov [base_code],0D1h
     jmp instruction_ready
     ret
 
-    sh_mem_imm_nosize:
+sh_mem_imm_nosize:
     call recoverable_unknown_size
+
     sh_mem_imm_8bit:
     cmp u8 [value],1
     je sh_mem_1_8bit
@@ -19926,12 +20365,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    sh_mem_1_8bit:
+sh_mem_1_8bit:
     mov [base_code],0D0h
     jmp instruction_ready
     ret
 
-    sh_reg:
+sh_reg:
     lods u8 [esi]
     call convert_register
     mov bx,ax
@@ -19945,6 +20384,7 @@ fp_qword_small_shift:
     je sh_reg_imm
     cmp al,10h
     jne invalid_operand
+
     sh_reg_reg:
     lods u8 [esi]
     cmp al,11h
@@ -19957,17 +20397,18 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    sh_reg_cl_8bit:
+sh_reg_cl_8bit:
     mov [base_code],0D2h
     jmp nomem_instruction_ready
     ret
 
-    sh_reg_imm:
+sh_reg_imm:
     mov al,[operand_size]
     or al,al
     jz sh_reg_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     sh_reg_imm_size_ok:
     push _ebx
     call get_byte_value
@@ -19986,12 +20427,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    sh_reg_1:
+sh_reg_1:
     mov [base_code],0D1h
     jmp nomem_instruction_ready
     ret
 
-    sh_reg_imm_8bit:
+sh_reg_imm_8bit:
     cmp dl,1
     je sh_reg_1_8bit
     mov [base_code],0C0h
@@ -20001,12 +20442,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    sh_reg_1_8bit:
+sh_reg_1_8bit:
     mov [base_code],0D0h
     jmp nomem_instruction_ready
     ret
 
-    shd_instruction:
+shd_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -20044,12 +20485,13 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    shd_mem_reg_imm:
+shd_mem_reg_imm:
     mov al,[operand_size]
     or al,al
     jz shd_mem_reg_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     shd_mem_reg_imm_size_ok:
     call get_byte_value
     mov u8 [value],al
@@ -20059,7 +20501,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    shd_reg:
+shd_reg:
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -20090,12 +20532,13 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    shd_reg_reg_imm:
+shd_reg_reg_imm:
     mov al,[operand_size]
     or al,al
     jz shd_reg_reg_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     shd_reg_reg_imm_size_ok:
     call get_byte_value
     mov dl,al
@@ -20136,17 +20579,18 @@ fp_qword_small_shift:
     cmp ah,2
     jne invalid_operand_size
     inc [extended_code]
+
     movx_mem_store:
     call operand_autodetect
     jmp instruction_ready
     ret
 
-    movx_unknown_size:
+movx_unknown_size:
     call recoverable_unknown_size
     jmp movx_mem_store
     ret
 
-    movx_reg:
+movx_reg:
     lods u8 [esi]
     call convert_register
     pop _ebx
@@ -20160,18 +20604,18 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    movx_reg_8bit:
+movx_reg_8bit:
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
-    movx_reg_16bit:
+movx_reg_16bit:
     call operand_autodetect
     inc [extended_code]
     jmp nomem_instruction_ready
     ret
 
-    movsxd_instruction:
+movsxd_instruction:
     mov [base_code],al
     call take_register
     mov [postbyte_register],al
@@ -20192,12 +20636,13 @@ fp_qword_small_shift:
     je movsxd_mem_store
     cmp [operand_size],0
     jne invalid_operand_size
+
     movsxd_mem_store:
     call operand_64bit
     jmp instruction_ready
     ret
 
-    movsxd_reg:
+movsxd_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -20207,7 +20652,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    bt_instruction:
+bt_instruction:
     mov [postbyte_register],al
     shl al,3
     add al,83h
@@ -20230,6 +20675,7 @@ fp_qword_small_shift:
     jne bt_mem_reg
     cmp u8 [esi+2],'('
     je bt_mem_imm
+
     bt_mem_reg:
     call take_register
     mov [postbyte_register],al
@@ -20239,7 +20685,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    bt_mem_imm:
+bt_mem_imm:
     xor al,al
     xchg al,[operand_size]
     push _eax
@@ -20252,6 +20698,7 @@ fp_qword_small_shift:
     jz bt_mem_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     bt_mem_imm_size_ok:
     call get_byte_value
     mov u8 [value],al
@@ -20259,6 +20706,7 @@ fp_qword_small_shift:
     or al,al
     jz bt_mem_imm_nosize
     call operand_autodetect
+
     bt_mem_imm_store:
     pop _ecx _ebx _edx
     mov [extended_code],0BAh
@@ -20266,12 +20714,12 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    bt_mem_imm_nosize:
+bt_mem_imm_nosize:
     call recoverable_unknown_size
     jmp bt_mem_imm_store
     ret
 
-    bt_reg:
+bt_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20284,6 +20732,7 @@ fp_qword_small_shift:
     jne bt_reg_reg
     cmp u8 [esi+2],'('
     je bt_reg_imm
+
     bt_reg_reg:
     call take_register
     mov [postbyte_register],al
@@ -20292,7 +20741,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    bt_reg_imm:
+bt_reg_imm:
     xor al,al
     xchg al,[operand_size]
     push _eax _ebx
@@ -20305,6 +20754,7 @@ fp_qword_small_shift:
     jz bt_reg_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     bt_reg_imm_size_ok:
     call get_byte_value
     mov u8 [value],al
@@ -20318,7 +20768,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    bs_instruction:
+bs_instruction:
     mov [extended_code],al
     mov [base_code],0Fh
     call get_reg_mem
@@ -20328,13 +20778,13 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    bs_reg_reg:
+bs_reg_reg:
     mov al,ah
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
-    get_reg_mem:
+get_reg_mem:
     call take_register
     mov [postbyte_register],al
     lods u8 [esi]
@@ -20350,14 +20800,14 @@ fp_qword_small_shift:
     clc
     ret
 
-    get_reg_reg:
+get_reg_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
     stc
     ret
 
-    imul_instruction:
+imul_instruction:
     mov [base_code],0F6h
     mov [postbyte_register],5
     lods u8 [esi]
@@ -20366,6 +20816,7 @@ fp_qword_small_shift:
     je imul_reg
     cmp al,'['
     jne invalid_operand
+
     imul_mem:
     call get_address
     mov al,[operand_size]
@@ -20377,13 +20828,14 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    imul_mem_nosize:
+imul_mem_nosize:
     call recoverable_unknown_size
+
     imul_mem_8bit:
     jmp instruction_ready
     ret
 
-    imul_reg:
+imul_reg:
     lods u8 [esi]
     call convert_register
     cmp u8 [esi],','
@@ -20394,11 +20846,12 @@ fp_qword_small_shift:
     je imul_reg_8bit
     call operand_autodetect
     inc [base_code]
+
     imul_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    imul_reg_:
+imul_reg_:
     mov [postbyte_register],al
     inc esi
     cmp u8 [esi],'('
@@ -20407,6 +20860,7 @@ fp_qword_small_shift:
     jne imul_reg_noimm
     cmp u8 [esi+2],'('
     je imul_reg_imm
+
     imul_reg_noimm:
     lods u8 [esi]
     call get_size_operator
@@ -20414,6 +20868,7 @@ fp_qword_small_shift:
     je imul_reg_reg
     cmp al,'['
     jne invalid_operand
+
     imul_reg_mem:
     call get_address
     push _edx _ebx _ecx
@@ -20427,7 +20882,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    imul_reg_mem_imm:
+imul_reg_mem_imm:
     inc esi
     lods u8 [esi]
     call get_size_operator
@@ -20440,6 +20895,7 @@ fp_qword_small_shift:
     je imul_reg_mem_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     imul_reg_mem_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -20450,7 +20906,7 @@ fp_qword_small_shift:
     jmp imul_reg_mem_imm_32bit_ok
     ret
 
-    imul_reg_mem_imm_16bit:
+imul_reg_mem_imm_16bit:
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -20462,6 +20918,7 @@ fp_qword_small_shift:
     jl imul_reg_mem_imm_16bit_store
     cmp ax,80h
     jl imul_reg_mem_imm_8bit_store
+
     imul_reg_mem_imm_16bit_store:
     pop _ecx _ebx _edx
     mov [base_code],69h
@@ -20469,9 +20926,10 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    imul_reg_mem_imm_32bit:
+imul_reg_mem_imm_32bit:
     call operand_32bit
     call get_dword_value
+
     imul_reg_mem_imm_32bit_ok:
     mov dword [value],eax
     cmp [value_type],0
@@ -20482,6 +20940,7 @@ fp_qword_small_shift:
     jl imul_reg_mem_imm_32bit_store
     cmp eax,80h
     jl imul_reg_mem_imm_8bit_store
+
     imul_reg_mem_imm_32bit_store:
     pop _ecx _ebx _edx
     mov [base_code],69h
@@ -20489,20 +20948,20 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    imul_reg_mem_imm_8bit_store:
+imul_reg_mem_imm_8bit_store:
     pop _ecx _ebx _edx
     mov [base_code],6Bh
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
-    imul_reg_imm:
+imul_reg_imm:
     mov bl,[postbyte_register]
     dec esi
     jmp imul_reg_reg_imm
     ret
 
-    imul_reg_reg:
+imul_reg_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20515,7 +20974,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    imul_reg_reg_imm:
+imul_reg_reg_imm:
     inc esi
     lods u8 [esi]
     call get_size_operator
@@ -20528,6 +20987,7 @@ fp_qword_small_shift:
     je imul_reg_reg_imm_32bit
     cmp al,8
     jne invalid_operand_size
+
     imul_reg_reg_imm_64bit:
     cmp [size_declared],0
     jne long_immediate_not_encodable
@@ -20539,7 +20999,7 @@ fp_qword_small_shift:
     jmp imul_reg_reg_imm_32bit_ok
     ret
 
-    imul_reg_reg_imm_16bit:
+imul_reg_reg_imm_16bit:
     call operand_16bit
     push _ebx
     call get_word_value
@@ -20553,6 +21013,7 @@ fp_qword_small_shift:
     jl imul_reg_reg_imm_16bit_store
     cmp ax,80h
     jl imul_reg_reg_imm_8bit_store
+
     imul_reg_reg_imm_16bit_store:
     mov [base_code],69h
     call store_nomem_instruction
@@ -20562,10 +21023,11 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    imul_reg_reg_imm_32bit:
+imul_reg_reg_imm_32bit:
     call operand_32bit
     push _ebx
     call get_dword_value
+
     imul_reg_reg_imm_32bit_ok:
     pop _ebx
     mov edx,eax
@@ -20577,6 +21039,7 @@ fp_qword_small_shift:
     jl imul_reg_reg_imm_32bit_store
     cmp eax,80h
     jl imul_reg_reg_imm_8bit_store
+
     imul_reg_reg_imm_32bit_store:
     mov [base_code],69h
     call store_nomem_instruction
@@ -20586,7 +21049,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    imul_reg_reg_imm_8bit_store:
+imul_reg_reg_imm_8bit_store:
     mov [base_code],6Bh
     call store_nomem_instruction
     mov al,dl
@@ -20594,7 +21057,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    in_instruction:
+in_instruction:
     call take_register
     or al,al
     jnz invalid_operand
@@ -20613,7 +21076,7 @@ fp_qword_small_shift:
     jmp invalid_operand
     ret
 
-    in_reg:
+in_reg:
     lods u8 [esi]
     cmp al,22h
     jne invalid_operand
@@ -20624,6 +21087,7 @@ fp_qword_small_shift:
     je in_ax_dx
     cmp al,4
     jne invalid_operand_size
+
     in_ax_dx:
     call operand_autodetect
     mov [base_code],0EDh
@@ -20631,18 +21095,19 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    in_al_dx:
+in_al_dx:
     mov al,0ECh
     stos u8 [edi]
     jmp instruction_assembled
     ret
 
-    in_imm:
+in_imm:
     mov al,[operand_size]
     or al,al
     jz in_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     in_imm_size_ok:
     call get_byte_value
     mov dl,al
@@ -20653,6 +21118,7 @@ fp_qword_small_shift:
     je in_ax_imm
     cmp al,4
     jne invalid_operand_size
+
     in_ax_imm:
     call operand_autodetect
     mov [base_code],0E5h
@@ -20662,7 +21128,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    in_al_imm:
+in_al_imm:
     mov al,0E4h
     stos u8 [edi]
     mov al,dl
@@ -20670,7 +21136,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    out_instruction:
+out_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
@@ -20694,6 +21160,7 @@ fp_qword_small_shift:
     je out_dx_ax
     cmp al,4
     jne invalid_operand_size
+
     out_dx_ax:
     call operand_autodetect
     mov [base_code],0EFh
@@ -20701,18 +21168,19 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    out_dx_al:
+out_dx_al:
     mov al,0EEh
     stos u8 [edi]
     jmp instruction_assembled
     ret
 
-    out_imm:
+out_imm:
     mov al,[operand_size]
     or al,al
     jz out_imm_size_ok
     cmp al,1
     jne invalid_operand_size
+
     out_imm_size_ok:
     call get_byte_value
     mov dl,al
@@ -20730,6 +21198,7 @@ fp_qword_small_shift:
     je out_imm_ax
     cmp al,4
     jne invalid_operand_size
+
     out_imm_ax:
     call operand_autodetect
     mov [base_code],0E7h
@@ -20739,24 +21208,26 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    out_imm_al:
+out_imm_al:
     mov al,0E6h
     stos u8 [edi]
     mov al,dl
     stos u8 [edi]
     jmp instruction_assembled
+    ret
 
-    call_instruction:
+call_instruction:
     mov [postbyte_register],10b
     mov [base_code],0E8h
     mov [extended_code],9Ah
     jmp process_jmp
     ret
 
-    jmp_instruction:
+jmp_instruction:
     mov [postbyte_register],100b
     mov [base_code],0E9h
     mov [extended_code],0EAh
+
     process_jmp:
     lods u8 [esi]
     call get_jump_operator
@@ -20766,6 +21237,7 @@ fp_qword_small_shift:
     jnz illegal_instruction
     mov [jump_type],2
     and [prefix_flags],not 10h
+
     jmp_type_ok:
     call get_size_operator
     cmp al,'('
@@ -20775,6 +21247,7 @@ fp_qword_small_shift:
     je jmp_reg
     cmp al,'['
     jne invalid_operand
+
     jmp_mem:
     cmp [jump_type],1
     je illegal_instruction
@@ -20796,17 +21269,19 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    jmp_mem_size_not_specified:
+jmp_mem_size_not_specified:
     cmp [jump_type],3
     je jmp_mem_far
     cmp [jump_type],2
     je jmp_mem_near
     call recoverable_unknown_size
+
     jmp_mem_near:
     cmp [code_type],16
     je jmp_mem_16bit
     cmp [code_type],32
     je jmp_mem_near_32bit
+
     jmp_mem_64bit:
     cmp [jump_type],3
     je invalid_operand_size
@@ -20815,11 +21290,12 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    jmp_mem_far:
+jmp_mem_far:
     cmp [code_type],16
     je jmp_mem_far_32bit
     jmp_mem_48bit:
     call operand_32bit
+
     jmp_mem_far_store:
     cmp [jump_type],2
     je invalid_operand_size
@@ -20827,23 +21303,24 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    jmp_mem_80bit:
+jmp_mem_80bit:
     call operand_64bit
     jmp jmp_mem_far_store
     ret
 
-    jmp_mem_far_32bit:
+jmp_mem_far_32bit:
     call operand_16bit
     jmp jmp_mem_far_store
     ret
 
-    jmp_mem_32bit:
+jmp_mem_32bit:
     cmp [jump_type],3
     je jmp_mem_far_32bit
     cmp [jump_type],2
     je jmp_mem_near_32bit
     cmp [code_type],16
     je jmp_mem_far_32bit
+
     jmp_mem_near_32bit:
     cmp [code_type],64
     je illegal_instruction
@@ -20851,14 +21328,14 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    jmp_mem_16bit:
+jmp_mem_16bit:
     cmp [jump_type],3
     je invalid_operand_size
     call operand_16bit
     jmp instruction_ready
     ret
 
-    jmp_reg:
+jmp_reg:
     test [jump_type],1
     jnz invalid_operand
     lods u8 [esi]
@@ -20871,25 +21348,26 @@ fp_qword_small_shift:
     je jmp_reg_32bit
     cmp al,8
     jne invalid_operand_size
+
     jmp_reg_64bit:
     cmp [code_type],64
     jne illegal_instruction
     jmp nomem_instruction_ready
     ret
 
-    jmp_reg_32bit:
+jmp_reg_32bit:
     cmp [code_type],64
     je illegal_instruction
     call operand_32bit
     jmp nomem_instruction_ready
     ret
 
-    jmp_reg_16bit:
+jmp_reg_16bit:
     call operand_16bit
     jmp nomem_instruction_ready
     ret
 
-    jmp_imm:
+jmp_imm:
     cmp u8 [esi],'.'
     je invalid_value
     mov ebx,esi
@@ -20900,6 +21378,7 @@ fp_qword_small_shift:
     je jmp_far
     cmp [jump_type],3
     je invalid_operand
+
     jmp_near:
     mov al,[operand_size]
     cmp al,2
@@ -20922,17 +21401,20 @@ fp_qword_small_shift:
     jne jmp_imm_32bit_prefix_ok
     mov u8 [edi],66h
     inc edi
+
     jmp_imm_32bit_prefix_ok:
     call calculate_jump_offset
     cdq
     call check_for_short_jump
     jc jmp_short
+
     jmp_imm_32bit_store:
     mov edx,eax
     sub edx,3
     jno jmp_imm_32bit_ok
     cmp [code_type],64
     je jump_out_of_range
+
     jmp_imm_32bit_ok:
     mov al,[base_code]
     stos u8 [edi]
@@ -20942,7 +21424,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    jmp_imm_64bit:
+jmp_imm_64bit:
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -20953,6 +21435,7 @@ fp_qword_small_shift:
     jne jump_out_of_range
     call check_for_short_jump
     jnc jmp_imm_32bit_store
+
     jmp_short:
     mov ah,al
     mov al,0EBh
@@ -20960,12 +21443,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    jmp_imm_16bit:
+jmp_imm_16bit:
     call get_address_word_value
     cmp [code_type],16
     je jmp_imm_16bit_prefix_ok
     mov u8 [edi],66h
     inc edi
+
     jmp_imm_16bit_prefix_ok:
     call calculate_jump_offset
     cwde
@@ -20983,14 +21467,14 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    calculate_jump_offset:
+calculate_jump_offset:
     add edi,2
     mov ebp,[addressing_space]
     call calculate_relative_offset
     sub edi,2
     ret
 
-    check_for_short_jump:
+check_for_short_jump:
     cmp [jump_type],1
     je forced_short
     ja no_short_jump
@@ -21002,27 +21486,30 @@ fp_qword_small_shift:
     jb short_jump
     cmp eax,-80h
     jae short_jump
+
     no_short_jump:
     clc
     ret
 
-    forced_short:
+forced_short:
     cmp [base_code],0E8h
     je illegal_instruction
     cmp [next_pass_needed],0
     jne jmp_short_value_type_ok
     cmp [value_type],0
     jne invalid_use_of_symbol
+
     jmp_short_value_type_ok:
     cmp eax,-80h
     jae short_jump
     cmp eax,80h
     jae jump_out_of_range
+
     short_jump:
     stc
     ret
 
-    jump_out_of_range:
+jump_out_of_range:
     cmp [error_line],0
     jne instruction_assembled
     mov _eax,u64[current_line]
@@ -21031,7 +21518,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    jmp_far:
+jmp_far:
     cmp [jump_type],2
     je invalid_operand
     cmp [code_type],64
@@ -21065,6 +21552,7 @@ fp_qword_small_shift:
     mov ax,bx
     call mark_relocation
     stos u16 [edi]
+
     jmp_far_segment:
     pop u64[symbol_identifier] _eax
     mov [value_type],al
@@ -21074,7 +21562,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    jmp_far_32bit:
+jmp_far_32bit:
     call get_dword_value
     mov ebx,eax
     call operand_32bit
@@ -21085,7 +21573,7 @@ fp_qword_small_shift:
     jmp jmp_far_segment
     ret
 
-    conditional_jump:
+conditional_jump:
     mov [base_code],al
     and [prefix_flags],not 10h
     lods u8 [esi]
@@ -21118,17 +21606,20 @@ fp_qword_small_shift:
     jne conditional_jump_32bit_prefix_ok
     mov u8 [edi],66h
     inc edi
+
     conditional_jump_32bit_prefix_ok:
     call calculate_jump_offset
     cdq
     call check_for_short_jump
     jc conditional_jump_short
+
     conditional_jump_32bit_store:
     mov edx,eax
     sub edx,4
     jno conditional_jump_32bit_range_ok
     cmp [code_type],64
     je jump_out_of_range
+
     conditional_jump_32bit_range_ok:
     mov ah,[base_code]
     add ah,10h
@@ -21140,7 +21631,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    conditional_jump_64bit:
+conditional_jump_64bit:
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21151,6 +21642,7 @@ fp_qword_small_shift:
     jne jump_out_of_range
     call check_for_short_jump
     jnc conditional_jump_32bit_store
+
     conditional_jump_short:
     mov ah,al
     mov al,[base_code]
@@ -21158,12 +21650,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    conditional_jump_16bit:
+conditional_jump_16bit:
     call get_address_word_value
     cmp [code_type],16
     je conditional_jump_16bit_prefix_ok
     mov u8 [edi],66h
     inc edi
+
     conditional_jump_16bit_prefix_ok:
     call calculate_jump_offset
     cwde
@@ -21183,7 +21676,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    loop_instruction_16bit:
+loop_instruction_16bit:
     cmp [code_type],64
     je illegal_instruction
     cmp [code_type],16
@@ -21192,16 +21685,17 @@ fp_qword_small_shift:
     jmp loop_instruction
     ret
 
-    loop_instruction_32bit:
+loop_instruction_32bit:
     cmp [code_type],32
     je loop_instruction
     mov [operand_prefix],67h
     jmp loop_instruction
     ret
 
-    loop_instruction_64bit:
+loop_instruction_64bit:
     cmp [code_type],64
     jne illegal_instruction
+
     loop_instruction:
     mov [base_code],al
     lods u8 [esi]
@@ -21226,6 +21720,7 @@ fp_qword_small_shift:
     je loop_jump_16bit
     cmp [code_type],64
     je loop_jump_64bit
+
     loop_jump_32bit:
     cmp [code_type],64
     je invalid_operand_size
@@ -21234,10 +21729,12 @@ fp_qword_small_shift:
     jne loop_jump_32bit_prefix_ok
     mov u8 [edi],66h
     inc edi
+
     loop_jump_32bit_prefix_ok:
     call loop_counter_size
     call calculate_jump_offset
     cdq
+
     make_loop_jump:
     call check_for_short_jump
     jc conditional_jump_short
@@ -21245,7 +21742,7 @@ fp_qword_small_shift:
     jmp jump_out_of_range
     ret
 
-    loop_counter_size:
+loop_counter_size:
     cmp [operand_prefix],0
     je loop_counter_size_ok
     push _eax
@@ -21255,7 +21752,7 @@ fp_qword_small_shift:
     loop_counter_size_ok:
     ret
 
-    loop_jump_64bit:
+loop_jump_64bit:
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21268,20 +21765,22 @@ fp_qword_small_shift:
     jmp make_loop_jump
     ret
 
-    loop_jump_16bit:
+loop_jump_16bit:
     call get_address_word_value
     cmp [code_type],16
     je loop_jump_16bit_prefix_ok
     mov u8 [edi],66h
     inc edi
+
     loop_jump_16bit_prefix_ok:
     call loop_counter_size
     call calculate_jump_offset
     cwde
     cdq
     jmp make_loop_jump
+    ret
 
-    movs_instruction:
+movs_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21328,12 +21827,12 @@ fp_qword_small_shift:
     jmp movs_store
     ret
 
-    movs_address_32bit:
+movs_address_32bit:
     call address_32bit_prefix
     jmp movs_store
     ret
 
-    movs_address_16bit:
+movs_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21341,6 +21840,7 @@ fp_qword_small_shift:
     xor ebx,ebx
     call store_segment_prefix_if_necessary
     mov al,0A4h
+
     movs_check_size:
     mov bl,[operand_size]
     cmp bl,1
@@ -21358,7 +21858,7 @@ fp_qword_small_shift:
     jmp simple_instruction
     ret
 
-    lods_instruction:
+lods_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21379,15 +21879,16 @@ fp_qword_small_shift:
     jmp lods_store
     ret
 
-    lods_address_32bit:
+lods_address_32bit:
     call address_32bit_prefix
     jmp lods_store
     ret
 
-    lods_address_16bit:
+lods_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
+
     lods_store:
     xor ebx,ebx
     call store_segment_prefix_if_necessary
@@ -21395,7 +21896,7 @@ fp_qword_small_shift:
     jmp movs_check_size
     ret
 
-    stos_instruction:
+stos_instruction:
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
@@ -21417,15 +21918,16 @@ fp_qword_small_shift:
     jmp stos_store
     ret
 
-    stos_address_32bit:
+stos_address_32bit:
     call address_32bit_prefix
     jmp stos_store
     ret
 
-    stos_address_16bit:
+stos_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
+
     stos_store:
     cmp [segment_register],1
     ja invalid_address
@@ -21433,7 +21935,7 @@ fp_qword_small_shift:
     jmp movs_check_size
     ret
 
-    cmps_instruction:
+cmps_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21482,15 +21984,16 @@ fp_qword_small_shift:
     jmp cmps_store
     ret
 
-    cmps_address_32bit:
+cmps_address_32bit:
     call address_32bit_prefix
     jmp cmps_store
     ret
 
-    cmps_address_16bit:
+cmps_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
+
     cmps_store:
     xor ebx,ebx
     call store_segment_prefix_if_necessary
@@ -21498,7 +22001,7 @@ fp_qword_small_shift:
     jmp movs_check_size
     ret
 
-    ins_instruction:
+ins_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21519,15 +22022,16 @@ fp_qword_small_shift:
     jmp ins_store
     ret
 
-    ins_address_32bit:
+ins_address_32bit:
     call address_32bit_prefix
     jmp ins_store
     ret
 
-    ins_address_16bit:
+ins_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
+
     ins_store:
     cmp [segment_register],1
     ja invalid_address
@@ -21541,13 +22045,14 @@ fp_qword_small_shift:
     cmp al,22h
     jne invalid_operand
     mov al,6Ch
+
     ins_check_size:
     cmp [operand_size],8
     jne movs_check_size
     jmp invalid_operand_size
     ret
 
-    outs_instruction:
+outs_instruction:
     lods u8 [esi]
     cmp al,10h
     jne invalid_operand
@@ -21577,15 +22082,16 @@ fp_qword_small_shift:
     jmp outs_store
     ret
 
-    outs_address_32bit:
+outs_address_32bit:
     call address_32bit_prefix
     jmp outs_store
     ret
 
-    outs_address_16bit:
+outs_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
+
     outs_store:
     xor ebx,ebx
     call store_segment_prefix_if_necessary
@@ -21593,7 +22099,7 @@ fp_qword_small_shift:
     jmp ins_check_size
     ret
 
-    xlat_instruction:
+xlat_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21614,23 +22120,25 @@ fp_qword_small_shift:
     jmp xlat_store
     ret
 
-    xlat_address_32bit:
+xlat_address_32bit:
     call address_32bit_prefix
     jmp xlat_store
     ret
 
-    xlat_address_16bit:
+xlat_address_16bit:
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
+
     xlat_store:
     call store_segment_prefix_if_necessary
     mov al,0D7h
     cmp [operand_size],1
     jbe simple_instruction
     jmp invalid_operand_size
+    ret
 
-    pm_word_instruction:
+pm_word_instruction:
     mov ah,al
     shr ah,4
     and al,111b
@@ -21641,6 +22149,7 @@ fp_qword_small_shift:
     call get_size_operator
     cmp al,10h
     je pm_reg
+
     pm_mem:
     cmp al,'['
     jne invalid_operand
@@ -21650,11 +22159,12 @@ fp_qword_small_shift:
     je pm_mem_store
     or al,al
     jnz invalid_operand_size
+
     pm_mem_store:
     jmp instruction_ready
     ret
 
-    pm_reg:
+pm_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -21663,7 +22173,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    pm_store_word_instruction:
+pm_store_word_instruction:
     mov ah,al
     shr ah,4
     and al,111b
@@ -21682,7 +22192,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    lgdt_instruction:
+lgdt_instruction:
     mov [base_code],0Fh
     mov [extended_code],1
     mov [postbyte_register],al
@@ -21701,23 +22211,24 @@ fp_qword_small_shift:
     jmp lgdt_mem_store
     ret
 
-    lgdt_mem_80bit:
+lgdt_mem_80bit:
     cmp [code_type],64
     jne illegal_instruction
     jmp lgdt_mem_store
     ret
 
-    lgdt_mem_48bit:
+lgdt_mem_48bit:
     cmp [code_type],64
     je illegal_instruction
     cmp [postbyte_register],2
     jb lgdt_mem_store
     call operand_32bit
+
     lgdt_mem_store:
     jmp instruction_ready
     ret
 
-    lar_instruction:
+lar_instruction:
     mov [extended_code],al
     mov [base_code],0Fh
     call take_register
@@ -21740,11 +22251,12 @@ fp_qword_small_shift:
     jz lar_reg_mem
     cmp al,2
     jne invalid_operand_size
+
     lar_reg_mem:
     jmp instruction_ready
     ret
 
-    lar_reg_reg:
+lar_reg_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,2
@@ -21753,7 +22265,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    invlpg_instruction:
+invlpg_instruction:
     mov [base_code],0Fh
     mov [extended_code],1
     mov [postbyte_register],7
@@ -21765,9 +22277,10 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    swapgs_instruction:
+swapgs_instruction:
     cmp [code_type],64
     jne illegal_instruction
+
     simple_instruction_0f_01:
     mov ah,al
     mov al,0Fh
@@ -21775,8 +22288,9 @@ fp_qword_small_shift:
     mov al,1
     stos u16 [edi]
     jmp instruction_assembled
+    ret
 
-    basic_486_instruction:
+basic_486_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -21798,11 +22312,12 @@ fp_qword_small_shift:
     je basic_486_mem_reg_8bit
     call operand_autodetect
     inc [extended_code]
+
     basic_486_mem_reg_8bit:
     jmp instruction_ready
     ret
 
-    basic_486_reg:
+basic_486_reg:
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -21817,16 +22332,18 @@ fp_qword_small_shift:
     je basic_486_reg_reg_8bit
     call operand_autodetect
     inc [extended_code]
+
     basic_486_reg_reg_8bit:
     jmp nomem_instruction_ready
     ret
 
-    bswap_instruction:
+bswap_instruction:
     call take_register
     test al,1000b
     jz bswap_reg_code_ok
     or [rex_prefix],41h
     and al,111b
+
     bswap_reg_code_ok:
     add al,0C8h
     mov [extended_code],al
@@ -21840,13 +22357,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    bswap_reg64:
+bswap_reg64:
     call operand_64bit
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
-    cmpxchgx_instruction:
+cmpxchgx_instruction:
     mov [base_code],0Fh
     mov [extended_code],0C7h
     mov [postbyte_register],al
@@ -21862,15 +22379,17 @@ fp_qword_small_shift:
     jz cmpxchgx_size_ok
     cmp al,ah
     jne invalid_operand_size
+
     cmpxchgx_size_ok:
     cmp ah,16
     jne cmpxchgx_store
     call operand_64bit
+
     cmpxchgx_store:
     jmp instruction_ready
     ret
 
-    nop_instruction:
+nop_instruction:
     mov ah,[esi]
     cmp ah,10h
     je extended_nop
@@ -21882,7 +22401,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    extended_nop:
+extended_nop:
     mov [base_code],0Fh
     mov [extended_code],1Fh
     mov [postbyte_register],0
@@ -21897,19 +22416,21 @@ fp_qword_small_shift:
     or al,al
     jz extended_nop_store
     call operand_autodetect
+
     extended_nop_store:
     jmp instruction_ready
     ret
 
-    extended_nop_reg:
+extended_nop_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
     mov al,ah
     call operand_autodetect
     jmp nomem_instruction_ready
+    ret
 
-    basic_fpu_instruction:
+basic_fpu_instruction:
     mov [postbyte_register],al
     mov [base_code],0D8h
     lods u8 [esi]
@@ -21928,7 +22449,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    basic_fpu_mem:
+basic_fpu_mem:
     call get_address
     mov al,[operand_size]
     cmp al,4
@@ -21938,16 +22459,17 @@ fp_qword_small_shift:
     or al,al
     jnz invalid_operand_size
     call recoverable_unknown_size
+
     basic_fpu_mem_32bit:
     jmp instruction_ready
     ret
 
-    basic_fpu_mem_64bit:
+basic_fpu_mem_64bit:
     mov [base_code],0DCh
     jmp instruction_ready
     ret
 
-    basic_fpu_streg:
+basic_fpu_streg:
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -21961,6 +22483,7 @@ fp_qword_small_shift:
     test ah,110b
     jz basic_fpu_streg_st0
     xor [postbyte_register],1
+
     basic_fpu_streg_st0:
     lods u8 [esi]
     cmp al,','
@@ -21977,7 +22500,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    basic_fpu_st0:
+basic_fpu_st0:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -21988,12 +22511,13 @@ fp_qword_small_shift:
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
+
     basic_fpu_single_streg:
     mov [base_code],0D8h
     jmp nomem_instruction_ready
     ret
 
-    simple_fpu_instruction:
+simple_fpu_instruction:
     mov ah,al
     or ah,11000000b
     mov al,0D9h
@@ -22001,7 +22525,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    fi_instruction:
+fi_instruction:
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22016,17 +22540,18 @@ fp_qword_small_shift:
     or al,al
     jnz invalid_operand_size
     call recoverable_unknown_size
+
     fi_mem_32bit:
     mov [base_code],0DAh
     jmp instruction_ready
     ret
 
-    fi_mem_16bit:
+fi_mem_16bit:
     mov [base_code],0DEh
     jmp instruction_ready
     ret
 
-    fld_instruction:
+fld_instruction:
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22045,17 +22570,18 @@ fp_qword_small_shift:
     or al,al
     jnz invalid_operand_size
     call recoverable_unknown_size
+
     fld_mem_32bit:
     mov [base_code],0D9h
     jmp instruction_ready
     ret
 
-    fld_mem_64bit:
+fld_mem_64bit:
     mov [base_code],0DDh
     jmp instruction_ready
     ret
 
-    fld_mem_80bit:
+fld_mem_80bit:
     mov al,[postbyte_register]
     cmp al,0
     je fld_mem_80bit_store
@@ -22065,13 +22591,13 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    fld_mem_80bit_store:
+fld_mem_80bit_store:
     add [postbyte_register],5
     mov [base_code],0DBh
     jmp instruction_ready
     ret
 
-    fld_streg:
+fld_streg:
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -22081,12 +22607,12 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    fst_streg:
+fst_streg:
     mov [base_code],0DDh
     jmp nomem_instruction_ready
     ret
 
-    fild_instruction:
+fild_instruction:
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22103,17 +22629,18 @@ fp_qword_small_shift:
     or al,al
     jnz invalid_operand_size
     call recoverable_unknown_size
+
     fild_mem_32bit:
     mov [base_code],0DBh
     jmp instruction_ready
     ret
 
-    fild_mem_16bit:
+fild_mem_16bit:
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
-    fild_mem_64bit:
+fild_mem_64bit:
     mov al,[postbyte_register]
     cmp al,1
     je fisttp_64bit_store
@@ -22124,18 +22651,18 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    fild_mem_64bit_store:
+fild_mem_64bit_store:
     add [postbyte_register],5
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
-    fisttp_64bit_store:
+fisttp_64bit_store:
     mov [base_code],0DDh
     jmp instruction_ready
     ret
 
-    fbld_instruction:
+fbld_instruction:
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22150,12 +22677,12 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    fbld_mem_80bit:
+fbld_mem_80bit:
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
-    faddp_instruction:
+faddp_instruction:
     mov [postbyte_register],al
     mov [base_code],0DEh
     mov edx,esi
@@ -22168,7 +22695,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    faddp_streg:
+faddp_streg:
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -22186,29 +22713,29 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    fcompp_instruction:
+fcompp_instruction:
     mov ax,0D9DEh
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
-    fucompp_instruction:
+fucompp_instruction:
     mov ax,0E9DAh
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
-    fxch_instruction:
+fxch_instruction:
     mov dx,01D9h
     jmp fpu_single_operand
     ret
 
-    ffreep_instruction:
+ffreep_instruction:
     mov dx,00DFh
     jmp fpu_single_operand
     ret
 
-    ffree_instruction:
+ffree_instruction:
     mov dl,0DDh
     mov dh,al
     fpu_single_operand:
@@ -22227,7 +22754,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    fpu_streg:
+fpu_streg:
     lods u8 [esi]
     call convert_fpu_register
     shl dh,3
@@ -22236,52 +22763,60 @@ fp_qword_small_shift:
     mov ax,dx
     stos u16 [edi]
     jmp instruction_assembled
+    ret
 
-    fstenv_instruction:
+fstenv_instruction:
     mov u8 [edi],9Bh
     inc edi
+
     fldenv_instruction:
     mov [base_code],0D9h
     jmp fpu_mem
     ret
 
-    fstenv_instruction_16bit:
+fstenv_instruction_16bit:
     mov u8 [edi],9Bh
     inc edi
+
     fldenv_instruction_16bit:
     call operand_16bit
     jmp fldenv_instruction
     ret
 
-    fstenv_instruction_32bit:
+fstenv_instruction_32bit:
     mov u8 [edi],9Bh
     inc edi
+
     fldenv_instruction_32bit:
     call operand_32bit
     jmp fldenv_instruction
     ret
 
-    fsave_instruction_32bit:
+fsave_instruction_32bit:
     mov u8 [edi],9Bh
     inc edi
+
     fnsave_instruction_32bit:
     call operand_32bit
     jmp fnsave_instruction
     ret
 
-    fsave_instruction_16bit:
+fsave_instruction_16bit:
     mov u8 [edi],9Bh
     inc edi
+
     fnsave_instruction_16bit:
     call operand_16bit
     jmp fnsave_instruction
     ret
 
-    fsave_instruction:
+fsave_instruction:
     mov u8 [edi],9Bh
     inc edi
+
     fnsave_instruction:
     mov [base_code],0DDh
+
     fpu_mem:
     mov [postbyte_register],al
     lods u8 [esi]
@@ -22294,9 +22829,10 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    fstcw_instruction:
+fstcw_instruction:
     mov u8 [edi],9Bh
     inc edi
+
     fldcw_instruction:
     mov [postbyte_register],al
     mov [base_code],0D9h
@@ -22313,13 +22849,14 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    fldcw_mem_16bit:
+fldcw_mem_16bit:
     jmp instruction_ready
     ret
 
-    fstsw_instruction:
+fstsw_instruction:
     mov al,9Bh
     stos u8 [edi]
+
     fnstsw_instruction:
     mov [base_code],0DDh
     mov [postbyte_register],7
@@ -22338,11 +22875,11 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    fstsw_mem_16bit:
+fstsw_mem_16bit:
     jmp instruction_ready
     ret
 
-    fstsw_reg:
+fstsw_reg:
     lods u8 [esi]
     call convert_register
     cmp ax,0200h
@@ -22352,9 +22889,10 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    finit_instruction:
+finit_instruction:
     mov u8 [edi],9Bh
     inc edi
+
     fninit_instruction:
     mov ah,al
     mov al,0DBh
@@ -22362,18 +22900,19 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    fcmov_instruction:
+fcmov_instruction:
     mov dh,0DAh
     jmp fcomi_streg
     ret
 
-    fcomi_instruction:
+fcomi_instruction:
     mov dh,0DBh
     jmp fcomi_streg
     ret
 
-    fcomip_instruction:
+fcomip_instruction:
     mov dh,0DFh
+
     fcomi_streg:
     mov dl,al
     lods u8 [esi]
@@ -22391,7 +22930,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    fcomi_st0_streg:
+fcomi_st0_streg:
     or ah,ah
     jnz invalid_operand
     inc esi
@@ -22406,10 +22945,12 @@ fp_qword_small_shift:
     mov al,dh
     stos u16 [edi]
     jmp instruction_assembled
+    ret
 
-    basic_mmx_instruction:
+basic_mmx_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
+
     mmx_instruction:
     lods u8 [esi]
     call get_size_operator
@@ -22428,19 +22969,20 @@ fp_qword_small_shift:
     je mmx_mmreg_mmreg
     cmp al,'['
     jne invalid_operand
+
     mmx_mmreg_mem:
     call get_address
     jmp instruction_ready
     ret
 
-    mmx_mmreg_mmreg:
+mmx_mmreg_mmreg:
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
-    mmx_bit_shift_instruction:
+mmx_bit_shift_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -22466,7 +23008,7 @@ fp_qword_small_shift:
     jmp invalid_operand
     ret
 
-    mmx_ps_mmreg_imm8:
+mmx_ps_mmreg_imm8:
     call get_byte_value
     mov u8 [value],al
     test [operand_size],not 1
@@ -22486,7 +23028,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    pmovmskb_instruction:
+pmovmskb_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     call take_register
@@ -22496,6 +23038,7 @@ fp_qword_small_shift:
     jne invalid_operand_size
     cmp ah,8
     jnz invalid_operand_size
+
     pmovmskb_reg_size_ok:
     mov [postbyte_register],al
     mov [operand_size],0
@@ -22515,7 +23058,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    mmx_imm8:
+mmx_imm8:
     push _ebx _ecx _edx
     xor cl,cl
     xchg cl,[operand_size]
@@ -22536,13 +23079,13 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    mmx_nomem_imm8:
+mmx_nomem_imm8:
     call store_nomem_instruction
     call append_imm8
     jmp instruction_assembled
     ret
 
-    append_imm8:
+append_imm8:
     mov [operand_size],0
     lods u8 [esi]
     cmp al,','
@@ -22557,7 +23100,7 @@ fp_qword_small_shift:
     stosb
     ret
 
-    pinsrw_instruction:
+pinsrw_instruction:
     mov [extended_code],al
     mov [base_code],0Fh
     lods u8 [esi]
@@ -22586,7 +23129,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    pinsrw_mmreg_reg:
+pinsrw_mmreg_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -22595,15 +23138,16 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    pshufw_instruction:
+pshufw_instruction:
     mov [mmx_size],8
     mov [opcode_prefix],al
     jmp pshuf_instruction
     ret
 
-    pshufd_instruction:
+pshufd_instruction:
     mov [mmx_size],16
     mov [opcode_prefix],al
+
     pshuf_instruction:
     mov [base_code],0Fh
     mov [extended_code],70h
@@ -22629,14 +23173,14 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    pshuf_mmreg_mmreg:
+pshuf_mmreg_mmreg:
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
     jmp mmx_nomem_imm8
     ret
 
-    movd_instruction:
+movd_instruction:
     mov [base_code],0Fh
     mov [extended_code],7Eh
     lods u8 [esi]
@@ -22652,7 +23196,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movd_reg:
+movd_reg:
     lods u8 [esi]
     cmp al,0B0h
     jae movd_mmreg
@@ -22664,7 +23208,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    movd_mmreg:
+movd_mmreg:
     mov [extended_code],6Eh
     call convert_mmx_register
     mov [postbyte_register],al
@@ -22685,7 +23229,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movd_mmreg_reg:
+movd_mmreg_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -22694,7 +23238,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    get_mmx_source_register:
+get_mmx_source_register:
     mov [operand_size],0
     lods u8 [esi]
     cmp al,','
@@ -22706,14 +23250,16 @@ fp_qword_small_shift:
     lods u8 [esi]
     call convert_mmx_register
     mov [postbyte_register],al
+
     make_mmx_prefix:
     cmp [operand_size],16
     jne no_mmx_prefix
     mov [operand_prefix],66h
+
     no_mmx_prefix:
     ret
 
-    movq_instruction:
+movq_instruction:
     mov [base_code],0Fh
     lods u8 [esi]
     call get_size_operator
@@ -22729,12 +23275,13 @@ fp_qword_small_shift:
     cmp ah,8
     je movq_mem_ready
     mov al,0D6h
+
     movq_mem_ready:
     mov [extended_code],al
     jmp instruction_ready
     ret
 
-    movq_reg:
+movq_reg:
     lods u8 [esi]
     cmp al,0B0h
     jae movq_mmreg
@@ -22748,7 +23295,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    movq_mmreg:
+movq_mmreg:
     call convert_mmx_register
     mov [postbyte_register],al
     mov [extended_code],6Fh
@@ -22757,6 +23304,7 @@ fp_qword_small_shift:
     jne movq_mmreg_
     mov [extended_code],7Eh
     mov [opcode_prefix],0F3h
+
     movq_mmreg_:
     lods u8 [esi]
     cmp al,','
@@ -22774,7 +23322,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movq_mmreg_reg:
+movq_mmreg_reg:
     lods u8 [esi]
     cmp al,0B0h
     jae movq_mmreg_mmreg
@@ -22788,12 +23336,13 @@ fp_qword_small_shift:
     cmp [mmx_size],16
     jne movq_mmreg_reg_store
     mov [opcode_prefix],66h
+
     movq_mmreg_reg_store:
     call operand_64bit
     jmp nomem_instruction_ready
     ret
 
-    movq_mmreg_mmreg:
+movq_mmreg_mmreg:
     call convert_mmx_register
     cmp ah,[mmx_size]
     jne invalid_operand_size
@@ -22801,7 +23350,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    movdq_instruction:
+movdq_instruction:
     mov [opcode_prefix],al
     mov [base_code],0Fh
     mov [extended_code],6Fh
@@ -22826,7 +23375,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movdq_mmreg:
+movdq_mmreg:
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
@@ -22843,14 +23392,14 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movdq_mmreg_mmreg:
+movdq_mmreg_mmreg:
     lods u8 [esi]
     call convert_xmm_register
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
-    lddqu_instruction:
+lddqu_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
@@ -22872,16 +23421,18 @@ fp_qword_small_shift:
     mov [base_code],0Fh
     mov [extended_code],0F0h
     jmp instruction_ready
+    ret
 
-    movdq2q_instruction:
+movdq2q_instruction:
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
     jmp movq2dq_
     ret
 
-    movq2dq_instruction:
+movq2dq_instruction:
     mov [opcode_prefix],0F3h
     mov [mmx_size],16
+
     movq2dq_:
     lods u8 [esi]
     call get_size_operator
@@ -22909,36 +23460,40 @@ fp_qword_small_shift:
     mov [base_code],0Fh
     mov [extended_code],0D6h
     jmp nomem_instruction_ready
+    ret
 
-    sse_ps_instruction_imm8:
+sse_ps_instruction_imm8:
     mov [immediate_size],1
+
     sse_ps_instruction:
     mov [mmx_size],16
     jmp sse_instruction
     ret
 
-    sse_pd_instruction_imm8:
+sse_pd_instruction_imm8:
     mov [immediate_size],1
+
     sse_pd_instruction:
     mov [mmx_size],16
     mov [opcode_prefix],66h
     jmp sse_instruction
     ret
 
-    sse_ss_instruction:
+sse_ss_instruction:
     mov [mmx_size],4
     mov [opcode_prefix],0F3h
     jmp sse_instruction
     ret
 
-    sse_sd_instruction:
+sse_sd_instruction:
     mov [mmx_size],8
     mov [opcode_prefix],0F2h
     jmp sse_instruction
     ret
 
-    cmp_pd_instruction:
+cmp_pd_instruction:
     mov [opcode_prefix],66h
+
     cmp_ps_instruction:
     mov [mmx_size],16
     mov u8 [value],al
@@ -22946,13 +23501,13 @@ fp_qword_small_shift:
     jmp sse_instruction
     ret
 
-    cmp_ss_instruction:
+cmp_ss_instruction:
     mov [mmx_size],4
     mov [opcode_prefix],0F3h
     jmp cmp_sx_instruction
     ret
 
-    cmpsd_instruction:
+cmpsd_instruction:
     mov al,0A7h
     mov ah,[esi]
     or ah,ah
@@ -22960,6 +23515,7 @@ fp_qword_small_shift:
     cmp ah,0Fh
     je simple_instruction_32bit
     mov al,-1
+
     cmp_sd_instruction:
     mov [mmx_size],8
     mov [opcode_prefix],0F2h
@@ -22969,33 +23525,35 @@ fp_qword_small_shift:
     jmp sse_instruction
     ret
 
-    comiss_instruction:
+comiss_instruction:
     mov [mmx_size],4
     jmp sse_instruction
     ret
 
-    comisd_instruction:
+comisd_instruction:
     mov [mmx_size],8
     mov [opcode_prefix],66h
     jmp sse_instruction
     ret
 
-    cvtdq2pd_instruction:
+cvtdq2pd_instruction:
     mov [opcode_prefix],0F3h
+
     cvtps2pd_instruction:
     mov [mmx_size],8
     jmp sse_instruction
     ret
 
-    cvtpd2dq_instruction:
+cvtpd2dq_instruction:
     mov [mmx_size],16
     mov [opcode_prefix],0F2h
     jmp sse_instruction
     ret
 
-    movshdup_instruction:
+movshdup_instruction:
     mov [mmx_size],16
     mov [opcode_prefix],0F3h
+
     sse_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -23006,6 +23564,7 @@ fp_qword_small_shift:
     sse_xmmreg:
     lods u8 [esi]
     call convert_xmm_register
+
     sse_reg:
     mov [postbyte_register],al
     mov [operand_size],0
@@ -23016,6 +23575,7 @@ fp_qword_small_shift:
     call get_size_operator
     cmp al,10h
     je sse_xmmreg_xmmreg
+
     sse_reg_mem:
     cmp al,'['
     jne invalid_operand
@@ -23025,6 +23585,7 @@ fp_qword_small_shift:
     mov al,[mmx_size]
     cmp [operand_size],al
     jne invalid_operand_size
+
     sse_mem_size_ok:
     mov al,[extended_code]
     mov ah,[supplemental_code]
@@ -23038,24 +23599,26 @@ fp_qword_small_shift:
     jne sse_ok
     call take_additional_xmm0
     mov [immediate_size],0
+
     sse_ok:
     jmp instruction_ready
     ret
 
-    sse_cmp_mem_ok:
+sse_cmp_mem_ok:
     cmp u8 [value],-1
     je mmx_imm8
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
-    sse_xmmreg_xmmreg:
+sse_xmmreg_xmmreg:
     cmp [operand_prefix],66h
     jne sse_xmmreg_xmmreg_ok
     cmp [extended_code],12h
     je invalid_operand
     cmp [extended_code],16h
     je invalid_operand
+
     sse_xmmreg_xmmreg_ok:
     lods u8 [esi]
     call convert_xmm_register
@@ -23072,11 +23635,12 @@ fp_qword_small_shift:
     jne sse_nomem_ok
     call take_additional_xmm0
     mov [immediate_size],0
+
     sse_nomem_ok:
     jmp nomem_instruction_ready
     ret
 
-    sse_cmp_nomem_ok:
+sse_cmp_nomem_ok:
     cmp u8 [value],-1
     je mmx_nomem_imm8
     call store_nomem_instruction
@@ -23085,7 +23649,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    take_additional_xmm0:
+take_additional_xmm0:
     cmp u8 [esi],','
     jne additional_xmm0_ok
     inc esi
@@ -23096,10 +23660,11 @@ fp_qword_small_shift:
     call convert_xmm_register
     test al,al
     jnz invalid_operand
+
     additional_xmm0_ok:
     ret
 
-    pslldq_instruction:
+pslldq_instruction:
     mov [postbyte_register],al
     mov [opcode_prefix],66h
     mov [base_code],0Fh
@@ -23114,8 +23679,9 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    movpd_instruction:
+movpd_instruction:
     mov [opcode_prefix],66h
+
     movps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -23123,13 +23689,13 @@ fp_qword_small_shift:
     jmp sse_mov_instruction
     ret
 
-    movss_instruction:
+movss_instruction:
     mov [mmx_size],4
     mov [opcode_prefix],0F3h
     jmp sse_movs
     ret
 
-    movsd_instruction:
+movsd_instruction:
     mov al,0A5h
     mov ah,[esi]
     or ah,ah
@@ -23138,17 +23704,19 @@ fp_qword_small_shift:
     je simple_instruction_32bit
     mov [mmx_size],8
     mov [opcode_prefix],0F2h
+
     sse_movs:
     mov [base_code],0Fh
     mov [extended_code],10h
     jmp sse_mov_instruction
     ret
 
-    sse_mov_instruction:
+sse_mov_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
     je sse_xmmreg
+
     sse_mem:
     cmp al,'['
     jne invalid_operand
@@ -23160,6 +23728,7 @@ fp_qword_small_shift:
     cmp [operand_size],al
     jne invalid_operand_size
     mov [operand_size],0
+
     sse_mem_xmmreg:
     lods u8 [esi]
     cmp al,','
@@ -23174,8 +23743,9 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movlpd_instruction:
+movlpd_instruction:
     mov [opcode_prefix],66h
+
     movlps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -23196,7 +23766,7 @@ fp_qword_small_shift:
     jmp sse_reg_mem
     ret
 
-    movhlps_instruction:
+movhlps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     mov [mmx_size],0
@@ -23217,14 +23787,15 @@ fp_qword_small_shift:
     jmp invalid_operand
     ret
 
-    maskmovq_instruction:
+maskmovq_instruction:
     mov cl,8
     jmp maskmov_instruction
     ret
 
-    maskmovdqu_instruction:
+maskmovdqu_instruction:
     mov cl,16
     mov [opcode_prefix],66h
+
     maskmov_instruction:
     mov [base_code],0Fh
     mov [extended_code],0F7h
@@ -23250,7 +23821,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    movmskpd_instruction:
+movmskpd_instruction:
     mov [opcode_prefix],66h
     movmskps_instruction:
     mov [base_code],0Fh
@@ -23263,6 +23834,7 @@ fp_qword_small_shift:
     jne invalid_operand_size
     cmp [code_type],64
     jne invalid_operand
+
     movmskps_reg_ok:
     mov [operand_size],0
     lods u8 [esi]
@@ -23273,9 +23845,11 @@ fp_qword_small_shift:
     cmp al,10h
     je sse_xmmreg_xmmreg_ok
     jmp invalid_operand
+    ret
 
-    cvtpi2pd_instruction:
+cvtpi2pd_instruction:
     mov [opcode_prefix],66h
+
     cvtpi2ps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -23305,7 +23879,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    cvtpi_xmmreg_xmmreg:
+cvtpi_xmmreg_xmmreg:
     lods u8 [esi]
     call convert_mmx_register
     cmp ah,8
@@ -23314,13 +23888,14 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    cvtsi2ss_instruction:
+cvtsi2ss_instruction:
     mov [opcode_prefix],0F3h
     jmp cvtsi_instruction
     ret
 
-    cvtsi2sd_instruction:
+cvtsi2sd_instruction:
     mov [opcode_prefix],0F2h
+
     cvtsi_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -23331,6 +23906,7 @@ fp_qword_small_shift:
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
+
     cvtsi_xmmreg:
     mov [operand_size],0
     lods u8 [esi]
@@ -23350,11 +23926,12 @@ fp_qword_small_shift:
     cmp [operand_size],8
     jne invalid_operand_size
     call operand_64bit
+
     cvtsi_size_ok:
     jmp instruction_ready
     ret
 
-    cvtsi_xmmreg_reg:
+cvtsi_xmmreg_reg:
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -23362,19 +23939,21 @@ fp_qword_small_shift:
     cmp ah,8
     jne invalid_operand_size
     call operand_64bit
+
     cvtsi_xmmreg_reg_store:
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
-    cvtps2pi_instruction:
+cvtps2pi_instruction:
     mov [mmx_size],8
     jmp cvtpd_instruction
     ret
 
-    cvtpd2pi_instruction:
+cvtpd2pi_instruction:
     mov [opcode_prefix],66h
     mov [mmx_size],16
+
     cvtpd_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -23390,15 +23969,16 @@ fp_qword_small_shift:
     jmp sse_reg
     ret
 
-    cvtss2si_instruction:
+cvtss2si_instruction:
     mov [opcode_prefix],0F3h
     mov [mmx_size],4
     jmp cvt2si_instruction
     ret
 
-    cvtsd2si_instruction:
+cvtsd2si_instruction:
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
+
     cvt2si_instruction:
     mov [extended_code],al
     mov [base_code],0Fh
@@ -23410,15 +23990,16 @@ fp_qword_small_shift:
     jne invalid_operand_size
     call operand_64bit
     jmp sse_reg
+    ret
 
-    ssse3_instruction:
+ssse3_instruction:
     mov [base_code],0Fh
     mov [extended_code],38h
     mov [supplemental_code],al
     jmp mmx_instruction
     ret
 
-    palignr_instruction:
+palignr_instruction:
     mov [base_code],0Fh
     mov [extended_code],3Ah
     mov [supplemental_code],0Fh
@@ -23443,14 +24024,14 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    palignr_mmreg_mmreg:
+palignr_mmreg_mmreg:
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
     jmp mmx_nomem_imm8
     ret
 
-    amd3dnow_instruction:
+amd3dnow_instruction:
     mov [base_code],0Fh
     mov [extended_code],0Fh
     mov u8 [value],al
@@ -23477,7 +24058,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    amd3dnow_mmreg_mmreg:
+amd3dnow_mmreg_mmreg:
     lods u8 [esi]
     call convert_mmx_register
     cmp ah,8
@@ -23487,16 +24068,19 @@ fp_qword_small_shift:
     mov al, u8 [value]
     stos u8 [edi]
     jmp instruction_assembled
+    ret
 
-    sse4_instruction_38_xmm0:
+sse4_instruction_38_xmm0:
     mov [immediate_size],-1
     jmp sse4_instruction_38
     ret
 
-    sse4_instruction_66_38_xmm0:
+sse4_instruction_66_38_xmm0:
     mov [immediate_size],-1
+
     sse4_instruction_66_38:
     mov [opcode_prefix],66h
+
     sse4_instruction_38:
     mov [mmx_size],16
     mov [supplemental_code],al
@@ -23504,23 +24088,25 @@ fp_qword_small_shift:
     jmp sse_instruction
     ret
 
-    sse4_ss_instruction_66_3a_imm8:
+sse4_ss_instruction_66_3a_imm8:
     mov [immediate_size],1
     mov cl,4
     jmp sse4_instruction_66_3a_setup
     ret
 
-    sse4_sd_instruction_66_3a_imm8:
+sse4_sd_instruction_66_3a_imm8:
     mov [immediate_size],1
     mov cl,8
     jmp sse4_instruction_66_3a_setup
     ret
 
-    sse4_instruction_66_3a_imm8:
+sse4_instruction_66_3a_imm8:
     mov [immediate_size],1
     mov cl,16
+
     sse4_instruction_66_3a_setup:
     mov [opcode_prefix],66h
+
     sse4_instruction_3a_setup:
     mov [supplemental_code],al
     mov al,3Ah
@@ -23528,20 +24114,20 @@ fp_qword_small_shift:
     jmp sse_instruction
     ret
 
-    sse4_instruction_3a_imm8:
+sse4_instruction_3a_imm8:
     mov [immediate_size],1
     mov cl,16
     jmp sse4_instruction_3a_setup
     ret
 
-    pclmulqdq_instruction:
+pclmulqdq_instruction:
     mov u8 [value],al
     mov al,44h
     mov cl,16
     jmp sse4_instruction_66_3a_setup
     ret
 
-    extractps_instruction:
+extractps_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
@@ -23554,6 +24140,7 @@ fp_qword_small_shift:
     je extractps_size_ok
     cmp [operand_size],0
     jne invalid_operand_size
+
     extractps_size_ok:
     push _edx _ebx _ecx
     mov [operand_size],0
@@ -23571,7 +24158,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    extractps_reg:
+extractps_reg:
     lods u8 [esi]
     call convert_register
     push _eax
@@ -23597,14 +24184,14 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    setup_66_0f_3a:
+setup_66_0f_3a:
     mov [extended_code],3Ah
     mov [supplemental_code],al
     mov [base_code],0Fh
     mov [opcode_prefix],66h
     ret
 
-    insertps_instruction:
+insertps_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
@@ -23628,34 +24215,36 @@ fp_qword_small_shift:
     je insertps_size_ok
     cmp [operand_size],0
     jne invalid_operand_size
+
     insertps_size_ok:
     jmp mmx_imm8
     ret
 
-    insertps_xmmreg_reg:
+insertps_xmmreg_reg:
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
     jmp mmx_nomem_imm8
     ret
 
-    pextrq_instruction:
+pextrq_instruction:
     mov [mmx_size],8
     jmp pextr_instruction
     ret
 
-    pextrd_instruction:
+pextrd_instruction:
     mov [mmx_size],4
     jmp pextr_instruction
     ret
 
-    pextrw_instruction:
+pextrw_instruction:
     mov [mmx_size],2
     jmp pextr_instruction
     ret
 
-    pextrb_instruction:
+pextrb_instruction:
     mov [mmx_size],1
+
     pextr_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
@@ -23670,10 +24259,12 @@ fp_qword_small_shift:
     je pextr_size_ok
     cmp [operand_size],0
     jne invalid_operand_size
+
     pextr_size_ok:
     cmp al,8
     jne pextr_prefix_ok
     call operand_64bit
+
     pextr_prefix_ok:
     push _edx _ebx _ecx
     mov [operand_size],0
@@ -23691,7 +24282,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    pextr_reg:
+pextr_reg:
     lods u8 [esi]
     call convert_register
     cmp [mmx_size],4
@@ -23702,14 +24293,16 @@ fp_qword_small_shift:
     jne pextr_invalid_size
     cmp ah,8
     je pextr_reg_size_ok
+
     pextr_invalid_size:
     jmp invalid_operand_size
     ret
 
-    pextrq_reg:
+pextrq_reg:
     cmp ah,8
     jne pextr_invalid_size
     call operand_64bit
+
     pextr_reg_size_ok:
     mov [operand_size],0
     push _eax
@@ -23734,26 +24327,27 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    pextr_reg_store:
+pextr_reg_store:
     cmp bh,16
     jne invalid_operand_size
     xchg bl,[postbyte_register]
     jmp mmx_nomem_imm8
     ret
 
-    pinsrb_instruction:
+pinsrb_instruction:
     mov [mmx_size],1
     jmp pinsr_instruction
     ret
 
-    pinsrd_instruction:
+pinsrd_instruction:
     mov [mmx_size],4
     jmp pinsr_instruction
     ret
 
-    pinsrq_instruction:
+pinsrq_instruction:
     mov [mmx_size],8
     call operand_64bit
+
     pinsr_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
@@ -23763,6 +24357,7 @@ fp_qword_small_shift:
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
+
     pinsr_xmmreg:
     mov [operand_size],0
     lods u8 [esi]
@@ -23783,7 +24378,7 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    pinsr_xmmreg_reg:
+pinsr_xmmreg_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -23794,39 +24389,40 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    pinsrq_xmmreg_reg:
+pinsrq_xmmreg_reg:
     cmp ah,8
     je mmx_nomem_imm8
     jmp invalid_operand_size
     ret
 
-    pmovsxbw_instruction:
+pmovsxbw_instruction:
     mov [mmx_size],8
     jmp pmovsx_instruction
     ret
 
-    pmovsxbd_instruction:
+pmovsxbd_instruction:
     mov [mmx_size],4
     jmp pmovsx_instruction
     ret
 
-    pmovsxbq_instruction:
+pmovsxbq_instruction:
     mov [mmx_size],2
     jmp pmovsx_instruction
     ret
 
-    pmovsxwd_instruction:
+pmovsxwd_instruction:
     mov [mmx_size],8
     jmp pmovsx_instruction
     ret
 
-    pmovsxwq_instruction:
+pmovsxwq_instruction:
     mov [mmx_size],4
     jmp pmovsx_instruction
     ret
 
-    pmovsxdq_instruction:
+pmovsxdq_instruction:
     mov [mmx_size],8
+
     pmovsx_instruction:
     call setup_66_0f_38
     lods u8 [esi]
@@ -23855,32 +24451,35 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    pmovsx_xmmreg_reg:
+pmovsx_xmmreg_reg:
     lods u8 [esi]
     call convert_xmm_register
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
-    setup_66_0f_38:
+setup_66_0f_38:
     mov [extended_code],38h
     mov [supplemental_code],al
     mov [base_code],0Fh
     mov [opcode_prefix],66h
     ret
 
-    xsaves_instruction_64bit:
+xsaves_instruction_64bit:
     call operand_64bit
+
     xsaves_instruction:
     mov ah,0C7h
     jmp xsave_common
     ret
 
-    fxsave_instruction_64bit:
+fxsave_instruction_64bit:
     call operand_64bit
+
     fxsave_instruction:
     mov ah,0AEh
     xor cl,cl
+
     xsave_common:
     mov [base_code],0Fh
     mov [extended_code],ah
@@ -23896,24 +24495,26 @@ fp_qword_small_shift:
     jz xsave_size_ok
     cmp ah,[mmx_size]
     jne invalid_operand_size
+
     xsave_size_ok:
     jmp instruction_ready
     ret
 
-    clflush_instruction:
+clflush_instruction:
     mov ah,0AEh
     mov cl,1
     jmp xsave_common
     ret
 
-    stmxcsr_instruction:
+stmxcsr_instruction:
     mov ah,0AEh
     mov cl,4
     jmp xsave_common
     ret
 
-    prefetch_instruction:
+prefetch_instruction:
     mov [extended_code],18h
+
     prefetch_mem_8bit:
     mov [base_code],0Fh
     mov [postbyte_register],al
@@ -23925,25 +24526,27 @@ fp_qword_small_shift:
     jz prefetch_size_ok
     cmp ah,1
     jne invalid_operand_size
-    prefetch_size_ok:
+
+prefetch_size_ok:
     call get_address
     jmp instruction_ready
     ret
 
-    amd_prefetch_instruction:
+amd_prefetch_instruction:
     mov [extended_code],0Dh
     jmp prefetch_mem_8bit
     ret
 
-    clflushopt_instruction:
+clflushopt_instruction:
     mov [extended_code],0AEh
     mov [opcode_prefix],66h
     jmp prefetch_mem_8bit
     ret
 
-    pcommit_instruction:
+pcommit_instruction:
     mov u8 [edi],66h
     inc edi
+
     fence_instruction:
     mov bl,al
     mov ax,0AE0Fh
@@ -23953,21 +24556,23 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    pause_instruction:
+pause_instruction:
     mov ax,90F3h
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
-    movntq_instruction:
+movntq_instruction:
     mov [mmx_size],8
     jmp movnt_instruction
     ret
 
-    movntpd_instruction:
+movntpd_instruction:
     mov [opcode_prefix],66h
+
     movntps_instruction:
     mov [mmx_size],16
+
     movnt_instruction:
     mov [extended_code],al
     mov [base_code],0Fh
@@ -23989,16 +24594,18 @@ fp_qword_small_shift:
     jne invalid_operand_size
     mov [postbyte_register],al
     jmp instruction_ready
+    ret
 
-    movntsd_instruction:
+movntsd_instruction:
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
     jmp movnts_instruction
     ret
 
-    movntss_instruction:
+movntss_instruction:
     mov [opcode_prefix],0F3h
     mov [mmx_size],4
+
     movnts_instruction:
     mov [extended_code],al
     mov [base_code],0Fh
@@ -24012,6 +24619,7 @@ fp_qword_small_shift:
     je movnts_size_ok
     test al,al
     jnz invalid_operand_size
+
     movnts_size_ok:
     lods u8 [esi]
     cmp al,','
@@ -24025,8 +24633,9 @@ fp_qword_small_shift:
     call convert_xmm_register
     mov [postbyte_register],al
     jmp instruction_ready
+    ret
 
-    movnti_instruction:
+movnti_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -24043,12 +24652,13 @@ fp_qword_small_shift:
     cmp ah,8
     jne invalid_operand_size
     call operand_64bit
+
     movnti_store:
     mov [postbyte_register],al
     jmp instruction_ready
     ret
 
-    monitor_instruction:
+monitor_instruction:
     mov [postbyte_register],al
     cmp u8 [esi],0
     je monitor_instruction_store
@@ -24071,6 +24681,7 @@ fp_qword_small_shift:
     call take_register
     cmp ax,0402h
     jne invalid_operand
+
     monitor_instruction_store:
     mov ax,010Fh
     stos u16 [edi]
@@ -24079,7 +24690,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    movntdqa_instruction:
+movntdqa_instruction:
     call setup_66_0f_38
     lods u8 [esi]
     call get_size_operator
@@ -24097,8 +24708,9 @@ fp_qword_small_shift:
     jne invalid_operand
     call get_address
     jmp instruction_ready
+    ret
 
-    extrq_instruction:
+extrq_instruction:
     mov [opcode_prefix],66h
     mov [base_code],0Fh
     mov [extended_code],78h
@@ -24130,7 +24742,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    extrq_xmmreg_xmmreg:
+extrq_xmmreg_xmmreg:
     inc [extended_code]
     lods u8 [esi]
     call convert_xmm_register
@@ -24138,7 +24750,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    insertq_instruction:
+insertq_instruction:
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
     mov [extended_code],78h
@@ -24166,13 +24778,14 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    insertq_with_imm:
+insertq_with_imm:
     call store_nomem_instruction
     call append_imm8
     call append_imm8
     jmp instruction_assembled
+    ret
 
-    crc32_instruction:
+crc32_instruction:
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
     mov [extended_code],38h
@@ -24185,6 +24798,7 @@ fp_qword_small_shift:
     jne invalid_operand
     cmp [code_type],64
     jne illegal_instruction
+
     crc32_reg_size_ok:
     lods u8 [esi]
     cmp al,','
@@ -24204,16 +24818,17 @@ fp_qword_small_shift:
     je crc32_reg_mem_store
     inc [supplemental_code]
     call operand_autodetect
+
     crc32_reg_mem_store:
     jmp instruction_ready
     ret
 
-    crc32_unknown_size:
+crc32_unknown_size:
     call recoverable_unknown_size
     jmp crc32_reg_mem_store
     ret
 
-    crc32_reg_reg:
+crc32_reg_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -24222,16 +24837,17 @@ fp_qword_small_shift:
     je crc32_reg_reg_store
     inc [supplemental_code]
     call operand_autodetect
+
     crc32_reg_reg_store:
     jmp nomem_instruction_ready
     ret
 
-    popcnt_instruction:
+popcnt_instruction:
     mov [opcode_prefix],0F3h
     jmp bs_instruction
     ret
 
-    movbe_instruction:
+movbe_instruction:
     mov [supplemental_code],al
     mov [extended_code],38h
     mov [base_code],0Fh
@@ -24257,7 +24873,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    movbe_mem:
+movbe_mem:
     inc [supplemental_code]
     call get_address
     push _edx _ebx _ecx
@@ -24272,7 +24888,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    adx_instruction:
+adx_instruction:
     mov [base_code],0Fh
     mov [extended_code],38h
     mov [supplemental_code],0F6h
@@ -24288,7 +24904,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    adx_reg_reg:
+adx_reg_reg:
     cmp ah,4
     je nomem_instruction_ready
     cmp ah,8
@@ -24297,7 +24913,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    rdpid_instruction:
+rdpid_instruction:
     mov [postbyte_register],al
     mov [extended_code],0C7h
     mov [base_code],0Fh
@@ -24310,18 +24926,20 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    rdpid_64bit:
+rdpid_64bit:
     cmp ah,8
     jne invalid_operand_size
     jmp nomem_instruction_ready
+    ret
 
-    vmclear_instruction:
+vmclear_instruction:
     mov [opcode_prefix],66h
     jmp vmx_instruction
     ret
 
-    vmxon_instruction:
+vmxon_instruction:
     mov [opcode_prefix],0F3h
+
     vmx_instruction:
     mov [postbyte_register],al
     mov [extended_code],0C7h
@@ -24335,12 +24953,13 @@ fp_qword_small_shift:
     jz vmx_size_ok
     cmp al,8
     jne invalid_operand_size
+
     vmx_size_ok:
     mov [base_code],0Fh
     jmp instruction_ready
     ret
 
-    vmread_instruction:
+vmread_instruction:
     mov [extended_code],78h
     lods u8 [esi]
     call get_size_operator
@@ -24358,7 +24977,7 @@ fp_qword_small_shift:
     jmp vmx_size_ok
     ret
 
-    vmread_nomem:
+vmread_nomem:
     lods u8 [esi]
     call convert_register
     push _eax
@@ -24374,19 +24993,19 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    vmread_check_size:
+vmread_check_size:
     cmp [code_type],64
     je vmread_long
     cmp [operand_size],4
     jne invalid_operand_size
     ret
 
-    vmread_long:
+vmread_long:
     cmp [operand_size],8
     jne invalid_operand_size
     ret
 
-    vmwrite_instruction:
+vmwrite_instruction:
     mov [extended_code],79h
     call take_register
     mov [postbyte_register],al
@@ -24404,7 +25023,7 @@ fp_qword_small_shift:
     jmp vmx_size_ok
     ret
 
-    vmwrite_nomem:
+vmwrite_nomem:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -24412,7 +25031,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    vmx_inv_instruction:
+vmx_inv_instruction:
     call setup_66_0f_38
     call take_register
     mov [postbyte_register],al
@@ -24434,13 +25053,14 @@ fp_qword_small_shift:
     jmp vmx_size_ok
     ret
 
-    simple_svm_instruction:
+simple_svm_instruction:
     push _eax
     mov [base_code],0Fh
     mov [extended_code],1
     call take_register
     or al,al
     jnz invalid_operand
+
     simple_svm_detect_size:
     cmp ah,2
     je simple_svm_16bit
@@ -24451,7 +25071,7 @@ fp_qword_small_shift:
     jmp simple_svm_store
     ret
 
-    simple_svm_16bit:
+simple_svm_16bit:
     cmp [code_type],16
     je simple_svm_store
     cmp [code_type],64
@@ -24459,12 +25079,13 @@ fp_qword_small_shift:
     jmp prefixed_svm_store
     ret
 
-    simple_svm_32bit:
+simple_svm_32bit:
     cmp [code_type],32
     je simple_svm_store
     prefixed_svm_store:
     mov al,67h
     stos u8 [edi]
+
     simple_svm_store:
     call store_classic_instruction_code
     pop _eax
@@ -24472,7 +25093,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    skinit_instruction:
+skinit_instruction:
     call take_register
     cmp ax,0400h
     jne invalid_operand
@@ -24480,7 +25101,7 @@ fp_qword_small_shift:
     jmp simple_instruction_0f_01
     ret
 
-    clzero_instruction:
+clzero_instruction:
     call take_register
     or al,al
     jnz invalid_operand
@@ -24492,13 +25113,13 @@ fp_qword_small_shift:
     jmp simple_instruction_0f_01
     ret
 
-    clzero_64bit:
+clzero_64bit:
     cmp ah,8
     jne invalid_operand
     jmp simple_instruction_0f_01
     ret
 
-    invlpga_instruction:
+invlpga_instruction:
     push _eax
     mov [base_code],0Fh
     mov [extended_code],1
@@ -24515,8 +25136,9 @@ fp_qword_small_shift:
     jne invalid_operand
     mov ah,bl
     jmp simple_svm_detect_size
+    ret
 
-    rdrand_instruction:
+rdrand_instruction:
     mov [base_code],0Fh
     mov [extended_code],0C7h
     mov [postbyte_register],al
@@ -24527,7 +25149,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    rdfsbase_instruction:
+rdfsbase_instruction:
     cmp [code_type],64
     jne illegal_instruction
     mov [opcode_prefix],0F3h
@@ -24541,8 +25163,9 @@ fp_qword_small_shift:
     je invalid_operand_size
     call operand_autodetect
     jmp nomem_instruction_ready
+    ret
 
-    xabort_instruction:
+xabort_instruction:
     lods u8 [esi]
     call get_size_operator
     cmp ah,1
@@ -24558,7 +25181,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    xbegin_instruction:
+xbegin_instruction:
     lods u8 [esi]
     cmp al,'('
     jne invalid_operand
@@ -24567,6 +25190,7 @@ fp_qword_small_shift:
     je xbegin_64bit
     cmp al,32
     je xbegin_32bit
+
     xbegin_16bit:
     call get_address_word_value
     add edi,4
@@ -24579,13 +25203,14 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    xbegin_32bit:
+xbegin_32bit:
     call get_address_dword_value
     jmp xbegin_address_ok
     ret
 
-    xbegin_64bit:
+xbegin_64bit:
     call get_address_qword_value
+
     xbegin_address_ok:
     add edi,5
     mov ebp,[addressing_space]
@@ -24604,25 +25229,28 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    xbegin_rel32:
+xbegin_rel32:
     sub edx,1
     jno xbegin_rel32_ok
     cmp [code_type],64
     je jump_out_of_range
+
     xbegin_rel32_ok:
     mov ax,0F8C7h
     stos u16 [edi]
     mov eax,edx
     stos dword [edi]
     jmp instruction_assembled
+    ret
 
-    bndcl_instruction:
+bndcl_instruction:
     mov ah,0F3h
     jmp bndc_instruction
     ret
 
-    bndcu_instruction:
+bndcu_instruction:
     mov ah,0F2h
+
     bndc_instruction:
     mov [opcode_prefix],ah
     mov [base_code],0Fh
@@ -24646,12 +25274,12 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    bndc_mem:
+bndc_mem:
     call get_address_of_required_size
     jmp instruction_ready
     ret
 
-    bndmov_instruction:
+bndmov_instruction:
     mov [opcode_prefix],66h
     mov [base_code],0Fh
     mov [extended_code],al
@@ -24674,7 +25302,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    bndmov_reg:
+bndmov_reg:
     lods u8 [esi]
     call convert_bnd_register
     mov [postbyte_register],al
@@ -24691,18 +25319,19 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    bndmov_reg_reg:
+bndmov_reg_reg:
     lods u8 [esi]
     call convert_bnd_register
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
-    take_bnd_register:
+take_bnd_register:
     lods u8 [esi]
     cmp al,14h
     jne invalid_operand
     lods u8 [esi]
+
     convert_bnd_register:
     mov ah,al
     shr ah,4
@@ -24711,7 +25340,7 @@ fp_qword_small_shift:
     and al,1111b
     ret
 
-    bndmk_instruction:
+bndmk_instruction:
     mov [opcode_prefix],0F3h
     mov [base_code],0Fh
     mov [extended_code],al
@@ -24751,10 +25380,13 @@ fp_qword_small_shift:
     or bl,bl
     jnz invalid_address
     mov bl,bh
+
     bndmk_to_index:
     inc cl
+
     bndmk_selected_base:
     mov bh,[address_register]
+
     bndmk_ready:
     or bx,bx
     jz instruction_ready
@@ -24764,16 +25396,17 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    get_bnd_size:
+get_bnd_size:
     mov al,4
     cmp [code_type],64
     jne bnd_size_ok
     add al,4
+
     bnd_size_ok:
     mov [address_size],al
     ret
 
-    get_address_component:
+get_address_component:
     mov [free_address_range],0
     call calculate_address
     mov [address_high],edx
@@ -24785,10 +25418,11 @@ fp_qword_small_shift:
     shr al,4
     cmp al,[address_size]
     jne invalid_address
+
     address_component_ok:
     ret
 
-    bndldx_instruction:
+bndldx_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     call take_bnd_register
@@ -24800,7 +25434,7 @@ fp_qword_small_shift:
     jmp bndmk_ready
     ret
 
-    bndstx_instruction:
+bndstx_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     call take_bnd_mib
@@ -24812,7 +25446,7 @@ fp_qword_small_shift:
     jmp bndmk_ready
     ret
 
-    take_bnd_mib:
+take_bnd_mib:
     lods u8 [esi]
     cmp al,'['
     jne invalid_operand
@@ -24847,21 +25481,24 @@ fp_qword_small_shift:
     cmp cl,1
     jne invalid_address
     mov bh,bl
+
     mib_place_index:
     mov bl,[address_register]
     xor cl,cl
     or bl,bl
     jz bnd_mib_ok
     inc cl
+
     bnd_mib_ok:
     ret
 
-    take_register:
+take_register:
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
     jne invalid_operand
     lods u8 [esi]
+
     convert_register:
     mov ah,al
     shr ah,4
@@ -24877,22 +25514,24 @@ fp_qword_small_shift:
     or ah,ah
     jz high_byte_register
     or [rex_prefix],40h
+
     match_register_size:
     cmp ah,[operand_size]
     je register_size_ok
     cmp [operand_size],0
     jne operand_sizes_do_not_match
     mov [operand_size],ah
+
     register_size_ok:
     ret
 
-    high_byte_register:
+high_byte_register:
     mov ah,1
     or [rex_prefix],10h
     jmp match_register_size
     ret
 
-    convert_fpu_register:
+convert_fpu_register:
     mov ah,al
     shr ah,4
     and al,111b
@@ -24901,7 +25540,7 @@ fp_qword_small_shift:
     jmp match_register_size
     ret
 
-    convert_mmx_register:
+convert_mmx_register:
     mov ah,al
     shr ah,4
     cmp ah,0Ch
@@ -24914,7 +25553,7 @@ fp_qword_small_shift:
     jmp match_register_size
     ret
 
-    xmm_register:
+xmm_register:
     and al,0Fh
     mov ah,16
     cmp al,8
@@ -24924,7 +25563,7 @@ fp_qword_small_shift:
     jmp match_register_size
     ret
 
-    convert_xmm_register:
+convert_xmm_register:
     mov ah,al
     shr ah,4
     cmp ah,0Ch
@@ -24932,7 +25571,7 @@ fp_qword_small_shift:
     jmp invalid_operand
     ret
 
-    get_size_operator:
+get_size_operator:
     xor ah,ah
     cmp al,11h
     jne no_size_operator
@@ -24945,28 +25584,31 @@ fp_qword_small_shift:
     cmp [operand_size],0
     jne operand_sizes_do_not_match
     mov [operand_size],ah
+
     size_operator_ok:
     ret
 
-    no_size_operator:
+no_size_operator:
     mov [size_declared],0
     cmp al,'['
     jne size_operator_ok
     and [operand_flags],not 1
     ret
 
-    get_jump_operator:
+get_jump_operator:
     mov [jump_type],0
     cmp al,12h
     jne jump_operator_ok
     lods u16 [esi]
     mov [jump_type],al
     mov al,ah
+
     jump_operator_ok:
     ret
 
-    get_address:
+get_address:
     and [address_size],0
+
     get_address_of_required_size:
     call get_address_prefixes
     and [free_address_range],0
@@ -24981,6 +25623,7 @@ fp_qword_small_shift:
     jnz clear_address_size
     cmp [code_type],64
     jne address_ok
+
     calculate_relative_address:
     mov _edx,u64[address_symbol]
     mov u64[symbol_identifier],_edx
@@ -24992,18 +25635,21 @@ fp_qword_small_shift:
     cmp edx,[address_high]
     je address_high_ok
     call recoverable_overflow
+
     address_high_ok:
     mov edx,eax
     ror ecx,16
     mov cl,[value_type]
     rol ecx,16
     mov bx,9900h
+
     clear_address_size:
     and ch,not 0Fh
+
     address_ok:
     ret
 
-    get_address_prefixes:
+get_address_prefixes:
     and [segment_register],0
     and [address_size_declared],0
     mov al,[code_type]
@@ -25018,6 +25664,7 @@ fp_qword_small_shift:
     mov [segment_register],al
     mov al,[esi]
     and al,11110000b
+
     get_address_size_prefix:
     cmp al,70h
     jne address_size_prefix_ok
@@ -25032,29 +25679,31 @@ fp_qword_small_shift:
     or [address_size],al
     cmp al,[address_size]
     jne invalid_address_size
+
     address_size_prefix_ok:
     ret
 
-    operand_16bit:
+operand_16bit:
     cmp [code_type],16
     je size_prefix_ok
     mov [operand_prefix],66h
     ret
 
-    operand_32bit:
+operand_32bit:
     cmp [code_type],16
     jne size_prefix_ok
     mov [operand_prefix],66h
+
     size_prefix_ok:
     ret
 
-    operand_64bit:
+operand_64bit:
     cmp [code_type],64
     jne illegal_instruction
     or [rex_prefix],48h
     ret
 
-    operand_autodetect:
+operand_autodetect:
     cmp al,2
     je operand_16bit
     cmp al,4
@@ -25064,7 +25713,7 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    store_segment_prefix_if_necessary:
+store_segment_prefix_if_necessary:
     mov al,[segment_register]
     or al,al
     jz segment_prefix_ok
@@ -25085,7 +25734,7 @@ fp_qword_small_shift:
     je segment_prefix_86
     ret
 
-    ss_prefix:
+ss_prefix:
     cmp bl,25h
     je segment_prefix_ok
     cmp bh,25h
@@ -25097,12 +25746,13 @@ fp_qword_small_shift:
     jmp segment_prefix_86
     ret
 
-    store_segment_prefix:
+store_segment_prefix:
     mov al,[segment_register]
     or al,al
     jz segment_prefix_ok
     cmp al,5
     jae segment_prefix_386
+
     segment_prefix_86:
     dec al
     shl al,3
@@ -25111,25 +25761,29 @@ fp_qword_small_shift:
     jmp segment_prefix_ok
     ret
 
-    segment_prefix_386:
+segment_prefix_386:
     add al,64h-5
     stos u8 [edi]
+
     segment_prefix_ok:
     ret
 
-    store_instruction_code:
+store_instruction_code:
     cmp [vex_required],0
     jne store_vex_instruction_code
+
     store_classic_instruction_code:
     mov al,[operand_prefix]
     or al,al
     jz operand_prefix_ok
     stos u8 [edi]
+
     operand_prefix_ok:
     mov al,[opcode_prefix]
     or al,al
     jz opcode_prefix_ok
     stos u8 [edi]
+
     opcode_prefix_ok:
     mov al,[rex_prefix]
     test al,40h
@@ -25139,11 +25793,13 @@ fp_qword_small_shift:
     test al,0B0h
     jnz disallowed_combination_of_registers
     stos u8 [edi]
+
     rex_prefix_ok:
     mov al,[base_code]
     stos u8 [edi]
     cmp al,0Fh
     jne instruction_code_ok
+
     store_extended_code:
     mov al,[extended_code]
     stos u8 [edi]
@@ -25151,15 +25807,16 @@ fp_qword_small_shift:
     je store_supplemental_code
     cmp al,3Ah
     je store_supplemental_code
+
     instruction_code_ok:
     ret
 
-    store_supplemental_code:
+store_supplemental_code:
     mov al,[supplemental_code]
     stos u8 [edi]
     ret
 
-    store_nomem_instruction:
+store_nomem_instruction:
     test [postbyte_register],10000b
     jz nomem_reg_high_code_ok
     or [vex_required],10h
@@ -25169,17 +25826,20 @@ fp_qword_small_shift:
     jz nomem_reg_code_ok
     or [rex_prefix],44h
     and [postbyte_register],111b
+
     nomem_reg_code_ok:
     test bl,10000b
     jz nomem_rm_high_code_ok
     or [rex_prefix],42h
     or [vex_required],8
     and bl,1111b
+
     nomem_rm_high_code_ok:
     test bl,1000b
     jz nomem_rm_code_ok
     or [rex_prefix],41h
     and bl,111b
+
     nomem_rm_code_ok:
     and [displacement_compression],0
     call store_instruction_code
@@ -25190,18 +25850,20 @@ fp_qword_small_shift:
     stos u8 [edi]
     ret
 
-    store_instruction:
+store_instruction:
     mov u64[current_offset],_edi
     and [displacement_compression],0
     test [postbyte_register],10000b
     jz reg_high_code_ok
     or [vex_required],10h
     and [postbyte_register],1111b
+
     reg_high_code_ok:
     test [postbyte_register],1000b
     jz reg_code_ok
     or [rex_prefix],44h
     and [postbyte_register],111b
+
     reg_code_ok:
     cmp [code_type],64
     jne address_value_ok
@@ -25215,8 +25877,10 @@ fp_qword_small_shift:
     jnz address_value_ok
     test bx,8080h
     jz address_value_ok
+
     address_value_out_of_range:
     call recoverable_overflow
+
     address_value_ok:
     call store_segment_prefix_if_necessary
     test [vex_required],4
@@ -25247,6 +25911,7 @@ fp_qword_small_shift:
     cmp bl,bh
     jbe determine_16bit_address
     xchg bl,bh
+
     determine_16bit_address:
     cmp bx,2600h
     je address_si
@@ -25264,43 +25929,45 @@ fp_qword_small_shift:
     je address_bx_di
     cmp bx,2623h
     jne invalid_address
+
     address_bx_si:
     xor al,al
     jmp postbyte_16bit
     ret
 
-    address_bx_di:
+address_bx_di:
     mov al,1
     jmp postbyte_16bit
     ret
 
-    address_bp_si:
+address_bp_si:
     mov al,10b
     jmp postbyte_16bit
     ret
 
-    address_bp_di:
+address_bp_di:
     mov al,11b
     jmp postbyte_16bit
     ret
 
-    address_si:
+address_si:
     mov al,100b
     jmp postbyte_16bit
     ret
 
-    address_di:
+address_di:
     mov al,101b
     jmp postbyte_16bit
     ret
 
-    address_bx:
+address_bx:
     mov al,111b
     jmp postbyte_16bit
     ret
 
-    address_bp:
+address_bp:
     mov al,110b
+
     postbyte_16bit:
     test ch,22h
     jnz address_16bit_value
@@ -25319,6 +25986,7 @@ fp_qword_small_shift:
     jb address_8bit_value
     cmp dx,-80h
     jae address_8bit_value
+
     address_16bit_value:
     or al,10000000b
     mov cl,[postbyte_register]
@@ -25329,7 +25997,7 @@ fp_qword_small_shift:
     stos u16 [edi]
     ret
 
-    address_8bit_value:
+address_8bit_value:
     or al,01000000b
     mov cl,[postbyte_register]
     shl cl,3
@@ -25339,7 +26007,7 @@ fp_qword_small_shift:
     stos u8 [edi]
     ret
 
-    address:
+address:
     cmp al,110b
     je address_8bit_value
     mov cl,[postbyte_register]
@@ -25348,7 +26016,7 @@ fp_qword_small_shift:
     stos u8 [edi]
     ret
 
-    address_vsib:
+address_vsib:
     mov al,bl
     shr al,4
     test al,1
@@ -25356,11 +26024,13 @@ fp_qword_small_shift:
     or [vex_register],10000b
     or [vex_required],8
     xor al,1
+
     vsib_high_code_ok:
     cmp al,6
     je vsib_index_ok
     cmp al,0Ch
     jb invalid_address
+
     vsib_index_ok:
     mov al,bh
     shr al,4
@@ -25370,14 +26040,16 @@ fp_qword_small_shift:
     je address_prefix_ok
     test al,al
     jnz invalid_address
+
     postbyte_32bit:
     call address_32bit_prefix
     jmp address_prefix_ok
     ret
 
-    postbyte_64bit:
+postbyte_64bit:
     cmp [code_type],64
     jne invalid_address_size
+
     address_prefix_ok:
     cmp bl,44h
     je invalid_address
@@ -25386,16 +26058,19 @@ fp_qword_small_shift:
     test bh,1000b
     jz base_code_ok
     or [rex_prefix],41h
+
     base_code_ok:
     test bl,1000b
     jz index_code_ok
     or [rex_prefix],42h
+
     index_code_ok:
     test ch,44h or 88h
     setz [displacement_compression]
     call store_instruction_code
     or cl,cl
     jz only_base_register
+
     base_and_index:
     mov al,100b
     xor ah,ah
@@ -25409,13 +26084,14 @@ fp_qword_small_shift:
     jmp scale_ok
     ret
 
-    scale_2:
+scale_2:
     or ah,10000000b
     jmp scale_ok
     ret
 
-    scale_1:
+scale_1:
     or ah,01000000b
+
     scale_ok:
     or bh,bh
     jz only_index_register
@@ -25424,6 +26100,7 @@ fp_qword_small_shift:
     or ah,bl
     and bh,111b
     or ah,bh
+
     sib_ready:
     test ch,44h or 88h
     jnz sib_address_32bit_value
@@ -25433,6 +26110,7 @@ fp_qword_small_shift:
     je address_value
     or edx,edx
     jz sib_address
+
     address_value:
     cmp [displacement_compression],2
     ja sib_address_8bit_value
@@ -25441,6 +26119,7 @@ fp_qword_small_shift:
     jb sib_address_8bit_value
     cmp edx,-80h
     jnb sib_address_8bit_value
+
     sib_address_32bit_value:
     or al,10000000b
     mov cl,[postbyte_register]
@@ -25450,7 +26129,7 @@ fp_qword_small_shift:
     jmp store_address_32bit_value
     ret
 
-    sib_address_8bit_value:
+sib_address_8bit_value:
     or al,01000000b
     mov cl,[postbyte_register]
     shl cl,3
@@ -25460,14 +26139,14 @@ fp_qword_small_shift:
     stos u8 [edi]
     ret
 
-    sib_address:
+sib_address:
     mov cl,[postbyte_register]
     shl cl,3
     or al,cl
     stos u16 [edi]
     ret
 
-    only_index_register:
+only_index_register:
     or ah,101b
     and bl,111b
     shl bl,3
@@ -25486,13 +26165,13 @@ fp_qword_small_shift:
     jmp store_address_32bit_value
     ret
 
-    zero_index_register:
+zero_index_register:
     mov bl,4
     mov cl,1
     jmp base_and_index
     ret
 
-    only_base_register:
+only_base_register:
     mov al,bh
     and al,111b
     cmp al,4
@@ -25510,6 +26189,7 @@ fp_qword_small_shift:
     jb simple_address_8bit_value
     cmp edx,-80h
     jnb simple_address_8bit_value
+
     simple_address_32bit_value:
     or al,10000000b
     mov cl,[postbyte_register]
@@ -25519,7 +26199,7 @@ fp_qword_small_shift:
     jmp store_address_32bit_value
     ret
 
-    simple_address_8bit_value:
+simple_address_8bit_value:
     or al,01000000b
     mov cl,[postbyte_register]
     shl cl,3
@@ -25529,7 +26209,7 @@ fp_qword_small_shift:
     stos u8 [edi]
     ret
 
-    simple_address:
+simple_address:
     cmp al,5
     je simple_address_8bit_value
     mov cl,[postbyte_register]
@@ -25538,7 +26218,7 @@ fp_qword_small_shift:
     stos u8 [edi]
     ret
 
-    address_immediate:
+address_immediate:
     cmp [code_type],64
     je address_immediate_sib
     test ch,44h or 88h
@@ -25549,15 +26229,18 @@ fp_qword_small_shift:
     jnz invalid_address_size
     cmp [code_type],16
     je addressing_16bit
+
     address_immediate_32bit:
     call address_32bit_prefix
     call store_instruction_code
+
     store_immediate_address:
     mov al,101b
     mov cl,[postbyte_register]
     shl cl,3
     or al,cl
     stos u8 [edi]
+
     store_address_32bit_value:
     test ch,0F0h
     jz address_32bit_relocation_ok
@@ -25566,6 +26249,7 @@ fp_qword_small_shift:
     cmp al,4
     jne address_32bit_relocation
     mov al,2
+
     address_32bit_relocation:
     xchg [value_type],al
     mov _ebx,u64[address_symbol]
@@ -25573,12 +26257,13 @@ fp_qword_small_shift:
     call mark_relocation
     mov [value_type],al
     mov u64[symbol_identifier],_ebx
+
     address_32bit_relocation_ok:
     mov eax,edx
     stos dword [edi]
     ret
 
-    store_address_64bit_value:
+store_address_64bit_value:
     test ch,0F0h
     jz address_64bit_relocation_ok
     mov eax,ecx
@@ -25589,6 +26274,7 @@ fp_qword_small_shift:
     call mark_relocation
     mov [value_type],al
     mov u64[symbol_identifier],_ebx
+
     address_64bit_relocation_ok:
     mov eax,edx
     stos dword [edi]
@@ -25596,7 +26282,7 @@ fp_qword_small_shift:
     stos dword [edi]
     ret
 
-    address_immediate_sib:
+address_immediate_sib:
     test ch,44h
     jnz address_immediate_sib_32bit
     test ch,not 88h
@@ -25605,6 +26291,7 @@ fp_qword_small_shift:
     jz address_immediate_sib_store
     cmp [address_high],0
     je address_immediate_sib_nosignextend
+
     address_immediate_sib_store:
     call store_instruction_code
     mov al,100b
@@ -25616,19 +26303,21 @@ fp_qword_small_shift:
     jmp store_address_32bit_value
     ret
 
-    address_immediate_sib_32bit:
+address_immediate_sib_32bit:
     test ecx,0FF0000h
     jnz address_immediate_sib_nosignextend
     test edx,80000000h
     jz address_immediate_sib_store
+
     address_immediate_sib_nosignextend:
     call address_32bit_prefix
     jmp address_immediate_sib_store
     ret
 
-    address_eip_based:
+address_eip_based:
     mov al,67h
     stos u8 [edi]
+
     address_rip_based:
     cmp [code_type],64
     jne invalid_address
@@ -25636,7 +26325,7 @@ fp_qword_small_shift:
     jmp store_immediate_address
     ret
 
-    address_relative:
+address_relative:
     call store_instruction_code
     movzx eax,[immediate_size]
     add eax,edi
@@ -25645,6 +26334,7 @@ fp_qword_small_shift:
     sub edx,eax
     jno     @f
     call recoverable_overflow
+
     @@:
     mov al,101b
     mov cl,[postbyte_register]
@@ -25662,12 +26352,13 @@ fp_qword_small_shift:
     stos dword [edi]
     ret
 
-    addressing_16bit:
+addressing_16bit:
     cmp edx,10000h
     jge address_immediate_32bit
     cmp edx,-8000h
     jl address_immediate_32bit
     movzx edx,dx
+
     address_immediate_16bit:
     call address_16bit_prefix
     call store_instruction_code
@@ -25684,29 +26375,30 @@ fp_qword_small_shift:
     jl value_out_of_range
     ret
 
-    address_16bit_prefix:
+address_16bit_prefix:
     cmp [code_type],16
     je instruction_prefix_ok
     mov al,67h
     stos u8 [edi]
     ret
 
-    address_32bit_prefix:
+address_32bit_prefix:
     cmp [code_type],32
     je instruction_prefix_ok
     mov al,67h
     stos u8 [edi]
+
     instruction_prefix_ok:
     ret
 
-    store_instruction_with_imm8:
+store_instruction_with_imm8:
     mov [immediate_size],1
     call store_instruction
     mov al, u8 [value]
     stos u8 [edi]
     ret
 
-    store_instruction_with_imm16:
+store_instruction_with_imm16:
     mov [immediate_size],2
     call store_instruction
     mov ax, u16 [value]
@@ -25714,7 +26406,7 @@ fp_qword_small_shift:
     stos u16 [edi]
     ret
 
-    store_instruction_with_imm32:
+store_instruction_with_imm32:
     mov [immediate_size],4
     call store_instruction
     mov eax,dword [value]
@@ -25722,28 +26414,31 @@ fp_qword_small_shift:
     stos dword [edi]
     ret
 
-    avx_single_source_pd_instruction_er_evex:
+avx_single_source_pd_instruction_er_evex:
     or [vex_required],8
+
     avx_single_source_pd_instruction_er:
     or [operand_flags],2+4+8
     jmp avx_pd_instruction
     ret
 
-    avx_single_source_pd_instruction_sae_evex:
+avx_single_source_pd_instruction_sae_evex:
     or [vex_required],8
     or [operand_flags],2+4
     jmp avx_pd_instruction
     ret
 
-    avx_pd_instruction_imm8:
+avx_pd_instruction_imm8:
     mov [immediate_size],1
     jmp avx_pd_instruction
     ret
 
-    avx_pd_instruction_er:
+avx_pd_instruction_er:
     or [operand_flags],8
+
     avx_pd_instruction_sae:
     or [operand_flags],4
+
     avx_pd_instruction:
     mov [opcode_prefix],66h
     or [rex_prefix],80h
@@ -25751,48 +26446,52 @@ fp_qword_small_shift:
     jmp avx_instruction_with_broadcast
     ret
 
-    avx_pd_instruction_38_evex:
+avx_pd_instruction_38_evex:
     or [vex_required],8
     mov [supplemental_code],al
     mov al,38h
     jmp avx_pd_instruction
     ret
 
-    avx_cvtps2dq_instruction:
+avx_cvtps2dq_instruction:
     mov [opcode_prefix],66h
     jmp avx_single_source_ps_instruction_er
     ret
 
-    avx_cvtudq2ps_instruction:
+avx_cvtudq2ps_instruction:
     mov [opcode_prefix],0F2h
+
     avx_single_source_ps_instruction_er_evex:
     or [vex_required],8
+
     avx_single_source_ps_instruction_er:
     or [operand_flags],2+4+8
     jmp avx_ps_instruction
     ret
 
-    avx_single_source_ps_instruction_noevex:
+avx_single_source_ps_instruction_noevex:
     or [operand_flags],2
     or [vex_required],2
     jmp avx_ps_instruction
     ret
 
-    avx_ps_instruction_imm8:
+avx_ps_instruction_imm8:
     mov [immediate_size],1
     jmp avx_ps_instruction
     ret
 
-    avx_ps_instruction_er:
+avx_ps_instruction_er:
     or [operand_flags],8
+
     avx_ps_instruction_sae:
     or [operand_flags],4
-    avx_ps_instruction:
+
+avx_ps_instruction:
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
-    avx_ps_instruction_66_38_evex:
+avx_ps_instruction_66_38_evex:
     or [vex_required],8
     mov [opcode_prefix],66h
     mov [supplemental_code],al
@@ -25800,10 +26499,12 @@ fp_qword_small_shift:
     jmp avx_ps_instruction
     ret
 
-    avx_sd_instruction_er:
+avx_sd_instruction_er:
     or [operand_flags],8
+
     avx_sd_instruction_sae:
     or [operand_flags],4
+
     avx_sd_instruction:
     mov [opcode_prefix],0F2h
     or [rex_prefix],80h
@@ -25811,25 +26512,29 @@ fp_qword_small_shift:
     jmp avx_instruction
     ret
 
-    avx_ss_instruction_er:
+avx_ss_instruction_er:
     or [operand_flags],8
+
     avx_ss_instruction_sae:
     or [operand_flags],4
+
     avx_ss_instruction:
     mov [opcode_prefix],0F3h
     mov cl,4
     jmp avx_instruction
     ret
 
-    avx_ss_instruction_noevex:
+avx_ss_instruction_noevex:
     or [vex_required],2
     jmp avx_ss_instruction
     ret
 
-    avx_single_source_q_instruction_38_evex:
+avx_single_source_q_instruction_38_evex:
     or [operand_flags],2
+
     avx_q_instruction_38_evex:
     or [vex_required],8
+
     avx_q_instruction_38:
     mov [supplemental_code],al
     mov al,38h
@@ -25838,12 +26543,13 @@ fp_qword_small_shift:
 
     avx_q_instruction_38_w1_evex:
     or [vex_required],8
+
     avx_q_instruction_38_w1:
     or [rex_prefix],8
     jmp avx_q_instruction_38
     ret
 
-    avx_q_instruction_3a_imm8_evex:
+avx_q_instruction_3a_imm8_evex:
     mov [immediate_size],1
     or [vex_required],8
     mov [supplemental_code],al
@@ -25851,30 +26557,33 @@ fp_qword_small_shift:
     jmp avx_q_instruction
     ret
 
-    avx_q_instruction_evex:
+avx_q_instruction_evex:
     or [vex_required],8
+
     avx_q_instruction:
     or [rex_prefix],80h
     mov ch,8
     jmp avx_pi_instruction
     ret
 
-    avx_single_source_d_instruction_38_evex:
+avx_single_source_d_instruction_38_evex:
     or [vex_required],8
+
     avx_single_source_d_instruction_38:
     or [operand_flags],2
     jmp avx_d_instruction_38
     ret
 
-    avx_d_instruction_38_evex:
+avx_d_instruction_38_evex:
     or [vex_required],8
+
     avx_d_instruction_38:
     mov [supplemental_code],al
     mov al,38h
     jmp avx_d_instruction
     ret
 
-    avx_d_instruction_3a_imm8_evex:
+avx_d_instruction_3a_imm8_evex:
     mov [immediate_size],1
     or [vex_required],8
     mov [supplemental_code],al
@@ -25882,71 +26591,80 @@ fp_qword_small_shift:
     jmp avx_d_instruction
     ret
 
-    avx_single_source_d_instruction_imm8:
+avx_single_source_d_instruction_imm8:
     or [operand_flags],2
     mov [immediate_size],1
     jmp avx_d_instruction
     ret
 
-    avx_d_instruction_evex:
+avx_d_instruction_evex:
     or [vex_required],8
+
     avx_d_instruction:
     mov ch,4
     jmp avx_pi_instruction
     ret
 
-    avx_single_source_bw_instruction_38:
+avx_single_source_bw_instruction_38:
     or [operand_flags],2
+
     avx_bw_instruction_38:
     mov [supplemental_code],al
     mov al,38h
+
     avx_bw_instruction:
     xor ch,ch
+
     avx_pi_instruction:
     mov [opcode_prefix],66h
     xor cl,cl
     jmp avx_instruction_with_broadcast
     ret
 
-    avx_bw_instruction_38_w1_evex:
+avx_bw_instruction_38_w1_evex:
     or [rex_prefix],8
+
     avx_bw_instruction_38_evex:
     or [vex_required],8
     jmp avx_bw_instruction_38
     ret
 
-    avx_pd_instruction_noevex:
+avx_pd_instruction_noevex:
     xor cl,cl
     or [vex_required],2
     mov [opcode_prefix],66h
     jmp avx_instruction
     ret
 
-    avx_ps_instruction_noevex:
+avx_ps_instruction_noevex:
     or [vex_required],2
     mov [opcode_prefix],0F2h
     xor cl,cl
     jmp avx_instruction
     ret
 
-    avx_instruction:
+avx_instruction:
     xor ch,ch
+
     avx_instruction_with_broadcast:
     mov [mmx_size],cl
     mov [broadcast_size],ch
     mov [base_code],0Fh
     mov [extended_code],al
+
     avx_xop_common:
     or [vex_required],1
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
     jne invalid_operand
+
     avx_reg:
     lods u8 [esi]
     call convert_avx_register
     mov [postbyte_register],al
     call take_avx512_mask
+
     avx_vex_reg:
     test [operand_flags],2
     jnz avx_vex_reg_ok
@@ -25955,6 +26673,7 @@ fp_qword_small_shift:
     jne invalid_operand
     call take_avx_register
     mov [vex_register],al
+
     avx_vex_reg_ok:
     mov al,[mmx_size]
     or al,al
@@ -25967,10 +26686,12 @@ fp_qword_small_shift:
     ja invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
+
     avx_regs_size_ok:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
+
     avx_regs_rm:
     call take_avx_rm
     jc avx_regs_reg
@@ -25991,13 +26712,14 @@ fp_qword_small_shift:
     jz avx_regs_mem_reg_store
     cmp [code_type],64
     jne invalid_operand
+
     avx_regs_mem_reg_store:
     call take_imm4_if_needed
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
-    avx_regs_reg:
+avx_regs_reg:
     mov bl,al
     call take_avx512_rounding
     mov al,[immediate_size]
@@ -26017,6 +26739,7 @@ fp_qword_small_shift:
     jz avx_regs_reg_
     cmp [code_type],64
     jne invalid_operand
+
     avx_regs_reg_:
     call take_avx_rm
     jc avx_regs_reg_reg
@@ -26028,7 +26751,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    avx_regs_reg_reg:
+avx_regs_reg_reg:
     shl al,4
     jc invalid_operand
     and u8 [value],1111b
@@ -26040,7 +26763,7 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    take_avx_rm:
+take_avx_rm:
     xor cl,cl
     xchg cl,[operand_size]
     lods u8 [esi]
@@ -26061,11 +26784,12 @@ fp_qword_small_shift:
     jb invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
+
     avx_reg_ok:
     stc
     ret
 
-    take_avx_mem:
+take_avx_mem:
     push _ecx
     call get_address
     cmp u8 [esi],'{'
@@ -26097,7 +26821,7 @@ fp_qword_small_shift:
     jmp avx_mem_broadcast_ok
     ret
 
-    avx_mem_broadcast_check:
+avx_mem_broadcast_check:
     bsf eax,eax
     xchg al,[broadcast_size]
     mov [mmx_size],al
@@ -26109,11 +26833,13 @@ fp_qword_small_shift:
     and al,1111b
     cmp al,ah
     jne invalid_operand_size
+
     avx_mem_broadcast_ok:
     or [vex_required],40h
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
+
     avx_mem_ok:
     pop _eax
     or al,al
@@ -26125,11 +26851,12 @@ fp_qword_small_shift:
     jz avx_mem_size_ok
     cmp al,[operand_size]
     jne operand_sizes_do_not_match
+
     avx_mem_size_ok:
     clc
     ret
 
-    avx_mem_size_deciding:
+avx_mem_size_deciding:
     mov al,[operand_size]
     cmp [mmx_size],0
     jne avx_mem_size_enforced
@@ -26142,6 +26869,7 @@ fp_qword_small_shift:
     or al,al
     jnz invalid_operand_size
     call recoverable_unknown_size
+
     avx_mem_size_enforced:
     or al,al
     jz avx_mem_size_ok
@@ -26150,7 +26878,7 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    take_imm4_if_needed:
+take_imm4_if_needed:
     cmp [immediate_size],-3
     jne imm4_ok
     push _ebx _ecx _edx
@@ -26165,10 +26893,11 @@ fp_qword_small_shift:
     jnz value_out_of_range
     or u8 [value],al
     pop _edx _ecx _ebx
+
     imm4_ok:
     ret
 
-    take_avx512_mask:
+take_avx512_mask:
     cmp u8 [esi],'{'
     jne avx512_masking_ok
     test [operand_flags],10h
@@ -26205,15 +26934,18 @@ fp_qword_small_shift:
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
+
     avx512_masking_ok:
     retn
-    take_avx512_rounding:
+
+take_avx512_rounding:
     test [operand_flags],4+8
     jz avx512_rounding_done
     cmp [mmx_size],0
     jne avx512_rounding_allowed
     cmp [operand_size],64
     jne avx512_rounding_done
+
     avx512_rounding_allowed:
     cmp u8 [esi],','
     jne avx512_rounding_done
@@ -26237,6 +26969,7 @@ fp_qword_small_shift:
     lods u8 [esi]
     cmp al,'-'
     jne invalid_operand
+
     take_sae:
     lods u8 [esi]
     cmp al,1Fh
@@ -26247,49 +26980,56 @@ fp_qword_small_shift:
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
+
     avx512_rounding_done:
     retn
 
-    avx_movdqu_instruction:
+avx_movdqu_instruction:
     mov ah,0F3h
     jmp avx_movdq_instruction
     ret
 
-    avx_movdqa_instruction:
+avx_movdqa_instruction:
     mov ah,66h
+
     avx_movdq_instruction:
     mov [opcode_prefix],ah
     or [vex_required],2
     jmp avx_movps_instruction
     ret
 
-    avx512_movdqu16_instruction:
+avx512_movdqu16_instruction:
     or [rex_prefix],8
+
     avx512_movdqu8_instruction:
     mov ah,0F2h
     jmp avx_movdq_instruction_evex
     ret
 
-    avx512_movdqu64_instruction:
+avx512_movdqu64_instruction:
     or [rex_prefix],8
+
     avx512_movdqu32_instruction:
     mov ah,0F3h
     jmp avx_movdq_instruction_evex
     ret
 
-    avx512_movdqa64_instruction:
+avx512_movdqa64_instruction:
     or [rex_prefix],8
+
     avx512_movdqa32_instruction:
     mov ah,66h
+
     avx_movdq_instruction_evex:
     mov [opcode_prefix],ah
     or [vex_required],8
     jmp avx_movps_instruction
     ret
 
-    avx_movpd_instruction:
+avx_movpd_instruction:
     mov [opcode_prefix],66h
     or [rex_prefix],80h
+
     avx_movps_instruction:
     or [operand_flags],2
     mov [base_code],0Fh
@@ -26306,6 +27046,7 @@ fp_qword_small_shift:
     test [extended_code],1
     jnz avx_mem
     add [extended_code],-1+10h
+
     avx_mem:
     cmp al,'['
     jne invalid_operand
@@ -26320,10 +27061,12 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_movntpd_instruction:
+avx_movntpd_instruction:
     or [rex_prefix],80h
+
     avx_movntdq_instruction:
     mov [opcode_prefix],66h
+
     avx_movntps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -26335,8 +27078,9 @@ fp_qword_small_shift:
     jmp avx_mem
     ret
 
-    avx_compress_q_instruction:
+avx_compress_q_instruction:
     or [rex_prefix],8
+
     avx_compress_d_instruction:
     or [vex_required],8
     mov [mmx_size],0
@@ -26357,9 +27101,10 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_lddqu_instruction:
+avx_lddqu_instruction:
     mov ah,0F2h
     or [vex_required],2
+
     avx_load_instruction:
     mov [opcode_prefix],ah
     mov [base_code],0Fh
@@ -26379,21 +27124,22 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_movntdqa_instruction:
+avx_movntdqa_instruction:
     mov [supplemental_code],al
     mov al,38h
     mov ah,66h
     jmp avx_load_instruction
     ret
 
-    avx_movq_instruction:
+avx_movq_instruction:
     or [rex_prefix],8
     mov [mmx_size],8
     jmp avx_mov_instruction
     ret
 
-    avx_movd_instruction:
+avx_movd_instruction:
     mov [mmx_size],4
+
     avx_mov_instruction:
     or [vex_required],1
     mov [opcode_prefix],66h
@@ -26430,7 +27176,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_movd_reg:
+avx_movd_reg:
     lods u8 [esi]
     cmp al,0C0h
     jae avx_movd_xmmreg
@@ -26451,6 +27197,7 @@ fp_qword_small_shift:
     cmp ah,16
     jne invalid_operand_size
     mov [postbyte_register],al
+
     avx_movd_reg_ready:
     test [rex_prefix],8
     jz nomem_instruction_ready
@@ -26459,7 +27206,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_movd_xmmreg:
+avx_movd_xmmreg:
     sub [extended_code],10h
     call convert_avx_register
     cmp ah,16
@@ -26480,6 +27227,7 @@ fp_qword_small_shift:
     cmp al,8
     jne avx_movd_xmmreg_mem_ready
     call avx_movq_xmmreg_xmmreg_opcode
+
     avx_movd_xmmreg_mem_ready:
     not al
     test [operand_size],al
@@ -26487,7 +27235,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_movd_xmmreg_reg:
+avx_movd_xmmreg_reg:
     lods u8 [esi]
     cmp al,0C0h
     jae avx_movq_xmmreg_xmmreg
@@ -26498,7 +27246,7 @@ fp_qword_small_shift:
     jmp avx_movd_reg_ready
     ret
 
-    avx_movq_xmmreg_xmmreg:
+avx_movq_xmmreg_xmmreg:
     cmp [mmx_size],8
     jne invalid_operand
     call avx_movq_xmmreg_xmmreg_opcode
@@ -26509,14 +27257,14 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_movq_xmmreg_xmmreg_opcode:
+avx_movq_xmmreg_xmmreg_opcode:
     and [rex_prefix],not 8
     or [rex_prefix],80h
     add [extended_code],10h
     mov [opcode_prefix],0F3h
     ret
 
-    avx_movddup_instruction:
+avx_movddup_instruction:
     or [vex_required],1
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
@@ -26535,14 +27283,16 @@ fp_qword_small_shift:
     cmp ah,16
     ja avx_movddup_size_ok
     mov [mmx_size],8
+
     avx_movddup_size_ok:
     call take_avx512_mask
     jmp avx_vex_reg_ok
     ret
 
-    avx_movlpd_instruction:
+avx_movlpd_instruction:
     mov [opcode_prefix],66h
     or [rex_prefix],80h
+
     avx_movlps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -26572,10 +27322,11 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_movlps_mem:
+avx_movlps_mem:
     cmp al,'['
     jne invalid_operand
     call get_address
+
     avx_movlps_mem_:
     mov al,[operand_size]
     or al,al
@@ -26583,6 +27334,7 @@ fp_qword_small_shift:
     cmp al,[mmx_size]
     jne invalid_operand_size
     mov [operand_size],0
+
     avx_movlps_mem_size_ok:
     lods u8 [esi]
     cmp al,','
@@ -26595,7 +27347,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_movhlps_instruction:
+avx_movhlps_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
     or [vex_required],1
@@ -26616,16 +27368,17 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_movsd_instruction:
+avx_movsd_instruction:
     mov al,0F2h
     mov cl,8
     or [rex_prefix],80h
     jmp avx_movs_instruction
     ret
 
-    avx_movss_instruction:
+avx_movss_instruction:
     mov al,0F3h
     mov cl,4
+
     avx_movs_instruction:
     mov [opcode_prefix],al
     mov [mmx_size],cl
@@ -26667,7 +27420,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_movs_reg_mem:
+avx_movs_reg_mem:
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -26676,25 +27429,27 @@ fp_qword_small_shift:
     jz avx_movs_reg_mem_ok
     cmp al,[mmx_size]
     jne invalid_operand_size
+
     avx_movs_reg_mem_ok:
     jmp instruction_ready
     ret
 
-    avx_movs_mem:
+avx_movs_mem:
     cmp al,'['
     jne invalid_operand
     call get_address
     or [operand_flags],20h
     call take_avx512_mask
     jmp avx_movlps_mem_
+    ret
 
-    avx_comiss_instruction:
+avx_comiss_instruction:
     or [operand_flags],2+4+10h
     mov cl,4
     jmp avx_instruction
     ret
 
-    avx_comisd_instruction:
+avx_comisd_instruction:
     or [operand_flags],2+4+10h
     mov [opcode_prefix],66h
     or [rex_prefix],80h
@@ -26702,14 +27457,14 @@ fp_qword_small_shift:
     jmp avx_instruction
     ret
 
-    avx_movshdup_instruction:
+avx_movshdup_instruction:
     or [operand_flags],2
     mov [opcode_prefix],0F3h
     xor cl,cl
     jmp avx_instruction
     ret
 
-    avx_cvtqq2pd_instruction:
+avx_cvtqq2pd_instruction:
     mov [opcode_prefix],0F3h
     or [vex_required],8
     or [operand_flags],2+4+8
@@ -26718,7 +27473,7 @@ fp_qword_small_shift:
     jmp avx_instruction_with_broadcast
     ret
 
-    avx_pshuf_w_instruction:
+avx_pshuf_w_instruction:
     mov [opcode_prefix],al
     or [operand_flags],2
     mov [immediate_size],1
@@ -26727,22 +27482,24 @@ fp_qword_small_shift:
     jmp avx_instruction
     ret
 
-    avx_single_source_128bit_instruction_38_noevex:
+avx_single_source_128bit_instruction_38_noevex:
     or [operand_flags],2
+
     avx_128bit_instruction_38_noevex:
     mov cl,16
     jmp avx_instruction_38_noevex
     ret
 
-    avx_single_source_instruction_38_noevex:
+avx_single_source_instruction_38_noevex:
     or [operand_flags],2
     jmp avx_pi_instruction_38_noevex
     ret
 
-    avx_pi_instruction_38_noevex:
+avx_pi_instruction_38_noevex:
     xor cl,cl
     avx_instruction_38_noevex:
     or [vex_required],2
+
     avx_instruction_38:
     mov [opcode_prefix],66h
     mov [supplemental_code],al
@@ -26750,38 +27507,43 @@ fp_qword_small_shift:
     jmp avx_instruction
     ret
 
-    avx_ss_instruction_3a_imm8_noevex:
+avx_ss_instruction_3a_imm8_noevex:
     mov cl,4
     jmp avx_instruction_3a_imm8_noevex
     ret
 
-    avx_sd_instruction_3a_imm8_noevex:
+avx_sd_instruction_3a_imm8_noevex:
     mov cl,8
     jmp avx_instruction_3a_imm8_noevex
     ret
 
-    avx_single_source_128bit_instruction_3a_imm8_noevex:
+avx_single_source_128bit_instruction_3a_imm8_noevex:
     or [operand_flags],2
+
     avx_128bit_instruction_3a_imm8_noevex:
     mov cl,16
     jmp avx_instruction_3a_imm8_noevex
     ret
 
-    avx_triple_source_instruction_3a_noevex:
+avx_triple_source_instruction_3a_noevex:
     xor cl,cl
     mov [immediate_size],-1
     mov u8 [value],0
     jmp avx_instruction_3a_noevex
     ret
 
-    avx_single_source_instruction_3a_imm8_noevex:
+avx_single_source_instruction_3a_imm8_noevex:
     or [operand_flags],2
+
     avx_pi_instruction_3a_imm8_noevex:
     xor cl,cl
+
     avx_instruction_3a_imm8_noevex:
     mov [immediate_size],1
+
     avx_instruction_3a_noevex:
     or [vex_required],2
+
     avx_instruction_3a:
     mov [opcode_prefix],66h
     mov [supplemental_code],al
@@ -26789,45 +27551,50 @@ fp_qword_small_shift:
     jmp avx_instruction
     ret
 
-    avx_pi_instruction_3a_imm8:
+avx_pi_instruction_3a_imm8:
     xor cl,cl
     mov [immediate_size],1
     jmp avx_instruction_3a
     ret
 
-    avx_pclmulqdq_instruction:
+avx_pclmulqdq_instruction:
     mov u8 [value],al
     mov [immediate_size],-4
     or [vex_required],2
     mov cl,16
     mov al,44h
     jmp avx_instruction_3a
+    ret
 
-    avx512_single_source_pd_instruction_sae_imm8:
+avx512_single_source_pd_instruction_sae_imm8:
     or [operand_flags],2
+
     avx512_pd_instruction_sae_imm8:
     or [rex_prefix],8
     mov cx,0800h
     jmp avx512_instruction_sae_imm8
     ret
 
-    avx512_single_source_ps_instruction_sae_imm8:
+avx512_single_source_ps_instruction_sae_imm8:
     or [operand_flags],2
+
     avx512_ps_instruction_sae_imm8:
     mov cx,0400h
     jmp avx512_instruction_sae_imm8
     ret
 
-    avx512_sd_instruction_sae_imm8:
+avx512_sd_instruction_sae_imm8:
     or [rex_prefix],8
     mov cx,0008h
     jmp avx512_instruction_sae_imm8
     ret
 
-    avx512_ss_instruction_sae_imm8:
+avx512_ss_instruction_sae_imm8:
     mov cx,0004h
+
     avx512_instruction_sae_imm8:
     or [operand_flags],4
+
     avx512_instruction_imm8:
     or [vex_required],8
     mov [opcode_prefix],66h
@@ -26837,51 +27604,61 @@ fp_qword_small_shift:
     jmp avx_instruction_with_broadcast
     ret
 
-    avx512_pd_instruction_er:
+avx512_pd_instruction_er:
     or [operand_flags],4+8
     jmp avx512_pd_instruction
     ret
 
-    avx512_single_source_pd_instruction_sae:
+avx512_single_source_pd_instruction_sae:
     or [operand_flags],4
+
     avx512_single_source_pd_instruction:
     or [operand_flags],2
+
     avx512_pd_instruction:
     or [rex_prefix],8
     mov cx,0800h
     jmp avx512_instruction
     ret
 
-    avx512_ps_instruction_er:
+avx512_ps_instruction_er:
     or [operand_flags],4+8
     jmp avx512_ps_instruction
     ret
 
-    avx512_single_source_ps_instruction_sae:
+avx512_single_source_ps_instruction_sae:
     or [operand_flags],4
+
     avx512_single_source_ps_instruction:
     or [operand_flags],2
+
     avx512_ps_instruction:
     mov cx,0400h
     jmp avx512_instruction
     ret
 
-    avx512_sd_instruction_er:
+avx512_sd_instruction_er:
     or [operand_flags],8
+
     avx512_sd_instruction_sae:
     or [operand_flags],4
+
     avx512_sd_instruction:
     or [rex_prefix],8
+
     mov cx,0008h
     jmp avx512_instruction
     ret
 
-    avx512_ss_instruction_er:
+avx512_ss_instruction_er:
     or [operand_flags],8
+
     avx512_ss_instruction_sae:
     or [operand_flags],4
+
     avx512_ss_instruction:
     mov cx,0004h
+
     avx512_instruction:
     or [vex_required],8
     mov [opcode_prefix],66h
@@ -26890,83 +27667,89 @@ fp_qword_small_shift:
     jmp avx_instruction_with_broadcast
     ret
 
-    avx512_exp2pd_instruction:
+avx512_exp2pd_instruction:
     or [rex_prefix],8
     or [operand_flags],2+4
     mov cx,0840h
     jmp avx512_instruction
     ret
 
-    avx512_exp2ps_instruction:
+avx512_exp2ps_instruction:
     or [operand_flags],2+4
     mov cx,0440h
     jmp avx512_instruction
+    ret
 
-    fma_instruction_pd:
+fma_instruction_pd:
     or [rex_prefix],8
     mov cx,0800h
     jmp fma_instruction
     ret
 
-    fma_instruction_ps:
+fma_instruction_ps:
     mov cx,0400h
     jmp fma_instruction
     ret
 
-    fma_instruction_sd:
+fma_instruction_sd:
     or [rex_prefix],8
     mov cx,0008h
     jmp fma_instruction
     ret
 
-    fma_instruction_ss:
+fma_instruction_ss:
     mov cx,0004h
+
     fma_instruction:
     or [operand_flags],4+8
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,38h
     jmp avx_instruction_with_broadcast
+    ret
 
-    fma4_instruction_p:
+fma4_instruction_p:
     xor cl,cl
     jmp fma4_instruction
     ret
 
-    fma4_instruction_sd:
+fma4_instruction_sd:
     mov cl,8
     jmp fma4_instruction
     ret
 
-    fma4_instruction_ss:
+fma4_instruction_ss:
     mov cl,4
+
     fma4_instruction:
     mov [immediate_size],-2
     mov u8 [value],0
     jmp avx_instruction_3a_noevex
+    ret
 
-    avx_cmp_pd_instruction:
+avx_cmp_pd_instruction:
     mov [opcode_prefix],66h
     or [rex_prefix],80h
     mov cx,0800h
     jmp avx_cmp_instruction
     ret
 
-    avx_cmp_ps_instruction:
+avx_cmp_ps_instruction:
     mov cx,0400h
     jmp avx_cmp_instruction
     ret
 
-    avx_cmp_sd_instruction:
+avx_cmp_sd_instruction:
     mov [opcode_prefix],0F2h
     or [rex_prefix],80h
     mov cx,0008h
     jmp avx_cmp_instruction
     ret
 
-    avx_cmp_ss_instruction:
+avx_cmp_ss_instruction:
     mov [opcode_prefix],0F3h
     mov cx,0004h
+
     avx_cmp_instruction:
     mov u8 [value],al
     mov [immediate_size],-4
@@ -26975,7 +27758,7 @@ fp_qword_small_shift:
     jmp avx_cmp_common
     ret
 
-    avx_cmpeqq_instruction:
+avx_cmpeqq_instruction:
     or [rex_prefix],80h
     mov ch,8
     mov [supplemental_code],al
@@ -26983,61 +27766,65 @@ fp_qword_small_shift:
     jmp avx_cmp_pi_instruction
     ret
 
-    avx_cmpeqd_instruction:
+avx_cmpeqd_instruction:
     mov ch,4
     jmp avx_cmp_pi_instruction
     ret
 
-    avx_cmpeqb_instruction:
+avx_cmpeqb_instruction:
     xor ch,ch
     jmp avx_cmp_pi_instruction
     ret
 
-    avx512_cmp_uq_instruction:
+avx512_cmp_uq_instruction:
     or [rex_prefix],8
     mov ch,8
     mov ah,1Eh
     jmp avx_cmp_pi_instruction_evex
     ret
 
-    avx512_cmp_ud_instruction:
+avx512_cmp_ud_instruction:
     mov ch,4
     mov ah,1Eh
     jmp avx_cmp_pi_instruction_evex
     ret
 
-    avx512_cmp_q_instruction:
+avx512_cmp_q_instruction:
     or [rex_prefix],8
     mov ch,8
     mov ah,1Fh
     jmp avx_cmp_pi_instruction_evex
     ret
 
-    avx512_cmp_d_instruction:
+avx512_cmp_d_instruction:
     mov ch,4
     mov ah,1Fh
     jmp avx_cmp_pi_instruction_evex
     ret
 
-    avx512_cmp_uw_instruction:
+avx512_cmp_uw_instruction:
     or [rex_prefix],8
+
     avx512_cmp_ub_instruction:
     xor ch,ch
     mov ah,3Eh
     jmp avx_cmp_pi_instruction_evex
     ret
 
-    avx512_cmp_w_instruction:
+avx512_cmp_w_instruction:
     or [rex_prefix],8
+
     avx512_cmp_b_instruction:
     xor ch,ch
     mov ah,3Fh
+
     avx_cmp_pi_instruction_evex:
     mov u8 [value],al
     mov [immediate_size],-4
     mov [supplemental_code],ah
     mov al,3Ah
     or [vex_required],8
+
     avx_cmp_pi_instruction:
     xor cl,cl
     or [operand_flags],20h
@@ -27057,7 +27844,7 @@ fp_qword_small_shift:
     jmp avx_reg
     ret
 
-    avx_maskreg:
+avx_maskreg:
     cmp [operand_size],0
     jne invalid_operand_size
     or [vex_required],8
@@ -27068,25 +27855,26 @@ fp_qword_small_shift:
     jmp avx_vex_reg
     ret
 
-    avx512_fpclasspd_instruction:
+avx512_fpclasspd_instruction:
     or [rex_prefix],8
     mov cx,0800h
     jmp avx_fpclass_instruction
     ret
 
-    avx512_fpclassps_instruction:
+avx512_fpclassps_instruction:
     mov cx,0400h
     jmp avx_fpclass_instruction
     ret
 
-    avx512_fpclasssd_instruction:
+avx512_fpclasssd_instruction:
     or [rex_prefix],8
     mov cx,0008h
     jmp avx_fpclass_instruction
     ret
 
-    avx512_fpclassss_instruction:
+avx512_fpclassss_instruction:
     mov cx,0004h
+
     avx_fpclass_instruction:
     mov [broadcast_size],ch
     mov [mmx_size],cl
@@ -27099,43 +27887,48 @@ fp_qword_small_shift:
     jmp invalid_operand
     ret
 
-    avx512_ptestnmd_instruction:
+avx512_ptestnmd_instruction:
     mov ch,4
     jmp avx512_ptestnm_instruction
     ret
 
-    avx512_ptestnmq_instruction:
+avx512_ptestnmq_instruction:
     or [rex_prefix],8
     mov ch,8
     jmp avx512_ptestnm_instruction
     ret
 
-    avx512_ptestnmw_instruction:
+avx512_ptestnmw_instruction:
     or [rex_prefix],8
+
     avx512_ptestnmb_instruction:
     xor ch,ch
+
     avx512_ptestnm_instruction:
     mov ah,0F3h
     jmp avx512_ptest_instruction
     ret
 
-    avx512_ptestmd_instruction:
+avx512_ptestmd_instruction:
     mov ch,4
     jmp avx512_ptestm_instruction
     ret
 
-    avx512_ptestmq_instruction:
+avx512_ptestmq_instruction:
     or [rex_prefix],8
     mov ch,8
     jmp avx512_ptestm_instruction
     ret
 
-    avx512_ptestmw_instruction:
+avx512_ptestmw_instruction:
     or [rex_prefix],8
+
     avx512_ptestmb_instruction:
     xor ch,ch
+
     avx512_ptestm_instruction:
     mov ah,66h
+
     avx512_ptest_instruction:
     xor cl,cl
     mov [opcode_prefix],ah
@@ -27143,9 +27936,11 @@ fp_qword_small_shift:
     mov al,38h
     or [vex_required],8
     jmp avx_cmp_common
+    ret
 
-    mask_shift_instruction_q:
+mask_shift_instruction_q:
     or [rex_prefix],8
+
     mask_shift_instruction_d:
     or [operand_flags],2
     or [immediate_size],1
@@ -27155,31 +27950,36 @@ fp_qword_small_shift:
     jmp mask_instruction
     ret
 
-    mask_instruction_single_source_b:
+mask_instruction_single_source_b:
     mov [opcode_prefix],66h
     jmp mask_instruction_single_source_w
     ret
 
-    mask_instruction_single_source_d:
+mask_instruction_single_source_d:
     mov [opcode_prefix],66h
+
     mask_instruction_single_source_q:
     or [rex_prefix],8
+
     mask_instruction_single_source_w:
     or [operand_flags],2
     jmp mask_instruction
     ret
 
-    mask_instruction_b:
+mask_instruction_b:
     mov [opcode_prefix],66h
     jmp mask_instruction_w
     ret
 
-    mask_instruction_d:
+mask_instruction_d:
     mov [opcode_prefix],66h
+
     mask_instruction_q:
     or [rex_prefix],8
+
     mask_instruction_w:
     mov [operand_size],32
+
     mask_instruction:
     or [vex_required],1
     mov [base_code],0Fh
@@ -27193,6 +27993,7 @@ fp_qword_small_shift:
     jne invalid_operand
     call take_mask_register
     mov [vex_register],al
+
     mask_instruction_nds_ok:
     lods u8 [esi]
     cmp al,','
@@ -27204,12 +28005,13 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    take_mask_register:
+take_mask_register:
     lods u8 [esi]
     cmp al,14h
     jne invalid_operand
     lods u8 [esi]
-    convert_mask_register:
+
+convert_mask_register:
     mov ah,al
     shr ah,4
     cmp ah,5
@@ -27217,7 +28019,7 @@ fp_qword_small_shift:
     and al,1111b
     ret
 
-    kmov_instruction:
+kmov_instruction:
     mov [mmx_size],al
     or [vex_required],1
     mov [base_code],0Fh
@@ -27237,6 +28039,7 @@ fp_qword_small_shift:
     jne invalid_operand
     call take_mask_register
     mov [postbyte_register],al
+
     kmov_with_mem:
     mov ah,[mmx_size]
     mov al,[operand_size]
@@ -27244,23 +28047,26 @@ fp_qword_small_shift:
     jz kmov_mem_size_ok
     cmp al,ah
     jne invalid_operand_size
+
     kmov_mem_size_ok:
     call setup_kmov_prefix
     jmp instruction_ready
     ret
 
-    setup_kmov_prefix:
+setup_kmov_prefix:
     cmp ah,4
     jb kmov_w_ok
     or [rex_prefix],8
+
     kmov_w_ok:
     test ah,1 or 4
     jz kmov_prefix_ok
     mov [opcode_prefix],66h
+
     kmov_prefix_ok:
     ret
 
-    kmov_maskreg:
+kmov_maskreg:
     lods u8 [esi]
     call convert_mask_register
     mov [postbyte_register],al
@@ -27279,7 +28085,7 @@ fp_qword_small_shift:
     jmp kmov_with_mem
     ret
 
-    kmov_maskreg_maskreg:
+kmov_maskreg_maskreg:
     lods u8 [esi]
     call convert_mask_register
     mov bl,al
@@ -27288,10 +28094,11 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    kmov_maskreg_reg:
+kmov_maskreg_reg:
     add [extended_code],2
     lods u8 [esi]
     call convert_register
+
     kmov_with_reg:
     mov bl,al
     mov al,[mmx_size]
@@ -27299,6 +28106,7 @@ fp_qword_small_shift:
     cmp al,ah
     jbe kmov_reg_size_check
     mov ah,al
+
     kmov_reg_size_check:
     cmp ah,[operand_size]
     jne invalid_operand_size
@@ -27311,16 +28119,17 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    kmov_f2_w1:
+kmov_f2_w1:
     or [rex_prefix],8
     cmp [code_type],64
     jne illegal_instruction
+
     kmov_f2:
     mov [opcode_prefix],0F2h
     jmp nomem_instruction_ready
     ret
 
-    kmov_reg:
+kmov_reg:
     add [extended_code],3
     lods u8 [esi]
     call convert_register
@@ -27332,8 +28141,9 @@ fp_qword_small_shift:
     jmp kmov_with_reg
     ret
 
-    avx512_pmov_m2_instruction_w1:
+avx512_pmov_m2_instruction_w1:
     or [rex_prefix],8
+
     avx512_pmov_m2_instruction:
     or [vex_required],8
     call setup_f3_0f_38
@@ -27347,8 +28157,9 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx512_pmov_2m_instruction_w1:
+avx512_pmov_2m_instruction_w1:
     or [rex_prefix],8
+
     avx512_pmov_2m_instruction:
     or [vex_required],8
     call setup_f3_0f_38
@@ -27362,15 +28173,16 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    setup_f3_0f_38:
+setup_f3_0f_38:
     mov [extended_code],38h
     mov [supplemental_code],al
     mov [base_code],0Fh
     mov [opcode_prefix],0F3h
     ret
 
-    vzeroall_instruction:
+vzeroall_instruction:
     mov [operand_size],32
+
     vzeroupper_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -27379,35 +28191,38 @@ fp_qword_small_shift:
     jmp instruction_assembled
     ret
 
-    vldmxcsr_instruction:
+vldmxcsr_instruction:
     or [vex_required],2
     jmp fxsave_instruction
+    ret
 
-    avx_perm2f128_instruction:
+avx_perm2f128_instruction:
     or [vex_required],2
     xor ch,ch
+
     avx_instruction_imm8_without_128bit:
     mov [immediate_size],1
     mov ah,3Ah
     jmp avx_instruction_without_128bit
     ret
 
-    avx512_shuf_q_instruction:
+avx512_shuf_q_instruction:
     or [rex_prefix],8
     or [vex_required],8
     mov ch,8
     jmp avx_instruction_imm8_without_128bit
     ret
 
-    avx512_shuf_d_instruction:
+avx512_shuf_d_instruction:
     or [vex_required],8
     mov ch,4
     jmp avx_instruction_imm8_without_128bit
     ret
 
-    avx_permd_instruction:
+avx_permd_instruction:
     mov ah,38h
     mov ch,4
+
     avx_instruction_without_128bit:
     xor cl,cl
     call setup_avx_66_supplemental
@@ -27419,7 +28234,7 @@ fp_qword_small_shift:
     jmp avx_vex_reg
     ret
 
-    setup_avx_66_supplemental:
+setup_avx_66_supplemental:
     mov [opcode_prefix],66h
     mov [broadcast_size],ch
     mov [mmx_size],cl
@@ -27429,20 +28244,21 @@ fp_qword_small_shift:
     or [vex_required],1
     ret
 
-    avx_permq_instruction:
+avx_permq_instruction:
     or [rex_prefix],8
     mov ch,8
     jmp avx_permil_instruction
     ret
 
-    avx_permilpd_instruction:
+avx_permilpd_instruction:
     or [rex_prefix],80h
     mov ch,8
     jmp avx_permil_instruction
     ret
 
-    avx_permilps_instruction:
+avx_permilps_instruction:
     mov ch,4
+
     avx_permil_instruction:
     or [operand_flags],2
     xor cl,cl
@@ -27453,6 +28269,7 @@ fp_qword_small_shift:
     jae avx_permil_size_ok
     cmp ah,32
     jb invalid_operand_size
+
     avx_permil_size_ok:
     mov [postbyte_register],al
     call take_avx512_mask
@@ -27468,6 +28285,7 @@ fp_qword_small_shift:
     cmp al,11h
     jne avx_permil_rm_or_imm8
     mov al,[esi+3]
+
     avx_permil_rm_or_imm8:
     cmp al,'('
     je mmx_nomem_imm8
@@ -27481,7 +28299,7 @@ fp_qword_small_shift:
     jmp avx_regs_rm
     ret
 
-    avx_permq_rm:
+avx_permq_rm:
     or [vex_required],8
     shl al,5
     neg al
@@ -27490,23 +28308,24 @@ fp_qword_small_shift:
     jmp avx_regs_rm
     ret
 
-    vpermil_2pd_instruction:
+vpermil_2pd_instruction:
     mov [immediate_size],-2
     mov u8 [value],al
     mov al,49h
     jmp vpermil2_instruction_setup
     ret
 
-    vpermil_2ps_instruction:
+vpermil_2ps_instruction:
     mov [immediate_size],-2
     mov u8 [value],al
     mov al,48h
     jmp vpermil2_instruction_setup
     ret
 
-    vpermil2_instruction:
+vpermil2_instruction:
     mov [immediate_size],-3
     mov u8 [value],0
+
     vpermil2_instruction_setup:
     or [vex_required],2
     mov [base_code],0Fh
@@ -27514,22 +28333,25 @@ fp_qword_small_shift:
     mov al,3Ah
     xor cl,cl
     jmp avx_instruction
+    ret
 
-    avx_shift_q_instruction_evex:
+avx_shift_q_instruction_evex:
     or [vex_required],8
+
     avx_shift_q_instruction:
     or [rex_prefix],80h
     mov cl,8
     jmp avx_shift_instruction
     ret
 
-    avx_shift_d_instruction:
+avx_shift_d_instruction:
     mov cl,4
     jmp avx_shift_instruction
     ret
 
-    avx_shift_bw_instruction:
+avx_shift_bw_instruction:
     xor cl,cl
+
     avx_shift_instruction:
     mov [broadcast_size],cl
     mov [mmx_size],0
@@ -27577,7 +28399,7 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    convert_avx_shift_opcode:
+convert_avx_shift_opcode:
     mov al,[extended_code]
     mov ah,al
     and ah,1111b
@@ -27590,7 +28412,7 @@ fp_qword_small_shift:
     xchg al,[vex_register]
     ret
 
-    avx_shift_reg_reg_reg:
+avx_shift_reg_reg_reg:
     pop _eax
     lods u8 [esi]
     call convert_xmm_register
@@ -27599,7 +28421,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_shift_reg_reg_mem:
+avx_shift_reg_reg_mem:
     mov [mmx_size],16
     push _ecx
     lods u8 [esi]
@@ -27614,14 +28436,14 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_shift_reg_mem:
+avx_shift_reg_mem:
     or [vex_required],8
     call take_avx_mem
     call convert_avx_shift_opcode
     jmp mmx_imm8
     ret
 
-    avx_shift_dq_instruction:
+avx_shift_dq_instruction:
     mov [postbyte_register],al
     mov [opcode_prefix],66h
     mov [base_code],0Fh
@@ -27645,20 +28467,21 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    avx_shift_dq_reg_mem:
+avx_shift_dq_reg_mem:
     or [vex_required],8
     call get_address
     jmp mmx_imm8
     ret
 
-    avx512_rotate_q_instruction:
+avx512_rotate_q_instruction:
     mov cl,8
     or [rex_prefix],cl
     jmp avx512_rotate_instruction
     ret
 
-    avx512_rotate_d_instruction:
+avx512_rotate_d_instruction:
     mov cl,4
+
     avx512_rotate_instruction:
     mov [broadcast_size],cl
     mov [postbyte_register],al
@@ -27672,19 +28495,21 @@ fp_qword_small_shift:
     mov [vex_register],al
     call take_avx512_mask
     jmp avx_vex_reg_ok
+    ret
 
-    avx_pmovsxbq_instruction:
+avx_pmovsxbq_instruction:
     mov cl,2
     jmp avx_pmovsx_instruction
     ret
 
-    avx_pmovsxbd_instruction:
+avx_pmovsxbd_instruction:
     mov cl,4
     jmp avx_pmovsx_instruction
     ret
 
-    avx_pmovsxbw_instruction:
+avx_pmovsxbw_instruction:
     mov cl,8
+
     avx_pmovsx_instruction:
     mov [mmx_size],cl
     or [vex_required],1
@@ -27717,7 +28542,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx_pmovsx_reg_reg:
+avx_pmovsx_reg_reg:
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -27726,24 +28551,26 @@ fp_qword_small_shift:
     jb invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
+
     avx_pmovsx_xmmreg_reg_size_ok:
     pop _eax
     mov [operand_size],al
     jmp nomem_instruction_ready
     ret
 
-    avx512_pmovqb_instruction:
+avx512_pmovqb_instruction:
     mov cl,2
     jmp avx512_pmov_instruction
     ret
 
-    avx512_pmovdb_instruction:
+avx512_pmovdb_instruction:
     mov cl,4
     jmp avx512_pmov_instruction
     ret
 
-    avx512_pmovwb_instruction:
+avx512_pmovwb_instruction:
     mov cl,8
+
     avx512_pmov_instruction:
     mov [mmx_size],cl
     or [vex_required],8
@@ -27767,7 +28594,7 @@ fp_qword_small_shift:
     jmp instruction_ready
     ret
 
-    avx512_pmov_common:
+avx512_pmov_common:
     call take_avx512_mask
     xor al,al
     xchg al,[operand_size]
@@ -27786,7 +28613,7 @@ fp_qword_small_shift:
     pop _eax
     ret
 
-    avx512_pmov_reg:
+avx512_pmov_reg:
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -27797,71 +28624,75 @@ fp_qword_small_shift:
     cmp al,16
     jne invalid_operand_size
     jmp nomem_instruction_ready
+    ret
 
-    avx_broadcast_128_instruction_noevex:
+avx_broadcast_128_instruction_noevex:
     or [vex_required],2
     mov cl,10h
     jmp avx_broadcast_instruction
     ret
 
-    avx512_broadcast_32x2_instruction:
+avx512_broadcast_32x2_instruction:
     mov cl,08h
     jmp avx_broadcast_instruction_evex
     ret
 
-    avx512_broadcast_32x4_instruction:
+avx512_broadcast_32x4_instruction:
     mov cl,10h
     jmp avx_broadcast_instruction_evex
     ret
 
-    avx512_broadcast_32x8_instruction:
+avx512_broadcast_32x8_instruction:
     mov cl,20h
     jmp avx_broadcast_instruction_evex
     ret
 
-    avx512_broadcast_64x2_instruction:
+avx512_broadcast_64x2_instruction:
     mov cl,10h
     jmp avx_broadcast_instruction_w1_evex
     ret
 
-    avx512_broadcast_64x4_instruction:
+avx512_broadcast_64x4_instruction:
     mov cl,20h
+
     avx_broadcast_instruction_w1_evex:
     or [rex_prefix],8
+
     avx_broadcast_instruction_evex:
     or [vex_required],8
     jmp avx_broadcast_instruction
     ret
 
-    avx_broadcastss_instruction:
+avx_broadcastss_instruction:
     mov cl,4
     jmp avx_broadcast_instruction
     ret
 
-    avx_broadcastsd_instruction:
+avx_broadcastsd_instruction:
     or [rex_prefix],80h
     mov cl,8
     jmp avx_broadcast_instruction
     ret
 
-    avx_pbroadcastb_instruction:
+avx_pbroadcastb_instruction:
     mov cl,1
     jmp avx_broadcast_pi_instruction
     ret
 
-    avx_pbroadcastw_instruction:
+avx_pbroadcastw_instruction:
     mov cl,2
     jmp avx_broadcast_pi_instruction
     ret
 
-    avx_pbroadcastd_instruction:
+avx_pbroadcastd_instruction:
     mov cl,4
     jmp avx_broadcast_pi_instruction
     ret
 
-    avx_pbroadcastq_instruction:
+avx_pbroadcastq_instruction:
     mov cl,8
     or [rex_prefix],80h
+
     avx_broadcast_pi_instruction:
     or [operand_flags],40h
     avx_broadcast_instruction:
@@ -27883,6 +28714,7 @@ fp_qword_small_shift:
     je avx_broadcast_destination_size_ok
     cmp ah,16
     je invalid_operand_size
+
     avx_broadcast_destination_size_ok:
     xor ah,ah
     xchg ah,[operand_size]
@@ -27912,7 +28744,7 @@ fp_qword_small_shift:
     jmp invalid_operand_size
     ret
 
-    avx_broadcast_reg_reg:
+avx_broadcast_reg_reg:
     lods u8 [esi]
     test [operand_flags],40h
     jz avx_broadcast_reg_avx_reg
@@ -27922,6 +28754,7 @@ fp_qword_small_shift:
     jb avx_broadcast_reg_avx_reg
     cmp al,0C0h
     jb avx_broadcast_reg_general_reg
+
     avx_broadcast_reg_avx_reg:
     call convert_avx_register
     mov bl,al
@@ -27932,6 +28765,7 @@ fp_qword_small_shift:
     jne invalid_operand_size
     cmp al,ah
     jae invalid_operand
+
     avx_broadcast_reg_avx_reg_size_ok:
     pop _eax
     xchg ah,[operand_size]
@@ -27941,7 +28775,7 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_broadcast_reg_general_reg:
+avx_broadcast_reg_general_reg:
     call convert_register
     mov bl,al
     mov al,[mmx_size]
@@ -27952,6 +28786,7 @@ fp_qword_small_shift:
     ja invalid_operand_size
     cmp ah,4
     jne invalid_operand_size
+
     avx_broadcast_reg_general_reg_size_ok:
     cmp al,4
     jb avx_broadcast_reg_general_reg_ready
@@ -27959,6 +28794,7 @@ fp_qword_small_shift:
     mov al,3
     jne avx_broadcast_reg_general_reg_ready
     or [rex_prefix],8
+
     avx_broadcast_reg_general_reg_ready:
     add al,7Ah-1
     mov [supplemental_code],al
@@ -27967,26 +28803,30 @@ fp_qword_small_shift:
     xchg ah,[operand_size]
     mov [postbyte_register],al
     jmp nomem_instruction_ready
+    ret
 
-    avx512_extract_64x4_instruction:
+avx512_extract_64x4_instruction:
     or [rex_prefix],8
+
     avx512_extract_32x8_instruction:
     or [vex_required],8
     mov cl,32
     jmp avx_extractf_instruction
     ret
 
-    avx512_extract_64x2_instruction:
+avx512_extract_64x2_instruction:
     or [rex_prefix],8
+
     avx512_extract_32x4_instruction:
     or [vex_required],8
     mov cl,16
     jmp avx_extractf_instruction
     ret
 
-    avx_extractf128_instruction:
+avx_extractf128_instruction:
     or [vex_required],2
     mov cl,16
+
     avx_extractf_instruction:
     mov [mmx_size],cl
     call setup_66_0f_3a
@@ -28003,6 +28843,7 @@ fp_qword_small_shift:
     jz avx_extractf_mem_size_ok
     cmp al,[mmx_size]
     jne invalid_operand_size
+
     avx_extractf_mem_size_ok:
     call take_avx512_mask
     lods u8 [esi]
@@ -28015,7 +28856,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    avx_extractf_reg:
+avx_extractf_reg:
     lods u8 [esi]
     call convert_avx_register
     cmp ah,[mmx_size]
@@ -28034,25 +28875,28 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    avx512_insert_64x4_instruction:
+avx512_insert_64x4_instruction:
     or [rex_prefix],8
+
     avx512_insert_32x8_instruction:
     or [vex_required],8
     mov cl,32
     jmp avx_insertf_instruction
     ret
 
-    avx512_insert_64x2_instruction:
+avx512_insert_64x2_instruction:
     or [rex_prefix],8
+
     avx512_insert_32x4_instruction:
     or [vex_required],8
     mov cl,16
     jmp avx_insertf_instruction
     ret
 
-    avx_insertf128_instruction:
+avx_insertf128_instruction:
     or [vex_required],2
     mov cl,16
+
     avx_insertf_instruction:
     mov [mmx_size],cl
     mov [broadcast_size],0
@@ -28085,7 +28929,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    avx_insertf_reg_reg_reg:
+avx_insertf_reg_reg_reg:
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28094,24 +28938,25 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    avx_extract_b_instruction:
+avx_extract_b_instruction:
     mov cl,1
     jmp avx_extract_instruction
     ret
 
-    avx_extract_w_instruction:
+avx_extract_w_instruction:
     mov cl,2
     jmp avx_extract_instruction
     ret
 
-    avx_extract_q_instruction:
+avx_extract_q_instruction:
     or [rex_prefix],8
     mov cl,8
     jmp avx_extract_instruction
     ret
 
-    avx_extract_d_instruction:
+avx_extract_d_instruction:
     mov cl,4
+
     avx_extract_instruction:
     mov [mmx_size],cl
     call setup_66_0f_3a
@@ -28142,7 +28987,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    avx_extractps_reg:
+avx_extractps_reg:
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -28158,6 +29003,7 @@ fp_qword_small_shift:
     cmp al,4
     jae avx_extractps_reg_size_ok
     or [rex_prefix],8
+
     avx_extractps_reg_size_ok:
     mov [operand_size],0
     lods u8 [esi]
@@ -28179,7 +29025,7 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    avx_insertps_instruction:
+avx_insertps_instruction:
     mov [immediate_size],1
     or [operand_flags],10h
     mov [opcode_prefix],66h
@@ -28189,29 +29035,31 @@ fp_qword_small_shift:
     jmp avx_instruction
     ret
 
-    avx_pinsrb_instruction:
+avx_pinsrb_instruction:
     mov cl,1
     jmp avx_pinsr_instruction_3a
     ret
 
-    avx_pinsrw_instruction:
+avx_pinsrw_instruction:
     mov cl,2
     jmp avx_pinsr_instruction
     ret
 
-    avx_pinsrd_instruction:
+avx_pinsrd_instruction:
     mov cl,4
     jmp avx_pinsr_instruction_3a
     ret
 
-    avx_pinsrq_instruction:
+avx_pinsrq_instruction:
     cmp [code_type],64
     jne illegal_instruction
     mov cl,8
     or [rex_prefix],8
+
     avx_pinsr_instruction_3a:
     mov [supplemental_code],al
     mov al,3Ah
+
     avx_pinsr_instruction:
     mov [opcode_prefix],66h
     mov [base_code],0Fh
@@ -28228,17 +29076,20 @@ fp_qword_small_shift:
     call take_avx_register
     mov [vex_register],al
     jmp pinsr_xmmreg
+    ret
 
-    avx_cvtudq2pd_instruction:
+avx_cvtudq2pd_instruction:
     or [vex_required],8
+
     avx_cvtdq2pd_instruction:
     mov [opcode_prefix],0F3h
     mov cl,4
     jmp avx_cvt_d_instruction
     ret
 
-    avx_cvtps2qq_instruction:
+avx_cvtps2qq_instruction:
     or [operand_flags],8
+
     avx_cvttps2qq_instruction:
     or [operand_flags],4
     or [vex_required],8
@@ -28247,9 +29098,10 @@ fp_qword_small_shift:
     jmp avx_cvt_d_instruction
     ret
 
-    avx_cvtps2pd_instruction:
+avx_cvtps2pd_instruction:
     or [operand_flags],4
     mov cl,4
+
     avx_cvt_d_instruction:
     mov [base_code],0Fh
     mov [extended_code],al
@@ -28280,6 +29132,7 @@ fp_qword_small_shift:
     jb invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
+
     avx_cvt_d_reg_reg_size_ok:
     mov bl,al
     mov [operand_size],cl
@@ -28287,32 +29140,36 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_cvt_d_reg_mem:
+avx_cvt_d_reg_mem:
     call take_avx_mem
     jmp instruction_ready
     ret
 
-    avx_cvtpd2dq_instruction:
+avx_cvtpd2dq_instruction:
     or [operand_flags],4+8
     mov [opcode_prefix],0F2h
     jmp avx_cvt_q_instruction
     ret
 
-    avx_cvtuqq2ps_instruction:
+avx_cvtuqq2ps_instruction:
     mov [opcode_prefix],0F2h
+
     avx_cvtpd2udq_instruction:
     or [operand_flags],8
+
     avx_cvttpd2udq_instruction:
     or [operand_flags],4
     or [vex_required],8
     jmp avx_cvt_q_instruction
     ret
 
-    avx_cvtpd2ps_instruction:
+avx_cvtpd2ps_instruction:
     or [operand_flags],8
+
     avx_cvttpd2dq_instruction:
     or [operand_flags],4
     mov [opcode_prefix],66h
+
     avx_cvt_q_instruction:
     mov [broadcast_size],8
     mov [base_code],0Fh
@@ -28338,13 +29195,13 @@ fp_qword_small_shift:
     jmp nomem_instruction_ready
     ret
 
-    avx_cvt_q_reg_mem:
+avx_cvt_q_reg_mem:
     pop _eax
     call avx_cvt_q_check_size
     jmp instruction_ready
     ret
 
-    avx_cvt_q_check_size:
+avx_cvt_q_check_size:
     mov al,[operand_size]
     or al,al
     jz avx_cvt_q_size_not_specified
@@ -28356,30 +29213,31 @@ fp_qword_small_shift:
     ja invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
+
     avx_cvt_q_size_ok:
     ret
 
-    avx_cvt_q_size_not_specified:
+avx_cvt_q_size_not_specified:
     cmp ah,64 shr 1
     jne recoverable_unknown_size
     mov [operand_size],64
     ret
 
-    avx_cvttps2udq_instruction:
+avx_cvttps2udq_instruction:
     or [vex_required],8
     or [operand_flags],2+4
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
-    avx_cvttps2dq_instruction:
+avx_cvttps2dq_instruction:
     mov [opcode_prefix],0F3h
     or [operand_flags],2+4
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
-    avx_cvtph2ps_instruction:
+avx_cvtph2ps_instruction:
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     or [operand_flags],4
@@ -28388,7 +29246,7 @@ fp_qword_small_shift:
     jmp avx_cvt_d_instruction
     ret
 
-    avx_cvtps2ph_instruction:
+avx_cvtps2ph_instruction:
     call setup_66_0f_3a
     or [vex_required],1
     or [operand_flags],4
@@ -28411,7 +29269,7 @@ fp_qword_small_shift:
     jmp mmx_imm8
     ret
 
-    vcvtps2ph_reg:
+vcvtps2ph_reg:
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28437,1062 +29295,1064 @@ fp_qword_small_shift:
     jmp mmx_nomem_imm8
     ret
 
-    avx_cvtsd2usi_instruction:
-        or [operand_flags],8
-
-        avx_cvttsd2usi_instruction:
-        or [vex_required],8
-        jmp avx_cvttsd2si_instruction
-        ret
-
-    avx_cvtsd2si_instruction:
-        or [operand_flags],8
-
-        avx_cvttsd2si_instruction:
-        mov ah,0F2h
-        mov cl,8
-        jmp avx_cvt_2si_instruction
-        ret
-
-    avx_cvtss2usi_instruction:
-        or [operand_flags],8
-
-        avx_cvttss2usi_instruction:
-        or [vex_required],8
-        jmp avx_cvttss2si_instruction
-        ret
-
-    avx_cvtss2si_instruction:
-        or [operand_flags],8
-
-        avx_cvttss2si_instruction:
-        mov ah,0F3h
-        mov cl,4
-
-        avx_cvt_2si_instruction:
-        or [operand_flags],2+4
-        mov [mmx_size],cl
-        mov [broadcast_size],0
-        mov [opcode_prefix],ah
-        mov [base_code],0Fh
-        mov [extended_code],al
-        or [vex_required],1
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov [postbyte_register],al
-        mov [operand_size],0
-        cmp ah,4
-        je avx_cvt_2si_reg
-        cmp ah,8
-        jne invalid_operand_size
-        call operand_64bit
-
-        avx_cvt_2si_reg:
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_rm
-        jnc instruction_ready
-        mov bl,al
-        call take_avx512_rounding
-        jmp nomem_instruction_ready
-        ret
-
-    avx_cvtusi2sd_instruction:
-        or [vex_required],8
-
-        avx_cvtsi2sd_instruction:
-        mov ah,0F2h
-        mov cl,8
-        jmp avx_cvtsi_instruction
-        ret
-
-    avx_cvtusi2ss_instruction:
-        or [vex_required],8
-
-        avx_cvtsi2ss_instruction:
-        mov ah,0F3h
-        mov cl,4
-        
-        avx_cvtsi_instruction:
-        or [operand_flags],2+4+8
-        mov [mmx_size],cl
-        mov [opcode_prefix],ah
-        mov [base_code],0Fh
-        mov [extended_code],al
-        or [vex_required],1
-        call take_avx_register
-        cmp ah,16
-        jne invalid_operand_size
-        mov [postbyte_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_register
-        mov [vex_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        mov [operand_size],0
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,'['
-        je avx_cvtsi_reg_reg_mem
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov bl,al
-        cmp ah,4
-        je avx_cvtsi_reg_reg_reg32
-        cmp ah,8
-        jne invalid_operand_size
-        call operand_64bit
-
-        avx_cvtsi_rounding:
-        call take_avx512_rounding
-        jmp nomem_instruction_ready
-        ret
-
-    avx_cvtsi_reg_reg_reg32:
-        cmp [mmx_size],8
-        jne avx_cvtsi_rounding
-        jmp nomem_instruction_ready
-        ret
-
-    avx_cvtsi_reg_reg_mem:
-        call get_address
-        mov al,[operand_size]
-        mov [mmx_size],al
-        or al,al
-        jz single_mem_nosize
-        cmp al,4
-        je instruction_ready
-        cmp al,8
-        jne invalid_operand_size
-        call operand_64bit
-        jmp instruction_ready
-        ret
-
-    avx_maskmov_w1_instruction:
-        or [rex_prefix],8
-
-        avx_maskmov_instruction:
-        call setup_66_0f_38
-        mov [mmx_size],0
-        or [vex_required],2
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne avx_maskmov_mem
-        lods u8 [esi]
-        call convert_avx_register
-        mov [postbyte_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_register
-        mov [vex_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,'['
-        jne invalid_operand
-        call get_address
-        jmp instruction_ready
-        ret
-
-    avx_maskmov_mem:
-        cmp al,'['
-        jne invalid_operand
-        call get_address
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_register
-        mov [vex_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_register
-        mov [postbyte_register],al
-        add [supplemental_code],2
-        jmp instruction_ready
-        ret
-
-    avx_movmskpd_instruction:
-        mov [opcode_prefix],66h
-
-        avx_movmskps_instruction:
-        mov [base_code],0Fh
-        mov [extended_code],50h
-        or [vex_required],2
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov [postbyte_register],al
-        cmp ah,4
-        je avx_movmskps_reg_ok
-        cmp ah,8
-        jne invalid_operand_size
-        cmp [code_type],64
-        jne invalid_operand
-
-        avx_movmskps_reg_ok:
-        mov [operand_size],0
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_register
-        mov bl,al
-        jmp nomem_instruction_ready
-        ret
-
-    avx_maskmovdqu_instruction:
-        or [vex_required],2
-        jmp maskmovdqu_instruction
-        ret
-
-    avx_pmovmskb_instruction:
-        or [vex_required],2
-        mov [opcode_prefix],66h
-        mov [base_code],0Fh
-        mov [extended_code],al
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        cmp ah,4
-        je avx_pmovmskb_reg_size_ok
-        cmp [code_type],64
-        jne invalid_operand_size
-        cmp ah,8
-        jnz invalid_operand_size
-
-        avx_pmovmskb_reg_size_ok:
-        mov [postbyte_register],al
-        mov [operand_size],0
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        call take_avx_register
-        mov bl,al
-        jmp nomem_instruction_ready
-
-    gather_pd_instruction:
-        or [rex_prefix],8
-
-        gather_ps_instruction:
-        call setup_66_0f_38
-        or [vex_required],4
-        or [operand_flags],20h
-        call take_avx_register
-        mov [postbyte_register],al
-        call take_avx512_mask
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        xor cl,cl
-        xchg cl,[operand_size]
-        push _ecx
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,'['
-        jne invalid_argument
-        call get_address
-        pop _eax
-        xchg al,[operand_size]
-
-        gather_mem_size_check:
-        mov ah,4
-        test [rex_prefix],8
-        jz gather_elements_size_ok
-        add ah,ah
-
-        gather_elements_size_ok:
-        mov [mmx_size],ah
-        test al,al
-        jz gather_mem_size_ok
-        cmp al,ah
-        jne invalid_operand_size
-        gather_mem_size_ok:
-        cmp u8 [esi],','
-        je gather_reg_mem_reg
-        test [vex_required],20h
-        jz invalid_operand
-        mov ah,[operand_size]
-        mov al,80h
-        jmp gather_arguments_ok
-        ret
-
-    gather_reg_mem_reg:
-        or [vex_required],2
-        inc esi
-        call take_avx_register
-
-        gather_arguments_ok:
-        mov [vex_register],al
-        cmp al,[postbyte_register]
-        je disallowed_combination_of_registers
-        mov al,bl
-        and al,11111b
-        cmp al,[postbyte_register]
-        je disallowed_combination_of_registers
-        cmp al,[vex_register]
-        je disallowed_combination_of_registers
-        mov al,bl
-        shr al,5
-        cmp al,0Ch shr 1
-        je gather_vr128
-        mov ah,32
-        cmp al,6 shr 1
-        jne gather_regular
-        add ah,ah
-
-        gather_regular:
-        mov al,[rex_prefix]
-        shr al,3
-        xor al,[supplemental_code]
-        test al,1
-        jz gather_uniform
-        test [supplemental_code],1
-        jz gather_double
-        mov al,ah
-        xchg al,[operand_size]
-        add al,al
-        cmp al,ah
-        jne invalid_operand_size
-        jmp instruction_ready
-        ret
-
-    gather_double:
-        add ah,ah
-
-        gather_uniform:
-        cmp ah,[operand_size]
-        jne invalid_operand_size
-        jmp instruction_ready
-        ret
-
-    gather_vr128:
-        cmp ah,16
-        je instruction_ready
-        cmp ah,32
-        jne invalid_operand_size
-        test [supplemental_code],1
-        jnz invalid_operand_size
-        test [rex_prefix],8
-        jz invalid_operand_size
-        jmp instruction_ready
-        ret
-
-    scatter_pd_instruction:
-        or [rex_prefix],8
-
-        scatter_ps_instruction:
-        call setup_66_0f_38
-        or [vex_required],4+8
-        or [operand_flags],20h
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,'['
-        jne invalid_argument
-        call get_address
-        call take_avx512_mask
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        xor al,al
-        xchg al,[operand_size]
-        push _eax
-        call take_avx_register
-        mov [postbyte_register],al
-        pop _eax
-        jmp gather_mem_size_check
-        ret
-
-    gatherpf_qpd_instruction:
-        mov ah,0C7h
-        jmp gatherpf_pd_instruction
-        ret
-
-    gatherpf_dpd_instruction:
-        mov ah,0C6h
-
-        gatherpf_pd_instruction:
-        or [rex_prefix],8
-        mov cl,8
-        jmp gatherpf_instruction
-        ret
-
-    gatherpf_qps_instruction:
-        mov ah,0C7h
-        jmp gatherpf_ps_instruction
-        ret
-
-    gatherpf_dps_instruction:
-        mov ah,0C6h
-
-        gatherpf_ps_instruction:
-        mov cl,4
-
-        gatherpf_instruction:
-        mov [mmx_size],cl
-        mov [postbyte_register],al
-        mov al,ah
-        call setup_66_0f_38
-        or [vex_required],4+8
-        or [operand_flags],20h
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,'['
-        jne invalid_argument
-        call get_address
-        call take_avx512_mask
-        mov ah,[mmx_size]
-        mov al,[operand_size]
-        or al,al
-        jz gatherpf_mem_size_ok
-        cmp al,ah
-        jne invalid_operand_size
-
-        gatherpf_mem_size_ok:
-        mov [operand_size],64
-        mov al,6 shr 1
-        cmp ah,4
-        je gatherpf_check_vsib
-        cmp [supplemental_code],0C6h
-        jne gatherpf_check_vsib
-        mov al,0Eh shr 1
-        
-        gatherpf_check_vsib:
-        mov ah,bl
-        shr ah,5
-        cmp al,ah
-        jne invalid_operand
-        jmp instruction_ready
-        ret
-
-    bmi_instruction:
-        mov [base_code],0Fh
-        mov [extended_code],38h
-        mov [supplemental_code],0F3h
-        mov [postbyte_register],al
-
-        bmi_reg:
-        or [vex_required],2
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov [vex_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        je bmi_reg_reg
-        cmp al,'['
-        jne invalid_argument
-        call get_address
-        call operand_32or64
-        jmp instruction_ready
-        ret
-
-    bmi_reg_reg:
-        lods u8 [esi]
-        call convert_register
-        mov bl,al
-        call operand_32or64
-        jmp nomem_instruction_ready
-        ret
-
-    operand_32or64:
-        mov al,[operand_size]
-        cmp al,4
-        je operand_32or64_ok
-        cmp al,8
-        jne invalid_operand_size
-        cmp [code_type],64
-        jne invalid_operand
-        or [rex_prefix],8
-
-        operand_32or64_ok:
-        ret
-
-    pdep_instruction:
-        mov [opcode_prefix],0F2h
-        jmp andn_instruction
-        ret
-
-    pext_instruction:
-        mov [opcode_prefix],0F3h
-
-        andn_instruction:
-        mov [base_code],0Fh
-        mov [extended_code],38h
-        mov [supplemental_code],al
-        or [vex_required],2
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov [postbyte_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        jmp bmi_reg
-        ret
-
-    sarx_instruction:
-        mov [opcode_prefix],0F3h
-        jmp bzhi_instruction
-        ret
-
-    shrx_instruction:
-        mov [opcode_prefix],0F2h
-        jmp bzhi_instruction
-        ret
-
-    shlx_instruction:
-        mov [opcode_prefix],66h
-
-        bzhi_instruction:
-        mov [base_code],0Fh
-        mov [extended_code],38h
-        mov [supplemental_code],al
-        or [vex_required],2
-        call get_reg_mem
-        jc bzhi_reg_reg
-        call get_vex_source_register
-        jc invalid_operand
-        call operand_32or64
-        jmp instruction_ready
-        ret
-
-    bzhi_reg_reg:
-        call get_vex_source_register
-        jc invalid_operand
-        call operand_32or64
-        jmp nomem_instruction_ready
-        ret
-
-    get_vex_source_register:
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne no_vex_source_register
-        lods u8 [esi]
-        call convert_register
-        mov [vex_register],al
-        clc
-        ret
-
-    no_vex_source_register:
-        stc
-        ret
-
-    bextr_instruction:
-        mov [base_code],0Fh
-        mov [extended_code],38h
-        mov [supplemental_code],al
-        or [vex_required],2
-        call get_reg_mem
-        jc bextr_reg_reg
-        call get_vex_source_register
-        jc bextr_reg_mem_imm32
-        call operand_32or64
-        jmp instruction_ready
-        ret
-
-    bextr_reg_reg:
-        call get_vex_source_register
-        jc bextr_reg_reg_imm32
-        call operand_32or64
-        jmp nomem_instruction_ready
-        ret
-
-    setup_bextr_imm_opcode:
-        mov [xop_opcode_map],0Ah
-        mov [base_code],10h
-        call operand_32or64
-        ret
-
-    bextr_reg_mem_imm32:
-        call get_imm32
-        call setup_bextr_imm_opcode
-        jmp store_instruction_with_imm32
-        ret
-
-    bextr_reg_reg_imm32:
-        call get_imm32
-        call setup_bextr_imm_opcode
-
-        store_nomem_instruction_with_imm32:
-        call store_nomem_instruction
-        mov eax,dword [value]
-        call mark_relocation
-        stos dword [edi]
-        jmp instruction_assembled
-        ret
-
-    get_imm32:
-        cmp al,'('
-        jne invalid_operand
-        push _edx _ebx _ecx
-        call get_dword_value
-        mov dword [value],eax
-        pop _ecx _ebx _edx
-        ret
-
-    rorx_instruction:
-        mov [opcode_prefix],0F2h
-        mov [base_code],0Fh
-        mov [extended_code],3Ah
-        mov [supplemental_code],al
-        or [vex_required],2
-        call get_reg_mem
-        jc rorx_reg_reg
-        call operand_32or64
-        jmp mmx_imm8
-        ret
-
-    rorx_reg_reg:
-        call operand_32or64
-        jmp mmx_nomem_imm8
-        ret
-
-    tbm_instruction:
-        mov [xop_opcode_map],9
-        mov ah,al
-        shr ah,4
-        and al,111b
-        mov [base_code],ah
-        mov [postbyte_register],al
-        jmp bmi_reg
-
-    llwpcb_instruction:
-        or [vex_required],2
-        mov [xop_opcode_map],9
-        mov [base_code],12h
-        mov [postbyte_register],al
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov bl,al
-        call operand_32or64
-        jmp nomem_instruction_ready
-        ret
-
-    lwpins_instruction:
-        or [vex_required],2
-        mov [xop_opcode_map],0Ah
-        mov [base_code],12h
-        mov [vex_register],al
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_register
-        mov [postbyte_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        xor cl,cl
-        xchg cl,[operand_size]
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        je lwpins_reg_reg
-        cmp al,'['
-        jne invalid_argument
-        push _ecx
-        call get_address
-        pop _eax
-        xchg al,[operand_size]
-        test al,al
-        jz lwpins_reg_mem_size_ok
-        cmp al,4
-        jne invalid_operand_size
-
-        lwpins_reg_mem_size_ok:
-        call prepare_lwpins
-        jmp store_instruction_with_imm32
-        ret
-
-    lwpins_reg_reg:
-        lods u8 [esi]
-        call convert_register
-        cmp ah,4
-        jne invalid_operand_size
-        mov [operand_size],cl
-        mov bl,al
-        call prepare_lwpins
-        jmp store_nomem_instruction_with_imm32
-        ret
-
-    prepare_lwpins:
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        lods u8 [esi]
-        call get_imm32
-        call operand_32or64
-        mov al,[vex_register]
-        xchg al,[postbyte_register]
-        mov [vex_register],al
-        ret
-
-    xop_single_source_sd_instruction:
-        or [operand_flags],2
-        mov [mmx_size],8
-        jmp xop_instruction_9
-        ret
-
-    xop_single_source_ss_instruction:
-        or [operand_flags],2
-        mov [mmx_size],4
-        jmp xop_instruction_9
-        ret
-
-    xop_single_source_instruction:
-        or [operand_flags],2
-        mov [mmx_size],0
-
-        xop_instruction_9:
-        mov [base_code],al
-        mov [xop_opcode_map],9
-        jmp avx_xop_common
-        ret
-
-    xop_single_source_128bit_instruction:
-        or [operand_flags],2
-        mov [mmx_size],16
-        jmp xop_instruction_9
-        ret
-
-    xop_triple_source_128bit_instruction:
-        mov [immediate_size],-1
-        mov u8 [value],0
-        mov [mmx_size],16
-        jmp xop_instruction_8
-        ret
-
-    xop_128bit_instruction:
-        mov [immediate_size],-2
-        mov u8 [value],0
-        mov [mmx_size],16
-
-        xop_instruction_8:
-        mov [base_code],al
-        mov [xop_opcode_map],8
-        jmp avx_xop_common
-        ret
-
-    xop_pcom_b_instruction:
-        mov ah,0CCh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_d_instruction:
-        mov ah,0CEh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_q_instruction:
-        mov ah,0CFh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_w_instruction:
-        mov ah,0CDh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_ub_instruction:
-        mov ah,0ECh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_ud_instruction:
-        mov ah,0EEh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_uq_instruction:
-        mov ah,0EFh
-        jmp xop_pcom_instruction
-        ret
-
-    xop_pcom_uw_instruction:
-        mov ah,0EDh
-
-        xop_pcom_instruction:
-        mov u8 [value],al
-        mov [immediate_size],-4
-        mov [mmx_size],16
-        mov [base_code],ah
-        mov [xop_opcode_map],8
-        jmp avx_xop_common
-        ret
-
-    vpcmov_instruction:
-        or [vex_required],2
-        mov [immediate_size],-2
-        mov u8 [value],0
-        mov [mmx_size],0
-        mov [base_code],al
-        mov [xop_opcode_map],8
-        jmp avx_xop_common
-        ret
-
-    xop_shift_instruction:
-        mov [base_code],al
-        or [vex_required],2
-        mov [xop_opcode_map],9
-        call take_avx_register
-        cmp ah,16
-        jne invalid_operand
-        mov [postbyte_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,'['
-        je xop_shift_reg_mem
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-        call convert_xmm_register
-        mov [vex_register],al
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        push _esi
-        xor cl,cl
-        xchg cl,[operand_size]
-        lods u8 [esi]
-        call get_size_operator
-        pop _esi
-        xchg cl,[operand_size]
-        cmp al,'['
-        je xop_shift_reg_reg_mem
-        cmp al,10h
-        jne xop_shift_reg_reg_imm
-        call take_avx_register
-        mov bl,al
-        xchg bl,[vex_register]
-        jmp nomem_instruction_ready
-        ret
-
-    xop_shift_reg_reg_mem:
-        or [rex_prefix],8
-        lods u8 [esi]
-        call get_size_operator
-        call get_address
-        jmp instruction_ready
-        ret
-
-    xop_shift_reg_reg_imm:
-        xor bl,bl
-        xchg bl,[vex_register]
-        cmp [base_code],94h
-        jae invalid_operand
-        add [base_code],30h
-        mov [xop_opcode_map],8
-        dec esi
-        jmp mmx_nomem_imm8
-        ret
-
-    xop_shift_reg_mem:
-        call get_address
-        lods u8 [esi]
-        cmp al,','
-        jne invalid_operand
-        push _esi
-        xor cl,cl
-        xchg cl,[operand_size]
-        lods u8 [esi]
-        call get_size_operator
-        pop _esi
-        xchg cl,[operand_size]
-        cmp al,10h
-        jne xop_shift_reg_mem_imm
-        call take_avx_register
-        mov [vex_register],al
-        jmp instruction_ready
-        ret
-
-    xop_shift_reg_mem_imm:
-        cmp [base_code],94h
-        jae invalid_operand
-        add [base_code],30h
-        mov [xop_opcode_map],8
-        dec esi
-        jmp mmx_imm8
-        ret
-
-    set_evex_mode:
-        mov [evex_mode],al
-        jmp instruction_assembled
-        ret
-
-    take_avx_register:
-        lods u8 [esi]
-        call get_size_operator
-        cmp al,10h
-        jne invalid_operand
-        lods u8 [esi]
-
-        convert_avx_register:
-        mov ah,al
-        and al,1Fh
-        and ah,0E0h
-        sub ah,60h
-        jb invalid_operand
-        jz avx512_register_size
-        sub ah,60h
-        jb invalid_operand
-        jnz avx_register_size_ok
-        mov ah,16
-        jmp avx_register_size_ok
-        ret
-
-    avx512_register_size:
-        mov ah,64
-
-        avx_register_size_ok:
-        cmp al,8
-        jb match_register_size
-        cmp [code_type],64
-        jne invalid_operand
-        jmp match_register_size
-        ret
-
-    store_vex_instruction_code:
-        test [rex_prefix],10h
-        jnz invalid_operand
-        test [vex_required],0F8h
-        jnz store_evex_instruction_code
-        test [vex_register],10000b
-        jnz store_evex_instruction_code
-        cmp [operand_size],64
-        je store_evex_instruction_code
-        mov al,[base_code]
-        cmp al,0Fh
-        jne store_xop_instruction_code
-        test [vex_required],2
-        jnz prepare_vex
-        cmp [evex_mode],0
-        je prepare_vex
-        cmp [displacement_compression],1
-        jne prepare_vex
-        cmp edx,80h
-        jb prepare_vex
-        cmp edx,-80h
-        jae prepare_vex
-        mov al,bl
-        or al,bh
-        shr al,4
-        cmp al,2
-        je prepare_vex
-        call compress_displacement
-        cmp [displacement_compression],2
-        ja prepare_evex
-        jb prepare_vex
-        dec [displacement_compression]
-        mov edx,[uncompressed_displacement]
-
-        prepare_vex:
-        mov ah,[extended_code]
-        cmp ah,38h
-        je store_vex_0f38_instruction_code
-        cmp ah,3Ah
-        je store_vex_0f3a_instruction_code
-        test [rex_prefix],1011b
-        jnz store_vex_0f_instruction_code
-        mov [edi+2],ah
-        mov u8 [edi],0C5h
-        mov al,[vex_register]
-        not al
-        shl al,3
-        mov ah,[rex_prefix]
-        shl ah,5
-        and ah,80h
-        xor al,ah
-        call get_vex_lpp_bits
-        mov [edi+1],al
-        call check_vex
-        add edi,3
-        ret
-
-    get_vex_lpp_bits:
-        cmp [operand_size],32
-        jne get_vex_pp_bits
-        or al,100b
-
-        get_vex_pp_bits:
-        mov ah,[opcode_prefix]
-        cmp ah,66h
-        je vex_66
-        cmp ah,0F3h
-        je vex_f3
-        cmp ah,0F2h
-        je vex_f2
-        test ah,ah
-        jnz disallowed_combination_of_registers
-        ret
-
-    vex_f2:
-        or al,11b
-        ret
-
-    vex_f3:
-        or al,10b
-        ret
-
-    vex_66:
-        or al,1
-        ret
-
-    store_vex_0f38_instruction_code:
-        mov al,11100010b
-        mov ah,[supplemental_code]
-        jmp make_c4_vex
-        ret
-
-    store_vex_0f3a_instruction_code:
-        mov al,11100011b
-        mov ah,[supplemental_code]
-        jmp make_c4_vex
-        ret
-
-    store_vex_0f_instruction_code:
-        mov al,11100001b
+avx_cvtsd2usi_instruction:
+    or [operand_flags],8
+
+    avx_cvttsd2usi_instruction:
+    or [vex_required],8
+    jmp avx_cvttsd2si_instruction
+    ret
+
+avx_cvtsd2si_instruction:
+    or [operand_flags],8
+
+    avx_cvttsd2si_instruction:
+    mov ah,0F2h
+    mov cl,8
+    jmp avx_cvt_2si_instruction
+    ret
+
+avx_cvtss2usi_instruction:
+    or [operand_flags],8
+
+    avx_cvttss2usi_instruction:
+    or [vex_required],8
+    jmp avx_cvttss2si_instruction
+    ret
+
+avx_cvtss2si_instruction:
+    or [operand_flags],8
+
+    avx_cvttss2si_instruction:
+    mov ah,0F3h
+    mov cl,4
+
+    avx_cvt_2si_instruction:
+    or [operand_flags],2+4
+    mov [mmx_size],cl
+    mov [broadcast_size],0
+    mov [opcode_prefix],ah
+    mov [base_code],0Fh
+    mov [extended_code],al
+    or [vex_required],1
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov [postbyte_register],al
+    mov [operand_size],0
+    cmp ah,4
+    je avx_cvt_2si_reg
+    cmp ah,8
+    jne invalid_operand_size
+    call operand_64bit
+
+    avx_cvt_2si_reg:
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_rm
+    jnc instruction_ready
+    mov bl,al
+    call take_avx512_rounding
+    jmp nomem_instruction_ready
+    ret
+
+avx_cvtusi2sd_instruction:
+    or [vex_required],8
+
+    avx_cvtsi2sd_instruction:
+    mov ah,0F2h
+    mov cl,8
+    jmp avx_cvtsi_instruction
+    ret
+
+avx_cvtusi2ss_instruction:
+    or [vex_required],8
+
+    avx_cvtsi2ss_instruction:
+    mov ah,0F3h
+    mov cl,4
+
+    avx_cvtsi_instruction:
+    or [operand_flags],2+4+8
+    mov [mmx_size],cl
+    mov [opcode_prefix],ah
+    mov [base_code],0Fh
+    mov [extended_code],al
+    or [vex_required],1
+    call take_avx_register
+    cmp ah,16
+    jne invalid_operand_size
+    mov [postbyte_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_register
+    mov [vex_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    mov [operand_size],0
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,'['
+    je avx_cvtsi_reg_reg_mem
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov bl,al
+    cmp ah,4
+    je avx_cvtsi_reg_reg_reg32
+    cmp ah,8
+    jne invalid_operand_size
+    call operand_64bit
+
+    avx_cvtsi_rounding:
+    call take_avx512_rounding
+    jmp nomem_instruction_ready
+    ret
+
+avx_cvtsi_reg_reg_reg32:
+    cmp [mmx_size],8
+    jne avx_cvtsi_rounding
+    jmp nomem_instruction_ready
+    ret
+
+avx_cvtsi_reg_reg_mem:
+    call get_address
+    mov al,[operand_size]
+    mov [mmx_size],al
+    or al,al
+    jz single_mem_nosize
+    cmp al,4
+    je instruction_ready
+    cmp al,8
+    jne invalid_operand_size
+    call operand_64bit
+    jmp instruction_ready
+    ret
+
+avx_maskmov_w1_instruction:
+    or [rex_prefix],8
+
+    avx_maskmov_instruction:
+    call setup_66_0f_38
+    mov [mmx_size],0
+    or [vex_required],2
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne avx_maskmov_mem
+    lods u8 [esi]
+    call convert_avx_register
+    mov [postbyte_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_register
+    mov [vex_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,'['
+    jne invalid_operand
+    call get_address
+    jmp instruction_ready
+    ret
+
+avx_maskmov_mem:
+    cmp al,'['
+    jne invalid_operand
+    call get_address
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_register
+    mov [vex_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_register
+    mov [postbyte_register],al
+    add [supplemental_code],2
+    jmp instruction_ready
+    ret
+
+avx_movmskpd_instruction:
+    mov [opcode_prefix],66h
+
+    avx_movmskps_instruction:
+    mov [base_code],0Fh
+    mov [extended_code],50h
+    or [vex_required],2
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov [postbyte_register],al
+    cmp ah,4
+    je avx_movmskps_reg_ok
+    cmp ah,8
+    jne invalid_operand_size
+    cmp [code_type],64
+    jne invalid_operand
+
+    avx_movmskps_reg_ok:
+    mov [operand_size],0
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_register
+    mov bl,al
+    jmp nomem_instruction_ready
+    ret
+
+avx_maskmovdqu_instruction:
+    or [vex_required],2
+    jmp maskmovdqu_instruction
+    ret
+
+avx_pmovmskb_instruction:
+    or [vex_required],2
+    mov [opcode_prefix],66h
+    mov [base_code],0Fh
+    mov [extended_code],al
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    cmp ah,4
+    je avx_pmovmskb_reg_size_ok
+    cmp [code_type],64
+    jne invalid_operand_size
+    cmp ah,8
+    jnz invalid_operand_size
+
+    avx_pmovmskb_reg_size_ok:
+    mov [postbyte_register],al
+    mov [operand_size],0
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    call take_avx_register
+    mov bl,al
+    jmp nomem_instruction_ready
+    ret
+
+gather_pd_instruction:
+    or [rex_prefix],8
+
+    gather_ps_instruction:
+    call setup_66_0f_38
+    or [vex_required],4
+    or [operand_flags],20h
+    call take_avx_register
+    mov [postbyte_register],al
+    call take_avx512_mask
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    xor cl,cl
+    xchg cl,[operand_size]
+    push _ecx
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,'['
+    jne invalid_argument
+    call get_address
+    pop _eax
+    xchg al,[operand_size]
+
+    gather_mem_size_check:
+    mov ah,4
+    test [rex_prefix],8
+    jz gather_elements_size_ok
+    add ah,ah
+
+    gather_elements_size_ok:
+    mov [mmx_size],ah
+    test al,al
+    jz gather_mem_size_ok
+    cmp al,ah
+    jne invalid_operand_size
+
+    gather_mem_size_ok:
+    cmp u8 [esi],','
+    je gather_reg_mem_reg
+    test [vex_required],20h
+    jz invalid_operand
+    mov ah,[operand_size]
+    mov al,80h
+    jmp gather_arguments_ok
+    ret
+
+gather_reg_mem_reg:
+    or [vex_required],2
+    inc esi
+    call take_avx_register
+
+    gather_arguments_ok:
+    mov [vex_register],al
+    cmp al,[postbyte_register]
+    je disallowed_combination_of_registers
+    mov al,bl
+    and al,11111b
+    cmp al,[postbyte_register]
+    je disallowed_combination_of_registers
+    cmp al,[vex_register]
+    je disallowed_combination_of_registers
+    mov al,bl
+    shr al,5
+    cmp al,0Ch shr 1
+    je gather_vr128
+    mov ah,32
+    cmp al,6 shr 1
+    jne gather_regular
+    add ah,ah
+
+    gather_regular:
+    mov al,[rex_prefix]
+    shr al,3
+    xor al,[supplemental_code]
+    test al,1
+    jz gather_uniform
+    test [supplemental_code],1
+    jz gather_double
+    mov al,ah
+    xchg al,[operand_size]
+    add al,al
+    cmp al,ah
+    jne invalid_operand_size
+    jmp instruction_ready
+    ret
+
+gather_double:
+    add ah,ah
+
+    gather_uniform:
+    cmp ah,[operand_size]
+    jne invalid_operand_size
+    jmp instruction_ready
+    ret
+
+gather_vr128:
+    cmp ah,16
+    je instruction_ready
+    cmp ah,32
+    jne invalid_operand_size
+    test [supplemental_code],1
+    jnz invalid_operand_size
+    test [rex_prefix],8
+    jz invalid_operand_size
+    jmp instruction_ready
+    ret
+
+scatter_pd_instruction:
+    or [rex_prefix],8
+
+    scatter_ps_instruction:
+    call setup_66_0f_38
+    or [vex_required],4+8
+    or [operand_flags],20h
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,'['
+    jne invalid_argument
+    call get_address
+    call take_avx512_mask
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    xor al,al
+    xchg al,[operand_size]
+    push _eax
+    call take_avx_register
+    mov [postbyte_register],al
+    pop _eax
+    jmp gather_mem_size_check
+    ret
+
+gatherpf_qpd_instruction:
+    mov ah,0C7h
+    jmp gatherpf_pd_instruction
+    ret
+
+gatherpf_dpd_instruction:
+    mov ah,0C6h
+
+    gatherpf_pd_instruction:
+    or [rex_prefix],8
+    mov cl,8
+    jmp gatherpf_instruction
+    ret
+
+gatherpf_qps_instruction:
+    mov ah,0C7h
+    jmp gatherpf_ps_instruction
+    ret
+
+gatherpf_dps_instruction:
+    mov ah,0C6h
+
+    gatherpf_ps_instruction:
+    mov cl,4
+
+    gatherpf_instruction:
+    mov [mmx_size],cl
+    mov [postbyte_register],al
+    mov al,ah
+    call setup_66_0f_38
+    or [vex_required],4+8
+    or [operand_flags],20h
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,'['
+    jne invalid_argument
+    call get_address
+    call take_avx512_mask
+    mov ah,[mmx_size]
+    mov al,[operand_size]
+    or al,al
+    jz gatherpf_mem_size_ok
+    cmp al,ah
+    jne invalid_operand_size
+
+    gatherpf_mem_size_ok:
+    mov [operand_size],64
+    mov al,6 shr 1
+    cmp ah,4
+    je gatherpf_check_vsib
+    cmp [supplemental_code],0C6h
+    jne gatherpf_check_vsib
+    mov al,0Eh shr 1
+
+    gatherpf_check_vsib:
+    mov ah,bl
+    shr ah,5
+    cmp al,ah
+    jne invalid_operand
+    jmp instruction_ready
+    ret
+
+bmi_instruction:
+    mov [base_code],0Fh
+    mov [extended_code],38h
+    mov [supplemental_code],0F3h
+    mov [postbyte_register],al
+
+    bmi_reg:
+    or [vex_required],2
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov [vex_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    je bmi_reg_reg
+    cmp al,'['
+    jne invalid_argument
+    call get_address
+    call operand_32or64
+    jmp instruction_ready
+    ret
+
+bmi_reg_reg:
+    lods u8 [esi]
+    call convert_register
+    mov bl,al
+    call operand_32or64
+    jmp nomem_instruction_ready
+    ret
+
+operand_32or64:
+    mov al,[operand_size]
+    cmp al,4
+    je operand_32or64_ok
+    cmp al,8
+    jne invalid_operand_size
+    cmp [code_type],64
+    jne invalid_operand
+    or [rex_prefix],8
+
+    operand_32or64_ok:
+    ret
+
+pdep_instruction:
+    mov [opcode_prefix],0F2h
+    jmp andn_instruction
+    ret
+
+pext_instruction:
+    mov [opcode_prefix],0F3h
+
+    andn_instruction:
+    mov [base_code],0Fh
+    mov [extended_code],38h
+    mov [supplemental_code],al
+    or [vex_required],2
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov [postbyte_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    jmp bmi_reg
+    ret
+
+sarx_instruction:
+    mov [opcode_prefix],0F3h
+    jmp bzhi_instruction
+    ret
+
+shrx_instruction:
+    mov [opcode_prefix],0F2h
+    jmp bzhi_instruction
+    ret
+
+shlx_instruction:
+    mov [opcode_prefix],66h
+
+    bzhi_instruction:
+    mov [base_code],0Fh
+    mov [extended_code],38h
+    mov [supplemental_code],al
+    or [vex_required],2
+    call get_reg_mem
+    jc bzhi_reg_reg
+    call get_vex_source_register
+    jc invalid_operand
+    call operand_32or64
+    jmp instruction_ready
+    ret
+
+bzhi_reg_reg:
+    call get_vex_source_register
+    jc invalid_operand
+    call operand_32or64
+    jmp nomem_instruction_ready
+    ret
+
+get_vex_source_register:
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne no_vex_source_register
+    lods u8 [esi]
+    call convert_register
+    mov [vex_register],al
+    clc
+    ret
+
+no_vex_source_register:
+    stc
+    ret
+
+bextr_instruction:
+    mov [base_code],0Fh
+    mov [extended_code],38h
+    mov [supplemental_code],al
+    or [vex_required],2
+    call get_reg_mem
+    jc bextr_reg_reg
+    call get_vex_source_register
+    jc bextr_reg_mem_imm32
+    call operand_32or64
+    jmp instruction_ready
+    ret
+
+bextr_reg_reg:
+    call get_vex_source_register
+    jc bextr_reg_reg_imm32
+    call operand_32or64
+    jmp nomem_instruction_ready
+    ret
+
+setup_bextr_imm_opcode:
+    mov [xop_opcode_map],0Ah
+    mov [base_code],10h
+    call operand_32or64
+    ret
+
+bextr_reg_mem_imm32:
+    call get_imm32
+    call setup_bextr_imm_opcode
+    jmp store_instruction_with_imm32
+    ret
+
+bextr_reg_reg_imm32:
+    call get_imm32
+    call setup_bextr_imm_opcode
+
+    store_nomem_instruction_with_imm32:
+    call store_nomem_instruction
+    mov eax,dword [value]
+    call mark_relocation
+    stos dword [edi]
+    jmp instruction_assembled
+    ret
+
+get_imm32:
+    cmp al,'('
+    jne invalid_operand
+    push _edx _ebx _ecx
+    call get_dword_value
+    mov dword [value],eax
+    pop _ecx _ebx _edx
+    ret
+
+rorx_instruction:
+    mov [opcode_prefix],0F2h
+    mov [base_code],0Fh
+    mov [extended_code],3Ah
+    mov [supplemental_code],al
+    or [vex_required],2
+    call get_reg_mem
+    jc rorx_reg_reg
+    call operand_32or64
+    jmp mmx_imm8
+    ret
+
+rorx_reg_reg:
+    call operand_32or64
+    jmp mmx_nomem_imm8
+    ret
+
+tbm_instruction:
+    mov [xop_opcode_map],9
+    mov ah,al
+    shr ah,4
+    and al,111b
+    mov [base_code],ah
+    mov [postbyte_register],al
+    jmp bmi_reg
+
+llwpcb_instruction:
+    or [vex_required],2
+    mov [xop_opcode_map],9
+    mov [base_code],12h
+    mov [postbyte_register],al
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov bl,al
+    call operand_32or64
+    jmp nomem_instruction_ready
+    ret
+
+lwpins_instruction:
+    or [vex_required],2
+    mov [xop_opcode_map],0Ah
+    mov [base_code],12h
+    mov [vex_register],al
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_register
+    mov [postbyte_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    xor cl,cl
+    xchg cl,[operand_size]
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    je lwpins_reg_reg
+    cmp al,'['
+    jne invalid_argument
+    push _ecx
+    call get_address
+    pop _eax
+    xchg al,[operand_size]
+    test al,al
+    jz lwpins_reg_mem_size_ok
+    cmp al,4
+    jne invalid_operand_size
+
+    lwpins_reg_mem_size_ok:
+    call prepare_lwpins
+    jmp store_instruction_with_imm32
+    ret
+
+lwpins_reg_reg:
+    lods u8 [esi]
+    call convert_register
+    cmp ah,4
+    jne invalid_operand_size
+    mov [operand_size],cl
+    mov bl,al
+    call prepare_lwpins
+    jmp store_nomem_instruction_with_imm32
+    ret
+
+prepare_lwpins:
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    lods u8 [esi]
+    call get_imm32
+    call operand_32or64
+    mov al,[vex_register]
+    xchg al,[postbyte_register]
+    mov [vex_register],al
+    ret
+
+xop_single_source_sd_instruction:
+    or [operand_flags],2
+    mov [mmx_size],8
+    jmp xop_instruction_9
+    ret
+
+xop_single_source_ss_instruction:
+    or [operand_flags],2
+    mov [mmx_size],4
+    jmp xop_instruction_9
+    ret
+
+xop_single_source_instruction:
+    or [operand_flags],2
+    mov [mmx_size],0
+
+    xop_instruction_9:
+    mov [base_code],al
+    mov [xop_opcode_map],9
+    jmp avx_xop_common
+    ret
+
+xop_single_source_128bit_instruction:
+    or [operand_flags],2
+    mov [mmx_size],16
+    jmp xop_instruction_9
+    ret
+
+xop_triple_source_128bit_instruction:
+    mov [immediate_size],-1
+    mov u8 [value],0
+    mov [mmx_size],16
+    jmp xop_instruction_8
+    ret
+
+xop_128bit_instruction:
+    mov [immediate_size],-2
+    mov u8 [value],0
+    mov [mmx_size],16
+
+    xop_instruction_8:
+    mov [base_code],al
+    mov [xop_opcode_map],8
+    jmp avx_xop_common
+    ret
+
+xop_pcom_b_instruction:
+    mov ah,0CCh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_d_instruction:
+    mov ah,0CEh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_q_instruction:
+    mov ah,0CFh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_w_instruction:
+    mov ah,0CDh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_ub_instruction:
+    mov ah,0ECh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_ud_instruction:
+    mov ah,0EEh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_uq_instruction:
+    mov ah,0EFh
+    jmp xop_pcom_instruction
+    ret
+
+xop_pcom_uw_instruction:
+    mov ah,0EDh
+
+    xop_pcom_instruction:
+    mov u8 [value],al
+    mov [immediate_size],-4
+    mov [mmx_size],16
+    mov [base_code],ah
+    mov [xop_opcode_map],8
+    jmp avx_xop_common
+    ret
+
+vpcmov_instruction:
+    or [vex_required],2
+    mov [immediate_size],-2
+    mov u8 [value],0
+    mov [mmx_size],0
+    mov [base_code],al
+    mov [xop_opcode_map],8
+    jmp avx_xop_common
+    ret
+
+xop_shift_instruction:
+    mov [base_code],al
+    or [vex_required],2
+    mov [xop_opcode_map],9
+    call take_avx_register
+    cmp ah,16
+    jne invalid_operand
+    mov [postbyte_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,'['
+    je xop_shift_reg_mem
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+    call convert_xmm_register
+    mov [vex_register],al
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    push _esi
+    xor cl,cl
+    xchg cl,[operand_size]
+    lods u8 [esi]
+    call get_size_operator
+    pop _esi
+    xchg cl,[operand_size]
+    cmp al,'['
+    je xop_shift_reg_reg_mem
+    cmp al,10h
+    jne xop_shift_reg_reg_imm
+    call take_avx_register
+    mov bl,al
+    xchg bl,[vex_register]
+    jmp nomem_instruction_ready
+    ret
+
+xop_shift_reg_reg_mem:
+    or [rex_prefix],8
+    lods u8 [esi]
+    call get_size_operator
+    call get_address
+    jmp instruction_ready
+    ret
+
+xop_shift_reg_reg_imm:
+    xor bl,bl
+    xchg bl,[vex_register]
+    cmp [base_code],94h
+    jae invalid_operand
+    add [base_code],30h
+    mov [xop_opcode_map],8
+    dec esi
+    jmp mmx_nomem_imm8
+    ret
+
+xop_shift_reg_mem:
+    call get_address
+    lods u8 [esi]
+    cmp al,','
+    jne invalid_operand
+    push _esi
+    xor cl,cl
+    xchg cl,[operand_size]
+    lods u8 [esi]
+    call get_size_operator
+    pop _esi
+    xchg cl,[operand_size]
+    cmp al,10h
+    jne xop_shift_reg_mem_imm
+    call take_avx_register
+    mov [vex_register],al
+    jmp instruction_ready
+    ret
+
+xop_shift_reg_mem_imm:
+    cmp [base_code],94h
+    jae invalid_operand
+    add [base_code],30h
+    mov [xop_opcode_map],8
+    dec esi
+    jmp mmx_imm8
+    ret
+
+set_evex_mode:
+    mov [evex_mode],al
+    jmp instruction_assembled
+    ret
+
+take_avx_register:
+    lods u8 [esi]
+    call get_size_operator
+    cmp al,10h
+    jne invalid_operand
+    lods u8 [esi]
+
+    convert_avx_register:
+    mov ah,al
+    and al,1Fh
+    and ah,0E0h
+    sub ah,60h
+    jb invalid_operand
+    jz avx512_register_size
+    sub ah,60h
+    jb invalid_operand
+    jnz avx_register_size_ok
+    mov ah,16
+    jmp avx_register_size_ok
+    ret
+
+avx512_register_size:
+    mov ah,64
+
+    avx_register_size_ok:
+    cmp al,8
+    jb match_register_size
+    cmp [code_type],64
+    jne invalid_operand
+    jmp match_register_size
+    ret
+
+store_vex_instruction_code:
+    test [rex_prefix],10h
+    jnz invalid_operand
+    test [vex_required],0F8h
+    jnz store_evex_instruction_code
+    test [vex_register],10000b
+    jnz store_evex_instruction_code
+    cmp [operand_size],64
+    je store_evex_instruction_code
+    mov al,[base_code]
+    cmp al,0Fh
+    jne store_xop_instruction_code
+    test [vex_required],2
+    jnz prepare_vex
+    cmp [evex_mode],0
+    je prepare_vex
+    cmp [displacement_compression],1
+    jne prepare_vex
+    cmp edx,80h
+    jb prepare_vex
+    cmp edx,-80h
+    jae prepare_vex
+    mov al,bl
+    or al,bh
+    shr al,4
+    cmp al,2
+    je prepare_vex
+    call compress_displacement
+    cmp [displacement_compression],2
+    ja prepare_evex
+    jb prepare_vex
+    dec [displacement_compression]
+    mov edx,[uncompressed_displacement]
+
+    prepare_vex:
+    mov ah,[extended_code]
+    cmp ah,38h
+    je store_vex_0f38_instruction_code
+    cmp ah,3Ah
+    je store_vex_0f3a_instruction_code
+    test [rex_prefix],1011b
+    jnz store_vex_0f_instruction_code
+    mov [edi+2],ah
+    mov u8 [edi],0C5h
+    mov al,[vex_register]
+    not al
+    shl al,3
+    mov ah,[rex_prefix]
+    shl ah,5
+    and ah,80h
+    xor al,ah
+    call get_vex_lpp_bits
+    mov [edi+1],al
+    call check_vex
+    add edi,3
+    ret
+
+get_vex_lpp_bits:
+    cmp [operand_size],32
+    jne get_vex_pp_bits
+    or al,100b
+
+    get_vex_pp_bits:
+    mov ah,[opcode_prefix]
+    cmp ah,66h
+    je vex_66
+    cmp ah,0F3h
+    je vex_f3
+    cmp ah,0F2h
+    je vex_f2
+    test ah,ah
+    jnz disallowed_combination_of_registers
+    ret
+
+vex_f2:
+    or al,11b
+    ret
+
+vex_f3:
+    or al,10b
+    ret
+
+vex_66:
+    or al,1
+    ret
+
+store_vex_0f38_instruction_code:
+    mov al,11100010b
+    mov ah,[supplemental_code]
+    jmp make_c4_vex
+    ret
+
+store_vex_0f3a_instruction_code:
+    mov al,11100011b
+    mov ah,[supplemental_code]
+    jmp make_c4_vex
+    ret
+
+store_vex_0f_instruction_code:
+    mov al,11100001b
 
     make_c4_vex:
     mov [edi+3],ah
@@ -29560,6 +30420,7 @@ store_evex_instruction_code:
     cmp [displacement_compression],1
     jne prepare_evex
     call compress_displacement
+
     prepare_evex:
     mov ah,[extended_code]
     cmp ah,38h
@@ -29567,6 +30428,7 @@ store_evex_instruction_code:
     cmp ah,3Ah
     je store_evex_0f3a_instruction_code
     mov al,11110001b
+
     make_evex:
     mov [edi+4],ah
     mov u8 [edi],62h
@@ -29607,6 +30469,7 @@ evex_rounding:
     mov ah,[rounding_mode]
     shl ah,5
     or al,ah
+
     evex_l_ok:
     test [vex_required],20h
     jz evex_zaaa_ok
