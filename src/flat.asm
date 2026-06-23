@@ -668,13 +668,16 @@ display_user_messages:
     mov [displayed_count],0
     call show_display_buffer
     cmp [displayed_count],1
-    jb line_break_ok
+    ;jb line_break_ok
+    jb return_ok
     je make_line_break
     mov ax, u16 [last_displayed]
     cmp ax,0A0Dh
-    je line_break_ok
+    ;je line_break_ok
+    je return_ok
     cmp ax,0D0Ah
-    je line_break_ok
+    ;je line_break_ok
+    je return_ok
 
     make_line_break:
     mov u16 [buffer],0A0Dh
@@ -690,8 +693,6 @@ display_user_messages:
     mov rcx,rax
     call u64[WriteFile]
     add rsp,56
-
-    line_break_ok:
     ret
 
 display_block:
@@ -699,6 +700,7 @@ display_block:
     cmp ecx,1
     ja take_last_two_characters
     jb block_displayed
+    ;jb return_ok
     mov al,[last_displayed+1]
     mov ah,[esi]
     mov u16 [last_displayed],ax
@@ -1684,7 +1686,8 @@ prepare_preprocessed_source:
 
     prepare_preprocessed_line:
     cmp esi,ebp
-    jae preprocessed_source_ok
+    ;jae preprocessed_source_ok
+    jae return_ok
     mov _eax,u64[memory_start]
     mov edx,[input_file]
     cmp [esi],edx
@@ -1701,9 +1704,6 @@ prepare_preprocessed_source:
     prepare_next_preprocessed_line:
     call skip_preprocessed_line
     jmp prepare_preprocessed_line
-    ret
-
-preprocessed_source_ok:
     ret
 
 skip_preprocessed_line:
@@ -1744,7 +1744,8 @@ restore_preprocessed_source:
 
     restore_preprocessed_line:
     cmp esi,ebp
-    jae preprocessed_source_restored
+    ;jae preprocessed_source_restored
+    jae return_ok
     mov _eax,u64[memory_start]
     add [esi],eax
     cmp [esi],eax
@@ -1761,9 +1762,6 @@ restore_preprocessed_source:
     restore_next_preprocessed_line:
     call skip_preprocessed_line
     jmp restore_preprocessed_line
-    ret
-
-preprocessed_source_restored:
     ret
 
 dump_preprocessed_source:
@@ -2398,7 +2396,6 @@ lower_case:
     xlat u8 [ebx]
     stos u8 [edi]
     loop convert_case
-    case_ok:
     ret
 
 get_directive:
@@ -3267,7 +3264,8 @@ skip_pattern:
     or al,al
     jz invalid_macro_arguments
     cmp al,','
-    je pattern_skipped
+    ;je pattern_skipped
+    je return_ok
     cmp al,22h
     je skip_quoted_string_in_pattern
     cmp al,1Ah
@@ -3294,9 +3292,6 @@ skip_quoted_string_in_pattern:
     lods u32 [esi]
     add esi,eax
     jmp skip_pattern
-    ret
-
-pattern_skipped:
     ret
 
 purge_macro:
@@ -3839,16 +3834,16 @@ greedy_macro_argument:
     got_macro_argument:
     xchg esi,ebx
     cmp u32 [edx+8],0
-    jne macro_argument_ok
+    ;jne macro_argument_ok
+    jne return_ok
     mov eax,[default_argument_value]
     or eax,eax
-    jz macro_argument_ok
+    ;jz macro_argument_ok
+    jz return_ok
     cmp eax,-1
     je invalid_macro_arguments
     mov [edx+12],eax
     call finish_macro_argument
-
-    macro_argument_ok:
     ret
 
 finish_macro_argument:
@@ -4277,19 +4272,20 @@ cannot_match:
 
 exact_match:
     cmp esi,[parameters_end]
-    je exact_match_complete
+    ;je exact_match_complete
+    je return_ok
     mov ah,[esi]
     mov al,[ebx]
     cmp al,','
-    je exact_match_complete
+    ;je exact_match_complete
+    je return_ok
     cmp al,1Ah
-    je exact_match_complete
+    ;je exact_match_complete
+    je return_ok
     cmp al,'='
     je match_verbatim
     call match_elements
     je exact_match
-
-    exact_match_complete:
     ret
 
 match_verbatim:
@@ -6253,13 +6249,11 @@ expression_argument_parsed:
 
 contents_parsed:
     cmp [parenthesis_stack],0
-    je contents_ok
+    ;je contents_ok
+    je return_ok
     dec [parenthesis_stack]
     add _esp,16
     jmp contents_parsed
-    ret
-
-contents_ok:
     ret
 
 identify_label:
@@ -6267,21 +6261,19 @@ identify_label:
     je local_label_name
     call get_label_id
     cmp eax,10h
-    jb label_identified
+    ;jb label_identified
+    jb return_ok
     or ebx,ebx
     jz anonymous_label_name
     dec ebx
     mov [current_locals_prefix],ebx
-
-    label_identified:
     ret
 
 anonymous_label_name:
     cmp u8 [esi-1],'@'
-    je anonymous_label_name_ok
+    ;je anonymous_label_name_ok
+    je return_ok
     mov eax,0Fh
-
-    anonymous_label_name_ok:
     ret
 
 local_label_name:
@@ -6522,11 +6514,10 @@ get_label_id:
     call get_label_id
     pop _esi _ebx
     cmp ebx,[eax+24]
-    jne composed_label_id_ok
+    ;jne composed_label_id_ok
+    jne return_ok
     lea edx,[ebx-2]
     mov u64[additional_memory_end],_edx
-
-    composed_label_id_ok:
     ret
 
 anonymous_label:
@@ -6938,12 +6929,11 @@ expression_value:
     pop u64[current_offset]
     lods u8 [esi]
     cmp al,')'
-    je subexpression_closed
+    ;je subexpression_closed
+    je return_ok
     dec esi
     mov al,'!'
     stosb
-
-    subexpression_closed:
     ret
 
 symbol_value:
@@ -8353,12 +8343,12 @@ calculate_expression:
 expression_calculated:
     sub edi,14h
     cmp [value_undefined],0
-    je expression_value_ok
+    ;je expression_value_ok
+    je return_ok
     xor eax,eax
     mov [edi],eax
     mov [edi+4],eax
     mov [edi+12],eax
-    expression_value_ok:
     ret
 
 get_byte_number:
@@ -8643,14 +8633,16 @@ add_relocatable:
 
 add_register:
     or al,al
-    jz add_register_done
+    ;jz add_register_done
+    jz return_ok
 
     add_register_start:
     cmp [esi+8],al
     jne add_in_second_slot
     add [esi+10],cl
     jo value_out_of_range
-    jnz add_register_done
+    ;jnz add_register_done
+    jnz return_ok
     mov u8 [esi+8],0
     ret
 
@@ -8659,7 +8651,8 @@ add_in_second_slot:
     jne create_in_first_slot
     add [esi+11],cl
     jo value_out_of_range
-    jnz add_register_done
+    ;jnz add_register_done
+    jnz return_ok
     mov u8 [esi+9],0
     ret
 
@@ -8675,8 +8668,6 @@ create_in_second_slot:
     jne invalid_expression
     mov [esi+9],al
     mov [esi+11],cl
-
-    add_register_done:
     ret
 
 out_of_range:
@@ -8739,7 +8730,8 @@ negate_relocatable:
 
 sub_register:
     or al,al
-    jz add_register_done
+    ;jz add_register_done
+    jz return_ok
     neg cl
     jo value_out_of_range
     jmp add_register_start
@@ -9431,9 +9423,11 @@ div_done:
 
 store_label_reference:
     cmp [symbols_file],0
-    je label_reference_ok
+    ;je label_reference_ok
+    je return_ok
     cmp [next_pass_needed],0
-    jne label_reference_ok
+    ;jne label_reference_ok
+    jne return_ok
     mov eax,[tagged_blocks]
     mov dword [eax-4],2
     mov dword [eax-8],4
@@ -9442,8 +9436,6 @@ store_label_reference:
     jbe out_of_memory
     mov [tagged_blocks],eax
     mov [eax],ebx
-
-    label_reference_ok:
     ret
 
 convert_fp:
@@ -9674,8 +9666,6 @@ byte_positive:
     jnz range_exceeded
     cmp eax,100h
     jae range_exceeded
-
-    return_byte_value:
     ret
 
 range_exceeded:
@@ -9683,23 +9673,21 @@ range_exceeded:
     xor edx,edx
     recoverable_overflow:
     cmp [error_line],0
-    jne ignore_overflow
+    ;jne ignore_overflow
+    jne return_ok
     push u64[current_line]
     pop u64[error_line]
     mov [error],value_out_of_range
     or [value_undefined],-1
-
-    ignore_overflow:
     ret
 
 recoverable_misuse:
     cmp [error_line],0
-    jne ignore_misuse
+    ;jne ignore_misuse
+    jne return_ok
     push u64[current_line]
     pop u64[error_line]
     mov [error],invalid_use_of_symbol
-
-    ignore_misuse:
     ret
 
 get_word_value:
@@ -10061,14 +10049,13 @@ check_rip_relative_address:
 
 get_address_register:
     or al,al
-    jz address_register_ok
+    ;jz address_register_ok
+    jz return_ok
     cmp dl,1
     jne scaled_register
     or bh,bh
     jnz scaled_register
     mov bh,al
-
-    address_register_ok:
     ret
 
 scaled_register:
@@ -10076,7 +10063,8 @@ scaled_register:
     jnz invalid_address
     mov bl,al
     mov cl,dl
-    jmp address_register_ok
+    ;jmp address_register_ok
+    jmp return_ok
     ret
 
 sib_allowed:
@@ -10217,7 +10205,8 @@ swap_vsib_registers:
 
 calculate_relative_offset:
     cmp [value_undefined],0
-    jne relative_offset_ok
+    ;jne relative_offset_ok
+    jne return_ok
     test bh,bh
     setne ch
     cmp bx,[ds:ebp+10h]
@@ -10256,18 +10245,20 @@ calculate_relative_offset:
 
     set_relative_offset_type:
     cmp [value_type],0
-    je relative_offset_ok
+    ;je relative_offset_ok
+    je return_ok
     mov [value_type],0
     cmp ecx,[ds:ebp+14h]
-    je relative_offset_ok
+    ;je relative_offset_ok
+    je return_ok
     mov [value_type],3
-    relative_offset_ok:
     ret
 
 plt_relative_offset:
     mov [value_type],7
     cmp u8 [ds:ebp+9],2
-    je relative_offset_ok
+    ;je relative_offset_ok
+    je return_ok
     cmp u8 [ds:ebp+9],4
     jne recoverable_misuse
     ret
@@ -10822,13 +10813,13 @@ get_include_directory:
 
     include_directory_ok:
     cmp u8 [edi-1],'/'
-    je path_separator_ok
+    ;je path_separator_ok
+    je return_ok
     cmp u8 [edi-1],'\' ; '
-    je path_separator_ok
+    ;je path_separator_ok
+    je return_ok
     mov al,'/'
     stos u8 [edi]
-
-    path_separator_ok:
     ret
 
 assembler:
@@ -10954,7 +10945,8 @@ symbols_checked:
     jne next_pass
     mov _eax,u64[error_line]
     or eax,eax
-    jz assemble_ok
+    ;jz assemble_ok
+    jz return_ok
     mov u64[current_line],_eax
     cmp [error],undefined_symbol
     jne error_confirmed
@@ -10979,9 +10971,6 @@ next_pass:
     cmp ax,[passes_limit]
     je code_cannot_be_generated
     jmp assembler_loop
-    ret
-
-assemble_ok:
     ret
 
 create_addressing_space:
@@ -11175,17 +11164,18 @@ make_virtual_label:
     sub cx,[ebx+16]
     setnz al
     or ah,al
-    jz label_made
+    ;jz label_made
+    jz return_ok
     test u8 [ebx+8],8
-    jz label_made
+    ;jz label_made
+    jz return_ok
     mov cx,[current_pass]
     cmp cx,[ebx+18]
-    jne label_made
+    ;jne label_made
+    jne return_ok
 
     requalified_label:
     or [next_pass_needed],-1
-
-    label_made:
     ret
 
 new_label:
@@ -11674,10 +11664,13 @@ display_byte:
 show_display_buffer:
     mov eax,[tagged_blocks]
     or eax,eax
-    jz display_done
+    ;jz display_done
+    jz return_ok
     mov esi, [labels_list]
     cmp esi, eax
-    je display_done
+    ;je display_done
+    je return_ok
+
 
     display_messages:
     sub esi, 8
@@ -11695,8 +11688,6 @@ show_display_buffer:
     skip_block:
     cmp esi, [tagged_blocks]
     jne display_messages
-
-    display_done:
     ret
 
 write_addressing_space:
@@ -11920,12 +11911,10 @@ find_structure_data:
     cmp _ebx,u64[additional_memory_end]
     je no_such_structure
     cmp ax,[ebx]
-    je structure_data_found
+    ;je structure_data_found
+    je return_ok
     add ebx,18h
     jmp scan_structures
-    ret
-
-    structure_data_found:
     ret
 
     no_such_structure:
@@ -12044,7 +12033,8 @@ close_virtual_addressing_space:
     mov [ebx+1Ch],eax
     add eax,[ebx+20h]
     test u8 [ebx+0Ah],2
-    jz addressing_space_closed
+    ;jz addressing_space_closed
+    jz return_ok
     or u8 [ebx+0Ah],4
     push _esi _edi _ecx _edx
     mov ecx,eax
@@ -12083,7 +12073,6 @@ close_virtual_addressing_space:
     adc dword [ebx+4],edx
     adc u8 [ebx+8],dl
     pop _edx _ecx _edi _esi
-    addressing_space_closed:
     ret
 
 repeat_directive:
@@ -12385,7 +12374,8 @@ skip_if:
 
 skip_if_block:
     call find_else
-    jc if_block_skipped
+    ;jc if_block_skipped
+    jc return_ok
     cmp u8 [esi],1
     jne skip_after_else
     cmp u16 [esi+1],if_directive-instruction_handler
@@ -12396,8 +12386,6 @@ skip_if_block:
 
 skip_after_else:
     call find_end_if
-
-    if_block_skipped:
     ret
 
 end_directive:
@@ -13725,16 +13713,16 @@ extrn_directive:
 
 mark_relocation:
     cmp [value_type],0
-    je relocation_ok
+    ;je relocation_ok
+    je return_ok
     mov ebp,[addressing_space]
     test u8 [ds:ebp+0Ah],1
-    jnz relocation_ok
+    ;jnz relocation_ok
+    jnz return_ok
     cmp [output_format],3
     je mark_pe_relocation
     cmp [output_format],4
     je mark_coff_relocation
-
-    relocation_ok:
     ret
 
 close_pass:
@@ -13747,12 +13735,11 @@ close_pass:
 
 recoverable_invalid_address:
     cmp [error_line],0
-    jne ignore_invalid_address
+    ;jne ignore_invalid_address
+    jne return_ok
     push u64[current_line]
     pop u64[error_line]
     mov [error],invalid_address
-
-    ignore_invalid_address:
     ret
 
 write_mz_header:
@@ -13847,7 +13834,6 @@ make_stub:
     mov ecx,default_stub_end-default_stub
     rep movs u8 [edi],[esi]
     pop _esi
-    jmp stub_ok
     ret
 
 default_stub:
@@ -13945,8 +13931,6 @@ default_stub:
     sub eax,esi
     mov [esi+3Ch],eax
     pop _esi
-
-    stub_ok:
     ret
 
 binary_stub:
@@ -14928,7 +14912,8 @@ make_fixups:
 
 make_pe_resource:
     cmp u8 [esi],82h
-    jne resource_done
+    ;jne resource_done
+    jne return_ok
     inc esi
     lods u16 [esi]
     cmp ax,'('
@@ -14946,7 +14931,8 @@ make_pe_resource:
     add edi,[resource_size]
     cmp edi,[tagged_blocks]
     ja out_of_memory
-    jmp resource_done
+    ;jmp resource_done
+    jmp return_ok
     ret
 
 resource_from_file:
@@ -15575,8 +15561,6 @@ string_data_copied:
     mov eax,edi
     sub eax,[resource_data]
     mov [resource_size],eax
-
-    resource_done:
     ret
 
 close_pe:
@@ -15810,13 +15794,13 @@ close_coff_section:
     xor eax,eax
     xchg [undefined_data_end],eax
     cmp eax,edi
-    jne coff_section_ok
+    ;jne coff_section_ok
+    jne return_ok
     cmp edx,[undefined_data_start]
-    jne coff_section_ok
+    ;jne coff_section_ok
+    jne return_ok
     mov edi,edx
     or u8 [ebx+14h],80h
-
-    coff_section_ok:
     ret
 
 mark_coff_relocation:
@@ -15893,10 +15877,10 @@ relative_coff_64bit_relocation:
 close_coff:
     call close_coff_section
     cmp [next_pass_needed],0
-    je coff_closed
+    ;je coff_closed
+    je return_ok
     mov eax,[symbols_stream]
     mov u64[free_additional_memory],_eax
-    coff_closed:
     ret
 
 coff_formatter:
@@ -16818,10 +16802,9 @@ get_simm32:
     cmp ecx,edx
     jne value_out_of_range
     cmp [value_type],4
-    jne get_simm32_ok
+    ;jne get_simm32_ok
+    jne return_ok
     mov [value_type],2
-
-    get_simm32_ok:
     ret
 
 basic_reg:
@@ -16997,12 +16980,11 @@ basic_eax_imm:
 
 recoverable_unknown_size:
     cmp [error_line],0
-    jne ignore_unknown_size
+    ;jne ignore_unknown_size
+    jne return_ok
     push u64[current_line]
     pop u64[error_line]
     mov [error],operand_size_not_specified
-
-    ignore_unknown_size:
     ret
 
 single_operand_instruction:
@@ -20315,12 +20297,12 @@ loop_instruction_64bit:
 
 loop_counter_size:
     cmp [operand_prefix],0
-    je loop_counter_size_ok
+    ;je loop_counter_size_ok
+    je return_ok
     push _eax
     mov al,[operand_prefix]
     stos u8 [edi]
     pop _eax
-    loop_counter_size_ok:
     ret
 
 loop_jump_64bit:
@@ -21824,10 +21806,9 @@ get_mmx_source_register:
 
     make_mmx_prefix:
     cmp [operand_size],16
-    jne no_mmx_prefix
+    ;jne no_mmx_prefix
+    jne return_ok
     mov [operand_prefix],66h
-
-    no_mmx_prefix:
     ret
 
 movq_instruction:
@@ -22222,7 +22203,8 @@ sse_cmp_nomem_ok:
 
 take_additional_xmm0:
     cmp u8 [esi],','
-    jne additional_xmm0_ok
+    ;jne additional_xmm0_ok
+    jne return_ok
     inc esi
     lods u8 [esi]
     cmp al,10h
@@ -22231,8 +22213,6 @@ take_additional_xmm0:
     call convert_xmm_register
     test al,al
     jnz invalid_operand
-
-    additional_xmm0_ok:
     ret
 
 pslldq_instruction:
@@ -23983,14 +23963,13 @@ get_address_component:
     mov [address_high],edx
     mov edx,eax
     or bx,bx
-    jz address_component_ok
+    ;jz address_component_ok
+    jz return_ok
     mov al,bl
     or al,bh
     shr al,4
     cmp al,[address_size]
     jne invalid_address
-
-    address_component_ok:
     ret
 
 bndldx_instruction:
@@ -24025,7 +24004,8 @@ take_bnd_mib:
     call get_address_prefixes
     call get_address_component
     cmp u8 [esi-1],']'
-    je bnd_mib_ok
+    ;je bnd_mib_ok
+    je return_ok
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -24057,10 +24037,9 @@ take_bnd_mib:
     mov bl,[address_register]
     xor cl,cl
     or bl,bl
-    jz bnd_mib_ok
+    ;jz bnd_mib_ok
+    jz return_ok
     inc cl
-
-    bnd_mib_ok:
     ret
 
 take_register:
@@ -24088,12 +24067,11 @@ take_register:
 
     match_register_size:
     cmp ah,[operand_size]
-    je register_size_ok
+    ;je register_size_ok
+    je return_ok
     cmp [operand_size],0
     jne operand_sizes_do_not_match
     mov [operand_size],ah
-
-    register_size_ok:
     ret
 
 high_byte_register:
@@ -24151,30 +24129,29 @@ get_size_operator:
     xchg al,ah
     or [operand_flags],1
     cmp ah,[operand_size]
-    je size_operator_ok
+    ;je size_operator_ok
+    je return_ok
     cmp [operand_size],0
     jne operand_sizes_do_not_match
     mov [operand_size],ah
-
-    size_operator_ok:
     ret
 
 no_size_operator:
     mov [size_declared],0
     cmp al,'['
-    jne size_operator_ok
+    ;jne size_operator_ok
+    jne return_ok
     and [operand_flags],not 1
     ret
 
 get_jump_operator:
     mov [jump_type],0
     cmp al,12h
-    jne jump_operator_ok
+    ;jne jump_operator_ok
+    jne return_ok
     lods u16 [esi]
     mov [jump_type],al
     mov al,ah
-
-    jump_operator_ok:
     ret
 
 get_address:
@@ -24189,11 +24166,13 @@ get_address:
     mov [address_high],edx
     mov edx,eax
     cmp [address_size_declared],0
-    jne address_ok
+    ;jne address_ok
+    jne return_ok
     or bx,bx
     jnz clear_address_size
     cmp [code_type],64
-    jne address_ok
+    ;jne address_ok
+    jne return_ok
 
     calculate_relative_address:
     mov _edx,u64[address_symbol]
@@ -24216,8 +24195,6 @@ get_address:
 
     clear_address_size:
     and ch,not 0Fh
-
-    address_ok:
     ret
 
 get_address_prefixes:
@@ -24238,7 +24215,8 @@ get_address_prefixes:
 
     get_address_size_prefix:
     cmp al,70h
-    jne address_size_prefix_ok
+    ;jne address_size_prefix_ok
+    jne return_ok
     lods u8 [esi]
     sub al,70h
     cmp al,2
@@ -24250,22 +24228,20 @@ get_address_prefixes:
     or [address_size],al
     cmp al,[address_size]
     jne invalid_address_size
-
-    address_size_prefix_ok:
     ret
 
 operand_16bit:
     cmp [code_type],16
-    je size_prefix_ok
+    ;je size_prefix_ok
+    je return_ok
     mov [operand_prefix],66h
     ret
 
 operand_32bit:
     cmp [code_type],16
-    jne size_prefix_ok
+    ;jne size_prefix_ok
+    jne return_ok
     mov [operand_prefix],66h
-
-    size_prefix_ok:
     ret
 
 operand_64bit:
@@ -24287,11 +24263,13 @@ operand_autodetect:
 store_segment_prefix_if_necessary:
     mov al,[segment_register]
     or al,al
-    jz segment_prefix_ok
+    ;jz segment_prefix_ok
+    jz return_ok
     cmp al,4
     ja segment_prefix_386
     cmp [code_type],64
-    je segment_prefix_ok
+    ;je segment_prefix_ok
+    je return_ok
     cmp al,3
     je ss_prefix
     jb segment_prefix_86
@@ -24307,20 +24285,25 @@ store_segment_prefix_if_necessary:
 
 ss_prefix:
     cmp bl,25h
-    je segment_prefix_ok
+    ;je segment_prefix_ok
+    je return_ok
     cmp bh,25h
-    je segment_prefix_ok
+    ;je segment_prefix_ok
+    je return_ok
     cmp bh,45h
-    je segment_prefix_ok
+    ;je segment_prefix_ok
+    je return_ok
     cmp bh,44h
-    je segment_prefix_ok
+    ;je segment_prefix_ok
+    je return_ok
     jmp segment_prefix_86
     ret
 
 store_segment_prefix:
     mov al,[segment_register]
     or al,al
-    jz segment_prefix_ok
+    ;jz segment_prefix_ok
+    jz return_ok
     cmp al,5
     jae segment_prefix_386
 
@@ -24329,14 +24312,11 @@ store_segment_prefix:
     shl al,3
     add al,26h
     stos u8 [edi]
-    jmp segment_prefix_ok
     ret
 
 segment_prefix_386:
     add al,64h-5
     stos u8 [edi]
-
-    segment_prefix_ok:
     ret
 
 store_instruction_code:
@@ -24369,7 +24349,8 @@ store_instruction_code:
     mov al,[base_code]
     stos u8 [edi]
     cmp al,0Fh
-    jne instruction_code_ok
+    ;jne instruction_code_ok
+    jne return_ok
 
     store_extended_code:
     mov al,[extended_code]
@@ -24378,8 +24359,6 @@ store_instruction_code:
     je store_supplemental_code
     cmp al,3Ah
     je store_supplemental_code
-
-    instruction_code_ok:
     ret
 
 store_supplemental_code:
@@ -24948,18 +24927,18 @@ addressing_16bit:
 
 address_16bit_prefix:
     cmp [code_type],16
-    je instruction_prefix_ok
+    ;je instruction_prefix_ok
+    je return_ok
     mov al,67h
     stos u8 [edi]
     ret
 
 address_32bit_prefix:
     cmp [code_type],32
-    je instruction_prefix_ok
+    ;je instruction_prefix_ok
+    je return_ok
     mov al,67h
     stos u8 [edi]
-
-    instruction_prefix_ok:
     ret
 
 store_instruction_with_imm8:
@@ -25451,7 +25430,8 @@ avx_mem_size_deciding:
 
 take_imm4_if_needed:
     cmp [immediate_size],-3
-    jne imm4_ok
+    ;jne imm4_ok
+    jne return_ok
     push _ebx _ecx _edx
     lods u8 [esi]
     cmp al,','
@@ -25464,13 +25444,12 @@ take_imm4_if_needed:
     jnz value_out_of_range
     or u8 [value],al
     pop _edx _ecx _ebx
-
-    imm4_ok:
     ret
 
 take_avx512_mask:
     cmp u8 [esi],'{'
-    jne avx512_masking_ok
+    ;jne avx512_masking_ok
+    jne near_ok
     test [operand_flags],10h
     jnz invalid_operand
     inc esi
@@ -25491,7 +25470,8 @@ take_avx512_mask:
     cmp al,'}'
     jne invalid_operand
     cmp u8 [esi],'{'
-    jne avx512_masking_ok
+    ;jne avx512_masking_ok
+    jne near_ok
     test [operand_flags],20h
     jnz invalid_operand
     inc esi
@@ -25505,23 +25485,25 @@ take_avx512_mask:
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
-
-    avx512_masking_ok:
     retn
 
 take_avx512_rounding:
     test [operand_flags],4+8
-    jz avx512_rounding_done
+    ;jz avx512_rounding_done
+    jz near_ok
     cmp [mmx_size],0
     jne avx512_rounding_allowed
     cmp [operand_size],64
-    jne avx512_rounding_done
+    ;jne avx512_rounding_done
+    jne near_ok
 
     avx512_rounding_allowed:
     cmp u8 [esi],','
-    jne avx512_rounding_done
+    ;jne avx512_rounding_done
+    jne near_ok
     cmp u8 [esi+1],'{'
-    jne avx512_rounding_done
+    ;jne avx512_rounding_done
+    jne near_ok
     add esi, 2
     mov [rounding_mode],0
     or [vex_required],40h+80h
@@ -25551,8 +25533,6 @@ take_avx512_rounding:
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
-
-    avx512_rounding_done:
     retn
 
 avx_movdqu_instruction:
@@ -26631,10 +26611,9 @@ setup_kmov_prefix:
 
     kmov_w_ok:
     test ah,1 or 4
-    jz kmov_prefix_ok
+    ;jz kmov_prefix_ok
+    jz return_ok
     mov [opcode_prefix],66h
-
-    kmov_prefix_ok:
     ret
 
 kmov_maskreg:
@@ -27780,12 +27759,11 @@ avx_cvt_q_check_size:
     ja invalid_operand_size
     shr al,1
     cmp al,ah
-    je avx_cvt_q_size_ok
+    ;je avx_cvt_q_size_ok
+    je return_ok
     ja invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
-
-    avx_cvt_q_size_ok:
     ret
 
 avx_cvt_q_size_not_specified:
@@ -28355,14 +28333,13 @@ bmi_reg_reg:
 operand_32or64:
     mov al,[operand_size]
     cmp al,4
-    je operand_32or64_ok
+    ;je operand_32or64_ok
+    je return_ok
     cmp al,8
     jne invalid_operand_size
     cmp [code_type],64
     jne invalid_operand
     or [rex_prefix],8
-
-    operand_32or64_ok:
     ret
 
 pdep_instruction:
@@ -28947,14 +28924,13 @@ store_vex_0f_instruction_code:
 
 check_vex:
     cmp [code_type],64
-    je vex_ok
+    je return_ok
     not al
     test al,11000000b
     jnz invalid_operand
     test [rex_prefix],40h
     jnz invalid_operand
-
-    vex_ok:
+    jmp return_ok
     ret
 
 store_xop_instruction_code:
@@ -29101,7 +29077,12 @@ displacement_compressed:
 
     displacement_compression_ok:
     mov ecx,ebp
+
+    return_ok:
     ret
+
+    near_ok:
+    retn
 
 include_variable db 'INCLUDE',0
 

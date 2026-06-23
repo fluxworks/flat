@@ -4,6 +4,22 @@
 format PE64 GUI
 entry start
 
+macro mov op1,op2,op3
+ {
+  if op3 eq
+    mov   op1,op2
+  else
+    mov   op1,op2
+    mov   op2,op3
+  end if
+ }
+
+macro stoschar [char]
+ {
+    mov al,char
+    stosb
+ }
+
 section '.text' code readable executable
 
   start:
@@ -14,6 +30,13 @@ section '.text' code readable executable
 	lea	rdx,[_message]
 	mov	rcx,0
 	call	[MessageBoxA]
+
+	mov al,1
+    stosb
+    mov al,2
+    stosb
+    mov al,3
+    stosb
 
 	mov	ecx,eax
 	call	[ExitProcess]
