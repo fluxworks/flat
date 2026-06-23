@@ -1381,15 +1381,6 @@ prepare_section_string:
     jc prepare_external_string
     mov esi,[esi]
     add esi,[resource_data]
-
-    copy_elf_section_name:
-    lods u8 [esi]
-    cmp edi,[tagged_blocks]
-    jae out_of_memory
-    stos u8 [edi]
-    test al,al
-    jnz copy_elf_section_name
-    jmp prepare_strings_table
     ret
 
 prepare_default_section_string:
@@ -5689,8 +5680,6 @@ parse_line_contents:
     je allow_embedded_instruction
     cmp bx,label_directive-instruction_handler
     je parse_label_directive
-    cmp bx,segment_directive-instruction_handler
-    je parse_segment_directive
     cmp bx,load_directive-instruction_handler
     je parse_load_directive
     cmp bx,extrn_directive-instruction_handler
@@ -7090,7 +7079,7 @@ get_number:
     cmp al,'Q'
     je get_oct_number
     inc esi
-    
+
     get_dec_number:
     mov ebx,esi
     mov esi,[number_start]
@@ -8113,7 +8102,7 @@ logical_value_boundaries_parenthesis_close:
     je compare_symbol_types
     cmp al,0F6h
     je scan_symbols_list
-    
+
     non_preevaluable_logical_value:
     mov ecx,esi
     mov esi,ebx
@@ -13474,10 +13463,6 @@ extension_specified:
     mov _edi,u64[current_offset]
     cmp [output_format],4
     je coff_formatter
-    cmp [output_format],5
-    jne common_formatter
-    bt      [format_flags],0
-    jnc elf_formatter
 
     common_formatter:
     mov eax,edi
@@ -13549,14 +13534,10 @@ format_directive:
     mov [output_format],al
     and edx,0Fh
     or [format_flags],edx
-    cmp al,2
-    je format_mz
     cmp al,3
     je format_pe
     cmp al,4
     je format_coff
-    cmp al,5
-    je format_elf
 
     format_defined:
     cmp u8 [esi],86h
@@ -13590,14 +13571,9 @@ entry_directive:
     bts [format_flags],10h
     jc setting_already_specified
     mov al,[output_format]
-    cmp al,2
-    je mz_entry
     cmp al,3
     je pe_entry
     cmp al,5
-    jne illegal_instruction
-    bt      [format_flags],0
-    jc elf_entry
     jmp illegal_instruction
     ret
 
@@ -13605,8 +13581,6 @@ stack_directive:
     bts [format_flags],11h
     jc setting_already_specified
     mov al,[output_format]
-    cmp al,2
-    je mz_stack
     cmp al,3
     je pe_stack
     jmp illegal_instruction
@@ -13616,19 +13590,8 @@ heap_directive:
     bts [format_flags],12h
     jc setting_already_specified
     mov al,[output_format]
-    cmp al,2
-    je mz_heap
     cmp al,3
     je pe_heap
-    jmp illegal_instruction
-    ret
-
-segment_directive:
-    mov al,[output_format]
-    cmp al,2
-    je mz_segment
-    cmp al,5
-    je elf_segment
     jmp illegal_instruction
     ret
 
@@ -13638,8 +13601,6 @@ section_directive:
     je pe_section
     cmp al,4
     je coff_section
-    cmp al,5
-    je elf_section
     jmp illegal_instruction
     ret
 
@@ -13768,14 +13729,10 @@ mark_relocation:
     mov ebp,[addressing_space]
     test u8 [ds:ebp+0Ah],1
     jnz relocation_ok
-    cmp [output_format],2
-    je mark_mz_relocation
     cmp [output_format],3
     je mark_pe_relocation
     cmp [output_format],4
     je mark_coff_relocation
-    cmp [output_format],5
-    je mark_elf_relocation
 
     relocation_ok:
     ret
@@ -13786,122 +13743,6 @@ close_pass:
     je close_pe
     cmp al,4
     je close_coff
-    cmp al,5
-    je close_elf
-    ret
-
-format_mz:
-    mov _edx,u64[additional_memory]
-    push _edi
-    mov edi,edx
-    mov ecx,1Ch shr 2
-    xor eax,eax
-    rep stos dword [edi]
-    mov u64[free_additional_memory],_edi
-    pop _edi
-    mov u16 [edx+0Ch],0FFFFh
-    mov u16 [edx+10h],1000h
-    mov [code_type],16
-    jmp format_defined
-    ret
-
-mark_mz_relocation:
-    push _eax _ebx
-    inc u16 [number_of_relocations]
-    jz format_limitations_exceeded
-    mov _ebx,u64[free_additional_memory]
-    mov eax,edi
-    sub eax,[code_start]
-    mov [ebx],ax
-    shr eax,16
-    shl ax,12
-    mov [ebx+2],ax
-    cmp u16 [ebx],0FFFFh
-    jne mz_relocation_ok
-    inc u16 [ebx+2]
-    sub u16 [ebx],10h
-
-    mz_relocation_ok:
-    add ebx,4
-    cmp ebx,[structures_buffer]
-    jae out_of_memory
-    mov u64[free_additional_memory],_ebx
-    pop _ebx _eax
-    ret
-
-mz_segment:
-    lods u8 [esi]
-    cmp al,2
-    jne invalid_argument
-    lods dword [esi]
-    cmp eax,0Fh
-    jb invalid_use_of_symbol
-    je reserved_word_used_as_symbol
-    inc esi
-    mov ebx,eax
-    mov eax,edi
-    sub eax,[code_start]
-    mov ecx,0Fh
-    add eax,0Fh
-    and eax,1111b
-    sub ecx,eax
-    mov edx,edi
-    xor eax,eax
-    rep stos u8 [edi]
-    mov eax,edx
-    call undefined_data
-    push _ebx
-    call create_addressing_space
-    pop _ebx
-    mov eax,edi
-    sub eax,[code_start]
-    shr eax,4
-    cmp eax,10000h
-    jae value_out_of_range
-    mov edx,eax
-    mov al,16
-    cmp u8 [esi],13h
-    jne segment_type_ok
-    inc esi
-    lods u8 [esi]
-
-    segment_type_ok:
-    mov [code_type],al
-    mov eax,edx
-    mov ch,1
-    mov [address_sign],0
-    xor edx,edx
-    xor ebp,ebp
-    mov [label_size],0
-    mov u64[address_symbol],_edx
-    jmp make_free_label
-    ret
-
-mz_entry:
-    lods u8 [esi]
-    cmp al,'('
-    jne invalid_argument
-    call get_word_value
-    cmp [value_type],1
-    je initial_cs_ok
-    call recoverable_invalid_address
-
-    initial_cs_ok:
-    mov _edx,u64[additional_memory]
-    mov [edx+16h],ax
-    lods u8 [esi]
-    cmp al,':'
-    jne invalid_argument
-    lods u8 [esi]
-    cmp al,'('
-    jne invalid_argument
-    ja invalid_address
-    call get_word_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov _edx,u64[additional_memory]
-    mov [edx+14h],ax
-    jmp instruction_assembled
     ret
 
 recoverable_invalid_address:
@@ -13914,65 +13755,7 @@ recoverable_invalid_address:
     ignore_invalid_address:
     ret
 
-mz_stack:
-    lods u8 [esi]
-    cmp al,'('
-    jne invalid_argument
-    call get_word_value
-    cmp u8 [esi],':'
-    je stack_pointer
-    cmp ax,10h
-    jb invalid_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov _edx,u64[additional_memory]
-    mov [edx+10h],ax
-    jmp instruction_assembled
-    ret
-
-stack_pointer:
-    cmp [value_type],1
-    je initial_ss_ok
-    call recoverable_invalid_address
-
-    initial_ss_ok:
-    mov _edx,u64[additional_memory]
-    mov [edx+0Eh],ax
-    lods u8 [esi]
-    cmp al,':'
-    jne invalid_argument
-    lods u8 [esi]
-    cmp al,'('
-    jne invalid_argument
-    call get_word_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov _edx,u64[additional_memory]
-    mov [edx+10h],ax
-    bts [format_flags],4
-    jmp instruction_assembled
-    ret
-
-mz_heap:
-    cmp [output_format],2
-    jne illegal_instruction
-    lods u8 [esi]
-    call get_size_operator
-    cmp ah,1
-    je invalid_value
-    cmp ah,2
-    ja invalid_value
-    cmp al,'('
-    jne invalid_argument
-    call get_word_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov _edx,u64[additional_memory]
-    mov [edx+0Ch],ax
-    jmp instruction_assembled
-    ret
-
-    write_mz_header:
+write_mz_header:
     mov _edx,u64[additional_memory]
     bt      [format_flags],4
     jc mz_stack_ok
@@ -16578,249 +16361,7 @@ add_string:
     pop _esi
     ret
 
-format_elf:
-    test [format_flags],8
-    jnz format_elf64
-    mov edx,edi
-    mov ecx,34h shr 2
-    lea eax,[edi+ecx*4]
-    cmp eax,[tagged_blocks]
-    jae out_of_memory
-    xor eax,eax
-    rep stos dword [edi]
-    mov dword [edx],7Fh + 'ELF' shl 8
-    mov al,1
-    mov [edx+4],al
-    mov [edx+5],al
-    mov [edx+6],al
-    mov [edx+14h],al
-    mov u8 [edx+12h],3
-    mov u8 [edx+28h],34h
-    mov u8 [edx+2Eh],28h
-    mov [code_type],32
-    cmp u16 [esi],1D19h
-    je format_elf_exe
-
-    elf_header_ok:
-    mov u8 [edx+10h],1
-    mov _eax,u64[additional_memory]
-    mov [symbols_stream],eax
-    mov ebx,eax
-    add eax,20h
-    cmp eax,[structures_buffer]
-    jae out_of_memory
-    mov u64[free_additional_memory],_eax
-    xor eax,eax
-    mov [current_section],ebx
-    mov [number_of_sections],eax
-    mov [ebx],al
-    mov [ebx+4],eax
-    mov [ebx+8],edi
-    mov al,111b
-    mov [ebx+14h],eax
-    mov al,4
-    mov [ebx+10h],eax
-    mov edx,ebx
-    call init_addressing_space
-    xchg edx,ebx
-    mov [edx+14h],ebx
-    mov u8 [edx+9],2
-    test [format_flags],8
-    jz format_defined
-    mov u8 [edx+9],4
-    mov u8 [ebx+10h],8
-    jmp format_defined
-    ret
-
-format_elf64:
-    mov edx,edi
-    mov ecx,40h shr 2
-    lea eax,[edi+ecx*4]
-    cmp eax,[tagged_blocks]
-    jae out_of_memory
-    xor eax,eax
-    rep stos dword [edi]
-    mov dword [edx],7Fh + 'ELF' shl 8
-    mov al,1
-    mov [edx+5],al
-    mov [edx+6],al
-    mov [edx+14h],al
-    mov u8 [edx+4],2
-    mov u8 [edx+12h],62
-    mov u8 [edx+34h],40h
-    mov u8 [edx+3Ah],40h
-    mov [code_type],64
-    cmp u16 [esi],1D19h
-    jne elf_header_ok
-    jmp format_elf64_exe
-    ret
-
-elf_section:
-    bt      [format_flags],0
-    jc illegal_instruction
-    call close_coff_section
-    mov _ebx,u64[free_additional_memory]
-    lea eax,[ebx+20h]
-    cmp eax,[structures_buffer]
-    jae out_of_memory
-    mov u64[free_additional_memory],_eax
-    mov [current_section],ebx
-    inc u16 [number_of_sections]
-    jz format_limitations_exceeded
-    xor eax,eax
-    mov [ebx],al
-    mov [ebx+8],edi
-    mov [ebx+10h],eax
-    mov al,10b
-    mov [ebx+14h],eax
-    mov edx,ebx
-    call create_addressing_space
-    xchg edx,ebx
-    mov [edx+14h],ebx
-    mov u8 [edx+9],2
-    test [format_flags],8
-    jz elf_labels_type_ok
-    mov u8 [edx+9],4
-
-    elf_labels_type_ok:
-    lods u16 [esi]
-    cmp ax,'('
-    jne invalid_argument
-    mov [ebx+4],esi
-    mov ecx,[esi]
-    lea esi, [esi+4+ecx+1]
-
-    elf_section_flags:
-    cmp u8 [esi],8Ch
-    je elf_section_alignment
-    cmp u8 [esi],19h
-    jne elf_section_settings_ok
-    inc esi
-    lods u8 [esi]
-    sub al,28
-    xor al,11b
-    test al,not 10b
-    jnz invalid_argument
-    mov cl,al
-    mov al,1
-    shl al,cl
-    test u8 [ebx+14h],al
-    jnz setting_already_specified
-    or u8 [ebx+14h],al
-    jmp elf_section_flags
-    ret
-
-elf_section_alignment:
-    inc esi
-    lods u8 [esi]
-    cmp al,'('
-    jne invalid_argument
-    cmp u8 [esi],'.'
-    je invalid_value
-    push _ebx
-    call get_count_value
-    pop _ebx
-    mov edx,eax
-    dec edx
-    test eax,edx
-    jnz invalid_value
-    or eax,eax
-    jz invalid_value
-    xchg [ebx+10h],eax
-    or eax,eax
-    jnz setting_already_specified
-    jmp elf_section_flags
-    ret
-
-elf_section_settings_ok:
-    cmp dword [ebx+10h],0
-    jne instruction_assembled
-    mov dword [ebx+10h],4
-    test [format_flags],8
-    jz instruction_assembled
-    mov u8 [ebx+10h],8
-    jmp instruction_assembled
-    ret
-
-mark_elf_relocation:
-    push _ebx
-    mov ebx,[addressing_space]
-    cmp [value_type],3
-    je elf_relocation_relative
-    cmp [value_type],7
-    je elf_relocation_relative
-    push _eax
-    cmp [value_type],5
-    je elf_gotoff_relocation
-    ja invalid_use_of_symbol
-    mov al,1
-    test [format_flags],8
-    jz coff_relocation
-    cmp [value_type],4
-    je coff_relocation
-    mov al,11
-    jmp coff_relocation
-    ret
-
-elf_gotoff_relocation:
-    test [format_flags],8
-    jnz invalid_use_of_symbol
-    mov al,9
-    jmp coff_relocation
-    ret
-
-elf_relocation_relative:
-    cmp u8 [ebx+9],0
-    je invalid_use_of_symbol
-    mov ebx,[current_section]
-    mov ebx,[ebx+8]
-    sub ebx,edi
-    sub eax,ebx
-    push _eax
-    mov al,2
-    cmp [value_type],3
-    je coff_relocation
-    mov al,4
-    jmp coff_relocation
-    ret
-
-close_elf:
-    bt      [format_flags],0
-    jc close_elf_exe
-    call close_coff_section
-    cmp [next_pass_needed],0
-    je elf_closed
-    mov eax,[symbols_stream]
-    mov u64[free_additional_memory],_eax
-
-    elf_closed:
-    ret
-
-elf_formatter:
-    mov ecx,edi
-    sub ecx,[code_start]
-    neg ecx
-    and ecx,111b
-    test [format_flags],8
-    jnz align_elf_structures
-    and ecx,11b
-
-    align_elf_structures:
-    xor al,al
-    rep stos u8 [edi]
-    push _edi
-    call prepare_default_section
-    mov esi, [symbols_stream]
-    mov _edi,u64[free_additional_memory]
-    xor eax,eax
-    mov ecx,4
-    rep stos dword [edi]
-    test [format_flags],8
-    jz find_first_section
-    mov ecx,2
-    rep stos dword [edi]
-
-    find_first_section:
+find_first_section:
     mov al,[esi]
     or al,al
     jz first_section_found
@@ -16866,8 +16407,6 @@ make_section_symbol:
     mov eax,edi
     xchg eax,[ebx+4]
     stos dword [edi]
-    test [format_flags],8
-    jnz elf64_section_symbol
     xor eax,eax
     stos dword [edi]
     stos dword [edi]
@@ -16895,15 +16434,7 @@ store_section_index:
     stos dword [edi]
     ret
 
-elf64_section_symbol:
-    call store_section_index
-    xor eax,eax
-    stos dword [edi]
-    stos dword [edi]
-    stos dword [edi]
-    stos dword [edi]
-
-    section_symbol_ok:
+section_symbol_ok:
     mov ebx,esi
     add esi, 20h
     cmp _ebx,u64[free_additional_memory]
@@ -16914,8 +16445,6 @@ elf64_section_symbol:
     mov esi, [symbols_stream]
 
     find_other_symbols:
-    cmp _esi,u64[free_additional_memory]
-    je elf_symbol_table_ok
     mov al,[esi]
     or al,al
     jz skip_section
@@ -16950,8 +16479,6 @@ make_public_symbol:
     cmp u8 [eax],0
     jne invalid_use_of_symbol
     mov eax,[eax+4]
-    test [format_flags],8
-    jnz elf64_public
     cmp dl,2
     jne invalid_use_of_symbol
     mov dx,[eax+0Eh]
@@ -16963,20 +16490,11 @@ undefined_public:
     jmp undefined_symbol
     ret
 
-elf64_public:
-    cmp dl,4
-    jne invalid_use_of_symbol
-    mov dx,[eax+6]
-    jmp section_for_public_ok
-    ret
-
 public_absolute:
     mov dx,0FFF1h
     section_for_public_ok:
     mov eax,[esi+4]
     stos dword [edi]
-    test [format_flags],8
-    jnz elf64_public_symbol
     movzx eax, u8 [ebx+9]
     shr al,1
     and al,1
@@ -16993,49 +16511,9 @@ public_absolute:
     mov eax,edx
     shl eax,16
     mov al,10h
-    cmp u8 [ebx+10],0
-    je elf_public_function
-    or al,1
-    jmp store_elf_public_info
     ret
 
-elf_public_function:
-    or al,2
-
-    store_elf_public_info:
-    stos dword [edi]
-    jmp public_symbol_ok
-    ret
-
-elf64_public_symbol:
-    mov eax,edx
-    shl eax,16
-    mov al,10h
-    cmp u8 [ebx+10],0
-    je elf64_public_function
-    or al,1
-    jmp store_elf64_public_info
-    ret
-
-elf64_public_function:
-    or al,2
-
-    store_elf64_public_info:
-    stos dword [edi]
-    mov al,[ebx+9]
-    shl eax,31-1
-    xor eax,[ebx+4]
-    js value_out_of_range
-    mov eax,[ebx]
-    stos dword [edi]
-    mov eax,[ebx+4]
-    stos dword [edi]
-    mov al,[ebx+10]
-    stos dword [edi]
-    xor al,al
-    stos dword [edi]
-
-    public_symbol_ok:
+public_symbol_ok:
     inc ecx
     mov eax,ecx
     shl eax,8
@@ -17048,8 +16526,6 @@ elf64_public_function:
 make_extrn_symbol:
     mov eax,[esi+4]
     stos dword [edi]
-    test [format_flags],8
-    jnz elf64_extrn_symbol
     xor eax,eax
     stos dword [edi]
     mov eax,[esi+8]
@@ -17059,17 +16535,6 @@ make_extrn_symbol:
     jmp extrn_symbol_ok
     ret
 
-elf64_extrn_symbol:
-    mov eax,10h
-    stos dword [edi]
-    xor al,al
-    stos dword [edi]
-    stos dword [edi]
-    mov eax,[esi+8]
-    stos dword [edi]
-    xor eax,eax
-    stos dword [edi]
-
 extrn_symbol_ok:
     inc ecx
     mov eax,ecx
@@ -17078,900 +16543,6 @@ extrn_symbol_ok:
     mov [esi],eax
     add esi, 0Ch
     jmp find_other_symbols
-    ret
-
-elf_symbol_table_ok:
-    mov edx,edi
-    mov _ebx,u64[free_additional_memory]
-    xor al,al
-    stos u8 [edi]
-    add edi,16
-    mov [edx+1],edx
-    add ebx,10h
-    test [format_flags],8
-    jz make_string_table
-    add ebx,8
-
-    make_string_table:
-    cmp ebx,edx
-    je elf_string_table_ok
-    test [format_flags],8
-    jnz make_elf64_string
-    cmp u8 [ebx+0Dh],0
-    je rel_prefix_ok
-    mov u8 [ebx+0Dh],0
-    mov eax,'.rel'
-    stos dword [edi]
-
-    rel_prefix_ok:
-    mov esi, edi
-    sub esi, edx
-    xchg esi,[ebx]
-    add ebx,10h
-
-    make_elf_string:
-    or esi,esi
-    jz default_string
-    lods dword [esi]
-    mov ecx,eax
-    rep movs u8 [edi],[esi]
-    xor al,al
-    stos u8 [edi]
-    jmp make_string_table
-    ret
-
-make_elf64_string:
-    cmp u8 [ebx+5],0
-    je elf64_rel_prefix_ok
-    mov u8 [ebx+5],0
-    mov eax,'.rel'
-    stos dword [edi]
-    mov al,'a'
-    stos u8 [edi]
-
-    elf64_rel_prefix_ok:
-    mov esi, edi
-    sub esi, edx
-    xchg esi,[ebx]
-    add ebx,18h
-    jmp make_elf_string
-    ret
-
-default_string:
-    mov eax,'.fla'
-    stos dword [edi]
-    mov ax,'t'
-    stos u16 [edi]
-    jmp make_string_table
-    ret
-
-elf_string_table_ok:
-    mov [edx+1+8],edi
-    mov ebx,[code_start]
-    mov eax,edi
-    sub _eax,u64[free_additional_memory]
-    xor ecx,ecx
-    sub ecx,eax
-    test [format_flags],8
-    jnz finish_elf64_header
-    and ecx,11b
-    add eax,ecx
-    mov [ebx+20h],eax
-    mov eax,[current_section]
-    inc ax
-    jz format_limitations_exceeded
-    mov [ebx+32h],ax
-    inc ax
-    jz format_limitations_exceeded
-    mov [ebx+30h],ax
-    jmp elf_header_finished
-    ret
-
-finish_elf64_header:
-    and ecx,111b
-    add eax,ecx
-    mov [ebx+28h],eax
-    mov eax,[current_section]
-    inc ax
-    jz format_limitations_exceeded
-    mov [ebx+3Eh],ax
-    inc ax
-    jz format_limitations_exceeded
-    mov [ebx+3Ch],ax
-
-    elf_header_finished:
-    xor eax,eax
-    add ecx,10*4
-    rep stos u8 [edi]
-    test [format_flags],8
-    jz elf_null_section_ok
-    mov ecx,6*4
-    rep stos u8 [edi]
-
-    elf_null_section_ok:
-    mov esi, ebp
-    xor ecx,ecx
-
-    make_section_entry:
-    mov ebx,edi
-    mov eax,[esi+4]
-    mov eax,[eax]
-    stos dword [edi]
-    mov eax,1
-    cmp dword [esi+0Ch],0
-    je bss_section
-    test u8 [esi+14h],80h
-    jz section_type_ok
-    bss_section:
-    mov al,8
-
-    section_type_ok:
-    stos dword [edi]
-    mov eax,[esi+14h]
-    and al,3Fh
-    call store_elf_machine_word
-    xor eax,eax
-    call store_elf_machine_word
-    mov eax,[esi+8]
-    mov [image_base],eax
-    sub eax,[code_start]
-    call store_elf_machine_word
-    mov eax,[esi+0Ch]
-    call store_elf_machine_word
-    xor eax,eax
-    stos dword [edi]
-    stos dword [edi]
-    mov eax,[esi+10h]
-    call store_elf_machine_word
-    xor eax,eax
-    call store_elf_machine_word
-    inc ecx
-    add esi, 20h
-    xchg _edi,[_esp]
-    mov ebp,edi
-
-    convert_relocations:
-    cmp _esi,u64[free_additional_memory]
-    je relocations_converted
-    mov al,[esi]
-    or al,al
-    jz relocations_converted
-    cmp al,80h
-    jb make_relocation_entry
-    cmp al,0C0h
-    jb relocation_entry_ok
-    add esi, 10h
-    jmp convert_relocations
-    ret
-
-    make_relocation_entry:
-    test [format_flags],8
-    jnz make_elf64_relocation_entry
-    mov eax,[esi+4]
-    stos dword [edi]
-    mov eax,[esi+8]
-    mov eax,[eax]
-    mov al,[esi]
-    stos dword [edi]
-    jmp relocation_entry_ok
-    ret
-
-    make_elf64_relocation_entry:
-    mov eax,[esi+4]
-    stos dword [edi]
-    xor eax,eax
-    stos dword [edi]
-    movzx eax, u8 [esi]
-    stos dword [edi]
-    mov eax,[esi+8]
-    mov eax,[eax]
-    shr eax,8
-    stos dword [edi]
-    xor eax,eax
-    push _edx
-    mov edx,[esi+4]
-    add edx,[image_base]
-    xchg eax,[edx]
-    stos dword [edi]
-    cmp u8 [esi],1
-    je addend_64bit
-    pop _edx
-    sar eax,31
-    stos dword [edi]
-    jmp relocation_entry_ok
-    ret
-
-    addend_64bit:
-    xor eax,eax
-    xchg eax,[edx+4]
-    stos dword [edi]
-    pop _edx
-
-    relocation_entry_ok:
-    add esi, 0Ch
-    jmp convert_relocations
-    ret
-
-    store_elf_machine_word:
-    stos dword [edi]
-    test [format_flags],8
-    jz elf_machine_word_ok
-    and dword [edi],0
-    add edi,4
-
-    elf_machine_word_ok:
-    ret
-
-    relocations_converted:
-    cmp edi,ebp
-    xchg _edi,[_esp]
-    je rel_section_ok
-    mov eax,[ebx]
-    sub eax,4
-    test [format_flags],8
-    jz store_relocations_name_offset
-    dec eax
-
-    store_relocations_name_offset:
-    stos dword [edi]
-    test [format_flags],8
-    jnz rela_section
-    mov eax,9
-    jmp store_relocations_type
-    ret
-
-rela_section:
-    mov eax,4
-    store_relocations_type:
-    stos dword [edi]
-    xor al,al
-    call store_elf_machine_word
-    call store_elf_machine_word
-    mov eax,ebp
-    sub eax,[code_start]
-    call store_elf_machine_word
-    mov _eax,[_esp]
-    sub eax,ebp
-    call store_elf_machine_word
-    mov eax,[current_section]
-    stos dword [edi]
-    mov eax,ecx
-    stos dword [edi]
-    inc ecx
-    test [format_flags],8
-    jnz finish_elf64_rela_section
-    mov eax,4
-    stos dword [edi]
-    mov al,8
-    stos dword [edi]
-    jmp rel_section_ok
-    ret
-
-finish_elf64_rela_section:
-    mov eax,8
-    stos dword [edi]
-    xor al,al
-    stos dword [edi]
-    mov al,24
-    stos dword [edi]
-    xor al,al
-    stos dword [edi]
-
-    rel_section_ok:
-    cmp _esi,u64[free_additional_memory]
-    jne make_section_entry
-    pop _eax
-    mov ebx,[code_start]
-    sub eax,ebx
-    mov [code_size],eax
-    mov ecx,20h
-    test [format_flags],8
-    jz adjust_elf_section_headers_offset
-    mov ecx,28h
-
-    adjust_elf_section_headers_offset:
-    add [ebx+ecx],eax
-    mov eax,1
-    stos dword [edi]
-    mov al,2
-    stos dword [edi]
-    xor al,al
-    call store_elf_machine_word
-    call store_elf_machine_word
-    mov eax,[code_size]
-    call store_elf_machine_word
-    mov eax,[edx+1]
-    sub _eax,u64[free_additional_memory]
-    call store_elf_machine_word
-    mov eax,[current_section]
-    inc eax
-    stos dword [edi]
-    mov eax,[number_of_sections]
-    inc eax
-    stos dword [edi]
-    test [format_flags],8
-    jnz finish_elf64_sym_section
-    mov eax,4
-    stos dword [edi]
-    mov al,10h
-    stos dword [edi]
-    jmp sym_section_ok
-    ret
-
-finish_elf64_sym_section:
-    mov eax,8
-    stos dword [edi]
-    xor al,al
-    stos dword [edi]
-    mov al,18h
-    stos dword [edi]
-    xor al,al
-    stos dword [edi]
-
-    sym_section_ok:
-    mov al,1+8
-    stos dword [edi]
-    mov al,3
-    stos dword [edi]
-    xor al,al
-    call store_elf_machine_word
-    call store_elf_machine_word
-    mov eax,[edx+1]
-    sub _eax,u64[free_additional_memory]
-    add eax,[code_size]
-    call store_elf_machine_word
-    mov eax,[edx+1+8]
-    sub eax,[edx+1]
-    call store_elf_machine_word
-    xor eax,eax
-    stos dword [edi]
-    stos dword [edi]
-    mov al,1
-    call store_elf_machine_word
-    xor eax,eax
-    call store_elf_machine_word
-    mov eax,'tab'
-    mov dword [edx+1],'.sym'
-    mov [edx+1+4],eax
-    mov dword [edx+1+8],'.str'
-    mov [edx+1+8+4],eax
-    mov [resource_data],edx
-    mov [written_size],0
-    mov edx,[output_file]
-    call create
-    jc write_failed
-    call write_code
-    mov ecx,edi
-    mov _edx,u64[free_additional_memory]
-    sub ecx,edx
-    add [written_size],ecx
-    call write
-    jc write_failed
-    jmp output_written
-
-format_elf_exe:
-    add esi, 2
-    or [format_flags],1
-    cmp u8 [esi],'('
-    jne elf_exe_brand_ok
-    inc esi
-    cmp u8 [esi],'.'
-    je invalid_value
-    push _edx
-    call get_byte_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    pop _edx
-    mov [edx+7],al
-
-    elf_exe_brand_ok:
-    mov [image_base],8048000h
-    cmp u8 [esi],80h
-    jne elf_exe_base_ok
-    lods u16 [esi]
-    cmp ah,'('
-    jne invalid_argument
-    cmp u8 [esi],'.'
-    je invalid_value
-    push _edx
-    call get_dword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov [image_base],eax
-    pop _edx
-    elf_exe_base_ok:
-    mov u8 [edx+10h],2
-    mov u8 [edx+2Ah],20h
-    mov ebx,edi
-    mov ecx,20h shr 2
-    cmp [current_pass],0
-    je init_elf_segments
-    imul ecx,[number_of_sections]
-
-    init_elf_segments:
-    xor eax,eax
-    rep stos dword [edi]
-    and [number_of_sections],0
-    mov u8 [ebx],1
-    mov u16 [ebx+1Ch],1000h
-    mov u8 [ebx+18h],111b
-    mov eax,edi
-    xor ebp,ebp
-    xor cl,cl
-    sub eax,[code_start]
-    sbb ebp,0
-    sbb cl,0
-    mov [ebx+4],eax
-    add eax,[image_base]
-    adc ebp,0
-    adc cl,0
-    mov [ebx+8],eax
-    mov [ebx+0Ch],eax
-    mov [edx+18h],eax
-    not eax
-    not ebp
-    not cl
-    add eax,1
-    adc ebp,0
-    adc cl,0
-    add eax,edi
-    adc ebp,0
-    adc cl,0
-    mov edx,ebp
-
-    elf_exe_addressing_setup:
-    push _eax
-    call init_addressing_space
-    pop _eax
-    mov [ebx],eax
-    mov [ebx+4],edx
-    mov [ebx+8],cl
-    mov [symbols_stream],edi
-    jmp format_defined
-    ret
-
-format_elf64_exe:
-    add esi, 2
-    or [format_flags],1
-    cmp u8 [esi],'('
-    jne elf64_exe_brand_ok
-    inc esi
-    cmp u8 [esi],'.'
-    je invalid_value
-    push _edx
-    call get_byte_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    pop _edx
-    mov [edx+7],al
-
-    elf64_exe_brand_ok:
-    mov [image_base],400000h
-    and [image_base_high],0
-    cmp u8 [esi],80h
-    jne elf64_exe_base_ok
-    lods u16 [esi]
-    cmp ah,'('
-    jne invalid_argument
-    cmp u8 [esi],'.'
-    je invalid_value
-    push _edx
-    call get_qword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov [image_base],eax
-    mov [image_base_high],edx
-    pop _edx
-
-    elf64_exe_base_ok:
-    mov u8 [edx+10h],2
-    mov u8 [edx+36h],38h
-    mov ebx,edi
-    mov ecx,38h shr 2
-    cmp [current_pass],0
-    je init_elf64_segments
-    imul ecx,[number_of_sections]
-
-    init_elf64_segments:
-    xor eax,eax
-    rep stos dword [edi]
-    and [number_of_sections],0
-    mov u8 [ebx],1
-    mov u16 [ebx+30h],1000h
-    mov u8 [ebx+4],111b
-    push _edx
-    mov eax,edi
-    sub eax,[code_start]
-    mov [ebx+8],eax
-    xor edx,edx
-    xor cl,cl
-    add eax,[image_base]
-    adc edx,[image_base_high]
-    adc cl,0
-    mov [ebx+10h],eax
-    mov [ebx+10h+4],edx
-    mov [ebx+18h],eax
-    mov [ebx+18h+4],edx
-    pop _ebx
-    mov [ebx+18h],eax
-    mov [ebx+18h+4],edx
-    not eax
-    not edx
-    not cl
-    add eax,1
-    adc edx,0
-    adc cl,0
-    add eax,edi
-    adc edx,0
-    adc cl,0
-    jmp elf_exe_addressing_setup
-    ret
-
-elf_entry:
-    lods u8 [esi]
-    cmp al,'('
-    jne invalid_argument
-    cmp u8 [esi],'.'
-    je invalid_value
-    test [format_flags],8
-    jnz elf64_entry
-    call get_dword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov edx,[code_start]
-    mov [edx+18h],eax
-    jmp instruction_assembled
-    ret
-
-elf64_entry:
-    call get_qword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
-    mov ebx,[code_start]
-    mov [ebx+18h],eax
-    mov [ebx+1Ch],edx
-    jmp instruction_assembled
-    ret
-
-elf_segment:
-    bt      [format_flags],0
-    jnc illegal_instruction
-    test [format_flags],8
-    jnz elf64_segment
-    call close_elf_segment
-    push _eax
-    call create_addressing_space
-    mov ebp,ebx
-    mov ebx,[number_of_sections]
-    shl ebx,5
-    add ebx,[code_start]
-    add ebx,34h
-    cmp ebx,[symbols_stream]
-    jb new_elf_segment
-    mov ebx,[symbols_stream]
-    sub ebx,20h
-    push _edi
-    mov edi,ebx
-    mov ecx,20h shr 2
-    xor eax,eax
-    rep stos dword [edi]
-    pop _edi
-    or [next_pass_needed],-1
-
-    new_elf_segment:
-    mov u8 [ebx],1
-    mov u16 [ebx+1Ch],1000h
-    elf_segment_flags:
-    cmp u8 [esi],1Eh
-    je elf_segment_type
-    cmp u8 [esi],19h
-    jne elf_segment_flags_ok
-    lods u16 [esi]
-    sub ah,28
-    jbe invalid_argument
-    cmp ah,1
-    je mark_elf_segment_flag
-    cmp ah,3
-    ja invalid_argument
-    xor ah,1
-    cmp ah,2
-    je mark_elf_segment_flag
-    inc ah
-
-    mark_elf_segment_flag:
-    test [ebx+18h],ah
-    jnz setting_already_specified
-    or [ebx+18h],ah
-    jmp elf_segment_flags
-    ret
-
-elf_segment_type:
-    cmp u8 [ebx],1
-    jne setting_already_specified
-    lods u16 [esi]
-    mov ecx,[number_of_sections]
-    jecxz elf_segment_type_ok
-    mov edx,[code_start]
-    add edx,34h
-
-    scan_elf_segment_types:
-    cmp edx,[symbols_stream]
-    jae elf_segment_type_ok
-    cmp [edx],ah
-    je data_already_defined
-    add edx,20h
-    loop scan_elf_segment_types
-    elf_segment_type_ok:
-    mov [ebx],ah
-    mov u16 [ebx+1Ch],1
-    cmp ah,50h
-    jb elf_segment_flags
-    or dword [ebx],6474E500h
-    jmp elf_segment_flags
-    ret
-
-elf_segment_flags_ok:
-    mov eax,edi
-    sub eax,[code_start]
-    mov [ebx+4],eax
-    pop _edx
-    and eax,0FFFh
-    add edx,eax
-    mov [ebx+8],edx
-    mov [ebx+0Ch],edx
-    mov eax,edx
-    xor edx,edx
-    xor cl,cl
-    not eax
-    not edx
-    not cl
-    add eax,1
-    adc edx,0
-    adc cl,0
-    add eax,edi
-    adc edx,0
-    adc cl,0
-
-    elf_segment_addressing_setup:
-    mov [ds:ebp],eax
-    mov [ds:ebp+4],edx
-    mov [ds:ebp+8],cl
-    inc [number_of_sections]
-    jmp instruction_assembled
-    ret
-
-close_elf_segment:
-    cmp [number_of_sections],0
-    jne finish_elf_segment
-    cmp edi,[symbols_stream]
-    jne first_elf_segment_ok
-    push _edi
-    mov edi,[code_start]
-    add edi,34h
-    mov ecx,20h shr 2
-    xor eax,eax
-    rep stos dword [edi]
-    pop _edi
-    mov eax,[image_base]
-    ret
-
-first_elf_segment_ok:
-    inc [number_of_sections]
-
-    finish_elf_segment:
-    mov ebx,[number_of_sections]
-    dec ebx
-    shl ebx,5
-    add ebx,[code_start]
-    add ebx,34h
-    mov eax,edi
-    sub eax,[code_start]
-    sub eax,[ebx+4]
-    mov edx,edi
-    cmp edi,[undefined_data_end]
-    jne elf_segment_size_ok
-    mov edi,[undefined_data_start]
-
-    elf_segment_size_ok:
-    mov [ebx+14h],eax
-    add eax,edi
-    sub eax,edx
-    mov [ebx+10h],eax
-    and [undefined_data_end],0
-    mov eax,[ebx+8]
-    cmp u8 [ebx],1
-    jne elf_segment_position_ok
-    add eax,[ebx+14h]
-    add eax,0FFFh
-
-    elf_segment_position_ok:
-    and eax,not 0FFFh
-    ret
-
-elf64_segment:
-    call close_elf64_segment
-    push _eax _edx
-    call create_addressing_space
-    mov ebp,ebx
-    mov ebx,[number_of_sections]
-    imul ebx,38h
-    add ebx,[code_start]
-    add ebx,40h
-    cmp ebx,[symbols_stream]
-    jb new_elf64_segment
-    mov ebx,[symbols_stream]
-    sub ebx,38h
-    push _edi
-    mov edi,ebx
-    mov ecx,38h shr 2
-    xor eax,eax
-    rep stos dword [edi]
-    pop _edi
-    or [next_pass_needed],-1
-
-    new_elf64_segment:
-    mov u8 [ebx],1
-    mov u16 [ebx+30h],1000h
-
-    elf64_segment_flags:
-    cmp u8 [esi],1Eh
-    je elf64_segment_type
-    cmp u8 [esi],19h
-    jne elf64_segment_flags_ok
-    lods u16 [esi]
-    sub ah,28
-    jbe invalid_argument
-    cmp ah,1
-    je mark_elf64_segment_flag
-    cmp ah,3
-    ja invalid_argument
-    xor ah,1
-    cmp ah,2
-    je mark_elf64_segment_flag
-    inc ah
-
-    mark_elf64_segment_flag:
-    test [ebx+4],ah
-    jnz setting_already_specified
-    or [ebx+4],ah
-    jmp elf64_segment_flags
-    ret
-
-elf64_segment_type:
-    cmp u8 [ebx],1
-    jne setting_already_specified
-    lods u16 [esi]
-    mov ecx,[number_of_sections]
-    jecxz elf64_segment_type_ok
-    mov edx,[code_start]
-    add edx,40h
-
-    scan_elf64_segment_types:
-    cmp edx,[symbols_stream]
-    jae elf64_segment_type_ok
-    cmp [edx],ah
-    je data_already_defined
-    add edx,38h
-    loop scan_elf64_segment_types
-
-    elf64_segment_type_ok:
-    mov [ebx],ah
-    mov u16 [ebx+30h],1
-    cmp ah,50h
-    jb elf64_segment_flags
-    or dword [ebx],6474E500h
-    jmp elf64_segment_flags
-    ret
-
-elf64_segment_flags_ok:
-    mov ecx,edi
-    sub ecx,[code_start]
-    mov [ebx+8],ecx
-    pop _edx _eax
-    and ecx,0FFFh
-    add eax,ecx
-    adc edx,0
-    mov [ebx+10h],eax
-    mov [ebx+10h+4],edx
-    mov [ebx+18h],eax
-    mov [ebx+18h+4],edx
-    xor cl,cl
-    not eax
-    not edx
-    not cl
-    add eax,1
-    adc edx,0
-    adc cl,0
-    add eax,edi
-    adc edx,0
-    adc cl,0
-    jmp elf_segment_addressing_setup
-    ret
-
-close_elf64_segment:
-    cmp [number_of_sections],0
-    jne finish_elf64_segment
-    cmp edi,[symbols_stream]
-    jne first_elf64_segment_ok
-    push _edi
-    mov edi,[code_start]
-    add edi,40h
-    mov ecx,38h shr 2
-    xor eax,eax
-    rep stos dword [edi]
-    pop _edi
-    mov eax,[image_base]
-    mov edx,[image_base_high]
-    ret
-
-    first_elf64_segment_ok:
-    inc [number_of_sections]
-
-    finish_elf64_segment:
-    mov ebx,[number_of_sections]
-    dec ebx
-    imul ebx,38h
-    add ebx,[code_start]
-    add ebx,40h
-    mov eax,edi
-    sub eax,[code_start]
-    sub eax,[ebx+8]
-    mov edx,edi
-    cmp edi,[undefined_data_end]
-    jne elf64_segment_size_ok
-    mov edi,[undefined_data_start]
-
-    elf64_segment_size_ok:
-    mov [ebx+28h],eax
-    add eax,edi
-    sub eax,edx
-    mov [ebx+20h],eax
-    and [undefined_data_end],0
-    mov eax,[ebx+10h]
-    mov edx,[ebx+10h+4]
-    cmp u8 [ebx],1
-    jne elf64_segment_position_ok
-    add eax,[ebx+28h]
-    adc edx,0
-    add eax,0FFFh
-    adc edx,0
-
-    elf64_segment_position_ok:
-    and eax,not 0FFFh
-    ret
-
-close_elf_exe:
-    test [format_flags],8
-    jnz close_elf64_exe
-    call close_elf_segment
-    mov edx,[code_start]
-    mov eax,[number_of_sections]
-    mov u8 [edx+1Ch],34h
-    mov [edx+2Ch],ax
-    shl eax,5
-    add eax,edx
-    add eax,34h
-    cmp eax,[symbols_stream]
-    je elf_exe_ok
-    or [next_pass_needed],-1
-
-    elf_exe_ok:
-    ret
-
-close_elf64_exe:
-    call close_elf64_segment
-    mov edx,[code_start]
-    mov eax,[number_of_sections]
-    mov u8 [edx+20h],40h
-    mov [edx+38h],ax
-    imul eax,38h
-    add eax,edx
-    add eax,40h
-    cmp eax,[symbols_stream]
-    je elf64_exe_ok
-    or [next_pass_needed],-1
-
-    elf64_exe_ok:
     ret
 
 simple_instruction_except64:
@@ -30382,7 +28953,7 @@ check_vex:
     jnz invalid_operand
     test [rex_prefix],40h
     jnz invalid_operand
-    
+
     vex_ok:
     ret
 
@@ -30478,7 +29049,7 @@ evex_rounding:
     test [vex_required],40h
     jz evex_b_ok
     or al,10h
-    
+
     evex_b_ok:
     mov [edi+3],al
     add edi,5
@@ -30712,7 +29283,6 @@ symbols_3:
  db 'edx',10h,42h
  db 'efi',1Bh,10
  db 'eip',10h,94h
- db 'elf',18h,50h
  db 'esi',10h,46h
  db 'esp',10h,44h
  db 'far',12h,3
@@ -30854,7 +29424,6 @@ symbols_4:
 symbols_5:
  db '1to16',1Fh,14h
  db 'dword',11h,4
- db 'elf64',18h,58h
  db 'fword',11h,6
  db 'large',1Bh,82h
  db 'pword',11h,6
@@ -32761,8 +31330,6 @@ instructions_7:
  dw sse_ss_instruction-instruction_handler
  db 'section',0
  dw section_directive-instruction_handler
- db 'segment',0
- dw segment_directive-instruction_handler
  db 'stmxcsr',11b
  dw stmxcsr_instruction-instruction_handler
  db 'syscall',05h
