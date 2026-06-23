@@ -280,10 +280,8 @@ definition_option:
     cmp al,20h
     je definition_option
     cmp al,0Dh
-    ;je bad_params
     je carry_then_return
     or al,al
-    ;jz bad_params
     jz carry_then_return
     dec esi
     push _edi
@@ -291,7 +289,6 @@ definition_option:
     call convert_definition_option
     mov [definitions_pointer],edi
     pop _edi
-    ;jc bad_params
     jc carry_then_return
     jmp find_param
     ret
@@ -309,7 +306,6 @@ param_end:
     dec esi
     string_param_end:
     cmp edi,params+1000h
-    ;jae bad_params
     jae carry_then_return
     xor al,al
     stosb
@@ -318,7 +314,6 @@ param_end:
 
 all_params:
     cmp [input_file],0
-    ;je bad_params
     je carry_then_return
     mov eax,[definitions_pointer]
     mov u8 [eax],0
@@ -372,7 +367,6 @@ copy_definition_value:
 
     definition_value_character:
     cmp edi,predefinitions+1000h
-    ;jae bad_definition_option
     jae carry_then_return
     stosb
     jmp copy_definition_value
@@ -381,7 +375,6 @@ copy_definition_value:
 definition_value_end:
     dec esi
     cmp edi,predefinitions+1000h
-    ;jae bad_definition_option
     jae carry_then_return
     xor al,al
     stosb
@@ -531,7 +524,6 @@ open:
     call u64[CreateFile]
     add rsp,72
     cmp eax,-1
-    ;je file_error
     je carry_then_return
     mov ebx,eax
     clc
@@ -549,7 +541,6 @@ create:
     call u64[CreateFile]
     add rsp,72
     cmp eax,-1
-    ;je file_error
     je carry_then_return
     mov ebx,eax
     clc
@@ -564,7 +555,6 @@ write:
     call u64[WriteFile]
     add rsp,56
     or eax,eax
-    ;jz file_error
     jz carry_then_return
     clc
     ret
@@ -579,10 +569,8 @@ read:
     call u64[ReadFile]
     add rsp,56
     or eax,eax
-    ;jz file_error
     jz carry_then_return
     cmp ebp,[bytes_count]
-    ;jne file_error
     jne carry_then_return
     clc
     ret
@@ -603,7 +591,6 @@ lseek:
     call u64[SetFilePointer]
     add rsp,40
     cmp eax,-1
-    ;je file_error
     je carry_then_return
     clc
     ret
@@ -689,15 +676,12 @@ display_user_messages:
     mov [displayed_count],0
     call show_display_buffer
     cmp [displayed_count],1
-    ;jb line_break_ok
     jb return_ok
     je make_line_break
     mov ax, u16 [last_displayed]
     cmp ax,0A0Dh
-    ;je line_break_ok
     je return_ok
     cmp ax,0D0Ah
-    ;je line_break_ok
     je return_ok
 
     make_line_break:
