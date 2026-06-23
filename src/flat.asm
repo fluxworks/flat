@@ -138,7 +138,8 @@ find_param:
 
 get_output_file:
     cmp [output_file],0
-    jne bad_params
+    ;jne bad_params
+    jne carry_then_return
     mov [output_file],edi
 
     process_param:
@@ -147,7 +148,8 @@ get_output_file:
 
     copy_param:
     cmp edi,params+1000h
-    jae bad_params
+    ;jae bad_params
+    jae carry_then_return
     stosb
     lodsb
     cmp al,20h
@@ -170,7 +172,8 @@ string_param:
     or al,al
     jz param_end
     cmp edi,params+1000h
-    jae bad_params
+    ;jae bad_params
+    jae carry_then_return
     stosb
     jmp string_param
     ret
@@ -193,8 +196,6 @@ option_param:
     je symbols_option
     cmp al,'S'
     je symbols_option
-
-    bad_params:
     stc
     ret
 
@@ -211,23 +212,23 @@ get_option_value:
     or al,al
     jz option_value_ok
     sub al,30h
-    jc invalid_option_value
+    ;jc invalid_option_value
+    jc carry_then_return
     cmp al,9
-    ja invalid_option_value
+    ;ja invalid_option_value
+    ja carry_then_return
     imul edx,10
-    jo invalid_option_value
+    ;jo invalid_option_value
+    jo carry_then_return
     add edx,eax
-    jc invalid_option_value
+    ;jc invalid_option_value
+    jc carry_then_return
     jmp get_option_digit
     ret
 
 option_value_ok:
     dec esi
-    clc
-    ret
-
-invalid_option_value:
-    stc
+    jmp drop_then_return
     ret
 
 memory_option:
@@ -235,15 +236,19 @@ memory_option:
     cmp al,20h
     je memory_option
     cmp al,0Dh
-    je bad_params
+    ;je bad_params
+    je carry_then_return
     or al,al
-    jz bad_params
+    ;jz bad_params
+    jz carry_then_return
     dec esi
     call get_option_value
     or edx,edx
-    jz bad_params
+    ;jz bad_params
+    jz carry_then_return
     cmp edx,1 shl (32-10)
-    jae bad_params
+    ;jae bad_params
+    jae carry_then_return
     mov [memory_setting],edx
     jmp find_param
     ret
@@ -253,15 +258,19 @@ passes_option:
     cmp al,20h
     je passes_option
     cmp al,0Dh
-    je bad_params
+    ;je bad_params
+    je carry_then_return
     or al,al
-    jz bad_params
+    ;jz bad_params
+    jz carry_then_return
     dec esi
     call get_option_value
     or edx,edx
-    jz bad_params
+    ;jz bad_params
+    jz carry_then_return
     cmp edx,10000h
-    ja bad_params
+    ;ja bad_params
+    ja carry_then_return
     mov [passes_limit],dx
     jmp find_param
     ret
@@ -271,16 +280,19 @@ definition_option:
     cmp al,20h
     je definition_option
     cmp al,0Dh
-    je bad_params
+    ;je bad_params
+    je carry_then_return
     or al,al
-    jz bad_params
+    ;jz bad_params
+    jz carry_then_return
     dec esi
     push _edi
     mov edi,[definitions_pointer]
     call convert_definition_option
     mov [definitions_pointer],edi
     pop _edi
-    jc bad_params
+    ;jc bad_params
+    jc carry_then_return
     jmp find_param
     ret
 
@@ -297,7 +309,8 @@ param_end:
     dec esi
     string_param_end:
     cmp edi,params+1000h
-    jae bad_params
+    ;jae bad_params
+    jae carry_then_return
     xor al,al
     stosb
     jmp find_param
@@ -305,7 +318,8 @@ param_end:
 
 all_params:
     cmp [input_file],0
-    je bad_params
+    ;je bad_params
+    je carry_then_return
     mov eax,[definitions_pointer]
     mov u8 [eax],0
     mov [initial_definitions],predefinitions
@@ -315,7 +329,8 @@ all_params:
 convert_definition_option:
     mov ecx,edi
     cmp edi,predefinitions+1000h
-    jae bad_definition_option
+    ;jae bad_definition_option
+    jae carry_then_return
     xor al,al
     stosb
 
@@ -324,18 +339,20 @@ convert_definition_option:
     cmp al,'='
     je copy_definition_value
     cmp al,20h
-    je bad_definition_option
+    ;je bad_definition_option
+    je carry_then_return
     cmp al,0Dh
-    je bad_definition_option
+    ;je bad_definition_option
+    je carry_then_return
     or al,al
-    jz bad_definition_option
+    ;jz bad_definition_option
+    jz carry_then_return
     cmp edi,predefinitions+1000h
-    jae bad_definition_option
+    ;jae bad_definition_option
+    jae carry_then_return
     stosb
     inc u8 [ecx]
     jnz copy_definition_name
-
-    bad_definition_option:
     stc
     ret
 
@@ -355,7 +372,8 @@ copy_definition_value:
 
     definition_value_character:
     cmp edi,predefinitions+1000h
-    jae bad_definition_option
+    ;jae bad_definition_option
+    jae carry_then_return
     stosb
     jmp copy_definition_value
     ret
@@ -363,10 +381,11 @@ copy_definition_value:
 definition_value_end:
     dec esi
     cmp edi,predefinitions+1000h
-    jae bad_definition_option
+    ;jae bad_definition_option
+    jae carry_then_return
     xor al,al
     stosb
-    clc
+    jmp drop_then_return
     ret
 
     CREATE_NEW	       = 1
@@ -512,13 +531,10 @@ open:
     call u64[CreateFile]
     add rsp,72
     cmp eax,-1
-    je file_error
+    ;je file_error
+    je carry_then_return
     mov ebx,eax
     clc
-    ret
-
-file_error:
-    stc
     ret
 
 create:
@@ -533,7 +549,8 @@ create:
     call u64[CreateFile]
     add rsp,72
     cmp eax,-1
-    je file_error
+    ;je file_error
+    je carry_then_return
     mov ebx,eax
     clc
     ret
@@ -547,7 +564,8 @@ write:
     call u64[WriteFile]
     add rsp,56
     or eax,eax
-    jz file_error
+    ;jz file_error
+    jz carry_then_return
     clc
     ret
 
@@ -561,9 +579,11 @@ read:
     call u64[ReadFile]
     add rsp,56
     or eax,eax
-    jz file_error
+    ;jz file_error
+    jz carry_then_return
     cmp ebp,[bytes_count]
-    jne file_error
+    ;jne file_error
+    jne carry_then_return
     clc
     ret
 
@@ -583,7 +603,8 @@ lseek:
     call u64[SetFilePointer]
     add rsp,40
     cmp eax,-1
-    je file_error
+    ;je file_error
+    je carry_then_return
     clc
     ret
 
@@ -4244,7 +4265,8 @@ try_different_matching:
 
 skip_match_element:
     cmp esi,[parameters_end]
-    je cannot_match
+    ;je cannot_match
+    je carry_then_return
     mov al,[esi]
     cmp al,1Ah
     je skip_match_symbol
@@ -4266,21 +4288,14 @@ skip_match_symbol:
     add esi,eax
     ret
 
-cannot_match:
-    stc
-    ret
-
 exact_match:
     cmp esi,[parameters_end]
-    ;je exact_match_complete
     je return_ok
     mov ah,[esi]
     mov al,[ebx]
     cmp al,','
-    ;je exact_match_complete
     je return_ok
     cmp al,1Ah
-    ;je exact_match_complete
     je return_ok
     cmp al,'='
     je match_verbatim
@@ -4909,13 +4924,16 @@ reverse_block:
 
 close_macro_block:
     cmp _esi,u64[macro_block]
-    je block_closed
+    ;je block_closed
+    je drop_then_return
     cmp dword[counter],0
-    je block_closed
+    ;je block_closed
+    je drop_then_return
     jl reverse_counter
     mov _eax,u64[counter]
     cmp _eax,u64[counter_limit]
-    je block_closed
+    ;je block_closed
+    je drop_then_return
     inc [counter]
     jmp continue_block
     ret
@@ -4924,7 +4942,8 @@ reverse_counter:
     mov _eax,u64[counter]
     dec eax
     cmp eax,80000000h
-    je block_closed
+    ;je block_closed
+    je drop_then_return
     mov u64[counter],_eax
 
     continue_block:
@@ -4933,10 +4952,6 @@ reverse_counter:
     mov u64[macro_line],_eax
     mov _ecx,u64[macro_block_line_number]
     stc
-    ret
-
-block_closed:
-    clc
     ret
 
 get_macro_symbol:
@@ -4977,7 +4992,8 @@ find_macro_symbol_leaf:
     follow_macro_symbols_tree:
     mov edx,[ebx]
     or edx,edx
-    jz no_such_macro_symbol
+    ;jz no_such_macro_symbol
+    jz carry_then_return
     xor eax,eax
     shr ebp,1
     adc eax,0
@@ -4986,10 +5002,6 @@ find_macro_symbol_leaf:
     jnz follow_macro_symbols_tree
     add ebx,8
     clc
-    ret
-
-no_such_macro_symbol:
-    stc
     ret
 
 add_macro_symbol:
@@ -6271,7 +6283,6 @@ identify_label:
 
 anonymous_label_name:
     cmp u8 [esi-1],'@'
-    ;je anonymous_label_name_ok
     je return_ok
     mov eax,0Fh
     ret
@@ -7328,9 +7339,7 @@ oct_out_of_range:
 
     number_ok:
     pop _esi
-
-    number_done:
-    clc
+    jmp drop_then_return
     ret
 
 get_text_number:
@@ -7342,7 +7351,8 @@ get_text_number:
 
     get_text_character:
     sub edx,1
-    jc number_done
+    ;jc number_done
+    jc drop_then_return
     movzx eax, u8 [esi]
     inc esi
     mov cl,bl
@@ -7948,9 +7958,7 @@ negation_skipped:
     jne wrongly_structured_logical_expression
     pop _eax
     mov [logical_value_wrapping],al
-
-    logical_value_skipped:
-    clc
+    jmp drop_then_return
     ret
 
 wrongly_structured_logical_expression:
@@ -7964,13 +7972,17 @@ skip_simple_logical_value:
     find_simple_logical_value_end:
     mov al,[esi]
     or al,al
-    jz logical_value_skipped
+    ;jz logical_value_skipped
+    jz drop_then_return
     cmp al,0Fh
-    je logical_value_skipped
+    ;je logical_value_skipped
+    je drop_then_return
     cmp al,'|'
-    je logical_value_skipped
+    ;je logical_value_skipped
+    je drop_then_return
     cmp al,'&'
-    je logical_value_skipped
+    ;je logical_value_skipped
+    je drop_then_return
     cmp al,91h
     je skip_logical_value_internal_parenthesis
     cmp al,92h
@@ -7979,7 +7991,8 @@ skip_simple_logical_value:
     jnc skip_logical_value_symbol
     cmp [logical_value_wrapping],91h
     jne skip_logical_value_symbol
-    jmp logical_value_skipped
+    ;jmp logical_value_skipped
+    jmp drop_then_return
     ret
 
 skip_logical_value_internal_parenthesis:
@@ -10683,9 +10696,7 @@ skip_symbol:
     je skip_expression
     cmp al,'['
     je skip_address
-
-    skip_done:
-    clc
+    jmp drop_then_return
     ret
 
 skip_label:
@@ -10696,12 +10707,12 @@ skip_label:
 
     skip_assembler_symbol:
     inc esi
-    jmp skip_done
+    jmp drop_then_return
     ret
 
 skip_special_label:
     add esi, 4
-    jmp skip_done
+    jmp drop_then_return
     ret
 
 skip_address:
@@ -10722,9 +10733,11 @@ skip_expression:
     cmp al,'.'
     je skip_fp_value
     cmp al,')'
-    je skip_done
+    ;je skip_done
+    je drop_then_return
     cmp al,']'
-    je skip_done
+    ;je skip_done
+    je drop_then_return
     cmp al,'!'
     je skip_expression
     cmp al,0Fh
@@ -10750,14 +10763,16 @@ skip_label_value:
 
 skip_fp_value:
     add esi, 12
-    jmp skip_done
+    ;jmp skip_done
+    jmp drop_then_return
     ret
 
 skip_string:
     lods dword [esi]
     add esi, eax
     inc esi
-    jmp skip_done
+    ;jmp skip_done
+    jmp drop_then_return
     ret
 
 nothing_to_skip:
@@ -11056,7 +11071,8 @@ new_line:
     mov [ebx+10h],al
     continue_line:
     cmp u8 [esi],0Fh
-    je line_assembled
+    ;je line_assembled
+    je drop_then_return
     jmp assemble_line
     ret
 
@@ -11319,12 +11335,11 @@ instruction_assembled:
     jnz illegal_instruction
     mov al,[esi]
     cmp al,0Fh
-    je line_assembled
+    ;je line_assembled
+    je drop_then_return
     or al,al
     jnz extra_characters_on_line
-
-    line_assembled:
-    clc
+    jmp drop_then_return
     ret
 
 source_end:
@@ -11909,16 +11924,13 @@ find_structure_data:
 
     scan_structures:
     cmp _ebx,u64[additional_memory_end]
-    je no_such_structure
+    ;je no_such_structure
+    je carry_then_return
     cmp ax,[ebx]
     ;je structure_data_found
     je return_ok
     add ebx,18h
     jmp scan_structures
-    ret
-
-    no_such_structure:
-    stc
     ret
 
 allocate_virtual_structure_data:
@@ -12282,14 +12294,11 @@ end_if:
 find_else:
     call find_structure_end
     cmp ax,else_directive-instruction_handler
-    je else_found
+    ;je else_found
+    je drop_then_return
     cmp ax,if_directive-instruction_handler
     jne unexpected_instruction
     stc
-    ret
-
-else_found:
-    clc
     ret
 
 find_end_if:
@@ -20030,18 +20039,21 @@ calculate_jump_offset:
 check_for_short_jump:
     cmp [jump_type],1
     je forced_short
-    ja no_short_jump
+    ;ja no_short_jump
+    ja drop_then_return
     cmp [base_code],0E8h
-    je no_short_jump
+    ;je no_short_jump
+    je drop_then_return
     cmp [value_type],0
-    jne no_short_jump
+    ;jne no_short_jump
+    jne drop_then_return
     cmp eax,80h
-    jb short_jump
+    ;jb short_jump
+    jb carry_then_return
     cmp eax,-80h
-    jae short_jump
-
-    no_short_jump:
-    clc
+    ;jae short_jump
+    jae carry_then_return
+    jmp drop_then_return
     ret
 
 forced_short:
@@ -20054,12 +20066,11 @@ forced_short:
 
     jmp_short_value_type_ok:
     cmp eax,-80h
-    jae short_jump
+    ;jae short_jump
+    jae carry_then_return
     cmp eax,80h
     jae jump_out_of_range
-
-    short_jump:
-    stc
+    jmp carry_then_return
     ret
 
 jump_out_of_range:
@@ -25326,17 +25337,18 @@ take_avx_rm:
     lods u8 [esi]
     call convert_avx_register
     or cl,cl
-    jnz avx_reg_ok
+    ;jnz avx_reg_ok
+    jnz carry_then_return
     or cl,[mmx_size]
-    jz avx_reg_ok
+    ;jz avx_reg_ok
+    jz carry_then_return
     cmp ah,cl
-    je avx_reg_ok
+    ;je avx_reg_ok
+    je carry_then_return
     jb invalid_operand_size
     cmp ah,16
     jne invalid_operand_size
-
-    avx_reg_ok:
-    stc
+    jmp carry_then_return
     ret
 
 take_avx_mem:
@@ -25398,33 +25410,40 @@ avx_mem_broadcast_check:
     cmp [mmx_size],0
     jne avx_mem_size_enforced
     or al,al
-    jz avx_mem_size_ok
+    ;jz avx_mem_size_ok
+    jz drop_then_return
     cmp al,[operand_size]
     jne operand_sizes_do_not_match
-
-    avx_mem_size_ok:
-    clc
+    jmp drop_then_return
     ret
+    ;avx_mem_size_ok:
+    ;clc
+    ;ret
 
 avx_mem_size_deciding:
     mov al,[operand_size]
     cmp [mmx_size],0
     jne avx_mem_size_enforced
     cmp al,16
-    je avx_mem_size_ok
+    ;je avx_mem_size_ok
+    je drop_then_return
     cmp al,32
-    je avx_mem_size_ok
+    ;je avx_mem_size_ok
+    je drop_then_return
     cmp al,64
-    je avx_mem_size_ok
+    ;je avx_mem_size_ok
+    je drop_then_return
     or al,al
     jnz invalid_operand_size
     call recoverable_unknown_size
 
     avx_mem_size_enforced:
     or al,al
-    jz avx_mem_size_ok
+    ;jz avx_mem_size_ok
+    jz drop_then_return
     cmp al,[mmx_size]
-    je avx_mem_size_ok
+    ;je avx_mem_size_ok
+    je drop_then_return
     jmp invalid_operand_size
     ret
 
@@ -28408,15 +28427,12 @@ get_vex_source_register:
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
-    jne no_vex_source_register
+    ;jne no_vex_source_register
+    jne carry_then_return
     lods u8 [esi]
     call convert_register
     mov [vex_register],al
     clc
-    ret
-
-no_vex_source_register:
-    stc
     ret
 
 bextr_instruction:
@@ -28875,18 +28891,6 @@ get_vex_lpp_bits:
     jnz disallowed_combination_of_registers
     ret
 
-vex_f2:
-    or al,11b
-    ret
-
-vex_f3:
-    or al,10b
-    ret
-
-vex_66:
-    or al,1
-    ret
-
 store_vex_0f38_instruction_code:
     mov al,11100010b
     mov ah,[supplemental_code]
@@ -29078,10 +29082,30 @@ displacement_compressed:
     displacement_compression_ok:
     mov ecx,ebp
 
-    return_ok:
+return_ok:
     ret
 
-    near_ok:
+vex_f2:
+    or al,11b
+    ret
+
+vex_f3:
+    or al,10b
+    ret
+
+vex_66:
+    or al,1
+    ret
+
+carry_then_return:
+    stc
+    ret
+
+drop_then_return:
+    clc
+    ret
+
+near_ok:
     retn
 
 include_variable db 'INCLUDE',0
