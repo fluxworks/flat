@@ -14,6 +14,13 @@ u32 equ dword
 u16 equ word
 u8 equ byte
 
+
+macro u8.load
+{
+    lodsb
+    ud2
+}
+
 section '.text' code readable executable
 start:
     mov eax,STD_OUTPUT_HANDLE
@@ -865,6 +872,7 @@ display_error_line:
 
     convert_instruction:
     lodsb
+    u8.load
     cmp al,1Ah
     je copy_symbol
     cmp al,22h
