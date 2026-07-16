@@ -4,7 +4,7 @@
 format PE64 GUI
 entry start
 
-macro mov op1,op2,op3
+macro move( op1,op2,op3
  {
   if op3 eq
     mov   op1,op2
@@ -25,7 +25,7 @@ section '.text' code readable executable
   start:
 	sub	rsp,8*5 	; reserve stack for API use and make stack dqword aligned
 
-	mov	r9d,0
+	move( r9d,0
 	lea	r8,[_caption]
 	lea	rdx,[_message]
 	mov	rcx,0
