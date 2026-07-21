@@ -12,14 +12,7 @@ _edi equ rdi
 u64 equ qword
 u32 equ dword
 u16 equ word
-u8 equ byte
-
-
-macro u8.load
-{
-    lodsb
-    ud2
-}
+u8 equ byte 
 
 section '.text' code readable executable
 start:
@@ -872,7 +865,6 @@ display_error_line:
 
     convert_instruction:
     lodsb
-    u8.load
     cmp al,1Ah
     je copy_symbol
     cmp al,22h
@@ -1098,71 +1090,6 @@ invalid_file_format:
 
 invalid_macro_arguments:
     push _invalid_macro_arguments
-    jmp error_with_source
-    ret
-
-skip_macro_arguments_invalid_arguments:
-    push _skip_macro_arguments_invalid_arguments
-    jmp error_with_source
-    ret
-
-skips_macro_arguments_invalid_arguments:
-    push _skips_macro_arguments_invalid_arguments
-    jmp error_with_source
-    ret
-
-macro_arguments_finisher_invalid_arguments:
-    push _macro_arguments_finisher_invalid_arguments
-    jmp error_with_source
-    ret
-
-enclosed_argument_invalid_arguments:
-    push _enclosed_argument_invalid_arguments
-    jmp error_with_source
-    ret
-
-enclosed_argument_end_invalid_arguments:
-    push _enclosed_argument_end_invalid_arguments
-    jmp error_with_source
-    ret
-
-parameters_skipped_invalid_arguments:
-    push _parameters_skipped_invalid_arguments
-    jmp error_with_source
-    ret
-
-skip_pattern_invalid_arguments:
-    push _skip_pattern_invalid_arguments
-    jmp error_with_source
-    ret
-
-use_instant_macro_invalid_arguments:
-    push _use_instant_macro_invalid_arguments
-    jmp error_with_source
-    ret
-
-rept_counter_added_invalid_arguments:
-    push _rept_counter_added_invalid_arguments
-    jmp error_with_source
-    ret
-
-do_irp_invalid_arguments:
-    push _do_irp_invalid_arguments
-    jmp error_with_source
-    ret
-
-irps_name_ok_invalid_arguments:
-    push _irps_name_ok_invalid_arguments
-    jmp error_with_source
-    ret
-
-get_irpv_parameter_invalid_arguments:
-    push _get_irpv_parameter_invalid_arguments
-    jmp error_with_source
-    ret
-
-variable_values_collected_invalid_arguments:
-    push _variable_values_collected_invalid_arguments
     jmp error_with_source
     ret
 
@@ -3033,9 +2960,6 @@ define_macro:
 
     skip_macro_arguments:
     lods u8 [esi]
-    cmp al, '('
-    je skip_macro_arguments
-
     cmp al,1Ah
     je skip_macro_argument
     cmp al,'['
@@ -3043,8 +2967,6 @@ define_macro:
     or ebp,-1
     jz invalid_macro_arguments
     lods u8 [esi]
-    cmp al, '('
-    je skips_macro_arguments_invalid_arguments
     cmp al,1Ah
     jne invalid_macro_arguments
 
@@ -3072,10 +2994,8 @@ define_macro:
 
     macro_arguments_finisher:
     lods u8 [esi]
-    cmp al, '('
-    je skips_macro_arguments_invalid_arguments
 
-    end_macro_arguments:
+end_macro_arguments:
     or ebp,ebp
     jnz invalid_macro_arguments
     or al,al
@@ -3100,8 +3020,6 @@ skip_macro_argument_value:
 
     enclosed_argument:
     lods u8 [esi]
-    cmp al, '('
-    je enclosed_argument_invalid_arguments
     or al,al
     jz invalid_macro_arguments
     cmp al,1Ah
@@ -3132,8 +3050,6 @@ enclosed_string:
 enclosed_argument_end:
     loop enclosed_argument
     lods u8 [esi]
-    cmp al, '('
-    je enclosed_argument_end_invalid_arguments
     or al,al
     jz argument_value_end
     cmp al,','
@@ -3334,8 +3250,6 @@ parameters_skipped:
     dec esi
     mov [parameters_end],esi
     lods u8 [esi]
-    cmp al, '('
-    je parameters_skipped_invalid_arguments
     cmp al,'{'
     je found_macro_block
     or al,al
@@ -3352,8 +3266,6 @@ prepare_match:
 
 skip_pattern:
     lods u8 [esi]
-    cmp al, '('
-    je skip_pattern_invalid_arguments
     or al,al
     jz invalid_macro_arguments
     cmp al,','
@@ -3987,8 +3899,6 @@ use_instant_macro:
     mov [struc_name],0
     mov u64[counter_limit],_eax
     lods u8 [esi]
-    cmp al, '('
-    je use_instant_macro_invalid_arguments
     or al,al
     jz rept_counters_ok
     cmp al,'{'
@@ -4022,8 +3932,6 @@ use_instant_macro:
     cmp al,','
     jne rept_counters_ok
     lods u8 [esi]
-    cmp al, '('
-    je rept_counter_added_invalid_arguments
     cmp al,1Ah
     jne invalid_macro_arguments
     jmp add_rept_counter
@@ -4103,8 +4011,6 @@ do_irp:
     cmp al,'*'
     jne irp_name_ok
     lods u8 [esi]
-    cmp al, '('
-    je do_irp_invalid_arguments
 
 irp_name_ok:
     cmp al,','
@@ -4123,8 +4029,6 @@ irp_with_default_value:
     ret
 
 irps_name_ok:
-    cmp al, '('
-    je irps_name_ok_invalid_arguments
     cmp al,','
     jne invalid_macro_arguments
     cmp [base_code],3
@@ -4213,8 +4117,6 @@ irps_symbol:
 
 get_irpv_parameter:
     lods u8 [esi]
-    cmp al, '('
-    je get_irpv_parameter_invalid_arguments
     cmp al,1Ah
     jne invalid_macro_arguments
     lods u8 [esi]
@@ -4280,8 +4182,6 @@ variable_values_marked:
     add esi,ecx
     cmp u8 [esi],0
     je instant_macro_parameters_ok
-    cmp u8 [esi], '('
-    je variable_values_collected_invalid_arguments
     cmp u8 [esi],'{'
     jne invalid_macro_arguments
     jmp instant_macro_parameters_ok
@@ -33482,21 +33382,6 @@ _data_already_defined db 'data already defined',0
 _too_many_repeats db 'too many repeats',0
 _invoked_error db 'error directive encountered in source file',0
 _assertion_failed db 'assertion failed',0
-
-_skip_macro_arguments_invalid_arguments db 'invalid macro arguments on line 2975',0
-_skips_macro_arguments_invalid_arguments db 'invalid macro arguments on line 2990',0
-_macro_arguments_finisher_invalid_arguments db 'invalid macro arguments on line 3024',0
-_enclosed_argument_invalid_arguments db 'invalid macro arguments on line 3057',0
-_enclosed_argument_end_invalid_arguments db 'invalid macro arguments on line 3095',0
-_parameters_skipped_invalid_arguments db 'invalid macro arguments on line 3300',0
-_skip_pattern_invalid_arguments db 'invalid macro arguments on line 3325',0
-_use_instant_macro_invalid_arguments db 'invalid macro arguments on line 3963',0
-_rept_counter_added_invalid_arguments db 'invalid macro arguments on line 4003',0
-_do_irp_invalid_arguments db 'invalid macro arguments on line 4003',0
-_irps_name_ok_invalid_arguments db 'invalid macro arguments on line 4115',0
-_get_irpv_parameter_invalid_arguments db 'invalid macro arguments on line 4209',0
-_variable_values_collected_invalid_arguments db 'invalid macro arguments on line 4282',0
-
 
 section '.data' data readable writeable
 
