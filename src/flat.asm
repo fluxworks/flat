@@ -421,6 +421,8 @@ definition_value_end:
 
 init_memory:
     xor eax,eax
+    mov rcx, 0xFFFFFFFF
+    call u64[AttachConsole]
     mov u64[memory_start],_eax
     mov _eax,_esp
     and eax,not 0FFFh
@@ -491,6 +493,7 @@ exit_program:
     call u64[VirtualFree]
     add rsp,40
     do_exit:
+    call u64[FreeConsole]
     call u64[ExitProcess]
 
     get_environment_variable:
@@ -33577,52 +33580,60 @@ section '.idata' import data readable writeable
   dd 0,0,0,0,0
 
   kernel_table:
-    ExitProcess dq rva _ExitProcess
-    CreateFile dq rva _CreateFileA
-    ReadFile dq rva _ReadFile
-    WriteFile dq rva _WriteFile
-    CloseHandle dq rva _CloseHandle
-    SetFilePointer dq rva _SetFilePointer
+    AttachConsole dq rva _AttachConsole
+    CloseHandle   dq rva _CloseHandle
+    CreateFile    dq rva _CreateFileA
+    ExitProcess   dq rva _ExitProcess
+    FreeConsole   dq rva _FreeConsole
     GetCommandLine dq rva _GetCommandLineA
     GetEnvironmentVariable dq rva _GetEnvironmentVariable
     GetStdHandle dq rva _GetStdHandle
-    VirtualAlloc dq rva _VirtualAlloc
-    VirtualFree dq rva _VirtualFree
-    GetTickCount dq rva _GetTickCount
     GetSystemTime dq rva _GetSystemTime
+    GetTickCount dq rva _GetTickCount
     GlobalMemoryStatus dq rva _GlobalMemoryStatus
+    ReadFile     dq rva _ReadFile
+    SetFilePointer dq rva _SetFilePointer
+    VirtualAlloc dq rva _VirtualAlloc
+    VirtualFree   dq rva _VirtualFree
+    WriteFile     dq rva _WriteFile
+
+
     dq 0
 
   kernel_name db 'KERNEL32.DLL',0
 
-  _ExitProcess dw 0
-    db 'ExitProcess',0
-  _CreateFileA dw 0
-    db 'CreateFileA',0
-  _ReadFile dw 0
-    db 'ReadFile',0
-  _WriteFile dw 0
-    db 'WriteFile',0
+  _AttachConsole dw 0
+      db 'AttachConsole',0
   _CloseHandle dw 0
     db 'CloseHandle',0
-  _SetFilePointer dw 0
-    db 'SetFilePointer',0
+  _CreateFileA dw 0
+    db 'CreateFileA',0
+  _ExitProcess dw 0
+    db 'ExitProcess',0
+  _FreeConsole dw 0
+    db 'FreeConsole',0
   _GetCommandLineA dw 0
     db 'GetCommandLineA',0
   _GetEnvironmentVariable dw 0
     db 'GetEnvironmentVariableA',0
   _GetStdHandle dw 0
     db 'GetStdHandle',0
+  _GetSystemTime dw 0
+    db 'GetSystemTime',0
+  _GetTickCount dw 0
+    db 'GetTickCount',0
+  _GlobalMemoryStatus dw 0
+    db 'GlobalMemoryStatus',0
+  _ReadFile dw 0
+    db 'ReadFile',0
+  _SetFilePointer dw 0
+    db 'SetFilePointer',0
   _VirtualAlloc dw 0
     db 'VirtualAlloc',0
   _VirtualFree dw 0
     db 'VirtualFree',0
-  _GetTickCount dw 0
-    db 'GetTickCount',0
-  _GetSystemTime dw 0
-    db 'GetSystemTime',0
-  _GlobalMemoryStatus dw 0
-    db 'GlobalMemoryStatus',0
+  _WriteFile dw 0
+    db 'WriteFile',0
 
 section '.reloc' fixups data readable discardable
   if $=$$

@@ -1,4 +1,4 @@
-
+;
 ; Example of 64-bit PE program
 
 format PE64 GUI
@@ -25,7 +25,7 @@ section '.text' code readable executable
   start:
 	sub	rsp,8*5 	; reserve stack for API use and make stack dqword aligned
 
-	move( r9d,0
+	mov r9d,0
 	lea	r8,[_caption]
 	lea	rdx,[_message]
 	mov	rcx,0
