@@ -14,12 +14,25 @@ u32 equ dword
 u16 equ word
 u8 equ byte 
 
+macro strings.emit from
+{
+	local addr, behind
+	push addr
+	jmp behind
+	addr db from, 0
+	behind:
+	mov _esi, u64[_esp]
+	call display_string
+	pop _esi
+}
+
 section '.text' code readable executable
 start:
     mov eax,STD_OUTPUT_HANDLE
     mov u64[con_handle],_eax
-    mov esi, _logo
-    call display_string
+	strings.emit 'flat assembler v26.08.05.1915'
+    ;mov esi, _logo
+    ;call display_string
     call get_params
     jc information
     call init_memory
