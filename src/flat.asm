@@ -17,12 +17,14 @@ u8 equ byte
 macro strings.emit from
 {
 	local addr, behind
+	push _esi
 	push addr
 	jmp behind
 	addr db from, 0
 	behind:
 	mov _esi, u64[_esp]
 	call display_string
+	pop _esi
 	pop _esi
 }
 
@@ -89,6 +91,7 @@ start:
     ret
 
 information:
+    strings.emit 'information | 92'
     mov esi, _usage
     call display_string
     mov al,1
@@ -96,6 +99,7 @@ information:
     ret
 
 get_params:
+    strings.emit 'get_params | 100'
     mov [input_file],0
     mov [output_file],0
     mov [symbols_file],0
@@ -123,6 +127,7 @@ get_params:
     ret
 
 skip_quoted_name:
+    strings.emit 'skip_quoted_name | 127'
     lodsb
     cmp al,22h
     je find_param
@@ -132,6 +137,7 @@ skip_quoted_name:
     ret
 
 find_param:
+    strings.emit 'find_param | 138'
     lodsb
     cmp al,20h
     je find_param
@@ -150,6 +156,7 @@ find_param:
     ret
 
 get_output_file:
+    strings.emit 'get_output_file | 138'
     cmp [output_file],0
     ;jne bad_params
     jne carry_then_return
@@ -177,6 +184,7 @@ get_output_file:
     ret
 
 string_param:
+    strings.emit 'string_param | 187'
     lodsb
     cmp al,22h
     je string_param_end
@@ -192,6 +200,7 @@ string_param:
     ret
 
 option_param:
+    strings.emit 'option_param | 203'
     lodsb
     cmp al,'m'
     je memory_option
@@ -213,6 +222,7 @@ option_param:
     ret
 
 get_option_value:
+    strings.emit 'get_option_value | 203'
     xor eax,eax
     mov edx,eax
 
@@ -240,11 +250,13 @@ get_option_value:
     ret
 
 option_value_ok:
+    strings.emit 'option_value_ok | 253'
     dec esi
     jmp drop_then_return
     ret
 
 memory_option:
+    strings.emit 'memory_option | 253'
     lodsb
     cmp al,20h
     je memory_option
@@ -267,6 +279,7 @@ memory_option:
     ret
 
 passes_option:
+    strings.emit 'passes_option | 281'
     lodsb
     cmp al,20h
     je passes_option
@@ -289,6 +302,7 @@ passes_option:
     ret
 
 definition_option:
+    strings.emit 'definition_option | 305'
     lodsb
     cmp al,20h
     je definition_option
@@ -307,6 +321,7 @@ definition_option:
     ret
 
 symbols_option:
+    strings.emit 'symbols_option | 324'
     mov [symbols_file],edi
     find_symbols_file_name:
     lodsb
@@ -316,6 +331,7 @@ symbols_option:
     ret
 
 param_end:
+    strings.emit 'param_end | 333'
     dec esi
     string_param_end:
     cmp edi,params+1000h
@@ -326,6 +342,7 @@ param_end:
     ret
 
 all_params:
+    strings.emit 'all_params | 344'
     cmp [input_file],0
     je carry_then_return
     mov eax,[definitions_pointer]
@@ -335,6 +352,7 @@ all_params:
     ret
 
 convert_definition_option:
+    strings.emit 'convert_definition_option | 354'
     mov ecx,edi
     cmp edi,predefinitions+1000h
     ;jae bad_definition_option
@@ -365,6 +383,7 @@ convert_definition_option:
     ret
 
 copy_definition_value:
+    strings.emit 'copy_definition_value | 385'
     lodsb
     cmp al,20h
     je definition_value_end
@@ -386,6 +405,7 @@ copy_definition_value:
     ret
 
 definition_value_end:
+    strings.emit 'definition_value_end | 408'
     dec esi
     cmp edi,predefinitions+1000h
     jae carry_then_return
@@ -433,6 +453,7 @@ definition_value_end:
     PAGE_NOCACHE	       = 200h
 
 init_memory:
+    strings.emit 'init_memory | 455'
     xor eax,eax
     mov rcx, 0xFFFFFFFF
     call u64[AttachConsole]
@@ -486,6 +507,7 @@ large_memory:
     ret
 
 not_enough_memory:
+    strings.emit 'not_enough_memory | 509'
     mov _eax,u64[additional_memory_end]
     shl eax,1
     cmp eax,4000h
@@ -494,6 +516,7 @@ not_enough_memory:
     ret
 
 exit_program:
+    strings.emit 'exit_program | 518'
     movzx eax,al
     push _eax
     mov _eax,u64[memory_start]
@@ -529,6 +552,7 @@ exit_program:
     ret
 
 open:
+    strings.emit 'open | 554'
     sub rsp,72
     mov u64[rsp+48],0
     mov u64[rsp+40],0
@@ -546,6 +570,7 @@ open:
     ret
 
 create:
+    strings.emit 'create | 572'
     sub rsp,72
     mov u64[rsp+48],0
     mov u64[rsp+40],0
@@ -563,6 +588,7 @@ create:
     ret
 
 write:
+    strings.emit 'write | 590'
     sub rsp,56
     mov u64[rsp+32],0
     mov r9d,bytes_count
@@ -576,6 +602,7 @@ write:
     ret
 
 read:
+    strings.emit 'read | 604'
     mov ebp,ecx
     sub rsp,56
     mov u64[rsp+32],0
@@ -592,6 +619,7 @@ read:
     ret
 
 close:
+    strings.emit 'close | 621'
     sub rsp,40
     mov rcx,rbx
     call u64[CloseHandle]
@@ -599,6 +627,7 @@ close:
     ret
 
 lseek:
+    strings.emit 'lseek | 629'
     movzx eax,al
     sub rsp,40
     mov r9d,eax
@@ -653,6 +682,7 @@ display_character:
     ret
 
 display_number:
+    strings.emit 'display_number | 685'
     push _ebx
     mov ecx,1000000000
     xor edx,edx
@@ -689,6 +719,7 @@ display_number:
     ret
 
 display_user_messages:
+    strings.emit 'display_user_messages | 721'
     mov [displayed_count],0
     call show_display_buffer
     cmp [displayed_count],1
@@ -717,6 +748,7 @@ display_user_messages:
     ret
 
 display_block:
+    strings.emit 'display_block | 750'
     add [displayed_count],ecx
     cmp ecx,1
     ja take_last_two_characters
@@ -729,6 +761,7 @@ display_block:
     ret
 
 take_last_two_characters:
+    strings.emit 'take_last_two_characters | 763'
     mov ax,[esi+ecx-2]
     mov u16 [last_displayed],ax
     block_ok:
@@ -895,6 +928,7 @@ display_error_line:
     ret
 
 copy_symbol:
+    strings.emit 'copy_symbol | 930'
     or dl,dl
     jz space_ok
     mov u8 [edi],20h
@@ -911,6 +945,7 @@ copy_symbol:
     ret
 
 quoted:
+    strings.emit 'quoted | 948'
     mov al,27h
     stosb
     lodsd
@@ -935,6 +970,7 @@ quoted:
     ret
 
 instruction_converted:
+    strings.emit 'instruction_converted | 972'
     xor al,al
     stosb
     mov _esi,u64[additional_memory]
@@ -954,6 +990,7 @@ instruction_converted:
     ret
 
 make_timestamp:
+    strings.emit 'make_timestamp | 992'
     sub rsp,40
     mov rcx,buffer
     call u64[GetSystemTime]
@@ -1211,6 +1248,7 @@ undefined_symbol:
     ret
 
 copy_asciiz:
+    strings.emit 'copy_asciiz | 1250'
     lods u8 [esi]
     stos u8 [edi]
     test al,al
@@ -1218,6 +1256,7 @@ copy_asciiz:
     ret
 
 write_quoted_symbol_name:
+    strings.emit 'write_quoted_symbol_name | 1257'
     mov al,27h
     stosb
     movzx ecx, u8 [esi-1]
@@ -1227,6 +1266,7 @@ write_quoted_symbol_name:
     ret
 
 symbol_out_of_scope:
+    strings.emit 'symbol_out_of_scope | 1268'
     mov edi,message
     mov esi,_symbol_out_of_scope_1
     call copy_asciiz
@@ -1328,6 +1368,7 @@ invoked_error:
     ret
 
 dump_symbols:
+    strings.emit 'dump_symbols | 1370'
     mov edi,[code_start]
     call setup_dump_header
     mov esi,[input_file]
@@ -1367,6 +1408,7 @@ dump_symbols:
     ret
 
 prepare_string:
+    strings.emit 'prepare_string | 1410'
     mov esi,edi
     sub esi,ebx
     xchg esi,[edx+4]
@@ -1387,6 +1429,7 @@ prepare_string:
     ret
 
 prepare_section_string:
+    strings.emit 'prepare_section_string | 1410'
     mov ecx,[number_of_sections]
     mov eax,ecx
     inc eax
@@ -1407,6 +1450,7 @@ prepare_section_string:
     ret
 
 prepare_default_section_string:
+    strings.emit 'prepare_default_section_string | 1452'
     mov eax,'.fla'
     stos u32 [edi]
     mov ax,'t'
@@ -1417,6 +1461,7 @@ prepare_default_section_string:
     ret
 
 strings_table_ready:
+    strings.emit 'strings_table_ready | 1463'
     mov edx,[tagged_blocks]
     mov _ebp,u64[memory_end]
     sub ebp,[labels_list]
@@ -1439,6 +1484,7 @@ strings_table_ready:
     ret
 
 label_name_outside_source:
+    strings.emit 'label_name_outside_source | 1486'
     mov esi,eax
     mov eax,edi
     sub eax,ebx
@@ -1469,6 +1515,7 @@ label_name_outside_source:
     ret
 
 convert_base_symbol_for_label:
+    strings.emit 'convert_base_symbol_for_label | 1517'
     mov eax,[edx+20]
     test eax,eax
     jz base_symbol_for_label_ok
@@ -1494,6 +1541,7 @@ convert_base_symbol_for_label:
     ret
 
 labels_dump_ok:
+    strings.emit 'labels_dump_ok | 1543'
     mov eax,edi
     sub eax,ebx
     mov [ebx-40h+14h],eax
@@ -1532,6 +1580,7 @@ labels_dump_ok:
     ret
 
 process_line_dump:
+    strings.emit 'process_line_dump | 1582'
     push _ebx
     mov ebx,[esi+8]
     mov eax,[esi+4]
@@ -1587,6 +1636,7 @@ process_line_dump:
     ret
 
 lines_dump_ok:
+    strings.emit 'lines_dump_ok | 1638'
     mov edx,edi
     mov _eax,u64[current_offset]
     sub eax,[code_start]
@@ -1614,12 +1664,14 @@ lines_dump_ok:
     ret
 
 correct_inexisting_offset:
+    strings.emit 'correct_inexisting_offset | 1666'
     and u32 [edx],0
     or u8 [edx+1Ah],2
     jmp find_inexisting_offsets
     ret
 
 write_symbols:
+    strings.emit 'write_symbols | 1673'
     mov edx,[symbols_file]
     call create
     jc write_failed
@@ -1667,6 +1719,7 @@ write_symbols:
     ret
 
 dump_reference:
+    strings.emit 'dump_reference | 1721'
     mov _eax,u64[memory_end]
     sub eax,[esi]
     sub eax,LABEL_STRUCTURE_SIZE
@@ -1679,6 +1732,7 @@ dump_reference:
     ret
 
 references_dump_ok:
+    strings.emit 'references_dump_ok | 1734'
     mov _edx,u64[memory_start]
     mov ecx,edi
     sub ecx,edx
@@ -1688,6 +1742,7 @@ references_dump_ok:
     ret
 
 setup_dump_header:
+    strings.emit 'setup_dump_header | 1744'
     xor eax,eax
     mov ecx,40h shr 2
     rep stos dword [edi]
@@ -1698,6 +1753,7 @@ setup_dump_header:
     ret
 
 prepare_preprocessed_source:
+    strings.emit 'prepare_preprocessed_source | 1755'
     mov _esi,u64[memory_start]
     mov ebp,[source_start]
     test ebp,ebp
@@ -1728,6 +1784,7 @@ prepare_preprocessed_source:
     ret
 
 skip_preprocessed_line:
+    strings.emit 'skip_preprocessed_line | 1786'
     add esi,16
 
     skip_preprocessed_line_content:
@@ -1743,12 +1800,14 @@ skip_preprocessed_line:
     ret
 
 skip_preprocessed_string:
+    strings.emit 'skip_preprocessed_string | 1802'
     lods u32 [esi]
     add esi,eax
     jmp skip_preprocessed_line_content
     ret
 
 skip_preprocessed_symbol:
+    strings.emit 'skip_preprocessed_symbol | 1809'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -1756,6 +1815,7 @@ skip_preprocessed_symbol:
     ret
 
 restore_preprocessed_source:
+    strings.emit 'restore_preprocessed_source | 1817'
     mov _esi,u64[memory_start]
     mov ebp,[source_start]
     test ebp,ebp
@@ -1786,6 +1846,7 @@ restore_preprocessed_source:
     ret
 
 dump_preprocessed_source:
+    strings.emit 'dump_preprocessed_source | 1848'
     mov _edi,u64[free_additional_memory]
     call setup_dump_header
     mov esi,[input_file]
@@ -1820,6 +1881,7 @@ dump_preprocessed_source:
     ret
 
 preprocessor:
+    strings.emit 'preprocessor | 1883'
     mov edi,characters
     xor al,al
 
@@ -1934,6 +1996,7 @@ preprocessor:
     ret
 
 predefinition_string:
+    strings.emit 'predefinition_string | 1998'
     mov al,22h
     stos u8 [edi]
     scas u32 [edi]
