@@ -3058,6 +3058,7 @@ define_struc:
     ret
 
 define_macro:
+    strings.emit 'define_macro | 3060'
     xor ch,ch
 
     make_macro:
@@ -3134,6 +3135,7 @@ end_macro_arguments:
     ret
 
 macro_argument_with_default_value:
+    strings.emit 'macro_argument_with_default_value | 3137'
     or [skip_default_argument_value],-1
     call skip_macro_argument_value
     inc esi
@@ -3141,6 +3143,7 @@ macro_argument_with_default_value:
     ret
 
 skip_macro_argument_value:
+    strings.emit 'skip_macro_argument_value | 3145'
     cmp u8 [esi],'<'
     jne simple_argument
     mov ecx,1
@@ -3163,6 +3166,7 @@ skip_macro_argument_value:
     ret
 
 enclosed_symbol:
+    strings.emit 'enclosed_symbol | 3168'
     movzx eax, u8 [esi]
     inc esi
     add esi,eax
@@ -3170,12 +3174,14 @@ enclosed_symbol:
     ret
 
 enclosed_string:
+    strings.emit 'enclosed_string | 3177'
     lods u32 [esi]
     add esi,eax
     jmp enclosed_argument
     ret
 
 enclosed_argument_end:
+    strings.emit 'enclosed_argument_end | 3183'
     loop enclosed_argument
     lods u8 [esi]
     or al,al
@@ -3196,6 +3202,7 @@ enclosed_argument_end:
     ret
 
 simple_argument:
+    strings.emit 'simple_argument | 3204'
     lods u8 [esi]
     or al,al
     jz argument_value_end
@@ -3224,16 +3231,19 @@ simple_argument:
     ret
 
 argument_string:
+    strings.emit 'argument_string | 3233'
     lods u32 [esi]
     add esi,eax
     jmp simple_argument
     ret
 
 argument_value_end:
+    strings.emit 'argument_value_end | 3240'
     dec esi
     ret
 
 find_macro_block:
+    strings.emit 'find_macro_block | 3245'
     add esi,2
     lods u8 [esi]
     or al,al
@@ -3284,6 +3294,7 @@ find_macro_block:
     ret
 
 skip_macro_symbol:
+    strings.emit 'skip_macro_symbol | 3296'
     movzx eax, u8 [esi]
     inc esi
     add esi,eax
@@ -3291,12 +3302,14 @@ skip_macro_symbol:
     ret
 
 skip_macro_string:
+    strings.emit 'skip_macro_string | 3304'
     lods u32 [esi]
     add esi,eax
     jmp skip_macro_block
     ret
 
 postpone_directive:
+    strings.emit 'postpone_directive | 3311'
     push _esi
     mov esi,edx
     xor ecx,ecx
@@ -3319,26 +3332,31 @@ postpone_directive:
     ret
 
 rept_directive:
+    strings.emit 'rept_directive | 3334'
     mov [base_code],0
     jmp define_instant_macro
     ret
 
 irp_directive:
+    strings.emit 'irp_directive | 3340'
     mov [base_code],1
     jmp define_instant_macro
     ret
 
 irps_directive:
+    strings.emit 'irps_directive | 3347'
     mov [base_code],2
     jmp define_instant_macro
     ret
 
 irpv_directive:
+    strings.emit 'irpv_directive | 3353'
     mov [base_code],3
     jmp define_instant_macro
     ret
 
 match_directive:
+    strings.emit 'match_directive | 3358'
     mov [base_code],10h
 
     define_instant_macro:
@@ -3369,12 +3387,14 @@ match_directive:
     ret
 
 skip_quoted_parameter:
+    strings.emit 'skip_quoted_parameter | 3389'
     lods u32 [esi]
     add esi,eax
     jmp skip_parameters
     ret
 
 parameters_skipped:
+    strings.emit 'parameters_skipped | 3396'
     dec esi
     mov [parameters_end],esi
     lods u8 [esi]
@@ -3386,6 +3406,7 @@ parameters_skipped:
     ret
 
 prepare_match:
+    strings.emit 'prepare_match | 3408'
     call skip_pattern
     mov [value_type],80h+10b
     call process_symbolic_constants
@@ -3393,6 +3414,7 @@ prepare_match:
     ret
 
 skip_pattern:
+    strings.emit 'skip_pattern | 3417'
     lods u8 [esi]
     or al,al
     jz invalid_macro_arguments
@@ -3415,6 +3437,7 @@ skip_pattern:
     ret
 
 skip_symbol_in_pattern:
+    strings.emit 'skip_symbol_in_pattern | 3439'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -3422,22 +3445,26 @@ skip_symbol_in_pattern:
     ret
 
 skip_quoted_string_in_pattern:
+    strings.emit 'skip_quoted_string_in_pattern | 3447'
     lods u32 [esi]
     add esi,eax
     jmp skip_pattern
     ret
 
 purge_macro:
+    strings.emit 'purge_macro | 3454'
     xor ch,ch
     jmp restore_preprocessor_symbol
     ret
 
 purge_struc:
+    strings.emit 'purge_struc | 3460'
     mov ch,1
     jmp restore_preprocessor_symbol
     ret
 
 restore_equ_constant:
+    strings.emit 'restore_equ_constant | 3466'
     mov ch,10b
 
     restore_preprocessor_symbol:
@@ -3454,6 +3481,7 @@ restore_equ_constant:
     ret
 
 no_symbol_to_restore:
+    strings.emit 'no_symbol_to_restore | 3483'
     add esi,ecx
 
     symbol_restored:
@@ -3467,11 +3495,13 @@ no_symbol_to_restore:
     ret
 
 process_fix_constants:
+    strings.emit 'process_fix_constants | 3497'
     mov [value_type],11b
     jmp process_symbolic_constants
     ret
 
 process_equ_constants:
+    strings.emit 'process_equ_constants | 3503'
     mov [value_type],10b
 
     process_symbolic_constants:
@@ -3488,23 +3518,27 @@ process_equ_constants:
     ret
 
 ignore_string:
+    strings.emit 'ignore_string | 3520'
     lods u32 [esi]
     add esi,eax
     jmp process_symbolic_constants
     ret
 
 check_brace:
+    strings.emit 'check_brace | 3527'
     test [value_type],80h
     jz process_symbolic_constants
     ret
 
 no_replacing:
+    strings.emit 'no_replacing | 3533'
     movzx ecx, u8 [esi-1]
     add esi,ecx
     jmp process_symbolic_constants
     ret
 
 check_symbol:
+    strings.emit 'check_symbol | 3540'
     mov cl,[esi]
     inc esi
     mov ch,[value_type]
@@ -3538,6 +3572,7 @@ check_symbol:
     ret
 
 move_data:
+    strings.emit 'move_data | 3574'
     lea eax,[edi+ecx]
     cmp _eax,u64[memory_end]
     jae out_of_memory
@@ -3555,6 +3590,7 @@ move_data:
     ret
 
 string_after_replaced:
+    strings.emit 'string_after_replaced | 3592'
     lods u32 [esi]
     stos u32 [edi]
     mov ecx,eax
@@ -3563,6 +3599,7 @@ string_after_replaced:
     ret
 
 brace_after_replaced:
+    strings.emit 'brace_after_replaced | 3592'
     test [value_type],80h
     jz process_after_replaced
     mov edx,edi
@@ -3578,6 +3615,7 @@ brace_after_replaced:
     ret
 
 symbol_after_replaced:
+    strings.emit 'symbol_after_replaced | 3617'
     mov cl,[esi]
     inc esi
     mov ch,[value_type]
@@ -3592,6 +3630,7 @@ symbol_after_replaced:
     ret
 
 process_macro_operators:
+    strings.emit 'process_macro_operators | 3632'
     xor dl,dl
     mov ebp,edi
 
@@ -3615,10 +3654,12 @@ process_macro_operators:
     ret
 
 no_more_macro_operators:
+    strings.emit 'no_more_macro_operators | 3656'
     mov edi,ebp
     ret
 
 symbol_before_macro_operators:
+    strings.emit 'symbol_before_macro_operators | 3661'
     mov dl,1Ah
     mov ebx,esi
     lods u8 [esi]
@@ -3634,6 +3675,7 @@ symbol_before_macro_operators:
     ret
 
 string_before_macro_operators:
+    strings.emit 'string_before_macro_operators | 3677'
     mov dl,22h
     mov ebx,esi
     lods u32 [esi]
@@ -3642,6 +3684,7 @@ string_before_macro_operators:
     ret
 
 escaped_symbol:
+    strings.emit 'escaped_symbol | 3686'
     dec u8 [edi-1]
     dec ecx
     inc esi
@@ -3663,6 +3706,7 @@ escaped_symbol:
     ret
 
 reduce_symbol_conversion:
+    strings.emit 'reduce_symbol_conversion | 3708'
     inc esi
 
     symbol_conversion:
@@ -3683,6 +3727,7 @@ reduce_symbol_conversion:
     ret
 
 symbol_character_conversion:
+    strings.emit 'symbol_character_conversion | 3729'
     cmp al,22h
     je after_macro_operators
     cmp al,'`'
@@ -3711,6 +3756,7 @@ symbol_character_conversion:
     ret
 
 shift_line_data:
+    strings.emit 'shift_line_data | 3758'
     push _ecx
     mov edx,esi
     lea esi,[ebp-1]
@@ -3732,6 +3778,7 @@ shift_line_data:
     ret
 
 concatenation:
+    strings.emit 'concatenation | 3780'
     cmp dl,1Ah
     je symbol_concatenation
     cmp dl,22h
@@ -3744,6 +3791,7 @@ concatenation:
     ret
 
 symbol_concatenation:
+    strings.emit 'symbol_concatenation | 3793'
     cmp u8 [esi],1Ah
     jne no_concatenation
     inc esi
@@ -3761,6 +3809,7 @@ symbol_concatenation:
     ret
 
 concatenate_escaped_symbol:
+    strings.emit 'concatenate_escaped_symbol | 3811'
     inc esi
     dec ecx
     jz do_symbol_concatenation
@@ -3772,6 +3821,7 @@ concatenate_escaped_symbol:
     ret
 
 string_concatenation:
+    strings.emit 'string_concatenation | 3823'
     cmp u8 [esi],22h
     je do_string_concatenation
     cmp u8 [esi],'`'
@@ -3802,6 +3852,7 @@ string_concatenation:
     ret
 
 concatenate_converted_symbol_character:
+    strings.emit 'concatenate_converted_symbol_character | 3854'
     or al,al
     jz after_macro_operators
     cmp al,'#'
@@ -3812,6 +3863,7 @@ concatenate_converted_symbol_character:
     ret
 
 do_string_concatenation:
+    strings.emit 'do_string_concatenation | 3865'
     inc esi
     lods u32 [esi]
     mov ecx,eax
@@ -3837,6 +3889,7 @@ do_string_concatenation:
     ret
 
 symbol_after_macro_operators:
+    strings.emit 'symbol_after_macro_operators | 3891'
     mov dl,1Ah
     mov ebx,edi
     lods u8 [esi]
@@ -3852,6 +3905,7 @@ symbol_after_macro_operators:
     ret
 
 string_after_macro_operators:
+    strings.emit 'string_after_macro_operators | 3907'
     mov dl,22h
     mov ebx,edi
     lods u32 [esi]
@@ -3862,6 +3916,7 @@ string_after_macro_operators:
     ret
 
 use_macro:
+    strings.emit 'use_macro | 3918'
     push u64[free_additional_memory]
     push u64[macro_symbols]
     mov [macro_symbols],0
@@ -3903,6 +3958,7 @@ use_macro:
     ret
 
 next_argument:
+    strings.emit 'next_argument | 3960'
     cmp u8 [ebx],','
     jne process_macro_arguments
     inc ebx
@@ -3910,6 +3966,7 @@ next_argument:
     ret
 
 next_arguments_group:
+    strings.emit 'next_arguments_group | 3968'
     cmp u8 [ebx],','
     jne arguments_end
     inc ebx
@@ -3919,6 +3976,7 @@ next_arguments_group:
     ret
 
 get_macro_argument:
+    strings.emit 'get_macro_argument | 3987'
     lods u8 [esi]
     movzx ecx,al
     mov _eax,u64[counter_limit]
@@ -3942,6 +4000,7 @@ get_macro_argument:
     ret
 
 required_value:
+    strings.emit 'required_value | 4002'
     inc esi
     or [default_argument_value],-1
 
@@ -3957,6 +4016,7 @@ required_value:
     ret
 
 greedy_macro_argument:
+    strings.emit 'greedy_macro_argument | 4018'
     call skip_foreign_line
     dec esi
     mov eax,[edx+12]
@@ -3980,6 +4040,7 @@ greedy_macro_argument:
     ret
 
 finish_macro_argument:
+    strings.emit 'finish_macro_argument | 4042'
     mov eax,[edx+12]
     mov ecx,esi
     sub ecx,eax
@@ -3994,6 +4055,7 @@ finish_macro_argument:
     ret
 
 arguments_end:
+    strings.emit 'arguments_end | 4057'
     cmp u8 [ebx],0
     jne invalid_macro_arguments
     mov _eax,[_esp+8]
@@ -4008,6 +4070,7 @@ arguments_end:
     ret
 
 use_instant_macro:
+    strings.emit 'use_instant_macro | 4072'
     push _edi u64[current_line] _esi
     mov _eax,u64[error_line]
     mov u64[current_line],_eax
@@ -4066,6 +4129,7 @@ use_instant_macro:
     ret
 
 rept_counters_ok:
+    strings.emit 'rept_counters_ok | 4131'
     dec esi
     cmp [counter_limit],0
     je instant_macro_finish
@@ -4100,6 +4164,7 @@ rept_counters_ok:
     ret
 
 precalculate_value:
+    strings.emit 'precalculate_value | 4166'
     push _edi
     call convert_expression
     mov al,')'
@@ -4125,6 +4190,7 @@ value_precalculated:
     ret
 
 do_irp:
+    strings.emit 'do_irp | 4192'
     cmp u8 [esi],1Ah
     jne invalid_macro_arguments
     movzx eax, u8 [esi+1]
@@ -4147,6 +4213,7 @@ irp_name_ok:
     ret
 
 irp_with_default_value:
+    strings.emit 'irp_with_default_value | 4215'
     xor ebp,ebp
     or [skip_default_argument_value],-1
     call skip_macro_argument_value
@@ -4157,6 +4224,7 @@ irp_with_default_value:
     ret
 
 irps_name_ok:
+    strings.emit 'irps_name_ok | 4226'
     cmp al,','
     jne invalid_macro_arguments
     cmp [base_code],3
