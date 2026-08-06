@@ -2021,6 +2021,7 @@ copy_predefinition_string:
     ret
 
 predefinition_backslash:
+    strings.emit 'predefinition_backslash | 2023'
     mov u8 [edi],0
     lods u8 [esi]
     or al,al
@@ -2046,6 +2047,7 @@ predefinition_backslash:
     ret
 
 predefinition_backslashed_symbol:
+    strings.emit 'predefinition_backslashed_symbol | 2050'
     cmp al,20h
     je invalid_definition
     cmp al,22h
@@ -2073,6 +2075,7 @@ predefinition_backslashed_symbol:
     ret
 
 predefinition_backslashed_symbol_character:
+    strings.emit 'predefinition_backslashed_symbol_character | 2077'
     mov al,ah
     stos u8 [edi]
     inc u8 [ecx]
@@ -2080,6 +2083,7 @@ predefinition_backslashed_symbol_character:
     ret
 
 predefinition_converted:
+    strings.emit 'predefinition_converted | 2085'
     mov u64[memory_start],_edi
     sub edi,[edx+8]
     mov [edx+12],edi
@@ -2087,6 +2091,7 @@ predefinition_converted:
     ret
 
 predefinitions_ok:
+    strings.emit 'predefinitions_ok | 2093'
     mov esi,[input_file]
     mov edx,esi
     call open
@@ -2101,6 +2106,7 @@ predefinitions_ok:
     ret
 
 process_postponed:
+    strings.emit 'process_postponed | 2108'
     mov edx,hash_tree
     mov ecx,32
     find_postponed_list:
@@ -2126,6 +2132,7 @@ process_postponed:
     ret
 
 earliest_postponed_found:
+    strings.emit 'earliest_postponed_found | 2134'
     mov [ebx],eax
     call use_postponed_macro
     pop _edx
@@ -2137,10 +2144,12 @@ earliest_postponed_found:
     ret
 
 preprocessing_finished:
+    strings.emit 'preprocessing_finished | 2146'
     mov [source_start],edi
     ret
 
 use_postponed_macro:
+    strings.emit 'use_postponed_macro | 2151'
     lea esi,[edi-1]
     push _ecx _esi
     mov [struc_name],0
@@ -2148,6 +2157,7 @@ use_postponed_macro:
     ret
 
 preprocess_file:
+    strings.emit 'preprocess_file | 2159'
     push u64[memory_end]
     push _esi
     mov al,2
@@ -2202,6 +2212,7 @@ preprocess_file:
     ret
 
 convert_line:
+    strings.emit 'convert_line | 2214'
     push _ecx
     test [macro_status],0Fh
     jz convert_line_data
@@ -2264,6 +2275,7 @@ convert_line:
     ret
 
 control_character:
+    strings.emit 'control_character | 2278'
     cmp al,1Ah
     je line_end
     cmp al,0Dh
@@ -2278,6 +2290,7 @@ control_character:
     ret
 
 lf_character:
+    strings.emit 'lf_character | 2292'
     lods u8 [esi]
     cmp al,0Dh
     je line_end
@@ -2286,6 +2299,7 @@ lf_character:
     ret
 
 cr_character:
+    strings.emit 'cr_character | 2301'
     lods u8 [esi]
     cmp al,0Ah
     je line_end
@@ -2294,6 +2308,7 @@ cr_character:
     ret
 
 convert_string:
+    strings.emit 'convert_string | 2310'
     mov al,22h
     stos u8 [edi]
     scas u32 [edi]
@@ -2324,6 +2339,7 @@ copy_string:
     ret
 
 backslash_character:
+    strings.emit 'backslash_character | 2342'
     mov u8 [edi],0
     lods u8 [esi]
     cmp al,20h
@@ -2358,11 +2374,13 @@ backslash_character:
     ret
 
 no_end_quote:
+    strings.emit 'no_end_quote | 2377'
     mov u8 [ebx-5],0
     jmp missing_end_quote
     ret
 
 backslashed_symbol:
+    strings.emit 'backslashed_symbol | 2382'
     cmp al,1Ah
     je unexpected_end_of_file
     or al,al
@@ -2400,6 +2418,7 @@ convert_backslashed_symbol:
     ret
 
 backslashed_symbol_character:
+    strings.emit 'backslashed_symbol_character | 2420'
     mov al,ah
     stos u8 [edi]
     inc u8 [ecx]
@@ -2407,6 +2426,7 @@ backslashed_symbol_character:
     ret
 
 concatenate_lines:
+    strings.emit 'concatenate_lines | 2428'
     lods u8 [esi]
     cmp al,20h
     je concatenate_lines
@@ -2437,6 +2457,7 @@ concatenate_lines:
     ret
 
 concatenate_lf:
+    strings.emit 'concatenate_lf | 2459'
     lods u8 [esi]
     cmp al,0Dh
     je concatenate_ok
@@ -2445,6 +2466,7 @@ concatenate_lf:
     ret
 
 concatenate_cr:
+    strings.emit 'concatenate_cr | 2468'
     lods u8 [esi]
     cmp al,0Ah
     je concatenate_ok
@@ -2456,6 +2478,7 @@ concatenate_cr:
     ret
 
 ignore_comment:
+    strings.emit 'ignore_comment | 2468'
     lods u8 [esi]
     cmp al,0Ah
     je lf_character
@@ -2473,6 +2496,7 @@ ignore_comment:
     ret
 
 lower_case:
+    strings.emit 'lower_case | 2498'
     mov edi,converted
     mov ebx,characters
     convert_case:
@@ -2483,6 +2507,7 @@ lower_case:
     ret
 
 get_directive:
+    strings.emit 'get_directive | 2509'
     push _edi
     mov edx,esi
     mov ebp,ecx
@@ -2515,12 +2540,14 @@ get_directive:
     ret
 
 no_directive:
+    strings.emit 'no_directive | 2509'
     mov esi,edx
     mov ecx,ebp
     stc
     ret
 
 directive_found:
+    strings.emit 'directive_found | 2549'
     call get_directive_handler_base
     directive_handler:
     lea esi,[edx+ebp]
@@ -2530,10 +2557,12 @@ directive_found:
     ret
 
 get_directive_handler_base:
+    strings.emit 'get_directive_handler_base | 2549'
     mov _eax,[_esp]
     ret
 
 preprocess_line:
+    strings.emit 'preprocess_line | 2564'
     mov _eax,_esp
     sub _eax,u64[stack_limit]
     cmp eax,100h
@@ -2575,6 +2604,7 @@ preprocess_line:
     ret
 
 macro_preprocessing:
+    strings.emit 'macro_preprocessing | 2606'
     call process_macro_operators
     initial_preprocessing_ok:
     mov _esi,u64[current_line]
@@ -2604,6 +2634,7 @@ macro_preprocessing:
     ret
 
 not_preprocessor_directive:
+    strings.emit 'not_preprocessor_directive | 2636'
     xor ch,ch
     call get_preprocessor_symbol
     jc not_macro
@@ -2613,6 +2644,7 @@ not_preprocessor_directive:
     ret
 
 not_macro:
+    strings.emit 'not_macro | 2646'
     mov u64[struc_name],_esi
     add esi,ecx
     lods u8 [esi]
@@ -2679,6 +2711,7 @@ not_symbolic_constant:
     ret
 
 struc_name_ok:
+    strings.emit 'struc_name_ok | 2713'
     mov _edx,u64[struc_name]
     movzx eax, u8 [edx-1]
     add edx,eax
@@ -2701,6 +2734,7 @@ struc_name_ok:
     ret
 
 preprocess_label:
+    strings.emit 'preprocess_label | 2736'
     dec esi
     sub esi,ecx
     lea ebp,[esi-2]
@@ -2715,6 +2749,7 @@ preprocess_label:
     ret
 
 symbolic_constant_in_label:
+    strings.emit 'symbolic_constant_in_label | 2751'
     mov ebx,[edx+8]
     mov ecx,[edx+12]
     add ecx,ebx
@@ -2738,11 +2773,13 @@ symbolic_constant_in_label:
     ret
 
 label_broken:
+    strings.emit 'label_broken | 2775'
     push line_preprocessed
     jmp replace_symbolic_constant
     ret
 
 label_constant_ok:
+    strings.emit 'label_constant_ok | 2781'
     mov ecx,edi
     sub ecx,esi
     mov edi,[edx+12]
@@ -2758,6 +2795,7 @@ label_constant_ok:
     ret
 
 move_rest_of_line_up:
+    strings.emit 'move_rest_of_line_up | 2797'
     lea esi,[esi+ecx-1]
     lea edi,[edi+ecx-1]
     std
@@ -2775,6 +2813,7 @@ move_rest_of_line_up:
     ret
 
 not_preprocessor_symbol:
+    strings.emit 'not_preprocessor_symbol | 2815'
     mov _esi,u64[current_offset]
     call process_equ_constants
 
@@ -2783,6 +2822,7 @@ not_preprocessor_symbol:
     ret
 
 get_preprocessor_symbol:
+    strings.emit 'get_preprocessor_symbol | 2824'
     push _ebp _edi _esi
     mov ebp,ecx
     shl ebp,22
@@ -2844,11 +2884,13 @@ get_preprocessor_symbol:
     ret
 
 preprocessor_symbol_found:
+    strings.emit 'preprocessor_symbol_found | 2886'
     pop _ebx _edi _ebp
     clc
     ret
 
 calculate_hash:
+    strings.emit 'calculate_hash | 2892'
     xor ebx,ebx
     mov eax,2166136261
     mov ebp,16777619
@@ -2862,6 +2904,7 @@ calculate_hash:
     ret
 
 add_preprocessor_symbol:
+    strings.emit 'add_preprocessor_symbol | 2906'
     push _edi _esi
     xor eax,eax
     or cl,cl
@@ -2918,6 +2961,7 @@ add_preprocessor_symbol:
     ret
 
 add_symbol_entry:
+    strings.emit 'add_symbol_entry | 2963'
     mov eax,edx
     mov edx,[labels_list]
     sub edx,16
@@ -2933,6 +2977,7 @@ add_symbol_entry:
     ret
 
 extend_hashes_tree:
+    strings.emit 'extend_hashes_tree | 2979'
     mov edx,[labels_list]
     sub edx,8
     cmp _edx,u64[free_additional_memory]
@@ -2959,6 +3004,7 @@ extend_hashes_tree:
     ret
 
 define_fix_constant:
+    strings.emit 'define_fix_constant | 3006'
     add edx,5
     add esi,2
     push _edx
@@ -2967,6 +3013,7 @@ define_fix_constant:
     ret
 
 define_equ_constant:
+    strings.emit 'define_equ_constant | 3015'
     add esi,3
     push _esi
     call process_equ_constants
@@ -2987,6 +3034,7 @@ define_equ_constant:
     ret
 
 define_symbolic_constant:
+    strings.emit 'define_symbolic_constant | 3037'
     lods u8 [esi]
     cmp al,1Ah
     jne invalid_name
@@ -3004,6 +3052,7 @@ define_symbolic_constant:
     ret
 
 define_struc:
+    strings.emit 'define_struc | 3054'
     mov ch,1
     jmp make_macro
     ret
