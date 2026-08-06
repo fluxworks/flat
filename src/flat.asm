@@ -4265,6 +4265,7 @@ irps_name_ok:
     ret
 
 irp_parameters_end:
+    strings.emit 'irp_parameters_end | 4268'
     mov esi,ebx
     pop _eax
     mov [esi],al
@@ -4272,6 +4273,7 @@ irp_parameters_end:
     ret
 
 get_irps_parameter:
+    strings.emit 'get_irps_parameter | 4275'
     mov esi,[instant_macro_start]
     inc esi
     lods u8 [esi]
@@ -4289,12 +4291,14 @@ get_irps_parameter:
     ret
 
 irps_quoted_string:
+    strings.emit 'irps_quoted_string | 4293'
     mov eax,[ebx+1]
     add eax,1+4
     jmp irps_parameter_ok
     ret
 
 irps_symbol:
+    strings.emit 'irps_symbol | 4300'
     movzx eax, u8 [ebx+1]
     add eax,1+1
 
@@ -4312,6 +4316,7 @@ irps_symbol:
     ret
 
 get_irpv_parameter:
+    strings.emit 'get_irpv_parameter | 4318'
     lods u8 [esi]
     cmp al,1Ah
     jne invalid_macro_arguments
@@ -4344,6 +4349,7 @@ get_irpv_parameter:
     ret
 
 variable_values_marked:
+    strings.emit 'variable_values_marked | 4351'
     pop _edx
     push u64[counter_limit]
 
@@ -4384,6 +4390,7 @@ variable_values_marked:
     ret
 
 do_match:
+    strings.emit 'do_match | 4392'
     mov ebx,esi
     call skip_pattern
     call exact_match
@@ -4399,6 +4406,7 @@ do_match:
     ret
 
 free_match:
+    strings.emit 'free_match | 4408'
     add edx,12
     cmp _edx,u64[memory_end]
     ja out_of_memory
@@ -4426,6 +4434,7 @@ free_match:
     ret
 
 try_different_matching:
+    strings.emit 'try_different_matching | 4436'
     sub edx,12
     cmp edx,edi
     je instant_macro_done
@@ -4444,6 +4453,7 @@ try_different_matching:
     ret
 
 skip_match_element:
+    strings.emit 'skip_match_element | 4455'
     cmp esi,[parameters_end]
     ;je cannot_match
     je carry_then_return
@@ -4456,12 +4466,14 @@ skip_match_element:
     ret
 
 skip_match_quoted_string:
+    strings.emit 'skip_match_quoted_string | 4468'
     mov eax,[esi+1]
     add esi,5
     jmp skip_match_ok
     ret
 
 skip_match_symbol:
+    strings.emit 'skip_match_symbol | 4475'
     movzx eax, u8 [esi+1]
     add esi,2
     skip_match_ok:
@@ -4469,6 +4481,7 @@ skip_match_symbol:
     ret
 
 exact_match:
+    strings.emit 'exact_match | 4483'
     cmp esi,[parameters_end]
     je return_ok
     mov ah,[esi]
@@ -4484,6 +4497,7 @@ exact_match:
     ret
 
 match_verbatim:
+    strings.emit 'match_verbatim | 4499'
     inc ebx
     call match_elements
     je exact_match
@@ -4491,6 +4505,7 @@ match_verbatim:
     ret
 
 match_elements:
+    strings.emit 'match_elements | 4507'
     mov al,[ebx]
     cmp al,1Ah
     je match_symbols
@@ -4501,17 +4516,20 @@ match_elements:
     ret
 
 symbol_characters_matched:
+    strings.emit 'symbol_characters_matched | 4518'
     lea ebx,[ebx+1]
     lea esi,[esi+1]
     ret
 
 match_quoted_strings:
+    strings.emit 'match_quoted_strings | 4524'
     mov ecx,[ebx+1]
     add ecx,5
     jmp compare_elements
     ret
 
 match_symbols:
+    strings.emit 'match_symbols | 4531'
     movzx ecx, u8 [ebx+1]
     add ecx,2
 
@@ -4526,11 +4544,13 @@ match_symbols:
     ret
 
 elements_mismatch:
+    strings.emit 'elements_mismatch | 4546'
     mov esi,eax
     mov edi,ebp
     ret
 
 end_matching:
+    strings.emit 'end_matching | 4552'
     cmp u8 [ebx],','
     jne instant_macro_done
 
@@ -4563,11 +4583,13 @@ end_matching:
     ret
 
 matched_symbols_ok:
+    strings.emit 'matched_symbols_ok | 4585'
     pop _edx _edi _esi
     jmp instant_macro_parameters_ok
     ret
 
 process_macro:
+    strings.emit 'process_macro | 4591'
     push u64 [macro_status]
     or [macro_status],10h
     push u64[counter]
@@ -4599,6 +4621,7 @@ process_macro:
     ret
 
 macro_instructions_start:
+    strings.emit 'macro_instructions_start | 4623'
     mov ecx,80000000h
     mov u64[macro_block],_esi
     mov _eax,u64[macro_line]
@@ -4635,6 +4658,7 @@ macro_instructions_start:
     ret
 
 instant_macro_line_header:
+    strings.emit 'instant_macro_line_header | 4660'
     mov _eax,[_esp]	;current_line
     add eax,16
     find_defining_directive:
@@ -4652,6 +4676,7 @@ instant_macro_line_header:
     ret
 
 defining_directive_ok:
+    strings.emit 'defining_directive_ok | 4678'
     stos u32 [edi]
     mov eax,ecx
     stos u32 [edi]
@@ -4693,6 +4718,7 @@ defining_directive_ok:
     ret
 
 process_macro_symbol:
+    strings.emit 'process_macro_symbol | 4720'
     push _esi _edi
     test [macro_status],20h
     jz not_macro_directive
@@ -4706,6 +4732,7 @@ process_macro_symbol:
     ret
 
 process_macro_directive:
+    strings.emit 'process_macro_directive | 4734'
     mov edx,eax
     pop _edi _eax
     mov u8 [edi],0
@@ -4715,6 +4742,7 @@ process_macro_directive:
     ret
 
 not_macro_directive:
+    strings.emit 'not_macro_directive | 4744'
     and [macro_status],not 20h
     movzx ecx, u8 [esi]
     inc esi
@@ -4741,6 +4769,7 @@ not_macro_directive:
     ret
 
 group_macro_symbol:
+    strings.emit 'group_macro_symbol | 4771'
     xor eax,eax
     cmp dword[counter],eax
     je replace_macro_symbol
@@ -4757,6 +4786,7 @@ group_macro_symbol:
     ret
 
 multiple_macro_symbol_values:
+    strings.emit 'multiple_macro_symbol_values | 4788'
     inc eax
     push _eax
     call get_macro_symbol
@@ -4774,6 +4804,7 @@ multiple_macro_symbol_values:
     ret
 
 enclose_macro_symbol_value:
+    strings.emit 'enclose_macro_symbol_value | 4806'
     mov u8 [edi],'<'
     inc edi
     rep movs u8 [edi],[esi]
@@ -4793,12 +4824,14 @@ enclose_macro_symbol_value:
     ret
 
 multiple_macro_symbol_values_ok:
+    strings.emit 'multiple_macro_symbol_values_ok | 4826'
     pop _ecx _eax
     mov esi,edx
     jmp process_macro_line_element
     ret
 
 replace_macro_counter:
+    strings.emit 'replace_macro_counter | 4833'
     mov _eax,u64[counter]
     and eax,not 80000000h
     jz group_macro_counter
@@ -4809,6 +4842,7 @@ replace_macro_counter:
     ret
 
 group_macro_counter:
+    strings.emit 'group_macro_counter | 4844'
     mov edx,ecx
     xor ecx,ecx
 
@@ -4826,6 +4860,7 @@ group_macro_counter:
     ret
 
 store_number_symbol:
+    strings.emit 'store_number_symbol | 4862'
     cmp ecx,0
     jge numer_symbol_sign_ok
     neg ecx
@@ -4872,6 +4907,7 @@ store_number_symbol:
     ret
 
 not_macro_symbol:
+    strings.emit 'not_macro_symbol | 4909'
     pop _edi _esi
     mov al,1Ah
     stos u8 [edi]
@@ -4899,6 +4935,7 @@ not_macro_symbol:
     ret
 
 copy_struc_name:
+    strings.emit 'copy_struc_name | 4937'
     inc esi
     xchg esi,ebx
     movzx ecx, u8 [esi-1]
@@ -4915,6 +4952,7 @@ copy_struc_name:
     ret
 
 disable_replaced_struc_name:
+    strings.emit 'disable_replaced_struc_name | 4954'
     mov _ebx,[_esp+16+16]
     push _esi _edi
     lea edi,[ebx-3]
@@ -4930,6 +4968,7 @@ disable_replaced_struc_name:
     ret
 
 skip_foreign_symbol:
+    strings.emit 'skip_foreign_symbol | 4970'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -4947,12 +4986,14 @@ skip_foreign_symbol:
     ret
 
 skip_foreign_string:
+    strings.emit 'skip_foreign_string | 4988'
     lods u32 [esi]
     add esi,eax
     jmp skip_foreign_line
     ret
 
 macro_foreign_line:
+    strings.emit 'macro_foreign_line | 4995'
     call skip_foreign_symbol
     macro_line_processed:
     mov u8 [edi],0
@@ -4972,6 +5013,7 @@ macro_foreign_line:
     ret
 
 macro_block_processed:
+    strings.emit 'macro_block_processed | 5015'
     call close_macro_block
     jc process_macro_line
     pop u64[current_line]
@@ -4987,6 +5029,7 @@ macro_block_processed:
     ret
 
 local_symbols:
+    strings.emit 'local_symbols | 5031'
     lods u8 [esi]
     cmp al,1Ah
     jne invalid_argument
@@ -5038,6 +5081,7 @@ local_symbols:
     ret
 
 letter_digit:
+    strings.emit 'letter_digit | 5083'
     cmp u8 [eax+ecx],'Z'+1
     jb counter_ok
     jne small_letter_digit
@@ -5046,6 +5090,7 @@ letter_digit:
     ret
 
 small_letter_digit:
+    strings.emit 'small_letter_digit | 5092'
     cmp u8 [eax+ecx],'z'+1
     jb counter_ok
     mov u8 [eax+ecx],'0'
@@ -5071,6 +5116,7 @@ small_letter_digit:
     ret
 
 common_block:
+    strings.emit 'common_block | 5118'
     call close_macro_block
     jc process_macro_line
     mov [counter],0
@@ -5078,6 +5124,7 @@ common_block:
     ret
 
 forward_block:
+    strings.emit 'forward_block | 5126'
     cmp [counter_limit],0
     je common_block
     call close_macro_block
@@ -5087,6 +5134,7 @@ forward_block:
     ret
 
 reverse_block:
+    strings.emit 'reverse_block | 5136'
     cmp [counter_limit],0
     je common_block
     call close_macro_block
@@ -5103,6 +5151,7 @@ reverse_block:
     ret
 
 close_macro_block:
+    strings.emit 'close_macro_block | 5154'
     cmp _esi,u64[macro_block]
     ;je block_closed
     je drop_then_return
@@ -5119,6 +5168,7 @@ close_macro_block:
     ret
 
 reverse_counter:
+    strings.emit 'reverse_counter | 5170'
     mov _eax,u64[counter]
     dec eax
     cmp eax,80000000h
@@ -5135,6 +5185,7 @@ reverse_counter:
     ret
 
 get_macro_symbol:
+    strings.emit 'get_macro_symbol | 5187'
     push _ecx
     call find_macro_symbol_leaf
     jc macro_symbol_not_found
@@ -5154,16 +5205,19 @@ get_macro_symbol:
     ret
 
 macro_symbol_found:
+    strings.emit 'macro_symbol_found | 5207'
     pop _ecx
     clc
     ret
 
 macro_symbol_not_found:
+    strings.emit 'macro_symbol_not_found | 5213'
     pop _ecx
     stc
     ret
 
 find_macro_symbol_leaf:
+    strings.emit 'find_macro_symbol_leaf | 5219'
     shl eax,8
     mov al,cl
     mov ebp,eax
@@ -5185,6 +5239,7 @@ find_macro_symbol_leaf:
     ret
 
 add_macro_symbol:
+    strings.emit 'add_macro_symbol | 5241'
     push _ebx _ebp
     call find_macro_symbol_leaf
     jc extend_macro_symbol_tree
@@ -5202,7 +5257,8 @@ add_macro_symbol:
     pop _ebp _ebx
     ret
 
-    extend_macro_symbol_tree:
+extend_macro_symbol_tree:
+    strings.emit 'extend_macro_symbol_tree | 5260'
     mov _edx,u64[free_additional_memory]
     add edx,16
     cmp edx,[labels_list]
@@ -5225,6 +5281,7 @@ add_macro_symbol:
     ret
 
 include_file:
+    strings.emit 'include_file | 5283'
     lods u8 [esi]
     cmp al,22h
     jne invalid_argument
@@ -5244,6 +5301,7 @@ include_file:
     ret
 
 copy_current_file_path:
+    strings.emit 'copy_current_file_path | 5303'
     lods u8 [esi]
     stos u8 [edi]
     or al,al
@@ -5260,6 +5318,7 @@ copy_current_file_path:
     ret
 
 current_file_path_ok:
+    strings.emit 'current_file_path_ok | 5320'
     mov rsi,[rsp+8]
     call expand_path
     pop _edx
@@ -5319,6 +5378,7 @@ current_file_path_ok:
     ret
 
 parser:
+    strings.emit 'parser | 5380'
     mov _eax,u64[memory_end]
     mov [labels_list],eax
     mov _eax,u64[additional_memory]
