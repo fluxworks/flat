@@ -5443,6 +5443,7 @@ parser:
     ret
 
 simple_label:
+    strings.emit 'simple_label | 5445'
     pop _edi
     call identify_label
     cmp u8 [esi+1],':'
@@ -5457,6 +5458,7 @@ simple_label:
     ret
 
 block_label:
+    strings.emit 'block_label | 5460'
     mov u8 [edi],4
     inc edi
     stos u32 [edi]
@@ -5465,6 +5467,7 @@ block_label:
     ret
 
 constant_label:
+    strings.emit 'constant_label | 5469'
     pop _edi
     call get_label_id
     mov u8 [edi],3
@@ -5479,6 +5482,7 @@ constant_label:
     ret
 
 data_label:
+    strings.emit 'data_label | 5484'
     pop _ecx _edx
     pop _edi
     push _eax _ebx _esi
@@ -5520,6 +5524,7 @@ data_label:
     ret
 
 empty_instruction:
+    strings.emit 'empty_instruction | 5526'
     lods u8 [esi]
     or al,al
     jz parse_next_line
@@ -5532,6 +5537,7 @@ empty_instruction:
     ret
 
 empty_line:
+    strings.emit 'empty_line | 5539'
     add esi,16
 
     skip_rest_of_line:
@@ -5550,6 +5556,7 @@ empty_line:
     ret
 
 blocks_stack_ok:
+    strings.emit 'blocks_stack_ok | 5558'
     xor al,al
     stos u8 [edi]
     add edi,0Fh
@@ -5558,6 +5565,7 @@ blocks_stack_ok:
     ret
 
 parse_block:
+    strings.emit 'parse_block | 5567'
     mov _eax,_esp
     sub _eax,u64[stack_limit]
     cmp eax,100h
@@ -5576,6 +5584,7 @@ parse_block:
     ret
 
 parse_end_directive:
+    strings.emit 'parse_end_directive | 5586'
     cmp u8 [esi],1Ah
     jne common_parse
     push _edi
@@ -5590,6 +5599,7 @@ parse_end_directive:
     ret
 
 parse_end_block:
+    strings.emit 'parse_end_block | 5601'
     mov dl,al
     mov al,1
     stos u8 [edi]
@@ -5610,6 +5620,7 @@ parse_end_block:
     ret
 
 close_parsing_block:
+    strings.emit 'close_parsing_block | 5623'
     cmp [blocks_stack],0
     je unexpected_instruction
     cmp bx,[_esp+2]
@@ -5627,6 +5638,7 @@ close_parsing_block:
     ret
 
 parse_if:
+    strings.emit 'parse_if | 5640'
     push _edi
     call parse_line_contents
     xor al,al
@@ -5644,6 +5656,7 @@ parse_if:
     ret
 
 parse_while:
+    strings.emit 'parse_while | 5658'
     push _edi
     call parse_line_contents
     xor al,al
@@ -5661,18 +5674,21 @@ parse_while:
     ret
 
 parse_false_condition_block:
+    strings.emit 'parse_false_condition_block | 5676'
     or u8 [_esp],1
     sub edi,4
     jmp skip_parsing
     ret
 
 parse_true_condition_block:
+    strings.emit 'parse_true_condition_block | 5683'
     or u8 [_esp],100b
     sub edi,4
     jmp parse_next_line
     ret
 
 parse_else:
+    strings.emit 'parse_else | 5690'
     cmp [blocks_stack],0
     je unexpected_instruction
     cmp word [_esp+2],if_directive-instruction_handler
@@ -5703,6 +5719,7 @@ parse_else:
     ret
 
 parse_assert:
+    strings.emit 'parse_assert | 5721'
     push _edi
     call parse_line_contents
     xor al,al
@@ -5718,12 +5735,14 @@ parse_assert:
     ret
 
 skip_true_condition_else:
+    strings.emit 'skip_true_condition_else | 5737'
     sub edi,4
     or u8 [_esp],1
     jmp skip_parsing_contents
     ret
 
 parse_pure_else:
+    strings.emit 'parse_pure_else | 5744'
     bts u32 [_esp],1
     jc unexpected_instruction
     test u8 [_esp],100b
@@ -5734,6 +5753,7 @@ parse_pure_else:
     ret
 
 skip_parsing:
+    strings.emit 'skip_parsing | 5755'
     cmp esi,[source_start]
     jae source_parsed
     mov u64[current_line],_esi
@@ -5756,11 +5776,13 @@ skip_parsing:
     ret
 
 skip_parsing_label:
+    strings.emit 'skip_parsing_label | 5778'
     lea esi,[esi+ecx+1]
     jmp skip_parsing_line
     ret
 
 skip_parsing_instruction:
+    strings.emit 'skip_parsing_instruction | 5784'
     cmp bx,if_directive-instruction_handler
     je skip_parsing_block
     cmp bx,repeat_directive-instruction_handler
@@ -5786,6 +5808,7 @@ skip_parsing_instruction:
     ret
 
 skip_parsing_symbol:
+    strings.emit 'skip_parsing_symbol | 5810'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -5793,12 +5816,14 @@ skip_parsing_symbol:
     ret
 
 skip_parsing_string:
+    strings.emit 'skip_parsing_string | 5818'
     lods u32 [esi]
     add esi,eax
     jmp skip_parsing_contents
     ret
 
 skip_parsing_block:
+    strings.emit 'skip_parsing_block | 5825'
     mov _eax,_esp
     sub _eax,u64[stack_limit]
     cmp eax,100h
@@ -5812,6 +5837,7 @@ skip_parsing_block:
     ret
 
 skip_parsing_end_directive:
+    strings.emit 'skip_parsing_end_directive | 5839'
     cmp u8 [esi],1Ah
     jne skip_parsing_contents
     push _edi
@@ -5826,6 +5852,7 @@ skip_parsing_end_directive:
     ret
 
 skip_parsing_end_block:
+    strings.emit 'skip_parsing_end_block | 5854'
     lods u8 [esi]
     or al,al
     jnz extra_characters_on_line
@@ -5839,6 +5866,7 @@ skip_parsing_end_block:
     ret
 
 close_skip_parsing_block:
+    strings.emit 'close_skip_parsing_block | 5868'
     cmp [blocks_stack],0
     je unexpected_instruction
     cmp bx,[_esp+2]
@@ -5864,6 +5892,7 @@ close_skip_parsing_block:
     ret
 
 skip_parsing_else:
+    strings.emit 'skip_parsing_else | 5894'
     cmp [blocks_stack],0
     je unexpected_instruction
     cmp word [_esp+2],if_directive-instruction_handler
@@ -5903,6 +5932,7 @@ skip_parsing_else:
     ret
 
 skip_parsing_pure_else:
+    strings.emit 'skip_parsing_pure_else | 5934'
     bts u32 [_esp],1
     jc unexpected_instruction
     mov al,[_esp]
@@ -5917,6 +5947,7 @@ skip_parsing_pure_else:
     ret
 
 parse_line_contents:
+    strings.emit 'parse_line_contents | 5949'
     mov [parenthesis_stack],0
 
     parse_instruction_arguments:
@@ -5944,6 +5975,7 @@ parse_line_contents:
     ret
 
 parse_formatter_argument:
+    strings.emit 'parse_formatter_argument | 5977'
     or [formatter_symbols_allowed],-1
 
     parse_argument:
@@ -6014,18 +6046,21 @@ parse_formatter_argument:
     ret
 
 foreign_argument:
+    strings.emit 'foreign_argument | 6048'
     dec esi
     call skip_foreign_line
     jmp contents_parsed
     ret
 
 symbol_argument:
+    strings.emit 'symbol_argument | 6056'
     pop _edi
     stos u16 [edi]
     jmp argument_parsed
     ret
 
 operator_argument:
+    strings.emit 'operator_argument | 6062'
     pop _edi
     cmp al,85h
     je ptr_argument
@@ -6046,6 +6081,7 @@ operator_argument:
     ret
 
 instruction_separator:
+    strings.emit 'instruction_separator | 6083'
     stos u8 [edi]
     allow_embedded_instruction:
     cmp u8 [esi],1Ah
@@ -6064,6 +6100,7 @@ instruction_separator:
     ret
 
 embedded_instruction:
+    strings.emit 'embedded_instruction | 6103'
     pop _edi
     mov dl,al
     mov al,1
@@ -6076,6 +6113,7 @@ embedded_instruction:
     ret
 
 parse_times_directive:
+    strings.emit 'parse_times_directive | 6115'
     mov al,'('
     stos u8 [edi]
     call convert_expression
@@ -6088,6 +6126,7 @@ parse_times_directive:
     ret
 
 parse_segment_directive:
+    strings.emit 'parse_segment_directive | 6128'
     or [formatter_symbols_allowed],-1
     parse_label_directive:
     cmp u8 [esi],1Ah
@@ -6109,11 +6148,13 @@ parse_segment_directive:
     ret
 
 non_label_identified:
+    strings.emit 'non_label_identified | 6150'
     mov esi,ebx
     jmp argument_parsed
     ret
 
 parse_load_directive:
+    strings.emit 'parse_load_directive | 6156'
     cmp u8 [esi],1Ah
     jne argument_parsed
     push _esi
@@ -6133,6 +6174,7 @@ parse_load_directive:
     ret
 
 parse_public_directive:
+    strings.emit 'parse_public_directive | 6176'
     cmp u8 [esi],1Ah
     jne parse_argument
     inc esi
@@ -6154,6 +6196,7 @@ parse_public_directive:
     ret
 
 parse_public_label:
+    strings.emit 'parse_public_label | 6198'
     pop _ecx _esi
     mov al,2
     stos u8 [edi]
@@ -6184,6 +6227,7 @@ parse_public_label:
     ret
 
 parse_extrn_directive:
+    strings.emit 'parse_extrn_directive | 6229'
     cmp u8 [esi],22h
     je parse_quoted_extrn
     cmp u8 [esi],1Ah
@@ -6216,12 +6260,14 @@ parse_extrn_directive:
     ret
 
 parse_from_operator:
+    strings.emit 'parse_from_operator | 6262'
     cmp u8 [esi],22h
     jne forced_multipart_expression
     jmp argument_parsed
     ret
 
 parse_quoted_extrn:
+    strings.emit 'parse_quoted_extrn | 6269'
     inc esi
     mov ax,'('
     stos u16 [edi]
@@ -6244,11 +6290,13 @@ parse_quoted_extrn:
     ret
 
 ptr_argument:
+    strings.emit 'ptr_argument | 6292'
     call parse_address
     jmp address_parsed
     ret
 
 check_argument:
+    strings.emit 'check_argument | 6298'
     push _esi _ecx
     sub esi,2
     mov edi,single_operand_operators
@@ -6302,6 +6350,7 @@ check_argument:
     ret
 
 parse_expression:
+    strings.emit 'parse_expression | 6352'
     mov al,'('
     stos u8 [edi]
     call convert_expression
@@ -6310,6 +6359,7 @@ parse_expression:
     ret
 
 not_string:
+    strings.emit 'not_string | 6361'
     cmp u8 [esi],'('
     jne expression
     mov _eax,_esp
@@ -6325,11 +6375,13 @@ not_string:
     ret
 
 expression_comparator:
+    strings.emit 'expression_comparator | 6377'
     stos u8 [edi]
     jmp forced_expression
     ret
 
 greater:
+    strings.emit 'greater | 6383'
     cmp u8 [esi],'='
     jne separator
     inc esi
@@ -6338,6 +6390,7 @@ greater:
     ret
 
 less:
+    strings.emit 'less | 6392'
     cmp u8 [edi-1],0F6h
     je separator
     cmp u8 [esi],'>'
@@ -6350,17 +6403,20 @@ less:
     ret
 
 not_equal:
+    strings.emit 'not_equal | 6405'
     inc esi
     mov al,0F1h
     jmp expression_comparator
     ret
 
 expression:
+    strings.emit 'expression | 6412'
     call parse_expression
     jmp expression_argument_parsed
     ret
 
 forced_expression:
+    strings.emit 'forced_expression | 6418'
     xor al,al
     xchg al,[formatter_symbols_allowed]
     push _eax
@@ -6373,6 +6429,7 @@ forced_expression:
     ret
 
 forced_multipart_expression:
+    strings.emit 'forced_multipart_expression | 6431'
     xor al,al
     xchg al,[formatter_symbols_allowed]
     push _eax
@@ -6385,6 +6442,7 @@ forced_multipart_expression:
     ret
 
 address_argument:
+    strings.emit 'address_argument | 6444'
     call parse_address
     lods u8 [esi]
     cmp al,']'
@@ -6398,18 +6456,21 @@ address_argument:
     ret
 
 divided_address:
+    strings.emit 'divided_address | 6458'
     mov ax,'),'
     stos u16 [edi]
     jmp expression
     ret
 
 address_parsed:
+    strings.emit 'address_parsed | 6465'
     mov al,']'
     stos u8 [edi]
     jmp argument_parsed
     ret
 
 parse_address:
+    strings.emit 'parse_address | 6472'
     mov al,'['
     stos u8 [edi]
     cmp word [esi],021Ah
@@ -6438,6 +6499,7 @@ parse_address:
     ret
 
 unknown_segment_prefix:
+    strings.emit 'unknown_segment_prefix | 6501'
     sub esi,5
 
     convert_address:
@@ -6453,6 +6515,7 @@ unknown_segment_prefix:
     ret
 
 forced_parenthesis:
+    strings.emit 'forced_parenthesis | 6517'
     cmp u8 [esi],'('
     jne argument_parsed
     inc esi
@@ -6461,21 +6524,25 @@ forced_parenthesis:
     ret
 
 unallowed_character:
+    strings.emit 'unallowed_character | 6526'
     mov al,0FFh
     jmp separator
     ret
 
 open_decorator:
+    strings.emit 'open_decorator | 6532'
     inc [decorator_symbols_allowed]
     jmp separator
     ret
 
 close_decorator:
+    strings.emit 'close_decorator | 6538'
     dec [decorator_symbols_allowed]
     jmp separator
     ret
 
 close_parenthesis:
+    strings.emit 'close_parenthesis | 6544'
     mov al,92h
 
     separator:
@@ -6490,6 +6557,7 @@ close_parenthesis:
     ret
 
 expression_argument_parsed:
+    strings.emit 'expression_argument_parsed | 6559'
     cmp [parenthesis_stack],0
     je parse_argument
     cmp u8 [esi],')'
@@ -6500,6 +6568,7 @@ expression_argument_parsed:
     ret
 
 contents_parsed:
+    strings.emit 'contents_parsed | 6570'
     cmp [parenthesis_stack],0
     ;je contents_ok
     je return_ok
@@ -6509,6 +6578,7 @@ contents_parsed:
     ret
 
 identify_label:
+    strings.emit 'identify_label | 6580'
     cmp u8 [esi],'.'
     je local_label_name
     call get_label_id
@@ -6522,16 +6592,19 @@ identify_label:
     ret
 
 anonymous_label_name:
+    strings.emit 'anonymous_label_name | 6594'
     cmp u8 [esi-1],'@'
     je return_ok
     mov eax,0Fh
     ret
 
 local_label_name:
+    strings.emit 'local_label_name | 6601'
     call get_label_id
     ret
 
 get_operator:
+    strings.emit 'get_operator | 6606'
     cmp u8 [esi],1Ah
     jne get_simple_operator
     mov edx,esi
@@ -6564,6 +6637,7 @@ get_operator:
     ret
 
 no_operator:
+    strings.emit 'no_operator | 6639'
     mov esi,edx
     mov ecx,ebp
     pop _ebp
@@ -6572,6 +6646,7 @@ no_operator:
     ret
 
 operator_found:
+    strings.emit 'operator_found | 6648'
     lea esi,[edx+2+ebp]
     mov ecx,ebp
     pop _ebp
@@ -6579,6 +6654,7 @@ operator_found:
     ret
 
 get_simple_operator:
+    strings.emit 'get_simple_operator | 6656'
     mov al,[esi]
     cmp al,22h
     je no_simple_operator
@@ -6596,11 +6672,13 @@ get_simple_operator:
     ret
 
 simple_operator_found:
+    strings.emit 'simple_operator_found | 6674'
     inc esi
     mov al,[edi+2]
     ret
 
 get_symbol:
+    strings.emit 'get_symbol | 6681'
     push _esi
     mov ebp,ecx
     call lower_case
@@ -6641,6 +6719,7 @@ get_symbol:
     ret
 
 decorator_symbol:
+    strings.emit 'decorator_symbol | 6721'
     cmp [decorator_symbols_allowed],0
     jne symbol_ok
     no_symbol:
@@ -6650,11 +6729,13 @@ decorator_symbol:
     ret
 
 symbols_down:
+    strings.emit 'symbols_down | 6732'
     shr edx,1
     jmp scan_symbols
     ret
 
 symbols_up:
+    strings.emit 'symbols_up | 6737'
     lea ebx,[edi+ecx+2]
     shr edx,1
     adc edx,-1
@@ -6662,6 +6743,7 @@ symbols_up:
     ret
 
 get_data_directive:
+    strings.emit 'get_data_directive | 6745'
     push _esi
     mov ebp,ecx
     call lower_case
@@ -6677,6 +6759,7 @@ get_data_directive:
     ret
 
 get_instruction:
+    strings.emit 'get_instruction | 6761'
     push _esi
     mov ebp,ecx
     call lower_case
@@ -6710,17 +6793,20 @@ get_instruction:
     ret
 
 no_instruction:
+    strings.emit 'no_instruction | 6795'
     pop _esi
     mov ecx,ebp
     stc
     ret
 
 instructions_down:
+    strings.emit 'instructions_down | 6802'
     shr edx,1
     jmp scan_instructions
     ret
 
 instructions_up:
+    strings.emit 'instructions_up | 6808'
     lea ebx,[edi+ecx+3]
     shr edx,1
     adc edx,-1
@@ -6728,6 +6814,7 @@ instructions_up:
     ret
 
 get_label_id:
+    strings.emit 'get_label_id | 6816'
     cmp ecx,100h
     jae name_too_long
     cmp u8 [esi],'@'
@@ -6772,6 +6859,7 @@ get_label_id:
     ret
 
 anonymous_label:
+    strings.emit 'anonymous_label | 6861'
     cmp ecx,2
     jne standard_label
     mov al,[esi+1]
@@ -6799,6 +6887,7 @@ anonymous_label:
     ret
 
 anonymous_back:
+    strings.emit 'anonymous_back | 6889'
     mov eax,[anonymous_reverse]
     add esi,2
     or eax,eax
@@ -6807,12 +6896,14 @@ anonymous_back:
     ret
 
 bogus_anonymous:
+    strings.emit 'bogus_anonymous | 6898'
     call allocate_label
     mov [anonymous_reverse],eax
     jmp anonymous_ok
     ret
 
 new_anonymous:
+    strings.emit 'new_anonymous | 6905'
     add esi,2
     mov eax,[anonymous_forward]
     or eax,eax
@@ -6826,6 +6917,7 @@ new_anonymous:
     ret
 
 standard_label:
+    strings.emit 'standard_label | 6919'
     cmp u8 [esi],'%'
     je get_predefined_id
     cmp u8 [esi],'$'
@@ -6839,6 +6931,7 @@ standard_label:
     ret
 
 current_address_label:
+    strings.emit 'current_address_label | 6933'
     cmp ecx,2
     ja find_label
     inc esi
@@ -6851,22 +6944,27 @@ current_address_label:
     ret
 
 get_current_offset_id:
+    strings.emit 'get_current_offset_id | 6946'
     xor eax,eax
     ret
 
 get_counter_id:
+    strings.emit 'get_counter_id | 6951'
     mov eax,1
     ret
 
 get_timestamp_id:
+    strings.emit 'get_timestamp_id | 6956'
     mov eax,2
     ret
 
 get_org_origin_id:
+    strings.emit 'get_org_origin_id | 6961'
     mov eax,3
     ret
 
 get_predefined_id:
+    strings.emit 'get_predefined_id | 6966'
     cmp ecx,2
     ja find_label
     inc esi
@@ -6933,12 +7031,14 @@ get_predefined_id:
     ret
 
 label_found:
+    strings.emit 'label_found | 7033'
     add _esp,8
     pop _edi
     mov eax,[eax+4]
     ret
 
 extend_tree:
+    strings.emit 'extend_tree | 7040'
     mov _edx,u64[free_additional_memory]
     lea eax,[edx+8]
     cmp _eax,u64[additional_memory_end]
@@ -6980,6 +7080,7 @@ extend_tree:
     ret
 
 check_for_reserved_word:
+    strings.emit 'check_for_reserved_word | 7082'
     call get_instruction
     jnc reserved_word
     call get_data_directive
@@ -7022,6 +7123,7 @@ check_for_reserved_word:
     ret
 
 allocate_label:
+    strings.emit 'allocate_label | 7125'
     mov eax,[labels_list]
     mov ecx,LABEL_STRUCTURE_SIZE shr 2
 
@@ -7035,6 +7137,7 @@ allocate_label:
     LABEL_STRUCTURE_SIZE = 32
 
 convert_expression:
+    strings.emit 'convert_expression | 7140'
     push _ebp
     call get_fp_value
     jnc fp_expression
@@ -7054,6 +7157,7 @@ convert_expression:
     ret
 
 expression_element:
+    strings.emit 'expression_element | 7159'
     mov al,[esi]
     cmp al,1Ah
     je expression_number
@@ -7067,6 +7171,7 @@ expression_element:
     ret
 
 expression_number:
+    strings.emit 'expression_number | 7173'
     call convert_number
 
     expression_operator:
@@ -7093,11 +7198,13 @@ expression_number:
     ret
 
 push_operator:
+    strings.emit 'push_operator | 7200'
     push _eax
     jmp expression_loop
     ret
 
-    expression_end:
+expression_end:
+    strings.emit 'expression_end | 7206'
     cmp _esp,u64[current_offset]
     je expression_converted
     pop _eax
@@ -7106,10 +7213,12 @@ push_operator:
     ret
 
 expression_converted:
+    strings.emit 'expression_converted | 7216'
     pop _ebp
     ret
 
 fp_expression:
+    strings.emit 'fp_expression | 7220'
     mov al,'.'
     stos u8 [edi]
     mov eax,[fp_value]
@@ -7122,6 +7231,7 @@ fp_expression:
     ret
 
 convert_number:
+    strings.emit 'convert_number | 7233'
     lea eax,[edi+20h]
     mov _edx,u64[memory_end]
     cmp [source_start],0
@@ -7146,6 +7256,7 @@ convert_number:
     ret
 
 valid_number:
+    strings.emit 'valid_number | 7258'
     cmp u32 [edi+4],0
     jne qword_number
     cmp word [edi+2],0
@@ -7159,21 +7270,25 @@ byte_number:
     ret
 
 qword_number:
+    strings.emit 'qword_number | 7272'
     mov u8 [edi-1],8
     add edi,8
     ret
 
 dword_number:
+    strings.emit 'dword_number | 7278'
     mov u8 [edi-1],4
     scas u32 [edi]
     ret
 
 word_number:
+    strings.emit 'word_number | 7284'
     mov u8 [edi-1],2
     scas u16 [edi]
     ret
 
 expression_value:
+    strings.emit 'expression_value | 7290'
     inc esi
     push u64[current_offset]
     call convert_expression
@@ -7188,6 +7303,7 @@ expression_value:
     ret
 
 symbol_value:
+    strings.emit 'symbol_value | 7305'
     cmp [source_start],0
     je preprocessor_value
     push _edi _esi
@@ -7239,17 +7355,20 @@ symbol_value:
     ret
 
 broken_value:
+    strings.emit 'broken_value | 7358'
     mov eax,0Fh
     jmp store_label_value
     ret
 
 register_value:
+    strings.emit 'register_value | 7363'
     pop _edx _edi
     mov u8 [edi-1],10h
     stos u8 [edi]
     ret
 
 preprocessor_value:
+    strings.emit 'preprocessor_value | 7370'
     dec edi
     cmp [hash_tree],0
     je invalid_value
@@ -7270,6 +7389,7 @@ preprocessor_value:
     ret
 
 get_number:
+    strings.emit 'get_number | 7391'
     xor ebp,ebp
     lods u8 [esi]
     cmp al,22h
@@ -7368,6 +7488,7 @@ get_number:
     ret
 
 dec_out_of_range:
+    strings.emit 'dec_out_of_range | 7490'
     cmp esi,ebx
     ja dec_out_of_range_finished
     lods u8 [esi]
@@ -7383,11 +7504,13 @@ dec_out_of_range:
     ret
 
 dec_out_of_range_finished:
+    strings.emit 'dec_out_of_range_finished | 7506'
     or ebp,-1
     jmp number_ok
     ret
 
 bad_number:
+    strings.emit 'bad_number | 7513'
     pop _eax
     invalid_number:
     mov esi,[number_start]
@@ -7399,6 +7522,7 @@ bad_number:
     ret
 
 get_bin_number:
+    strings.emit 'get_bin_number | 7524'
     xor bl,bl
     get_bin_digit:
     cmp esi,[number_start]
@@ -7425,6 +7549,7 @@ get_bin_number:
     ret
 
 bin_digit_high:
+    strings.emit 'bin_digit_high | 7551'
     sub cl,32
     shl eax,cl
     or u32 [edi+4],eax
@@ -7432,6 +7557,7 @@ bin_digit_high:
     ret
 
 bin_out_of_range:
+    strings.emit 'bin_out_of_range | 7559'
     or al,al
     jz get_bin_digit
     or ebp,-1
@@ -7439,11 +7565,13 @@ bin_out_of_range:
     ret
 
 bin_digit_skip:
+    strings.emit 'bin_digit_skip | 7567'
     dec esi
     jmp get_bin_digit
     ret
 
 pascal_hex_number:
+    strings.emit 'pascal_hex_number | 7573'
     cmp cl,1
     je bad_number
 
@@ -7491,6 +7619,7 @@ pascal_hex_number:
     ret
 
 hex_digit_high:
+    strings.emit 'hex_digit_high | 7621'
     sub cl,32
     shl eax,cl
     or u32 [edi+4],eax
@@ -7498,6 +7627,7 @@ hex_digit_high:
     ret
 
 hex_out_of_range:
+    strings.emit 'hex_out_of_range | 7629'
     or al,al
     jz get_hex_digit
     or ebp,-1
@@ -7505,11 +7635,13 @@ hex_out_of_range:
     ret
 
 hex_digit_skip:
+    strings.emit 'hex_digit_skip | 7637'
     dec esi
     jmp get_hex_digit
     ret
 
 get_oct_number:
+    strings.emit 'get_oct_number | 7644'
     xor bl,bl
 
     get_oct_digit:
@@ -7545,6 +7677,7 @@ get_oct_number:
     ret
 
 oct_digit_wrap:
+    strings.emit 'oct_digit_wrap | 7680'
     shl eax,cl
     adc u32 [edi+4],0
     or u32 [edi],eax
@@ -7552,6 +7685,7 @@ oct_digit_wrap:
     ret
 
 oct_digit_high:
+    strings.emit 'oct_digit_high | 7687'
     sub cl,32
     shl eax,cl
     or u32 [edi+4],eax
@@ -7559,18 +7693,21 @@ oct_digit_high:
     ret
 
 oct_digit_skip:
+    strings.emit 'oct_digit_skip | 7696'
     dec esi
     jmp get_oct_digit
     ret
 
 oct_out_of_range:
+    strings.emit 'oct_out_of_range | 7701'
     or al,al
     jz get_oct_digit
     or ebp,-1
     jmp get_oct_digit
     ret
 
-    hex_number_ok:
+hex_number_ok:
+    strings.emit 'hex_number_ok | 7709'
     dec esi
 
     pascal_hex_ok:
@@ -7583,6 +7720,7 @@ oct_out_of_range:
     ret
 
 get_text_number:
+    strings.emit 'get_text_number | 7722'
     lods u32 [esi]
     mov edx,eax
     xor bl,bl
@@ -7607,6 +7745,7 @@ get_text_number:
     ret
 
 text_character_high:
+    strings.emit 'text_character_high | 7746'
     sub cl,32
     shl eax,cl
     or u32 [edi+4],eax
@@ -7614,11 +7753,13 @@ text_character_high:
     ret
 
 text_out_of_range:
+    strings.emit 'text_out_of_range | 7755'
     or ebp,-1
     jmp get_text_character
     ret
 
 get_fp_value:
+    strings.emit 'get_fp_value | 7761'
     push _edi _esi
     lods u8 [esi]
     cmp al,1Ah
@@ -7663,6 +7804,7 @@ get_fp_value:
     ret
 
 fp_character_dot:
+    strings.emit 'fp_character_dot | 7806'
     cmp esi,edx
     je not_fp_value
     or ah,ah
@@ -7677,6 +7819,7 @@ fp_character_dot:
     ret
 
 fp_last_character:
+    strings.emit 'fp_last_character | 7821'
     cmp cl,1
     jne not_fp_value
     or ah,4
@@ -7684,6 +7827,7 @@ fp_last_character:
     ret
 
 fp_character_exp:
+    strings.emit 'fp_character_exp | 7829'
     cmp esi,edx
     je not_fp_value
     cmp ah,1
@@ -7814,6 +7958,7 @@ fp_character_exp:
     ret
 
 fp_exponent:
+    strings.emit 'fp_exponent | 7960'
     or [fp_format],80h
     xor edx,edx
     xor ebp,ebp
@@ -7860,6 +8005,7 @@ fp_exponent:
     ret
 
 fp_negative_power:
+    strings.emit 'fp_negative_power | 8007'
     push _ecx
     mov ecx,10
     call fp_div
@@ -7890,6 +8036,7 @@ fp_negative_power:
     ret
 
 fp_mul:
+    strings.emit 'fp_mul | 8039'
     or ecx,ecx
     jz fp_zero
     mov eax,[edi+12]
@@ -7928,6 +8075,7 @@ fp_mul:
     ret
 
 fp_div:
+    strings.emit 'fp_div | 8077'
     mov eax,[edi+4]
     xor edx,edx
     div ecx
@@ -8043,6 +8191,7 @@ fp_add:
     ret
 
 fp_optimize:
+    strings.emit 'fp_optimize | 8193'
     mov eax,[edi]
     mov ebp,[edi+4]
     or ebp,[edi]
@@ -8065,10 +8214,12 @@ fp_optimize:
     ret
 
 fp_zero:
+    strings.emit 'fp_zero | 8216'
     mov u32 [edi+8],8000h
     ret
 
 preevaluate_logical_expression:
+    strings.emit 'preevaluate_logical_expression | 8221'
     xor al,al
 
     preevaluate_embedded_logical_expression:
@@ -8096,6 +8247,7 @@ preevaluate_logical_expression:
     ret
 
 preevaluate_or:
+    strings.emit 'preevaluate_or | 8249'
     cmp al,'1'
     je quick_true
     cmp al,'0'
@@ -8115,6 +8267,7 @@ preevaluate_or:
     ret
 
 preevaluate_and:
+    strings.emit 'preevaluate_and | 8269'
     cmp al,'0'
     je quick_false
     cmp al,'1'
@@ -8134,18 +8287,21 @@ preevaluate_and:
     ret
 
 leave_only_following:
+    strings.emit 'leave_only_following | 8289'
     mov _edi,[_esp]
     call preevaluate_logical_value
     jmp preevaluation_loop
     ret
 
 leave_only_preceding:
+    strings.emit 'leave_only_preceding | 8296'
     mov edi,ebx
     xor al,al
     jmp preevaluation_loop
     ret
 
 quick_true:
+    strings.emit 'quick_true | 8303'
     call skip_logical_value
     jc invalid_logical_expression
     mov _edi,[_esp]
@@ -8154,6 +8310,7 @@ quick_true:
     ret
 
 quick_false:
+    strings.emit 'quick_false | 8312'
     call skip_logical_value
     jc invalid_logical_expression
     mov _edi,[_esp]
@@ -8162,6 +8319,7 @@ quick_false:
     ret
 
 invalid_logical_expression:
+    strings.emit 'invalid_logical_expression | 8321'
     pop _edi
     mov esi,edi
     mov al,0FFh
@@ -8169,6 +8327,7 @@ invalid_logical_expression:
     ret
 
 skip_logical_value:
+    strings.emit 'skip_logical_value | 8330'
     cmp u8 [esi],'~'
     jne negation_skipped
     inc esi
@@ -8176,6 +8335,7 @@ skip_logical_value:
     ret
 
 negation_skipped:
+    strings.emit 'negation_skipped | 8337'
     mov al,[esi]
     cmp al,91h
     jne skip_simple_logical_value
@@ -8202,11 +8362,13 @@ negation_skipped:
     ret
 
 wrongly_structured_logical_expression:
+    strings.emit 'wrongly_structured_logical_expression | 8364'
     pop _eax
     stc
     ret
 
 skip_simple_logical_value:
+    strings.emit 'skip_simple_logical_value | 8370'
     mov [logical_value_parentheses],0
 
     find_simple_logical_value_end:
@@ -8236,6 +8398,7 @@ skip_simple_logical_value:
     ret
 
 skip_logical_value_internal_parenthesis:
+    strings.emit 'skip_logical_value_internal_parenthesis | 8400'
     inc [logical_value_parentheses]
     skip_logical_value_symbol:
     call skip_symbol
@@ -8243,6 +8406,7 @@ skip_logical_value_internal_parenthesis:
     ret
 
 preevaluate_logical_value:
+    strings.emit 'preevaluate_logical_value | 8408'
     mov ebp,edi
 
     preevaluate_negation:
@@ -8253,6 +8417,7 @@ preevaluate_logical_value:
     ret
 
 preevaluate_negation_ok:
+    strings.emit 'preevaluate_negation_ok | 8419'
     mov ebx,esi
     cmp u8 [esi],91h
     jne preevaluate_simple_logical_value
@@ -8275,6 +8440,7 @@ preevaluate_negation_ok:
     ret
 
 preevaluated_expression_value:
+    strings.emit 'preevaluated_expression_value | 8442'
     inc esi
     lea edx,[edi-1]
     sub edx,ebp
@@ -8287,11 +8453,13 @@ preevaluated_expression_value:
     ret
 
 invalid_logical_value:
+    strings.emit 'invalid_logical_value | 8455'
     mov edi,ebp
     mov al,0FFh
     ret
 
 preevaluate_simple_logical_value:
+    strings.emit 'preevaluate_simple_logical_value | 8461'
     xor edx,edx
     mov [logical_value_parentheses],edx
 
@@ -8325,11 +8493,13 @@ preevaluate_simple_logical_value:
     ret
 
 logical_value_internal_parentheses:
+    strings.emit 'logical_value_internal_parentheses | 8495'
     inc [logical_value_parentheses]
     jmp next_symbol_in_logical_value
     ret
 
 logical_value_boundaries_parenthesis_close:
+    strings.emit 'logical_value_boundaries_parenthesis_close | 8501'
     sub [logical_value_parentheses],1
     jnc next_symbol_in_logical_value
     cmp [logical_value_wrapping],91h
@@ -8358,12 +8528,14 @@ logical_value_boundaries_parenthesis_close:
     ret
 
 leave_logical_value_intact:
+    strings.emit 'leave_logical_value_intact | 8531'
     add edi,ecx
     add esi,ecx
     xor al,al
     ret
 
 compare_symbols:
+    strings.emit 'compare_symbols | 8537'
     lea ecx,[esi-1]
     sub ecx,edx
     mov eax,edx
@@ -8389,6 +8561,7 @@ compare_symbols:
     ret
 
 preevaluated_true:
+    strings.emit 'preevaluated_true | 8563'
     mov eax,edi
     sub eax,ebp
     test eax,1
@@ -8400,6 +8573,7 @@ preevaluated_true:
     ret
 
 compare_symbol_types:
+    strings.emit 'compare_symbol_types | 8575'
     push _esi
     lea esi,[edx+1]
 
@@ -8433,6 +8607,7 @@ compare_symbol_types:
     ret
 
 types_compared:
+    strings.emit 'types_compared | 8610'
     pop _esi
     cmp u8 [ebx],0F7h
     jne preevaluated_false
@@ -8440,11 +8615,13 @@ types_compared:
     ret
 
 different_type:
+    strings.emit 'different_type | 8618'
     pop _esi
     jmp preevaluated_false
     ret
 
 scan_symbols_list:
+    strings.emit 'scan_symbols_list | 8624'
     push _edi _esi
     lea esi,[edx+1]
     sub edx,ebx
@@ -8467,6 +8644,7 @@ scan_symbols_list:
     ret
 
 compare_in_list:
+    strings.emit 'compare_in_list | 8646'
     mov ecx,esi
     sub ecx,edi
     cmp ecx,edx
@@ -8486,6 +8664,7 @@ compare_in_list:
     ret
 
 check_list_end:
+    strings.emit 'check_list_end | 8666'
     inc esi
     cmp _esi,[_esp]
     jne invalid_symbols_list
@@ -8494,6 +8673,7 @@ check_list_end:
     ret
 
 not_equal_in_list:
+    strings.emit 'not_equal_in_list | 8675'
     add esi,ecx
 
     not_equal_length_in_list:
@@ -8506,12 +8686,14 @@ not_equal_in_list:
     jmp preevaluated_false
     ret
 
-    invalid_symbols_list:
+invalid_symbols_list:
+    strings.emit 'invalid_symbols_list | 8689'
     pop _esi _edi
     jmp invalid_logical_value
     ret
 
 calculate_expression:
+    strings.emit 'calculate_expression | 8695'
     mov u64[current_offset],_edi
     mov [value_undefined],0
     cmp u8 [esi],0
@@ -8594,6 +8776,7 @@ calculate_expression:
     ret
 
 expression_calculated:
+    strings.emit 'expression_calculated | 8778'
     sub edi,14h
     cmp [value_undefined],0
     ;je expression_value_ok
@@ -8605,6 +8788,7 @@ expression_calculated:
     ret
 
 get_byte_number:
+    strings.emit 'get_byte_number | 8790'
     xor eax,eax
     lods u8 [esi]
     stos dword [edi]
@@ -8620,6 +8804,7 @@ get_byte_number:
     ret
 
 get_word_number:
+    strings.emit 'get_word_number | 8806'
     xor eax,eax
     lods u16 [esi]
     stos dword [edi]
@@ -8629,6 +8814,7 @@ get_word_number:
     ret
 
 get_dword_number:
+    strings.emit 'get_dword_number | 8816'
     movs dword [edi],[esi]
     xor eax,eax
     stos dword [edi]
@@ -29317,6 +29503,7 @@ compress_displacement:
     ret
 
 displacement_compressed:
+    strings.emit 'displacement_compressed | 29319'
     add [displacement_compression],2
 
     displacement_compression_ok:
