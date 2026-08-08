@@ -8126,6 +8126,7 @@ fp_div:
     ret
 
 fp_add:
+    strings.emit 'fp_add | 8128'
     cmp u32 [ebx+8],8000h
     je .done
     cmp u32 [edi+8],8000h
@@ -8822,12 +8823,14 @@ get_dword_number:
     ret
 
 get_qword_number:
+    strings.emit 'get_qword_number | 8826'
     movs dword [edi],[esi]
     movs dword [edi],[esi]
     jmp got_number
     ret
 
 get_register:
+    strings.emit 'get_register | 8832'
     mov u8 [edi+9],0
     and u16 [edi+12],0
     lods u8 [esi]
@@ -8842,6 +8845,7 @@ get_register:
     ret
 
 get_label:
+    strings.emit 'get_label | 8848'
     xor eax,eax
     mov [edi+8],eax
     mov [edi+12],eax
@@ -8883,6 +8887,7 @@ get_label:
     ret
 
 unadjusted_label:
+    strings.emit 'unadjusted_label | 8889'
     mov eax,[ebx]
     stos dword [edi]
     mov eax,[ebx+4]
@@ -8926,6 +8931,7 @@ unadjusted_label:
     ret
 
 current_offset_label:
+    strings.emit 'current_offset_label | 8934'
     mov _eax,u64[current_offset]
     make_current_offset_label:
     xor edx,edx
@@ -8951,12 +8957,14 @@ current_offset_label:
     ret
 
 org_origin_label:
+    strings.emit 'org_origin_label | 8959'
     mov eax,[addressing_space]
     mov eax,[eax+18h]
     jmp make_current_offset_label
     ret
 
 counter_label:
+    strings.emit 'counter_label | 8966'
     mov _eax,u64[counter]
     make_dword_label_value:
     stos dword [edi]
@@ -8967,6 +8975,7 @@ counter_label:
     ret
 
 timestamp_label:
+    strings.emit 'timestamp_label | 8977'
     call make_timestamp
     make_qword_label_value:
     stos dword [edi]
@@ -8977,6 +8986,7 @@ timestamp_label:
     ret
 
 predefined_label:
+    strings.emit 'predefined_label | 8988'
     or eax,eax
     jz current_offset_label
     cmp eax,1
@@ -8990,11 +9000,13 @@ predefined_label:
     ret
 
 label_out_of_scope:
+    strings.emit 'label_out_of_scope | 9002'
     mov edx,symbol_out_of_scope
     jmp error_undefined
     ret
 
 label_undefined:
+    strings.emit 'label_undefined | 9008'
     mov edx,undefined_symbol
 
     error_undefined:
@@ -9021,6 +9033,7 @@ label_undefined:
     ret
 
 calculate_add:
+    strings.emit 'calculate_add | 9035'
     xor ah,ah
     mov ah,[ebx+12]
     mov al,[edi+12]
@@ -9040,6 +9053,7 @@ calculate_add:
     ret
 
 add_relocatable:
+    strings.emit 'add_relocatable | 9054'
     mov ah,al
     mov ecx,[edi+16]
     mov [ebx+16],ecx
@@ -9071,6 +9085,7 @@ add_relocatable:
     ret
 
 add_register:
+    strings.emit 'add_register | 9087'
     or al,al
     ;jz add_register_done
     jz return_ok
@@ -9086,6 +9101,7 @@ add_register:
     ret
 
 add_in_second_slot:
+    strings.emit 'add_in_second_slot | 9103'
     cmp [esi+9],al
     jne create_in_first_slot
     add [esi+11],cl
@@ -9096,6 +9112,7 @@ add_in_second_slot:
     ret
 
 create_in_first_slot:
+    strings.emit 'create_in_first_slot | 9114'
     cmp u8 [esi+8],0
     jne create_in_second_slot
     mov [esi+8],al
@@ -9103,6 +9120,7 @@ create_in_first_slot:
     ret
 
 create_in_second_slot:
+    strings.emit 'create_in_second_slot | 9122'
     cmp u8 [esi+9],0
     jne invalid_expression
     mov [esi+9],al
@@ -9110,10 +9128,12 @@ create_in_second_slot:
     ret
 
 out_of_range:
+    strings.emit 'out_of_range | 9130'
     jmp calculation_loop
     ret
 
 calculate_sub:
+    strings.emit 'calculate_sub | 9135'
     xor ah,ah
     mov ah,[ebx+12]
     mov al,[edi+12]
@@ -9134,6 +9154,7 @@ calculate_sub:
     ret
 
 negate_relocatable:
+    strings.emit 'negate_relocatable | 9156'
     neg al
     mov ah,al
     mov ecx,[edi+16]
@@ -9168,6 +9189,7 @@ negate_relocatable:
     ret
 
 sub_register:
+    strings.emit 'sub_register | 9191'
     or al,al
     ;jz add_register_done
     jz return_ok
@@ -9177,6 +9199,7 @@ sub_register:
     ret
 
 calculate_mul:
+    strings.emit 'calculate_mul | 9201'
     or dx,dx
     jz mul_start
     cmp u16 [ebx+8],0
@@ -9313,12 +9336,14 @@ calculate_mul:
     ret
 
 mul_overflow:
+    strings.emit 'mul_overflow | 9338'
     pop _edx _esi
     call recoverable_overflow
     jmp calculation_loop
     ret
 
 get_byte_scale:
+    strings.emit 'get_byte_scale | 9345'
     mov al,[edi]
     cbw
     cwde
@@ -9330,6 +9355,7 @@ get_byte_scale:
     ret
 
 calculate_div:
+    strings.emit 'calculate_div | 9357'
     push _esi _edx
     mov esi, ebx
     call div_64
@@ -9367,6 +9393,7 @@ calculate_div:
     ret
 
 calculate_mod:
+    strings.emit 'calculate_mod | 9395'
     push _esi
     mov esi, ebx
     call div_64
@@ -9378,6 +9405,7 @@ calculate_mod:
     ret
 
 calculate_and:
+    strings.emit 'calculate_and | 9407'
     mov eax,[edi]
     mov edx,[edi+4]
     mov cl,[edi+13]
@@ -9388,6 +9416,7 @@ calculate_and:
     ret
 
 calculate_or:
+    strings.emit 'calculate_or | 9418'
     mov eax,[edi]
     mov edx,[edi+4]
     mov cl,[edi+13]
@@ -9398,6 +9427,7 @@ calculate_or:
     ret
 
 calculate_xor:
+    strings.emit 'calculate_xor | 9429'
     mov eax,[edi]
     mov edx,[edi+4]
     mov cl,[edi+13]
@@ -9408,6 +9438,7 @@ calculate_xor:
     ret
 
 shr_negative:
+    strings.emit 'shr_negative | 9440'
     mov u8 [edi+13],0
     not dword [edi]
     not dword [edi+4]
@@ -9438,6 +9469,7 @@ shr_negative:
     ret
 
 shl_over:
+    strings.emit 'shl_over | 9471'
     cmp u8 [ebx+13],0
     jne shl_overflow
 
@@ -9454,6 +9486,7 @@ shl_over:
     ret
 
 shl_high:
+    strings.emit 'shl_high | 9489'
     sub cl,32
     shld [edi],edx,cl
     shld edx,eax,cl
@@ -9474,6 +9507,7 @@ shl_high:
     ret
 
 shl_negative:
+    strings.emit 'shl_negative | 9509'
     mov u8 [edi+13],0
     not dword [edi]
     not dword [edi+4]
@@ -9505,6 +9539,7 @@ shl_negative:
     ret
 
 shr_high:
+    strings.emit 'shr_high | 9541'
     sub cl,32
     shrd edx,esi,cl
     mov [ebx],edx
@@ -9514,6 +9549,7 @@ shr_high:
     ret
 
 shr_over:
+    strings.emit 'shr_over | 9551'
     movsx eax, u8 [ebx+13]
     mov dword [ebx],eax
     mov dword [ebx+4],eax
@@ -9521,6 +9557,7 @@ shr_over:
     ret
 
 calculate_not:
+    strings.emit 'calculate_not | 9559'
     cmp u16 [edi+8],0
     jne invalid_expression
     cmp u8 [edi+12],0
@@ -9536,6 +9573,7 @@ calculate_not:
     ret
 
 calculate_bsf:
+    strings.emit 'calculate_bsf | 9575'
     cmp u16 [edi+8],0
     jne invalid_expression
     cmp u8 [edi+12],0
@@ -9559,6 +9597,7 @@ calculate_bsf:
     ret
 
 calculate_bsr:
+    strings.emit 'calculate_bsr | 9599'
     cmp u16 [edi+8],0
     jne invalid_expression
     cmp u8 [edi+12],0
@@ -9585,6 +9624,7 @@ calculate_bsr:
     ret
 
 calculate_neg:
+    strings.emit 'calculate_neg | 9626'
     cmp u8 [edi+8],0
     je neg_first_register_ok
     neg u8 [edi+10]
@@ -9616,6 +9656,7 @@ calculate_neg:
     ret
 
 calculate_rva:
+    strings.emit 'calculate_rva | 9658'
     cmp u16 [edi+8],0
     jne invalid_expression
     mov al,[output_format]
@@ -9656,6 +9697,7 @@ calculate_rva:
     ret
 
 pe64_rva:
+    strings.emit 'pe64_rva | 9699'
     mov al,4
     bt      [resolver_flags],0
     jc pe64_rva_type_ok
@@ -9675,6 +9717,7 @@ pe64_rva:
     ret
 
 calculate_gotoff:
+    strings.emit 'calculate_gotoff | 9718'
     test [format_flags],8+1
     jnz invalid_expression
 
@@ -9693,6 +9736,7 @@ calculate_gotoff:
     ret
 
 calculate_plt:
+    strings.emit 'calculate_plt | 9738'
     cmp u16 [edi+8],0
     jne invalid_expression
     cmp [output_format],5
@@ -9718,6 +9762,7 @@ calculate_plt:
     ret
 
 div_64:
+    strings.emit 'div_64 | 9764'
     xor ebx,ebx
     cmp dword [edi],0
     jne divider_ok
@@ -9729,6 +9774,7 @@ div_64:
     ret
 
 divider_ok:
+    strings.emit 'divider_ok | 9776'
     cmp u8 [esi+13],0
     je div_first_sign_ok
     mov eax,[esi]
@@ -9775,6 +9821,7 @@ divider_ok:
     ret
 
 div_high:
+    strings.emit 'div_high | 9823'
     push _ebx
     mov eax,[esi+4]
     xor edx,edx
@@ -9808,6 +9855,7 @@ div_high:
     ret
 
 div_high_large_correction:
+    strings.emit 'div_high_large_correction | 9857'
     push _eax _edx
     mov eax,edx
     sub eax,ecx
@@ -9828,11 +9876,13 @@ div_high_large_correction:
     ret
 
 div_high_small_correction:
+    strings.emit 'div_high_small_correction | 9878'
     pop _edx _eax
     jmp div_high_correction
     ret
 
 div_done:
+    strings.emit 'div_done | 9884'
     or bh,bh
     jz remainder_ok
     not eax
@@ -9861,6 +9911,7 @@ div_done:
     ret
 
 store_label_reference:
+    strings.emit 'store_label_reference | 9913'
     cmp [symbols_file],0
     ;je label_reference_ok
     je return_ok
@@ -9878,6 +9929,7 @@ store_label_reference:
     ret
 
 convert_fp:
+    strings.emit 'convert_fp | 9931'
     inc esi
     and u16 [edi+8],0
     and u16 [edi+12],0
@@ -9935,6 +9987,7 @@ convert_fp:
     ret
 
 fp_qword_small_shift:
+    strings.emit 'fp_qword_small_shift | 9990'
     mov ebx,edx
     shr edx,cl
     shrd eax,ebx,cl
@@ -9963,6 +10016,7 @@ fp_qword_small_shift:
     ret
 
 convert_fp_word:
+    strings.emit 'convert_fp_word | 10019'
     xor eax,eax
     cmp u16 [esi+8],8000h
     je fp_word_store
@@ -10013,7 +10067,8 @@ convert_fp_word:
     add esi, 13
     ret
 
-    convert_fp_dword:
+convert_fp_dword:
+    strings.emit 'convert_fp_dword | 10071'
     xor eax,eax
     cmp u16 [esi+8],8000h
     je fp_dword_store
@@ -10064,6 +10119,7 @@ convert_fp_word:
     ret
 
 get_string_value:
+    strings.emit 'get_string_value | 10121'
     inc esi
     lods dword [esi]
     mov ecx,eax
@@ -10082,6 +10138,7 @@ get_string_value:
     ret
 
 get_byte_value:
+    strings.emit 'get_byte_value | 10141'
     mov [value_size],1
     or [operand_flags],1
     call calculate_value
@@ -10101,6 +10158,7 @@ get_byte_value:
     ret
 
 byte_positive:
+    strings.emit 'byte_positive | 10161'
     test edx,edx
     jnz range_exceeded
     cmp eax,100h
@@ -10108,6 +10166,7 @@ byte_positive:
     ret
 
 range_exceeded:
+    strings.emit 'range_exceeded | 10168'
     xor eax,eax
     xor edx,edx
     recoverable_overflow:
