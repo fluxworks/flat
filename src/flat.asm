@@ -10180,6 +10180,7 @@ range_exceeded:
     ret
 
 recoverable_misuse:
+    strings.emit 'recoverable_misuse | 10181'
     cmp [error_line],0
     ;jne ignore_misuse
     jne return_ok
@@ -10189,6 +10190,7 @@ recoverable_misuse:
     ret
 
 get_word_value:
+    strings.emit 'get_word_value | 10192'
     mov [value_size],2
     or [operand_flags],1
     call calculate_value
@@ -10208,13 +10210,15 @@ get_word_value:
     ret
 
 word_positive:
+    strings.emit 'word_positive | 10212'
     test edx,edx
     jnz range_exceeded
     cmp eax,10000h
     jae range_exceeded
     ret
 
-    get_dword_value:
+get_dword_value:
+    strings.emit 'get_dword_value | 10220'
     mov [value_size],4
     or [operand_flags],1
     call calculate_value
@@ -10232,6 +10236,7 @@ word_positive:
     ret
 
 check_dword_value:
+    strings.emit 'check_dword_value | 10239'
     mov eax,[edi]
     mov edx,[edi+4]
     cmp u8 [edi+13],0
@@ -10241,11 +10246,13 @@ check_dword_value:
     ret
 
 dword_positive:
+    strings.emit 'dword_positive | 10248'
     test edx,edx
     jne range_exceeded
     ret
 
 get_pword_value:
+    strings.emit 'get_pword_value | 10255'
     mov [value_size],6
     or [operand_flags],1
     call calculate_value
@@ -10263,11 +10270,13 @@ get_pword_value:
     ret
 
 pword_positive:
+    strings.emit 'pword_positive | 10272'
     cmp edx,10000h
     jae range_exceeded
     ret
 
 get_qword_value:
+    strings.emit 'get_qword_value | 10278'
     mov [value_size],8
     or [operand_flags],1
     call calculate_value
@@ -10278,6 +10287,7 @@ get_qword_value:
     ret
 
 get_count_value:
+    strings.emit 'get_count_value | 10289'
     mov [value_size],8
     or [operand_flags],1
     call calculate_expression
@@ -10299,6 +10309,7 @@ get_count_value:
     ret
 
 invalid_count_value:
+    strings.emit 'invalid_count_value | 10311'
     cmp [error_line],0
     jne zero_count
     mov _eax,u64[current_line]
@@ -10310,6 +10321,7 @@ invalid_count_value:
     ret
 
 get_value:
+    strings.emit 'get_value | 10323'
     mov [operand_size],0
     lods u8 [esi]
     call get_size_operator
@@ -10335,6 +10347,7 @@ get_value:
     ret
 
 calculate_value:
+    strings.emit 'calculate_value | 10349'
     call calculate_expression
     cmp u16 [edi+8],0
     jne invalid_value
@@ -10347,24 +10360,28 @@ calculate_value:
     ret
 
 value_qword:
+    strings.emit 'value_qword | 10362'
     call get_qword_value
     truncated_value:
     mov [value_sign],0
     ret
 
 value_pword:
+    strings.emit 'value_pword | 10369'
     call get_pword_value
     movzx edx,dx
     jmp truncated_value
     ret
 
 value_dword:
+    strings.emit 'value_dword | 10376'
     call get_dword_value
     xor edx,edx
     jmp truncated_value
     ret
 
 value_word:
+    strings.emit 'value_word | 10383'
     call get_word_value
     xor edx,edx
     movzx eax,ax
@@ -10372,6 +10389,7 @@ value_word:
     ret
 
 value_byte:
+    strings.emit 'value_byte | 10390'
     call get_byte_value
     xor edx,edx
     movzx eax,al
@@ -10379,6 +10397,7 @@ value_byte:
     ret
 
 get_address_word_value:
+    strings.emit 'get_address_word_value | 10399'
     mov [address_size],2
     mov [value_size],2
     mov [free_address_range],0
@@ -10386,6 +10405,7 @@ get_address_word_value:
     ret
 
 get_address_dword_value:
+    strings.emit 'get_address_dword_value | 10407'
     mov [address_size],4
     mov [value_size],4
     mov [free_address_range],0
@@ -10393,6 +10413,7 @@ get_address_dword_value:
     ret
 
 get_address_qword_value:
+    strings.emit 'get_address_qword_value | 10415'
     mov [address_size],8
     mov [value_size],8
     mov [free_address_range],0
@@ -10400,6 +10421,7 @@ get_address_qword_value:
     ret
 
 get_address_value:
+    strings.emit 'get_address_value | 10423'
     mov [address_size],0
     mov [value_size],8
     or [free_address_range],-1
@@ -10432,6 +10454,7 @@ get_address_value:
     ret
 
 invalid_address_type:
+    strings.emit 'invalid_address_type | 10456'
     call recoverable_misuse
     special_address_type_32bit:
     mov al,40h
@@ -10516,6 +10539,7 @@ invalid_address_type:
     ret
 
 address_sizes_do_not_match:
+    strings.emit 'address_sizes_do_not_match | 10540'
     cmp al,0Fh
     jne invalid_address
     mov al,bh
@@ -10537,6 +10561,7 @@ address_sizes_do_not_match:
     ret
 
 check_rip_relative_address:
+    strings.emit 'check_rip_relative_address | 10563'
     mov eax,[edi]
     cdq
     cmp edx,[edi+4]
@@ -10546,6 +10571,7 @@ check_rip_relative_address:
     ret
 
 get_address_register:
+    strings.emit 'get_address_register | 10573'
     or al,al
     ;jz address_register_ok
     jz return_ok
@@ -10557,6 +10583,7 @@ get_address_register:
     ret
 
 scaled_register:
+    strings.emit 'scaled_register | 10585'
     or bl,bl
     jnz invalid_address
     mov bl,al
@@ -10566,6 +10593,7 @@ scaled_register:
     ret
 
 sib_allowed:
+    strings.emit 'sib_allowed | 10594'
     or bh,bh
     jnz check_index_with_base
     cmp cl,3
@@ -10615,6 +10643,7 @@ sib_allowed:
     ret
 
 check_index_with_base:
+    strings.emit 'check_index_with_base | 10645'
     cmp cl,1
     jne check_index_scale
     cmp bl,44h
@@ -10631,6 +10660,7 @@ check_index_with_base:
     ret
 
 check_for_ebp_base:
+    strings.emit 'check_for_ebp_base | 10662'
     cmp bh,45h
     jne check_immediate_address
     cmp [segment_register],4
@@ -10642,6 +10672,7 @@ check_for_ebp_base:
     ret
 
 check_for_rbp_base:
+    strings.emit 'check_for_rbp_base | 10674'
     cmp bh,45h
     je swap_base_with_index
     cmp bh,85h
@@ -10650,6 +10681,7 @@ check_for_rbp_base:
     ret
 
 check_index_scale:
+    strings.emit 'check_index_scale | 10684'
     test cl,not 1111b
     jnz invalid_address
     mov al,cl
@@ -10660,6 +10692,7 @@ check_index_scale:
     ret
 
 check_vsib:
+    strings.emit 'check_vsib | 10694'
     xor ah,ah
 
     check_vsib_base:
@@ -10692,6 +10725,7 @@ check_vsib:
     ret
 
 swap_vsib_registers:
+    strings.emit 'swap_vsib_registers | 10726'
     xor ah,-1
     jz invalid_address
     cmp cl,1
@@ -10702,6 +10736,7 @@ swap_vsib_registers:
     ret
 
 calculate_relative_offset:
+    strings.emit 'calculate_relative_offset | 10738'
     cmp [value_undefined],0
     ;jne relative_offset_ok
     jne return_ok
@@ -10753,6 +10788,7 @@ calculate_relative_offset:
     ret
 
 plt_relative_offset:
+    strings.emit 'plt_relative_offset | 10790'
     mov [value_type],7
     cmp u8 [ds:ebp+9],2
     ;je relative_offset_ok
@@ -10762,6 +10798,7 @@ plt_relative_offset:
     ret
 
 calculate_logical_expression:
+    strings.emit 'calculate_logical_expression | 10800'
     xor al,al
     calculate_embedded_logical_expression:
     mov [logical_value_wrapping],al
@@ -10775,6 +10812,7 @@ calculate_logical_expression:
     ret
 
 logical_or:
+    strings.emit 'logical_or | 10815'
     inc esi
     or al,al
     jnz logical_value_already_determined
@@ -10786,6 +10824,7 @@ logical_or:
     ret
 
 logical_and:
+    strings.emit 'logical_and | 10826'
     inc esi
     or al,al
     jz logical_value_already_determined
@@ -10797,6 +10836,7 @@ logical_and:
     ret
 
 logical_value_already_determined:
+    strings.emit 'logical_value_already_determined | 10838'
     push _eax
     call skip_logical_value
     jc invalid_expression
@@ -10805,6 +10845,7 @@ logical_value_already_determined:
     ret
 
 get_value_for_comparison:
+    strings.emit 'get_value_for_comparison | 10847'
     mov [value_size],8
     or [operand_flags],1
     lods u8 [esi]
@@ -10830,6 +10871,7 @@ get_value_for_comparison:
     ret
 
 get_logical_value:
+    strings.emit 'get_logical_value | 10873'
     xor al,al
     check_for_negation:
     cmp u8 [esi],'~'
@@ -10840,6 +10882,7 @@ get_logical_value:
     ret
 
 negation_ok:
+    strings.emit 'negation_ok | 10884'
     push _eax
     mov al,[esi]
     cmp al,91h
@@ -10900,6 +10943,7 @@ negation_ok:
     ret
 
 invalid_comparison:
+    strings.emit 'invalid_comparison | 10945'
     call recoverable_misuse
 
     values_relative:
@@ -10931,6 +10975,7 @@ invalid_comparison:
     ret
 
 check_equal:
+    strings.emit 'check_equal | 10977'
     cmp bh,[value_sign]
     jne return_false
     cmp eax,ebp
@@ -10941,6 +10986,7 @@ check_equal:
     ret
 
 check_greater:
+    strings.emit 'check_greater | 10988'
     cmp bh,[value_sign]
     jg return_true
     jl return_false
@@ -10995,6 +11041,7 @@ check_greater:
     ret
 
 logical_number:
+    strings.emit 'logical_number | 11044'
     pop _ecx _ebx _eax _edx _eax
     or bl,bl
     jnz invalid_logical_number
@@ -11013,6 +11060,7 @@ logical_number:
     ret
 
 check_for_defined:
+    strings.emit 'check_for_defined | 11063'
     or bl,-1
     lods u16 [esi]
     cmp ah,'('
@@ -11042,16 +11090,19 @@ check_for_defined:
     ret
 
 defined_register:
+    strings.emit 'defined_register | 11092'
     inc esi
     jmp check_expression
     ret
 
 defined_fp_value:
+    strings.emit 'defined_fp_value | 11098'
     add esi, 12+1
     jmp expression_checked
     ret
 
 defined_string:
+    strings.emit 'defined_string | 11104'
     lods dword [esi]
     add esi, eax
     inc esi
@@ -11059,6 +11110,7 @@ defined_string:
     ret
 
 check_if_symbol_defined:
+    strings.emit 'check_if_symbol_defined | 11112'
     lods dword [esi]
     cmp eax,-1
     je invalid_expression
@@ -11079,6 +11131,7 @@ check_if_symbol_defined:
     ret
 
 no_prediction:
+    strings.emit 'no_prediction | 11133'
     test u8 [eax+8],1
     jz symbol_undefined
     mov cx,[current_pass]
@@ -11088,6 +11141,7 @@ no_prediction:
     ret
 
 symbol_predicted_undefined:
+    strings.emit 'symbol_predicted_undefined | 11144'
     or u8 [eax+8],40h
     and u8 [eax+8],not 80h
 
@@ -11097,11 +11151,13 @@ symbol_predicted_undefined:
     ret
 
 expression_checked:
+    strings.emit 'expression_checked | 11153'
     mov al,bl
     jmp logical_value_ok
     ret
 
 check_for_used:
+    strings.emit 'check_for_used | 11159'
     lods u16 [esi]
     cmp ah,2
     jne invalid_expression
@@ -11122,12 +11178,14 @@ check_for_used:
     ret
 
 not_used:
+    strings.emit 'not_used | 11180'
     or u8 [eax+8],10h
     and u8 [eax+8],not 20h
     jmp return_false
     ret
 
 given_false:
+    strings.emit 'given_false | 11187'
     inc esi
 
     return_false:
@@ -11136,6 +11194,7 @@ given_false:
     ret
 
 given_true:
+    strings.emit 'given_true | 11196'
     inc esi
 
     return_true:
@@ -11144,6 +11203,7 @@ given_true:
     ret
 
 logical_expression:
+    strings.emit 'logical_expression | 11205'
     lods u8 [esi]
     mov dl,[logical_value_wrapping]
     push _edx
@@ -11162,6 +11222,7 @@ logical_expression:
     ret
 
 skip_symbol:
+    strings.emit 'skip_symbol | 11224'
     lods u8 [esi]
     or al,al
     jz nothing_to_skip
@@ -11185,6 +11246,7 @@ skip_symbol:
     ret
 
 skip_label:
+    strings.emit 'skip_label | 11248'
     add esi, 2
 
     skip_instruction:
@@ -11196,11 +11258,13 @@ skip_label:
     ret
 
 skip_special_label:
+    strings.emit 'skip_special_label | 11260'
     add esi, 4
     jmp drop_then_return
     ret
 
 skip_address:
+    strings.emit 'skip_address | 11266'
     mov al,[esi]
     and al,11110000b
     cmp al,60h
@@ -11212,6 +11276,7 @@ skip_address:
     ret
 
 skip_expression:
+    strings.emit 'skip_expression | 11278'
     lods u8 [esi]
     or al,al
     jz skip_string
@@ -11239,6 +11304,7 @@ skip_expression:
     ret
 
 skip_label_value:
+    strings.emit 'skip_label_value | 11306'
     add esi, 3
 
     skip_register:
@@ -11247,12 +11313,14 @@ skip_label_value:
     ret
 
 skip_fp_value:
+    strings.emit 'skip_fp_value | 11315'
     add esi, 12
     ;jmp skip_done
     jmp drop_then_return
     ret
 
 skip_string:
+    strings.emit 'skip_string | 11322'
     lods dword [esi]
     add esi, eax
     inc esi
@@ -11261,11 +11329,13 @@ skip_string:
     ret
 
 nothing_to_skip:
+    strings.emit 'nothing_to_skip | 11331'
     dec esi
     stc
     ret
 
 expand_path:
+    strings.emit 'expand_path | 11337'
     lods u8 [esi]
     cmp al,'%'
     je environment_variable
@@ -11277,6 +11347,7 @@ expand_path:
     ret
 
 environment_variable:
+    strings.emit 'environment_variable | 11349'
     mov ebx,esi
 
     find_variable_end:
@@ -11295,6 +11366,7 @@ environment_variable:
     ret
 
 not_environment_variable:
+    strings.emit 'not_environment_variable | 11367'
     mov al,'%'
     stos u8 [edi]
     mov esi, ebx
@@ -11302,6 +11374,7 @@ not_environment_variable:
     ret
 
 get_include_directory:
+    strings.emit 'get_include_directory | 11376'
     lods u8 [esi]
     cmp al,';'
     je include_directory_ok
@@ -11323,6 +11396,7 @@ get_include_directory:
     ret
 
 assembler:
+    strings.emit 'assembler | 11398'
     xor eax,eax
     mov [stub_size],eax
     mov [current_pass],ax
