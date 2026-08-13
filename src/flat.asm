@@ -22543,6 +22543,7 @@ fldcw_mem_16bit:
     ret
 
 fstsw_instruction:
+    strings.emit 'fstsw_instruction | 22545'
     mov al,9Bh
     stos u8 [edi]
 
@@ -22565,10 +22566,12 @@ fstsw_instruction:
     ret
 
 fstsw_mem_16bit:
+    strings.emit 'fstsw_mem_16bit | 22569'
     jmp instruction_ready
     ret
 
 fstsw_reg:
+    strings.emit 'fstsw_reg | 22573'
     lods u8 [esi]
     call convert_register
     cmp ax,0200h
@@ -22579,6 +22582,7 @@ fstsw_reg:
     ret
 
 finit_instruction:
+    strings.emit 'finit_instruction | 22585'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22590,16 +22594,19 @@ finit_instruction:
     ret
 
 fcmov_instruction:
+    strings.emit 'fcmov_instruction | 22597'
     mov dh,0DAh
     jmp fcomi_streg
     ret
 
 fcomi_instruction:
+    strings.emit 'fcomi_instruction | 22603'
     mov dh,0DBh
     jmp fcomi_streg
     ret
 
 fcomip_instruction:
+    strings.emit 'fcomip_instruction | 22609'
     mov dh,0DFh
 
     fcomi_streg:
@@ -22620,6 +22627,7 @@ fcomip_instruction:
     ret
 
 fcomi_st0_streg:
+    strings.emit 'fcomi_st0_streg | 22630'
     or ah,ah
     jnz invalid_operand
     inc esi
@@ -22637,6 +22645,7 @@ fcomi_st0_streg:
     ret
 
 basic_mmx_instruction:
+    strings.emit 'basic_mmx_instruction | 22647'
     mov [base_code],0Fh
     mov [extended_code],al
 
@@ -22665,6 +22674,7 @@ basic_mmx_instruction:
     ret
 
 mmx_mmreg_mmreg:
+    strings.emit 'mmx_mmreg_mmreg | 22677'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -22672,6 +22682,7 @@ mmx_mmreg_mmreg:
     ret
 
 mmx_bit_shift_instruction:
+    strings.emit 'mmx_bit_shift_instruction | 22685'
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -22698,6 +22709,7 @@ mmx_bit_shift_instruction:
     ret
 
 mmx_ps_mmreg_imm8:
+    strings.emit 'mmx_ps_mmreg_imm8 | 22711'
     call get_byte_value
     mov u8 [value],al
     test [operand_size],not 1
@@ -22718,6 +22730,7 @@ mmx_ps_mmreg_imm8:
     ret
 
 pmovmskb_instruction:
+    strings.emit 'pmovmskb_instruction | 22733'
     mov [base_code],0Fh
     mov [extended_code],al
     call take_register
@@ -22748,6 +22761,7 @@ pmovmskb_instruction:
     ret
 
 mmx_imm8:
+    strings.emit 'mmx_imm8 | 22764'
     push _ebx _ecx _edx
     xor cl,cl
     xchg cl,[operand_size]
@@ -22769,12 +22783,14 @@ mmx_imm8:
     ret
 
 mmx_nomem_imm8:
+    strings.emit 'mmx_nomem_imm8 | 22785'
     call store_nomem_instruction
     call append_imm8
     jmp instruction_assembled
     ret
 
 append_imm8:
+    strings.emit 'append_imm8 | 22793'
     mov [operand_size],0
     lods u8 [esi]
     cmp al,','
@@ -22790,6 +22806,7 @@ append_imm8:
     ret
 
 pinsrw_instruction:
+    strings.emit 'pinsrw_instruction | 22808'
     mov [extended_code],al
     mov [base_code],0Fh
     lods u8 [esi]
@@ -22819,6 +22836,7 @@ pinsrw_instruction:
     ret
 
 pinsrw_mmreg_reg:
+    strings.emit 'pinsrw_mmreg_reg | 22838'
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -22828,12 +22846,14 @@ pinsrw_mmreg_reg:
     ret
 
 pshufw_instruction:
+    strings.emit 'pshufw_instruction | 22848'
     mov [mmx_size],8
     mov [opcode_prefix],al
     jmp pshuf_instruction
     ret
 
 pshufd_instruction:
+    strings.emit 'pshufd_instruction | 22855'
     mov [mmx_size],16
     mov [opcode_prefix],al
 
@@ -22863,6 +22883,7 @@ pshufd_instruction:
     ret
 
 pshuf_mmreg_mmreg:
+    strings.emit 'pshuf_mmreg_mmreg | 22885'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -22870,6 +22891,7 @@ pshuf_mmreg_mmreg:
     ret
 
 movd_instruction:
+    strings.emit 'movd_instruction | 22893'
     mov [base_code],0Fh
     mov [extended_code],7Eh
     lods u8 [esi]
@@ -22886,6 +22908,7 @@ movd_instruction:
     ret
 
 movd_reg:
+    strings.emit 'movd_reg | 22910'
     lods u8 [esi]
     cmp al,0B0h
     jae movd_mmreg
@@ -22898,6 +22921,7 @@ movd_reg:
     ret
 
 movd_mmreg:
+    strings.emit 'movd_mmreg | 22923'
     mov [extended_code],6Eh
     call convert_mmx_register
     mov [postbyte_register],al
@@ -22919,6 +22943,7 @@ movd_mmreg:
     ret
 
 movd_mmreg_reg:
+    strings.emit 'movd_mmreg_reg | 22945'
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -22928,6 +22953,7 @@ movd_mmreg_reg:
     ret
 
 get_mmx_source_register:
+    strings.emit 'get_mmx_source_register | 22955'
     mov [operand_size],0
     lods u8 [esi]
     cmp al,','
@@ -22948,6 +22974,7 @@ get_mmx_source_register:
     ret
 
 movq_instruction:
+    strings.emit 'movq_instruction | 22976'
     mov [base_code],0Fh
     lods u8 [esi]
     call get_size_operator
@@ -22970,6 +22997,7 @@ movq_instruction:
     ret
 
 movq_reg:
+    strings.emit 'movq_reg | 22999'
     lods u8 [esi]
     cmp al,0B0h
     jae movq_mmreg
@@ -22984,6 +23012,7 @@ movq_reg:
     ret
 
 movq_mmreg:
+    strings.emit 'movq_mmreg | 23015'
     call convert_mmx_register
     mov [postbyte_register],al
     mov [extended_code],6Fh
@@ -23011,6 +23040,7 @@ movq_mmreg:
     ret
 
 movq_mmreg_reg:
+    strings.emit 'movq_mmreg_reg | 23042'
     lods u8 [esi]
     cmp al,0B0h
     jae movq_mmreg_mmreg
@@ -23031,6 +23061,7 @@ movq_mmreg_reg:
     ret
 
 movq_mmreg_mmreg:
+    strings.emit 'movq_mmreg_mmreg | 23063'
     call convert_mmx_register
     cmp ah,[mmx_size]
     jne invalid_operand_size
@@ -23039,6 +23070,7 @@ movq_mmreg_mmreg:
     ret
 
 movdq_instruction:
+    strings.emit 'movdq_instruction | 23071'
     mov [opcode_prefix],al
     mov [base_code],0Fh
     mov [extended_code],6Fh
@@ -23064,6 +23096,7 @@ movdq_instruction:
     ret
 
 movdq_mmreg:
+    strings.emit 'movdq_mmreg | 23098'
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
@@ -23081,6 +23114,7 @@ movdq_mmreg:
     ret
 
 movdq_mmreg_mmreg:
+    strings.emit 'movdq_mmreg_mmreg | 23116'
     lods u8 [esi]
     call convert_xmm_register
     mov bl,al
@@ -23088,6 +23122,7 @@ movdq_mmreg_mmreg:
     ret
 
 lddqu_instruction:
+    strings.emit 'lddqu_instruction | 23124'
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
@@ -23112,12 +23147,14 @@ lddqu_instruction:
     ret
 
 movdq2q_instruction:
+    strings.emit 'movdq2q_instruction | 23149'
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
     jmp movq2dq_
     ret
 
 movq2dq_instruction:
+    strings.emit 'movq2dq_instruction | 23156'
     mov [opcode_prefix],0F3h
     mov [mmx_size],16
 
@@ -23151,6 +23188,7 @@ movq2dq_instruction:
     ret
 
 sse_ps_instruction_imm8:
+    strings.emit 'sse_ps_instruction_imm8 | 23190'
     mov [immediate_size],1
 
     sse_ps_instruction:
@@ -23159,6 +23197,7 @@ sse_ps_instruction_imm8:
     ret
 
 sse_pd_instruction_imm8:
+    strings.emit 'sse_pd_instruction_imm8 | 23199'
     mov [immediate_size],1
 
     sse_pd_instruction:
@@ -23168,18 +23207,21 @@ sse_pd_instruction_imm8:
     ret
 
 sse_ss_instruction:
+    strings.emit 'sse_ss_instruction | 23209'
     mov [mmx_size],4
     mov [opcode_prefix],0F3h
     jmp sse_instruction
     ret
 
 sse_sd_instruction:
+    strings.emit 'sse_sd_instruction | 23216'
     mov [mmx_size],8
     mov [opcode_prefix],0F2h
     jmp sse_instruction
     ret
 
 cmp_pd_instruction:
+    strings.emit 'cmp_pd_instruction | 23223'
     mov [opcode_prefix],66h
 
     cmp_ps_instruction:
@@ -23190,12 +23232,14 @@ cmp_pd_instruction:
     ret
 
 cmp_ss_instruction:
+    strings.emit 'cmp_ss_instruction | 23234'
     mov [mmx_size],4
     mov [opcode_prefix],0F3h
     jmp cmp_sx_instruction
     ret
 
 cmpsd_instruction:
+    strings.emit 'cmpsd_instruction | 23241'
     mov al,0A7h
     mov ah,[esi]
     or ah,ah
@@ -23214,17 +23258,20 @@ cmpsd_instruction:
     ret
 
 comiss_instruction:
+    strings.emit 'comiss_instruction | 23260'
     mov [mmx_size],4
     jmp sse_instruction
     ret
 
 comisd_instruction:
+    strings.emit 'comisd_instruction | 23266'
     mov [mmx_size],8
     mov [opcode_prefix],66h
     jmp sse_instruction
     ret
 
 cvtdq2pd_instruction:
+    strings.emit 'comisd_instruction | 23274'
     mov [opcode_prefix],0F3h
 
     cvtps2pd_instruction:
@@ -23233,12 +23280,14 @@ cvtdq2pd_instruction:
     ret
 
 cvtpd2dq_instruction:
+    strings.emit 'cvtpd2dq_instruction | 23282'
     mov [mmx_size],16
     mov [opcode_prefix],0F2h
     jmp sse_instruction
     ret
 
 movshdup_instruction:
+    strings.emit 'movshdup_instruction | 23289'
     mov [mmx_size],16
     mov [opcode_prefix],0F3h
 
@@ -23293,6 +23342,7 @@ movshdup_instruction:
     ret
 
 sse_cmp_mem_ok:
+    strings.emit 'sse_cmp_mem_ok | 23344'
     cmp u8 [value],-1
     je mmx_imm8
     call store_instruction_with_imm8
@@ -23300,6 +23350,7 @@ sse_cmp_mem_ok:
     ret
 
 sse_xmmreg_xmmreg:
+    strings.emit 'sse_xmmreg_xmmreg | 23353'
     cmp [operand_prefix],66h
     jne sse_xmmreg_xmmreg_ok
     cmp [extended_code],12h
@@ -23329,6 +23380,7 @@ sse_xmmreg_xmmreg:
     ret
 
 sse_cmp_nomem_ok:
+    strings.emit 'sse_cmp_nomem_ok | 23382'
     cmp u8 [value],-1
     je mmx_nomem_imm8
     call store_nomem_instruction
@@ -23338,6 +23390,7 @@ sse_cmp_nomem_ok:
     ret
 
 take_additional_xmm0:
+    strings.emit 'sse_cmp_nomem_ok | 23392'
     cmp u8 [esi],','
     ;jne additional_xmm0_ok
     jne return_ok
@@ -23352,6 +23405,7 @@ take_additional_xmm0:
     ret
 
 pslldq_instruction:
+    strings.emit 'pslldq_instruction | 23407'
     mov [postbyte_register],al
     mov [opcode_prefix],66h
     mov [base_code],0Fh
@@ -23367,6 +23421,7 @@ pslldq_instruction:
     ret
 
 movpd_instruction:
+    strings.emit 'movpd_instruction | 23423'
     mov [opcode_prefix],66h
 
     movps_instruction:
@@ -23377,12 +23432,14 @@ movpd_instruction:
     ret
 
 movss_instruction:
+    strings.emit 'movss_instruction | 23434'
     mov [mmx_size],4
     mov [opcode_prefix],0F3h
     jmp sse_movs
     ret
 
 movsd_instruction:
+    strings.emit 'movsd_instruction | 23441'
     mov al,0A5h
     mov ah,[esi]
     or ah,ah
@@ -23399,6 +23456,7 @@ movsd_instruction:
     ret
 
 sse_mov_instruction:
+    strings.emit 'sse_mov_instruction | 23458'
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
@@ -23431,6 +23489,7 @@ sse_mov_instruction:
     ret
 
 movlpd_instruction:
+    strings.emit 'movlpd_instruction | 23491'
     mov [opcode_prefix],66h
 
     movlps_instruction:
@@ -23454,6 +23513,7 @@ movlpd_instruction:
     ret
 
 movhlps_instruction:
+    strings.emit 'movhlps_instruction | 23515'
     mov [base_code],0Fh
     mov [extended_code],al
     mov [mmx_size],0
@@ -23475,11 +23535,13 @@ movhlps_instruction:
     ret
 
 maskmovq_instruction:
+    strings.emit 'maskmovq_instruction | 23537'
     mov cl,8
     jmp maskmov_instruction
     ret
 
 maskmovdqu_instruction:
+    strings.emit 'maskmovdqu_instruction | 23543'
     mov cl,16
     mov [opcode_prefix],66h
 
@@ -23509,6 +23571,7 @@ maskmovdqu_instruction:
     ret
 
 movmskpd_instruction:
+    strings.emit 'movmskpd_instruction | 23573'
     mov [opcode_prefix],66h
     movmskps_instruction:
     mov [base_code],0Fh
@@ -23535,6 +23598,7 @@ movmskpd_instruction:
     ret
 
 cvtpi2pd_instruction:
+    strings.emit 'cvtpi2pd_instruction | 23600'
     mov [opcode_prefix],66h
 
     cvtpi2ps_instruction:
@@ -23567,6 +23631,7 @@ cvtpi2pd_instruction:
     ret
 
 cvtpi_xmmreg_xmmreg:
+    strings.emit 'cvtpi_xmmreg_xmmreg | 23634'
     lods u8 [esi]
     call convert_mmx_register
     cmp ah,8
@@ -23576,11 +23641,13 @@ cvtpi_xmmreg_xmmreg:
     ret
 
 cvtsi2ss_instruction:
+    strings.emit 'cvtsi2ss_instruction | 23643'
     mov [opcode_prefix],0F3h
     jmp cvtsi_instruction
     ret
 
 cvtsi2sd_instruction:
+    strings.emit 'cvtsi2sd_instruction | 23649'
     mov [opcode_prefix],0F2h
 
     cvtsi_instruction:
@@ -23619,6 +23686,7 @@ cvtsi2sd_instruction:
     ret
 
 cvtsi_xmmreg_reg:
+    strings.emit 'cvtsi_xmmreg_reg | 23688'
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -23633,11 +23701,13 @@ cvtsi_xmmreg_reg:
     ret
 
 cvtps2pi_instruction:
+    strings.emit 'cvtps2pi_instruction | 23703'
     mov [mmx_size],8
     jmp cvtpd_instruction
     ret
 
 cvtpd2pi_instruction:
+    strings.emit 'cvtpd2pi_instruction | 23709'
     mov [opcode_prefix],66h
     mov [mmx_size],16
 
@@ -23657,12 +23727,14 @@ cvtpd2pi_instruction:
     ret
 
 cvtss2si_instruction:
+    strings.emit 'cvtss2si_instruction | 23729'
     mov [opcode_prefix],0F3h
     mov [mmx_size],4
     jmp cvt2si_instruction
     ret
 
 cvtsd2si_instruction:
+    strings.emit 'cvtsd2si_instruction | 23736'
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
 
@@ -23680,6 +23752,7 @@ cvtsd2si_instruction:
     ret
 
 ssse3_instruction:
+    strings.emit 'ssse3_instruction | 23754'
     mov [base_code],0Fh
     mov [extended_code],38h
     mov [supplemental_code],al
@@ -23687,6 +23760,7 @@ ssse3_instruction:
     ret
 
 palignr_instruction:
+    strings.emit 'palignr_instruction | 23762'
     mov [base_code],0Fh
     mov [extended_code],3Ah
     mov [supplemental_code],0Fh
@@ -23712,6 +23786,7 @@ palignr_instruction:
     ret
 
 palignr_mmreg_mmreg:
+    strings.emit 'palignr_mmreg_mmreg | 23788'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -23719,6 +23794,7 @@ palignr_mmreg_mmreg:
     ret
 
 amd3dnow_instruction:
+    strings.emit 'amd3dnow_instruction | 23796'
     mov [base_code],0Fh
     mov [extended_code],0Fh
     mov u8 [value],al
@@ -23746,6 +23822,7 @@ amd3dnow_instruction:
     ret
 
 amd3dnow_mmreg_mmreg:
+    strings.emit 'amd3dnow_mmreg_mmreg | 23824'
     lods u8 [esi]
     call convert_mmx_register
     cmp ah,8
@@ -23758,11 +23835,13 @@ amd3dnow_mmreg_mmreg:
     ret
 
 sse4_instruction_38_xmm0:
+    strings.emit 'sse4_instruction_38_xmm0 | 23838'
     mov [immediate_size],-1
     jmp sse4_instruction_38
     ret
 
 sse4_instruction_66_38_xmm0:
+    strings.emit 'sse4_instruction_66_38_xmm0 | 23843'
     mov [immediate_size],-1
 
     sse4_instruction_66_38:
@@ -23776,18 +23855,21 @@ sse4_instruction_66_38_xmm0:
     ret
 
 sse4_ss_instruction_66_3a_imm8:
+    strings.emit 'sse4_ss_instruction_66_3a_imm8 | 23857'
     mov [immediate_size],1
     mov cl,4
     jmp sse4_instruction_66_3a_setup
     ret
 
 sse4_sd_instruction_66_3a_imm8:
+    strings.emit 'sse4_sd_instruction_66_3a_imm8 | 23864'
     mov [immediate_size],1
     mov cl,8
     jmp sse4_instruction_66_3a_setup
     ret
 
 sse4_instruction_66_3a_imm8:
+    strings.emit 'sse4_instruction_66_3a_imm8 | 23871'
     mov [immediate_size],1
     mov cl,16
 
@@ -23802,12 +23884,14 @@ sse4_instruction_66_3a_imm8:
     ret
 
 sse4_instruction_3a_imm8:
+    strings.emit 'sse4_instruction_3a_imm8 | 23886'
     mov [immediate_size],1
     mov cl,16
     jmp sse4_instruction_3a_setup
     ret
 
 pclmulqdq_instruction:
+    strings.emit 'pclmulqdq_instruction | 23894'
     mov u8 [value],al
     mov al,44h
     mov cl,16
@@ -23815,6 +23899,7 @@ pclmulqdq_instruction:
     ret
 
 extractps_instruction:
+    strings.emit 'extractps_instruction | 23902'
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
@@ -23846,6 +23931,7 @@ extractps_instruction:
     ret
 
 extractps_reg:
+    strings.emit 'extractps_reg | 23934'
     lods u8 [esi]
     call convert_register
     push _eax
@@ -23872,6 +23958,7 @@ extractps_reg:
     ret
 
 setup_66_0f_3a:
+    strings.emit 'setup_66_0f_3a | 23960'
     mov [extended_code],3Ah
     mov [supplemental_code],al
     mov [base_code],0Fh
@@ -23879,6 +23966,7 @@ setup_66_0f_3a:
     ret
 
 insertps_instruction:
+    strings.emit 'insertps_instruction | 23968'
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
@@ -23908,6 +23996,7 @@ insertps_instruction:
     ret
 
 insertps_xmmreg_reg:
+    strings.emit 'insertps_xmmreg_reg | 23998'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -23915,21 +24004,25 @@ insertps_xmmreg_reg:
     ret
 
 pextrq_instruction:
+    strings.emit 'pextrq_instruction | 24006'
     mov [mmx_size],8
     jmp pextr_instruction
     ret
 
 pextrd_instruction:
+    strings.emit 'pextrd_instruction | 24012'
     mov [mmx_size],4
     jmp pextr_instruction
     ret
 
 pextrw_instruction:
+    strings.emit 'pextrw_instruction | 24018'
     mov [mmx_size],2
     jmp pextr_instruction
     ret
 
 pextrb_instruction:
+    strings.emit 'pextrb_instruction | 24024'
     mov [mmx_size],1
 
     pextr_instruction:
@@ -23970,6 +24063,7 @@ pextrb_instruction:
     ret
 
 pextr_reg:
+    strings.emit 'pextr_reg | 24065'
     lods u8 [esi]
     call convert_register
     cmp [mmx_size],4
@@ -23986,6 +24080,7 @@ pextr_reg:
     ret
 
 pextrq_reg:
+    strings.emit 'pextrq_reg | 24082'
     cmp ah,8
     jne pextr_invalid_size
     call operand_64bit
@@ -24015,6 +24110,7 @@ pextrq_reg:
     ret
 
 pextr_reg_store:
+    strings.emit 'pextr_reg_store | 24112'
     cmp bh,16
     jne invalid_operand_size
     xchg bl,[postbyte_register]
@@ -24022,16 +24118,19 @@ pextr_reg_store:
     ret
 
 pinsrb_instruction:
+    strings.emit 'pinsrb_instruction | 24120'
     mov [mmx_size],1
     jmp pinsr_instruction
     ret
 
 pinsrd_instruction:
+    strings.emit 'pinsrd_instruction | 24126'
     mov [mmx_size],4
     jmp pinsr_instruction
     ret
 
 pinsrq_instruction:
+    strings.emit 'pinsrq_instruction | 24132'
     mov [mmx_size],8
     call operand_64bit
 
@@ -24066,6 +24165,7 @@ pinsrq_instruction:
     ret
 
 pinsr_xmmreg_reg:
+    strings.emit 'pinsr_xmmreg_reg | 24167'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -24077,37 +24177,44 @@ pinsr_xmmreg_reg:
     ret
 
 pinsrq_xmmreg_reg:
+    strings.emit 'pinsrq_xmmreg_reg | 24179'
     cmp ah,8
     je mmx_nomem_imm8
     jmp invalid_operand_size
     ret
 
 pmovsxbw_instruction:
+    strings.emit 'pmovsxbw_instruction | 24186'
     mov [mmx_size],8
     jmp pmovsx_instruction
     ret
 
 pmovsxbd_instruction:
+    strings.emit 'pmovsxbd_instruction | 24192'
     mov [mmx_size],4
     jmp pmovsx_instruction
     ret
 
 pmovsxbq_instruction:
+    strings.emit 'pmovsxbq_instruction | 24198'
     mov [mmx_size],2
     jmp pmovsx_instruction
     ret
 
 pmovsxwd_instruction:
+    strings.emit 'pmovsxwd_instruction | 24205'
     mov [mmx_size],8
     jmp pmovsx_instruction
     ret
 
 pmovsxwq_instruction:
+    strings.emit 'pmovsxwq_instruction | 24205'
     mov [mmx_size],4
     jmp pmovsx_instruction
     ret
 
 pmovsxdq_instruction:
+    strings.emit 'pmovsxwq_instruction | 24216'
     mov [mmx_size],8
 
     pmovsx_instruction:
@@ -24139,6 +24246,7 @@ pmovsxdq_instruction:
     ret
 
 pmovsx_xmmreg_reg:
+    strings.emit 'pmovsx_xmmreg_reg | 24248'
     lods u8 [esi]
     call convert_xmm_register
     mov bl,al
@@ -24146,6 +24254,7 @@ pmovsx_xmmreg_reg:
     ret
 
 setup_66_0f_38:
+    strings.emit 'setup_66_0f_38 | 24256'
     mov [extended_code],38h
     mov [supplemental_code],al
     mov [base_code],0Fh
@@ -24153,6 +24262,7 @@ setup_66_0f_38:
     ret
 
 xsaves_instruction_64bit:
+    strings.emit 'xsaves_instruction_64bit | 24264'
     call operand_64bit
 
     xsaves_instruction:
@@ -24161,6 +24271,7 @@ xsaves_instruction_64bit:
     ret
 
 fxsave_instruction_64bit:
+    strings.emit 'fxsave_instruction_64bit | 24273'
     call operand_64bit
 
     fxsave_instruction:
@@ -24188,18 +24299,21 @@ fxsave_instruction_64bit:
     ret
 
 clflush_instruction:
+    strings.emit 'clflush_instruction | 24301'
     mov ah,0AEh
     mov cl,1
     jmp xsave_common
     ret
 
 stmxcsr_instruction:
+    strings.emit 'stmxcsr_instruction | 24308'
     mov ah,0AEh
     mov cl,4
     jmp xsave_common
     ret
 
 prefetch_instruction:
+    strings.emit 'prefetch_instruction | 24315'
     mov [extended_code],18h
 
     prefetch_mem_8bit:
@@ -24215,22 +24329,26 @@ prefetch_instruction:
     jne invalid_operand_size
 
 prefetch_size_ok:
+    strings.emit 'prefetch_size_ok | 24331'
     call get_address
     jmp instruction_ready
     ret
 
 amd_prefetch_instruction:
+    strings.emit 'amd_prefetch_instruction | 24337'
     mov [extended_code],0Dh
     jmp prefetch_mem_8bit
     ret
 
 clflushopt_instruction:
+    strings.emit 'clflushopt_instruction | 24343'
     mov [extended_code],0AEh
     mov [opcode_prefix],66h
     jmp prefetch_mem_8bit
     ret
 
 pcommit_instruction:
+    strings.emit 'pcommit_instruction | 24350'
     mov u8 [edi],66h
     inc edi
 
@@ -24244,17 +24362,20 @@ pcommit_instruction:
     ret
 
 pause_instruction:
+    strings.emit 'pause_instruction | 24364'
     mov ax,90F3h
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 movntq_instruction:
+    strings.emit 'movntq_instruction | 24371'
     mov [mmx_size],8
     jmp movnt_instruction
     ret
 
 movntpd_instruction:
+    strings.emit 'movntpd_instruction | 24377'
     mov [opcode_prefix],66h
 
     movntps_instruction:
@@ -24284,12 +24405,14 @@ movntpd_instruction:
     ret
 
 movntsd_instruction:
+    strings.emit 'movntsd_instruction | 24407'
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
     jmp movnts_instruction
     ret
 
 movntss_instruction:
+    strings.emit 'movntss_instruction | 24414'
     mov [opcode_prefix],0F3h
     mov [mmx_size],4
 
@@ -24323,6 +24446,7 @@ movntss_instruction:
     ret
 
 movnti_instruction:
+    strings.emit 'movnti_instruction | 24448'
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -24346,6 +24470,7 @@ movnti_instruction:
     ret
 
 monitor_instruction:
+    strings.emit 'monitor_instruction | 24472'
     mov [postbyte_register],al
     cmp u8 [esi],0
     je monitor_instruction_store
@@ -24378,6 +24503,7 @@ monitor_instruction:
     ret
 
 movntdqa_instruction:
+    strings.emit 'movntdqa_instruction | 24505'
     call setup_66_0f_38
     lods u8 [esi]
     call get_size_operator
@@ -24398,6 +24524,7 @@ movntdqa_instruction:
     ret
 
 extrq_instruction:
+    strings.emit 'extrq_instruction | 24526'
     mov [opcode_prefix],66h
     mov [base_code],0Fh
     mov [extended_code],78h
@@ -24430,6 +24557,7 @@ extrq_instruction:
     ret
 
 extrq_xmmreg_xmmreg:
+    strings.emit 'extrq_xmmreg_xmmreg | 24559'
     inc [extended_code]
     lods u8 [esi]
     call convert_xmm_register
@@ -24438,6 +24566,7 @@ extrq_xmmreg_xmmreg:
     ret
 
 insertq_instruction:
+    strings.emit 'insertq_instruction | 24568'
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
     mov [extended_code],78h
@@ -24466,6 +24595,7 @@ insertq_instruction:
     ret
 
 insertq_with_imm:
+    strings.emit 'insertq_with_imm | 24597'
     call store_nomem_instruction
     call append_imm8
     call append_imm8
@@ -24473,6 +24603,7 @@ insertq_with_imm:
     ret
 
 crc32_instruction:
+    strings.emit 'crc32_instruction | 24605'
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
     mov [extended_code],38h
@@ -24511,11 +24642,13 @@ crc32_instruction:
     ret
 
 crc32_unknown_size:
+    strings.emit 'crc32_unknown_size | 24644'
     call recoverable_unknown_size
     jmp crc32_reg_mem_store
     ret
 
 crc32_reg_reg:
+    strings.emit 'crc32_reg_reg | 24650'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -24530,11 +24663,13 @@ crc32_reg_reg:
     ret
 
 popcnt_instruction:
+    strings.emit 'popcnt_instruction | 24665'
     mov [opcode_prefix],0F3h
     jmp bs_instruction
     ret
 
 movbe_instruction:
+    strings.emit 'movbe_instruction | 24671'
     mov [supplemental_code],al
     mov [extended_code],38h
     mov [base_code],0Fh
@@ -24561,6 +24696,7 @@ movbe_instruction:
     ret
 
 movbe_mem:
+    strings.emit 'movbe_mem | 24698'
     inc [supplemental_code]
     call get_address
     push _edx _ebx _ecx
@@ -24592,6 +24728,7 @@ adx_instruction:
     ret
 
 adx_reg_reg:
+    strings.emit 'adx_reg_reg | 24730'
     cmp ah,4
     je nomem_instruction_ready
     cmp ah,8
@@ -24601,6 +24738,7 @@ adx_reg_reg:
     ret
 
 rdpid_instruction:
+    strings.emit 'rdpid_instruction | 24740'
     mov [postbyte_register],al
     mov [extended_code],0C7h
     mov [base_code],0Fh
@@ -24614,17 +24752,20 @@ rdpid_instruction:
     ret
 
 rdpid_64bit:
+    strings.emit 'rdpid_64bit | 24754'
     cmp ah,8
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
 vmclear_instruction:
+    strings.emit 'vmclear_instruction | 24761'
     mov [opcode_prefix],66h
     jmp vmx_instruction
     ret
 
 vmxon_instruction:
+    strings.emit 'vmxon_instruction | 24767'
     mov [opcode_prefix],0F3h
 
     vmx_instruction:
@@ -24647,6 +24788,7 @@ vmxon_instruction:
     ret
 
 vmread_instruction:
+    strings.emit 'vmread_instruction | 24790'
     mov [extended_code],78h
     lods u8 [esi]
     call get_size_operator
@@ -24665,6 +24807,7 @@ vmread_instruction:
     ret
 
 vmread_nomem:
+    strings.emit 'vmread_nomem | 24809'
     lods u8 [esi]
     call convert_register
     push _eax
@@ -24681,6 +24824,7 @@ vmread_nomem:
     ret
 
 vmread_check_size:
+    strings.emit 'vmread_check_size | 24826'
     cmp [code_type],64
     je vmread_long
     cmp [operand_size],4
@@ -24688,11 +24832,13 @@ vmread_check_size:
     ret
 
 vmread_long:
+    strings.emit 'vmread_long | 24834'
     cmp [operand_size],8
     jne invalid_operand_size
     ret
 
 vmwrite_instruction:
+    strings.emit 'vmwrite_instruction | 24840'
     mov [extended_code],79h
     call take_register
     mov [postbyte_register],al
@@ -24711,6 +24857,7 @@ vmwrite_instruction:
     ret
 
 vmwrite_nomem:
+    strings.emit 'vmwrite_nomem | 24859'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -24719,6 +24866,7 @@ vmwrite_nomem:
     ret
 
 vmx_inv_instruction:
+    strings.emit 'vmx_inv_instruction | 24868'
     call setup_66_0f_38
     call take_register
     mov [postbyte_register],al
@@ -24741,6 +24889,7 @@ vmx_inv_instruction:
     ret
 
 simple_svm_instruction:
+    strings.emit 'simple_svm_instruction | 24891'
     push _eax
     mov [base_code],0Fh
     mov [extended_code],1
@@ -24759,6 +24908,7 @@ simple_svm_instruction:
     ret
 
 simple_svm_16bit:
+    strings.emit 'simple_svm_16bit | 24911'
     cmp [code_type],16
     je simple_svm_store
     cmp [code_type],64
@@ -24767,6 +24917,7 @@ simple_svm_16bit:
     ret
 
 simple_svm_32bit:
+    strings.emit 'simple_svm_32bit | 24919'
     cmp [code_type],32
     je simple_svm_store
     prefixed_svm_store:
@@ -24781,6 +24932,7 @@ simple_svm_32bit:
     ret
 
 skinit_instruction:
+    strings.emit 'skinit_instruction | 24934'
     call take_register
     cmp ax,0400h
     jne invalid_operand
@@ -24789,6 +24941,7 @@ skinit_instruction:
     ret
 
 clzero_instruction:
+    strings.emit 'clzero_instruction | 24943'
     call take_register
     or al,al
     jnz invalid_operand
@@ -24801,12 +24954,14 @@ clzero_instruction:
     ret
 
 clzero_64bit:
+    strings.emit 'clzero_64bit | 24956'
     cmp ah,8
     jne invalid_operand
     jmp simple_instruction_0f_01
     ret
 
 invlpga_instruction:
+    strings.emit 'invlpga_instruction | 24963'
     push _eax
     mov [base_code],0Fh
     mov [extended_code],1
@@ -24826,6 +24981,7 @@ invlpga_instruction:
     ret
 
 rdrand_instruction:
+    strings.emit 'rdrand_instruction | 24983'
     mov [base_code],0Fh
     mov [extended_code],0C7h
     mov [postbyte_register],al
@@ -24837,6 +24993,7 @@ rdrand_instruction:
     ret
 
 rdfsbase_instruction:
+    strings.emit 'rdfsbase_instruction | 24995'
     cmp [code_type],64
     jne illegal_instruction
     mov [opcode_prefix],0F3h
@@ -24853,6 +25010,7 @@ rdfsbase_instruction:
     ret
 
 xabort_instruction:
+    strings.emit 'xabort_instruction | 25012'
     lods u8 [esi]
     call get_size_operator
     cmp ah,1
@@ -24869,6 +25027,7 @@ xabort_instruction:
     ret
 
 xbegin_instruction:
+    strings.emit 'xbegin_instruction | 25030'
     lods u8 [esi]
     cmp al,'('
     jne invalid_operand
@@ -24891,11 +25050,13 @@ xbegin_instruction:
     ret
 
 xbegin_32bit:
+    strings.emit 'xbegin_32bit | 25053'
     call get_address_dword_value
     jmp xbegin_address_ok
     ret
 
 xbegin_64bit:
+    strings.emit 'xbegin_64bit | 25058'
     call get_address_qword_value
 
     xbegin_address_ok:
@@ -24917,6 +25078,7 @@ xbegin_64bit:
     ret
 
 xbegin_rel32:
+    strings.emit 'xbegin_rel32 | 25080'
     sub edx,1
     jno xbegin_rel32_ok
     cmp [code_type],64
@@ -24931,11 +25093,13 @@ xbegin_rel32:
     ret
 
 bndcl_instruction:
+    strings.emit 'bndcl_instruction | 25096'
     mov ah,0F3h
     jmp bndc_instruction
     ret
 
 bndcu_instruction:
+    strings.emit 'bndcu_instruction | 25101'
     mov ah,0F2h
 
     bndc_instruction:
@@ -24962,11 +25126,13 @@ bndcu_instruction:
     ret
 
 bndc_mem:
+    strings.emit 'bndc_mem | 25128'
     call get_address_of_required_size
     jmp instruction_ready
     ret
 
 bndmov_instruction:
+    strings.emit 'bndmov_instruction | 25134'
     mov [opcode_prefix],66h
     mov [base_code],0Fh
     mov [extended_code],al
@@ -25007,6 +25173,7 @@ bndmov_reg:
     ret
 
 bndmov_reg_reg:
+    strings.emit 'bndmov_reg_reg | 25175'
     lods u8 [esi]
     call convert_bnd_register
     mov bl,al
@@ -25014,6 +25181,7 @@ bndmov_reg_reg:
     ret
 
 take_bnd_register:
+    strings.emit 'take_bnd_register | 25183'
     lods u8 [esi]
     cmp al,14h
     jne invalid_operand
@@ -25028,6 +25196,7 @@ take_bnd_register:
     ret
 
 bndmk_instruction:
+    strings.emit 'bndmk_instruction | 25198'
     mov [opcode_prefix],0F3h
     mov [base_code],0Fh
     mov [extended_code],al
@@ -25084,6 +25253,7 @@ bndmk_instruction:
     ret
 
 get_bnd_size:
+    strings.emit 'get_bnd_size | 25255'
     mov al,4
     cmp [code_type],64
     jne bnd_size_ok
@@ -25094,6 +25264,7 @@ get_bnd_size:
     ret
 
 get_address_component:
+    strings.emit 'get_address_component | 25266'
     mov [free_address_range],0
     call calculate_address
     mov [address_high],edx
@@ -25109,6 +25280,7 @@ get_address_component:
     ret
 
 bndldx_instruction:
+    strings.emit 'bndldx_instruction | 25282'
     mov [base_code],0Fh
     mov [extended_code],al
     call take_bnd_register
@@ -25121,6 +25293,7 @@ bndldx_instruction:
     ret
 
 bndstx_instruction:
+    strings.emit 'bndstx_instruction | 25295'
     mov [base_code],0Fh
     mov [extended_code],al
     call take_bnd_mib
@@ -25133,6 +25306,7 @@ bndstx_instruction:
     ret
 
 take_bnd_mib:
+    strings.emit 'take_bnd_mib | 25308'
     lods u8 [esi]
     cmp al,'['
     jne invalid_operand
@@ -25179,6 +25353,7 @@ take_bnd_mib:
     ret
 
 take_register:
+    strings.emit 'take_register | 25355'
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
@@ -25211,12 +25386,14 @@ take_register:
     ret
 
 high_byte_register:
+    strings.emit 'high_byte_register | 25388'
     mov ah,1
     or [rex_prefix],10h
     jmp match_register_size
     ret
 
 convert_fpu_register:
+    strings.emit 'convert_fpu_register | 25395'
     mov ah,al
     shr ah,4
     and al,111b
@@ -25226,6 +25403,7 @@ convert_fpu_register:
     ret
 
 convert_mmx_register:
+    strings.emit 'convert_mmx_register | 25405'
     mov ah,al
     shr ah,4
     cmp ah,0Ch
@@ -25239,6 +25417,7 @@ convert_mmx_register:
     ret
 
 xmm_register:
+    strings.emit 'xmm_register | 25419'
     and al,0Fh
     mov ah,16
     cmp al,8
@@ -25249,6 +25428,7 @@ xmm_register:
     ret
 
 convert_xmm_register:
+    strings.emit 'convert_xmm_register | 25430'
     mov ah,al
     shr ah,4
     cmp ah,0Ch
@@ -25257,6 +25437,7 @@ convert_xmm_register:
     ret
 
 get_size_operator:
+    strings.emit 'get_size_operator | 25439'
     xor ah,ah
     cmp al,11h
     jne no_size_operator
@@ -25273,6 +25454,7 @@ get_size_operator:
     ret
 
 no_size_operator:
+    strings.emit 'no_size_operator | 25456'
     mov [size_declared],0
     cmp al,'['
     ;jne size_operator_ok
@@ -25291,6 +25473,7 @@ get_jump_operator:
     ret
 
 get_address:
+    strings.emit 'get_address | 25475'
     and [address_size],0
 
     get_address_of_required_size:
@@ -25334,6 +25517,7 @@ get_address:
     ret
 
 get_address_prefixes:
+    strings.emit 'get_address_prefixes | 25519'
     and [segment_register],0
     and [address_size_declared],0
     mov al,[code_type]
@@ -25367,6 +25551,7 @@ get_address_prefixes:
     ret
 
 operand_16bit:
+    strings.emit 'operand_16bit | 25553'
     cmp [code_type],16
     ;je size_prefix_ok
     je return_ok
@@ -25374,6 +25559,7 @@ operand_16bit:
     ret
 
 operand_32bit:
+    strings.emit 'operand_32bit | 25561'
     cmp [code_type],16
     ;jne size_prefix_ok
     jne return_ok
@@ -25381,12 +25567,14 @@ operand_32bit:
     ret
 
 operand_64bit:
+    strings.emit 'operand_64bit | 25569'
     cmp [code_type],64
     jne illegal_instruction
     or [rex_prefix],48h
     ret
 
 operand_autodetect:
+    strings.emit 'operand_autodetect | 25575'
     cmp al,2
     je operand_16bit
     cmp al,4
@@ -25397,6 +25585,7 @@ operand_autodetect:
     ret
 
 store_segment_prefix_if_necessary:
+    strings.emit 'store_segment_prefix_if_necessary | 25587'
     mov al,[segment_register]
     or al,al
     ;jz segment_prefix_ok
@@ -25420,6 +25609,7 @@ store_segment_prefix_if_necessary:
     ret
 
 ss_prefix:
+    strings.emit 'ss_prefix | 25611'
     cmp bl,25h
     ;je segment_prefix_ok
     je return_ok
@@ -25436,6 +25626,7 @@ ss_prefix:
     ret
 
 store_segment_prefix:
+    strings.emit 'store_segment_prefix | 25628'
     mov al,[segment_register]
     or al,al
     ;jz segment_prefix_ok
@@ -25451,11 +25642,13 @@ store_segment_prefix:
     ret
 
 segment_prefix_386:
+    strings.emit 'segment_prefix_386 | 25644'
     add al,64h-5
     stos u8 [edi]
     ret
 
 store_instruction_code:
+    strings.emit 'store_instruction_code | 25650'
     cmp [vex_required],0
     jne store_vex_instruction_code
 
@@ -25498,11 +25691,13 @@ store_instruction_code:
     ret
 
 store_supplemental_code:
+    strings.emit 'store_supplemental_code | 25693'
     mov al,[supplemental_code]
     stos u8 [edi]
     ret
 
 store_nomem_instruction:
+    strings.emit 'store_nomem_instruction | 25699'
     test [postbyte_register],10000b
     jz nomem_reg_high_code_ok
     or [vex_required],10h
@@ -25537,6 +25732,7 @@ store_nomem_instruction:
     ret
 
 store_instruction:
+    strings.emit 'store_instruction | 25734'
     mov u64[current_offset],_edi
     and [displacement_compression],0
     test [postbyte_register],10000b
@@ -25622,36 +25818,43 @@ store_instruction:
     ret
 
 address_bx_di:
+    strings.emit 'address_bx_di | 25820'
     mov al,1
     jmp postbyte_16bit
     ret
 
 address_bp_si:
+    strings.emit 'address_bp_si | 25827'
     mov al,10b
     jmp postbyte_16bit
     ret
 
 address_bp_di:
+    strings.emit 'address_bp_di | 25833'
     mov al,11b
     jmp postbyte_16bit
     ret
 
 address_si:
+    strings.emit 'address_si | 25838'
     mov al,100b
     jmp postbyte_16bit
     ret
 
 address_di:
+    strings.emit 'address_di | 25844'
     mov al,101b
     jmp postbyte_16bit
     ret
 
 address_bx:
+    strings.emit 'address_bx | 25850'
     mov al,111b
     jmp postbyte_16bit
     ret
 
 address_bp:
+    strings.emit 'address_bp | 25856'
     mov al,110b
 
     postbyte_16bit:
@@ -25684,6 +25887,7 @@ address_bp:
     ret
 
 address_8bit_value:
+    strings.emit 'address_8bit_value | 25889'
     or al,01000000b
     mov cl,[postbyte_register]
     shl cl,3
@@ -25694,6 +25898,7 @@ address_8bit_value:
     ret
 
 address:
+    strings.emit 'address | 25900'
     cmp al,110b
     je address_8bit_value
     mov cl,[postbyte_register]
@@ -25703,6 +25908,7 @@ address:
     ret
 
 address_vsib:
+    strings.emit 'address_vsib | 25910'
     mov al,bl
     shr al,4
     test al,1
@@ -25733,6 +25939,7 @@ address_vsib:
     ret
 
 postbyte_64bit:
+    strings.emit 'postbyte_64bit | 25942'
     cmp [code_type],64
     jne invalid_address_size
 
@@ -25771,11 +25978,13 @@ postbyte_64bit:
     ret
 
 scale_2:
+    strings.emit 'scale_2 | 25980'
     or ah,10000000b
     jmp scale_ok
     ret
 
 scale_1:
+    strings.emit 'scale_1 | 25986'
     or ah,01000000b
 
     scale_ok:
@@ -25816,6 +26025,7 @@ scale_1:
     ret
 
 sib_address_8bit_value:
+    strings.emit 'sib_address_8bit_value | 26027'
     or al,01000000b
     mov cl,[postbyte_register]
     shl cl,3
@@ -25826,6 +26036,7 @@ sib_address_8bit_value:
     ret
 
 sib_address:
+    strings.emit 'sib_address | 26038'
     mov cl,[postbyte_register]
     shl cl,3
     or al,cl
@@ -25833,6 +26044,7 @@ sib_address:
     ret
 
 only_index_register:
+    strings.emit 'only_index_register | 26046'
     or ah,101b
     and bl,111b
     shl bl,3
@@ -25852,12 +26064,14 @@ only_index_register:
     ret
 
 zero_index_register:
+    strings.emit 'zero_index_register | 26066'
     mov bl,4
     mov cl,1
     jmp base_and_index
     ret
 
 only_base_register:
+    strings.emit 'zonly_base_register | 26073'
     mov al,bh
     and al,111b
     cmp al,4
@@ -25886,6 +26100,7 @@ only_base_register:
     ret
 
 simple_address_8bit_value:
+    strings.emit 'simple_address_8bit_value | 26102'
     or al,01000000b
     mov cl,[postbyte_register]
     shl cl,3
@@ -25896,6 +26111,7 @@ simple_address_8bit_value:
     ret
 
 simple_address:
+    strings.emit 'simple_address | 26113'
     cmp al,5
     je simple_address_8bit_value
     mov cl,[postbyte_register]
@@ -25905,6 +26121,7 @@ simple_address:
     ret
 
 address_immediate:
+    strings.emit 'address_immediate | 26123'
     cmp [code_type],64
     je address_immediate_sib
     test ch,44h or 88h
@@ -25950,6 +26167,7 @@ address_immediate:
     ret
 
 store_address_64bit_value:
+    strings.emit 'store_address_64bit_value | 26169'
     test ch,0F0h
     jz address_64bit_relocation_ok
     mov eax,ecx
@@ -25969,6 +26187,7 @@ store_address_64bit_value:
     ret
 
 address_immediate_sib:
+    strings.emit 'address_immediate_sib | 26189'
     test ch,44h
     jnz address_immediate_sib_32bit
     test ch,not 88h
@@ -25990,6 +26209,7 @@ address_immediate_sib:
     ret
 
 address_immediate_sib_32bit:
+    strings.emit 'address_immediate_sib_32bit | 26211'
     test ecx,0FF0000h
     jnz address_immediate_sib_nosignextend
     test edx,80000000h
@@ -26001,6 +26221,7 @@ address_immediate_sib_32bit:
     ret
 
 address_eip_based:
+    strings.emit 'address_eip_based | 26223'
     mov al,67h
     stos u8 [edi]
 
@@ -26012,6 +26233,7 @@ address_eip_based:
     ret
 
 address_relative:
+    strings.emit 'address_relative | 26235'
     call store_instruction_code
     movzx eax,[immediate_size]
     add eax,edi
@@ -26039,6 +26261,7 @@ address_relative:
     ret
 
 addressing_16bit:
+    strings.emit 'addressing_16bit | 26263'
     cmp edx,10000h
     jge address_immediate_32bit
     cmp edx,-8000h
@@ -26062,6 +26285,7 @@ addressing_16bit:
     ret
 
 address_16bit_prefix:
+    strings.emit 'address_16bit_prefix | 26287'
     cmp [code_type],16
     ;je instruction_prefix_ok
     je return_ok
@@ -26070,6 +26294,7 @@ address_16bit_prefix:
     ret
 
 address_32bit_prefix:
+    strings.emit 'address_32bit_prefix | 26296'
     cmp [code_type],32
     ;je instruction_prefix_ok
     je return_ok
@@ -26078,6 +26303,7 @@ address_32bit_prefix:
     ret
 
 store_instruction_with_imm8:
+    strings.emit 'store_instruction_with_imm8 | 26305'
     mov [immediate_size],1
     call store_instruction
     mov al, u8 [value]
@@ -26085,6 +26311,7 @@ store_instruction_with_imm8:
     ret
 
 store_instruction_with_imm16:
+    strings.emit 'store_instruction_with_imm16 | 26313'
     mov [immediate_size],2
     call store_instruction
     mov ax, u16 [value]
@@ -26093,6 +26320,7 @@ store_instruction_with_imm16:
     ret
 
 store_instruction_with_imm32:
+    strings.emit 'store_instruction_with_imm32 | 26322'
     mov [immediate_size],4
     call store_instruction
     mov eax,dword [value]
@@ -26101,6 +26329,7 @@ store_instruction_with_imm32:
     ret
 
 avx_single_source_pd_instruction_er_evex:
+    strings.emit 'avx_single_source_pd_instruction_er_evex | 26331'
     or [vex_required],8
 
     avx_single_source_pd_instruction_er:
@@ -26109,17 +26338,20 @@ avx_single_source_pd_instruction_er_evex:
     ret
 
 avx_single_source_pd_instruction_sae_evex:
+    strings.emit 'avx_single_source_pd_instruction_sae_evex | 26340'
     or [vex_required],8
     or [operand_flags],2+4
     jmp avx_pd_instruction
     ret
 
 avx_pd_instruction_imm8:
+    strings.emit 'avx_pd_instruction_imm8 | 26347'
     mov [immediate_size],1
     jmp avx_pd_instruction
     ret
 
 avx_pd_instruction_er:
+    strings.emit 'avx_pd_instruction_er | 26353'
     or [operand_flags],8
 
     avx_pd_instruction_sae:
@@ -26133,6 +26365,7 @@ avx_pd_instruction_er:
     ret
 
 avx_pd_instruction_38_evex:
+    strings.emit 'avx_pd_instruction_38_evex | 26367'
     or [vex_required],8
     mov [supplemental_code],al
     mov al,38h
@@ -26140,11 +26373,13 @@ avx_pd_instruction_38_evex:
     ret
 
 avx_cvtps2dq_instruction:
+    strings.emit 'avx_cvtps2dq_instruction | 26375'
     mov [opcode_prefix],66h
     jmp avx_single_source_ps_instruction_er
     ret
 
 avx_cvtudq2ps_instruction:
+    strings.emit 'avx_cvtudq2ps_instruction | 26381'
     mov [opcode_prefix],0F2h
 
     avx_single_source_ps_instruction_er_evex:
@@ -26156,28 +26391,33 @@ avx_cvtudq2ps_instruction:
     ret
 
 avx_single_source_ps_instruction_noevex:
+    strings.emit 'avx_single_source_ps_instruction_noevex | 26393'
     or [operand_flags],2
     or [vex_required],2
     jmp avx_ps_instruction
     ret
 
 avx_ps_instruction_imm8:
+    strings.emit 'avx_ps_instruction_imm8 | 26400'
     mov [immediate_size],1
     jmp avx_ps_instruction
     ret
 
 avx_ps_instruction_er:
+    strings.emit 'avx_ps_instruction_er | 26406'
     or [operand_flags],8
 
     avx_ps_instruction_sae:
     or [operand_flags],4
 
 avx_ps_instruction:
+    strings.emit 'avx_ps_instruction | 26413'
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
 avx_ps_instruction_66_38_evex:
+    strings.emit 'avx_ps_instruction_66_38_evex | 26419'
     or [vex_required],8
     mov [opcode_prefix],66h
     mov [supplemental_code],al
@@ -26186,6 +26426,7 @@ avx_ps_instruction_66_38_evex:
     ret
 
 avx_sd_instruction_er:
+    strings.emit 'avx_sd_instruction_er | 26428'
     or [operand_flags],8
 
     avx_sd_instruction_sae:
@@ -26199,6 +26440,7 @@ avx_sd_instruction_er:
     ret
 
 avx_ss_instruction_er:
+    strings.emit 'avx_ss_instruction_er | 26442'
     or [operand_flags],8
 
     avx_ss_instruction_sae:
@@ -26211,11 +26453,13 @@ avx_ss_instruction_er:
     ret
 
 avx_ss_instruction_noevex:
+    strings.emit 'avx_ss_instruction_noevex | 26455'
     or [vex_required],2
     jmp avx_ss_instruction
     ret
 
 avx_single_source_q_instruction_38_evex:
+    strings.emit 'avx_single_source_q_instruction_38_evex | 26461'
     or [operand_flags],2
 
     avx_q_instruction_38_evex:
@@ -26227,7 +26471,8 @@ avx_single_source_q_instruction_38_evex:
     jmp avx_q_instruction
     ret
 
-    avx_q_instruction_38_w1_evex:
+avx_q_instruction_38_w1_evex:
+    strings.emit 'avx_q_instruction_38_w1_evex | 26474'
     or [vex_required],8
 
     avx_q_instruction_38_w1:
@@ -26236,6 +26481,7 @@ avx_single_source_q_instruction_38_evex:
     ret
 
 avx_q_instruction_3a_imm8_evex:
+    strings.emit 'avx_q_instruction_3a_imm8_evex | 26483'
     mov [immediate_size],1
     or [vex_required],8
     mov [supplemental_code],al
@@ -26253,6 +26499,7 @@ avx_q_instruction_evex:
     ret
 
 avx_single_source_d_instruction_38_evex:
+    strings.emit 'avx_single_source_d_instruction_38_evex | 26501'
     or [vex_required],8
 
     avx_single_source_d_instruction_38:
@@ -26261,6 +26508,7 @@ avx_single_source_d_instruction_38_evex:
     ret
 
 avx_d_instruction_38_evex:
+    strings.emit 'avx_d_instruction_38_evex | 26510'
     or [vex_required],8
 
     avx_d_instruction_38:
@@ -26270,6 +26518,7 @@ avx_d_instruction_38_evex:
     ret
 
 avx_d_instruction_3a_imm8_evex:
+    strings.emit 'avx_d_instruction_3a_imm8_evex | 26520'
     mov [immediate_size],1
     or [vex_required],8
     mov [supplemental_code],al
@@ -26278,12 +26527,14 @@ avx_d_instruction_3a_imm8_evex:
     ret
 
 avx_single_source_d_instruction_imm8:
+    strings.emit 'avx_single_source_d_instruction_imm8 | 26529'
     or [operand_flags],2
     mov [immediate_size],1
     jmp avx_d_instruction
     ret
 
 avx_d_instruction_evex:
+    strings.emit 'avx_d_instruction_evex | 26536'
     or [vex_required],8
 
     avx_d_instruction:
@@ -26292,6 +26543,7 @@ avx_d_instruction_evex:
     ret
 
 avx_single_source_bw_instruction_38:
+    strings.emit 'avx_single_source_bw_instruction_38 | 26545'
     or [operand_flags],2
 
     avx_bw_instruction_38:
@@ -26308,6 +26560,7 @@ avx_single_source_bw_instruction_38:
     ret
 
 avx_bw_instruction_38_w1_evex:
+    strings.emit 'avx_bw_instruction_38_w1_evex | 26562'
     or [rex_prefix],8
 
     avx_bw_instruction_38_evex:
@@ -26316,6 +26569,7 @@ avx_bw_instruction_38_w1_evex:
     ret
 
 avx_pd_instruction_noevex:
+    strings.emit 'avx_pd_instruction_noevex | 26571'
     xor cl,cl
     or [vex_required],2
     mov [opcode_prefix],66h
@@ -26323,6 +26577,7 @@ avx_pd_instruction_noevex:
     ret
 
 avx_ps_instruction_noevex:
+    strings.emit 'avx_ps_instruction_noevex | 26579'
     or [vex_required],2
     mov [opcode_prefix],0F2h
     xor cl,cl
@@ -26330,6 +26585,7 @@ avx_ps_instruction_noevex:
     ret
 
 avx_instruction:
+    strings.emit 'avx_instruction | 26587'
     xor ch,ch
 
     avx_instruction_with_broadcast:
@@ -26406,6 +26662,7 @@ avx_instruction:
     ret
 
 avx_regs_reg:
+    strings.emit 'avx_regs_reg | 26664'
     mov bl,al
     call take_avx512_rounding
     mov al,[immediate_size]
@@ -26450,6 +26707,7 @@ avx_regs_reg_reg:
     ret
 
 take_avx_rm:
+    strings.emit 'take_avx_rm | 26709'
     xor cl,cl
     xchg cl,[operand_size]
     lods u8 [esi]
@@ -26477,6 +26735,7 @@ take_avx_rm:
     ret
 
 take_avx_mem:
+    strings.emit 'take_avx_mem | 26737'
     push _ecx
     call get_address
     cmp u8 [esi],'{'
@@ -26509,6 +26768,7 @@ take_avx_mem:
     ret
 
 avx_mem_broadcast_check:
+    strings.emit 'avx_mem_broadcast_check | 26770'
     bsf eax,eax
     xchg al,[broadcast_size]
     mov [mmx_size],al
@@ -26546,6 +26806,7 @@ avx_mem_broadcast_check:
     ;ret
 
 avx_mem_size_deciding:
+    strings.emit 'avx_mem_size_deciding | 26808'
     mov al,[operand_size]
     cmp [mmx_size],0
     jne avx_mem_size_enforced
@@ -26573,6 +26834,7 @@ avx_mem_size_deciding:
     ret
 
 take_imm4_if_needed:
+    strings.emit 'take_imm4_if_needed | 26836'
     cmp [immediate_size],-3
     ;jne imm4_ok
     jne return_ok
@@ -26591,6 +26853,7 @@ take_imm4_if_needed:
     ret
 
 take_avx512_mask:
+    strings.emit 'take_avx512_mask | 26856'
     cmp u8 [esi],'{'
     ;jne avx512_masking_ok
     jne near_ok
@@ -26632,6 +26895,7 @@ take_avx512_mask:
     retn
 
 take_avx512_rounding:
+    strings.emit 'take_avx512_rounding | 26897'
     test [operand_flags],4+8
     ;jz avx512_rounding_done
     jz near_ok
@@ -26680,11 +26944,13 @@ take_avx512_rounding:
     retn
 
 avx_movdqu_instruction:
+    strings.emit 'avx_movdqu_instruction | 26946'
     mov ah,0F3h
     jmp avx_movdq_instruction
     ret
 
 avx_movdqa_instruction:
+    strings.emit 'avx_movdqa_instruction | 26952'
     mov ah,66h
 
     avx_movdq_instruction:
@@ -26694,6 +26960,7 @@ avx_movdqa_instruction:
     ret
 
 avx512_movdqu16_instruction:
+    strings.emit 'avx512_movdqu16_instruction | 26963'
     or [rex_prefix],8
 
     avx512_movdqu8_instruction:
@@ -26702,6 +26969,7 @@ avx512_movdqu16_instruction:
     ret
 
 avx512_movdqu64_instruction:
+    strings.emit 'avx512_movdqu64_instruction | 26970'
     or [rex_prefix],8
 
     avx512_movdqu32_instruction:
@@ -26710,6 +26978,7 @@ avx512_movdqu64_instruction:
     ret
 
 avx512_movdqa64_instruction:
+    strings.emit 'avx512_movdqa64_instruction | 26980'
     or [rex_prefix],8
 
     avx512_movdqa32_instruction:
@@ -26722,6 +26991,7 @@ avx512_movdqa64_instruction:
     ret
 
 avx_movpd_instruction:
+    strings.emit 'avx_movpd_instruction | 26993'
     mov [opcode_prefix],66h
     or [rex_prefix],80h
 
@@ -26757,6 +27027,7 @@ avx_movpd_instruction:
     ret
 
 avx_movntpd_instruction:
+    strings.emit 'avx_movntpd_instruction | 27029'
     or [rex_prefix],80h
 
     avx_movntdq_instruction:
@@ -26774,6 +27045,7 @@ avx_movntpd_instruction:
     ret
 
 avx_compress_q_instruction:
+    strings.emit 'avx_compress_q_instruction | 27047'
     or [rex_prefix],8
 
     avx_compress_d_instruction:
@@ -26797,6 +27069,7 @@ avx_compress_q_instruction:
     ret
 
 avx_lddqu_instruction:
+    strings.emit 'avx_lddqu_instruction | 27071'
     mov ah,0F2h
     or [vex_required],2
 
@@ -26820,6 +27093,7 @@ avx_lddqu_instruction:
     ret
 
 avx_movntdqa_instruction:
+    strings.emit 'avx_movntdqa_instruction | 27095'
     mov [supplemental_code],al
     mov al,38h
     mov ah,66h
@@ -26827,12 +27101,14 @@ avx_movntdqa_instruction:
     ret
 
 avx_movq_instruction:
+    strings.emit 'avx_movq_instruction | 27104'
     or [rex_prefix],8
     mov [mmx_size],8
     jmp avx_mov_instruction
     ret
 
 avx_movd_instruction:
+    strings.emit 'avx_movd_instruction | 27110'
     mov [mmx_size],4
 
     avx_mov_instruction:
@@ -26872,6 +27148,7 @@ avx_movd_instruction:
     ret
 
 avx_movd_reg:
+    strings.emit 'avx_movd_reg | 27150'
     lods u8 [esi]
     cmp al,0C0h
     jae avx_movd_xmmreg
@@ -26902,6 +27179,7 @@ avx_movd_reg:
     ret
 
 avx_movd_xmmreg:
+    strings.emit 'avx_movd_xmmreg | 27181'
     sub [extended_code],10h
     call convert_avx_register
     cmp ah,16
@@ -26931,6 +27209,7 @@ avx_movd_xmmreg:
     ret
 
 avx_movd_xmmreg_reg:
+    strings.emit 'avx_movd_xmmreg_reg | 27211'
     lods u8 [esi]
     cmp al,0C0h
     jae avx_movq_xmmreg_xmmreg
@@ -26942,6 +27221,7 @@ avx_movd_xmmreg_reg:
     ret
 
 avx_movq_xmmreg_xmmreg:
+    strings.emit 'avx_movq_xmmreg_xmmreg | 27224'
     cmp [mmx_size],8
     jne invalid_operand
     call avx_movq_xmmreg_xmmreg_opcode
@@ -26953,6 +27233,7 @@ avx_movq_xmmreg_xmmreg:
     ret
 
 avx_movq_xmmreg_xmmreg_opcode:
+    strings.emit 'avx_movq_xmmreg_xmmreg_opcode | 27236'
     and [rex_prefix],not 8
     or [rex_prefix],80h
     add [extended_code],10h
@@ -26960,6 +27241,7 @@ avx_movq_xmmreg_xmmreg_opcode:
     ret
 
 avx_movddup_instruction:
+    strings.emit 'avx_movddup_instruction | 27243'
     or [vex_required],1
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
@@ -26985,6 +27267,7 @@ avx_movddup_instruction:
     ret
 
 avx_movlpd_instruction:
+    strings.emit 'avx_movlpd_instruction | 27269'
     mov [opcode_prefix],66h
     or [rex_prefix],80h
 
@@ -27018,6 +27301,7 @@ avx_movlpd_instruction:
     ret
 
 avx_movlps_mem:
+    strings.emit 'avx_movlps_mem | 27304'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -27043,6 +27327,7 @@ avx_movlps_mem:
     ret
 
 avx_movhlps_instruction:
+    strings.emit 'avx_movhlps_instruction | 27330'
     mov [base_code],0Fh
     mov [extended_code],al
     or [vex_required],1
@@ -27064,6 +27349,7 @@ avx_movhlps_instruction:
     ret
 
 avx_movsd_instruction:
+    strings.emit 'avx_movsd_instruction | 27352'
     mov al,0F2h
     mov cl,8
     or [rex_prefix],80h
@@ -27071,6 +27357,7 @@ avx_movsd_instruction:
     ret
 
 avx_movss_instruction:
+    strings.emit 'avx_movss_instruction | 27360'
     mov al,0F3h
     mov cl,4
 
@@ -27116,6 +27403,7 @@ avx_movss_instruction:
     ret
 
 avx_movs_reg_mem:
+    strings.emit 'avx_movs_reg_mem | 27405'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -27130,6 +27418,7 @@ avx_movs_reg_mem:
     ret
 
 avx_movs_mem:
+    strings.emit 'avx_movs_mem | 27420'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -27139,12 +27428,14 @@ avx_movs_mem:
     ret
 
 avx_comiss_instruction:
+    strings.emit 'avx_comiss_instruction | 27430'
     or [operand_flags],2+4+10h
     mov cl,4
     jmp avx_instruction
     ret
 
 avx_comisd_instruction:
+    strings.emit 'avx_comisd_instruction | 27437'
     or [operand_flags],2+4+10h
     mov [opcode_prefix],66h
     or [rex_prefix],80h
@@ -27160,6 +27451,7 @@ avx_movshdup_instruction:
     ret
 
 avx_cvtqq2pd_instruction:
+    strings.emit 'avx_cvtqq2pd_instruction | 27454'
     mov [opcode_prefix],0F3h
     or [vex_required],8
     or [operand_flags],2+4+8
@@ -27169,6 +27461,7 @@ avx_cvtqq2pd_instruction:
     ret
 
 avx_pshuf_w_instruction:
+    strings.emit 'avx_pshuf_w_instruction | 27463'
     mov [opcode_prefix],al
     or [operand_flags],2
     mov [immediate_size],1
@@ -27178,6 +27471,7 @@ avx_pshuf_w_instruction:
     ret
 
 avx_single_source_128bit_instruction_38_noevex:
+    strings.emit 'avx_single_source_128bit_instruction_38_noevex | 27473'
     or [operand_flags],2
 
     avx_128bit_instruction_38_noevex:
@@ -27186,11 +27480,13 @@ avx_single_source_128bit_instruction_38_noevex:
     ret
 
 avx_single_source_instruction_38_noevex:
+    strings.emit 'avx_single_source_instruction_38_noevex | 27482'
     or [operand_flags],2
     jmp avx_pi_instruction_38_noevex
     ret
 
 avx_pi_instruction_38_noevex:
+    strings.emit 'avx_pi_instruction_38_noevex | 27488'
     xor cl,cl
     avx_instruction_38_noevex:
     or [vex_required],2
@@ -27203,16 +27499,19 @@ avx_pi_instruction_38_noevex:
     ret
 
 avx_ss_instruction_3a_imm8_noevex:
+    strings.emit 'avx_ss_instruction_3a_imm8_noevex | 27501'
     mov cl,4
     jmp avx_instruction_3a_imm8_noevex
     ret
 
 avx_sd_instruction_3a_imm8_noevex:
+    strings.emit 'avx_sd_instruction_3a_imm8_noevex | 27508'
     mov cl,8
     jmp avx_instruction_3a_imm8_noevex
     ret
 
 avx_single_source_128bit_instruction_3a_imm8_noevex:
+    strings.emit 'avx_single_source_128bit_instruction_3a_imm8_noevex | 27513'
     or [operand_flags],2
 
     avx_128bit_instruction_3a_imm8_noevex:
@@ -27221,6 +27520,7 @@ avx_single_source_128bit_instruction_3a_imm8_noevex:
     ret
 
 avx_triple_source_instruction_3a_noevex:
+    strings.emit 'avx_triple_source_instruction_3a_noevex | 27523'
     xor cl,cl
     mov [immediate_size],-1
     mov u8 [value],0
@@ -27228,6 +27528,7 @@ avx_triple_source_instruction_3a_noevex:
     ret
 
 avx_single_source_instruction_3a_imm8_noevex:
+    strings.emit 'avx_single_source_instruction_3a_imm8_noevex | 27530'
     or [operand_flags],2
 
     avx_pi_instruction_3a_imm8_noevex:
@@ -27247,12 +27548,14 @@ avx_single_source_instruction_3a_imm8_noevex:
     ret
 
 avx_pi_instruction_3a_imm8:
+    strings.emit 'avx_pi_instruction_3a_imm8 | 27550'
     xor cl,cl
     mov [immediate_size],1
     jmp avx_instruction_3a
     ret
 
 avx_pclmulqdq_instruction:
+    strings.emit 'avx_pclmulqdq_instruction | 27558'
     mov u8 [value],al
     mov [immediate_size],-4
     or [vex_required],2
@@ -27262,6 +27565,7 @@ avx_pclmulqdq_instruction:
     ret
 
 avx512_single_source_pd_instruction_sae_imm8:
+    strings.emit 'avx512_single_source_pd_instruction_sae_imm8 | 27568'
     or [operand_flags],2
 
     avx512_pd_instruction_sae_imm8:
@@ -27271,6 +27575,7 @@ avx512_single_source_pd_instruction_sae_imm8:
     ret
 
 avx512_single_source_ps_instruction_sae_imm8:
+    strings.emit 'avx512_single_source_ps_instruction_sae_imm8 | 27577'
     or [operand_flags],2
 
     avx512_ps_instruction_sae_imm8:
@@ -27279,12 +27584,14 @@ avx512_single_source_ps_instruction_sae_imm8:
     ret
 
 avx512_sd_instruction_sae_imm8:
+    strings.emit 'avx512_sd_instruction_sae_imm8 | 27586'
     or [rex_prefix],8
     mov cx,0008h
     jmp avx512_instruction_sae_imm8
     ret
 
 avx512_ss_instruction_sae_imm8:
+    strings.emit 'avx512_ss_instruction_sae_imm8 | 27593'
     mov cx,0004h
 
     avx512_instruction_sae_imm8:
@@ -27300,11 +27607,13 @@ avx512_ss_instruction_sae_imm8:
     ret
 
 avx512_pd_instruction_er:
+    strings.emit 'avx512_pd_instruction_er | 27610'
     or [operand_flags],4+8
     jmp avx512_pd_instruction
     ret
 
 avx512_single_source_pd_instruction_sae:
+    strings.emit 'avx512_single_source_pd_instruction_sae | 27615'
     or [operand_flags],4
 
     avx512_single_source_pd_instruction:
@@ -27317,11 +27626,13 @@ avx512_single_source_pd_instruction_sae:
     ret
 
 avx512_ps_instruction_er:
+    strings.emit 'avx512_ps_instruction_er | 27628'
     or [operand_flags],4+8
     jmp avx512_ps_instruction
     ret
 
 avx512_single_source_ps_instruction_sae:
+    strings.emit 'avx512_single_source_ps_instruction_sae | 27635'
     or [operand_flags],4
 
     avx512_single_source_ps_instruction:
@@ -27333,6 +27644,7 @@ avx512_single_source_ps_instruction_sae:
     ret
 
 avx512_sd_instruction_er:
+    strings.emit 'avx512_sd_instruction_er | 27646'
     or [operand_flags],8
 
     avx512_sd_instruction_sae:
@@ -27346,6 +27658,7 @@ avx512_sd_instruction_er:
     ret
 
 avx512_ss_instruction_er:
+    strings.emit 'avx512_ss_instruction_er | 27660'
     or [operand_flags],8
 
     avx512_ss_instruction_sae:
@@ -27363,6 +27676,7 @@ avx512_ss_instruction_er:
     ret
 
 avx512_exp2pd_instruction:
+    strings.emit 'avx512_exp2pd_instruction | 27678'
     or [rex_prefix],8
     or [operand_flags],2+4
     mov cx,0840h
@@ -27370,29 +27684,34 @@ avx512_exp2pd_instruction:
     ret
 
 avx512_exp2ps_instruction:
+    strings.emit 'avx512_exp2ps_instruction | 27687'
     or [operand_flags],2+4
     mov cx,0440h
     jmp avx512_instruction
     ret
 
 fma_instruction_pd:
+    strings.emit 'fma_instruction_pd | 27693'
     or [rex_prefix],8
     mov cx,0800h
     jmp fma_instruction
     ret
 
 fma_instruction_ps:
+    strings.emit 'fma_instruction_ps | 27701'
     mov cx,0400h
     jmp fma_instruction
     ret
 
 fma_instruction_sd:
+    strings.emit 'fma_instruction_sd | 27707'
     or [rex_prefix],8
     mov cx,0008h
     jmp fma_instruction
     ret
 
 fma_instruction_ss:
+    strings.emit 'fma_instruction_ss | 27713'
     mov cx,0004h
 
     fma_instruction:
@@ -27404,16 +27723,19 @@ fma_instruction_ss:
     ret
 
 fma4_instruction_p:
+    strings.emit 'fma4_instruction_p | 27725'
     xor cl,cl
     jmp fma4_instruction
     ret
 
 fma4_instruction_sd:
+    strings.emit 'fma4_instruction_sd | 27731'
     mov cl,8
     jmp fma4_instruction
     ret
 
 fma4_instruction_ss:
+    strings.emit 'fma4_instruction_ss | 27737'
     mov cl,4
 
     fma4_instruction:
@@ -27423,6 +27745,7 @@ fma4_instruction_ss:
     ret
 
 avx_cmp_pd_instruction:
+    strings.emit 'avx_cmp_pd_instruction | 27747'
     mov [opcode_prefix],66h
     or [rex_prefix],80h
     mov cx,0800h
@@ -27430,11 +27753,13 @@ avx_cmp_pd_instruction:
     ret
 
 avx_cmp_ps_instruction:
+    strings.emit 'avx_cmp_ps_instruction | 27755'
     mov cx,0400h
     jmp avx_cmp_instruction
     ret
 
 avx_cmp_sd_instruction:
+    strings.emit 'avx_cmp_sd_instruction | 27761'
     mov [opcode_prefix],0F2h
     or [rex_prefix],80h
     mov cx,0008h
@@ -27442,6 +27767,7 @@ avx_cmp_sd_instruction:
     ret
 
 avx_cmp_ss_instruction:
+    strings.emit 'avx_cmp_ss_instruction | 27769'
     mov [opcode_prefix],0F3h
     mov cx,0004h
 
@@ -27454,6 +27780,7 @@ avx_cmp_ss_instruction:
     ret
 
 avx_cmpeqq_instruction:
+    strings.emit 'avx_cmpeqq_instruction | 27782'
     or [rex_prefix],80h
     mov ch,8
     mov [supplemental_code],al
@@ -27462,16 +27789,19 @@ avx_cmpeqq_instruction:
     ret
 
 avx_cmpeqd_instruction:
+    strings.emit 'avx_cmpeqd_instruction | 27791'
     mov ch,4
     jmp avx_cmp_pi_instruction
     ret
 
 avx_cmpeqb_instruction:
+    strings.emit 'avx_cmpeqb_instruction | 27797'
     xor ch,ch
     jmp avx_cmp_pi_instruction
     ret
 
 avx512_cmp_uq_instruction:
+    strings.emit 'avx512_cmp_uq_instruction | 27803'
     or [rex_prefix],8
     mov ch,8
     mov ah,1Eh
@@ -27479,12 +27809,14 @@ avx512_cmp_uq_instruction:
     ret
 
 avx512_cmp_ud_instruction:
+    strings.emit 'avx512_cmp_ud_instruction | 27811'
     mov ch,4
     mov ah,1Eh
     jmp avx_cmp_pi_instruction_evex
     ret
 
 avx512_cmp_q_instruction:
+    strings.emit 'avx512_cmp_q_instruction | 27818'
     or [rex_prefix],8
     mov ch,8
     mov ah,1Fh
@@ -27492,12 +27824,14 @@ avx512_cmp_q_instruction:
     ret
 
 avx512_cmp_d_instruction:
+    strings.emit 'avx512_cmp_d_instruction | 27826'
     mov ch,4
     mov ah,1Fh
     jmp avx_cmp_pi_instruction_evex
     ret
 
 avx512_cmp_uw_instruction:
+    strings.emit 'avx512_cmp_uw_instruction | 27833'
     or [rex_prefix],8
 
     avx512_cmp_ub_instruction:
@@ -27507,6 +27841,7 @@ avx512_cmp_uw_instruction:
     ret
 
 avx512_cmp_w_instruction:
+    strings.emit 'avx512_cmp_w_instruction | 27843'
     or [rex_prefix],8
 
     avx512_cmp_b_instruction:
@@ -27540,6 +27875,7 @@ avx512_cmp_w_instruction:
     ret
 
 avx_maskreg:
+    strings.emit 'avx_maskreg | 27877'
     cmp [operand_size],0
     jne invalid_operand_size
     or [vex_required],8
@@ -27551,23 +27887,27 @@ avx_maskreg:
     ret
 
 avx512_fpclasspd_instruction:
+    strings.emit 'avx512_fpclasspd_instruction | 27889'
     or [rex_prefix],8
     mov cx,0800h
     jmp avx_fpclass_instruction
     ret
 
 avx512_fpclassps_instruction:
+    strings.emit 'avx512_fpclassps_instruction | 27896'
     mov cx,0400h
     jmp avx_fpclass_instruction
     ret
 
 avx512_fpclasssd_instruction:
+    strings.emit 'avx512_fpclasssd_instruction | 27903'
     or [rex_prefix],8
     mov cx,0008h
     jmp avx_fpclass_instruction
     ret
 
 avx512_fpclassss_instruction:
+    strings.emit 'avx512_fpclassss_instruction | 27910'
     mov cx,0004h
 
     avx_fpclass_instruction:
@@ -27583,17 +27923,20 @@ avx512_fpclassss_instruction:
     ret
 
 avx512_ptestnmd_instruction:
+    strings.emit 'avx512_ptestnmd_instruction | 27925'
     mov ch,4
     jmp avx512_ptestnm_instruction
     ret
 
 avx512_ptestnmq_instruction:
+    strings.emit 'avx512_ptestnmq_instruction | 27931'
     or [rex_prefix],8
     mov ch,8
     jmp avx512_ptestnm_instruction
     ret
 
 avx512_ptestnmw_instruction:
+    strings.emit 'avx512_ptestnmw_instruction | 27938'
     or [rex_prefix],8
 
     avx512_ptestnmb_instruction:
@@ -27605,17 +27948,20 @@ avx512_ptestnmw_instruction:
     ret
 
 avx512_ptestmd_instruction:
+    strings.emit 'avx512_ptestmd_instruction | 27950'
     mov ch,4
     jmp avx512_ptestm_instruction
     ret
 
 avx512_ptestmq_instruction:
+    strings.emit 'avx512_ptestmq_instruction | 27956'
     or [rex_prefix],8
     mov ch,8
     jmp avx512_ptestm_instruction
     ret
 
 avx512_ptestmw_instruction:
+    strings.emit 'avx512_ptestmw_instruction | 27963'
     or [rex_prefix],8
 
     avx512_ptestmb_instruction:
@@ -27634,6 +27980,7 @@ avx512_ptestmw_instruction:
     ret
 
 mask_shift_instruction_q:
+    strings.emit 'mask_shift_instruction_q | 27982'
     or [rex_prefix],8
 
     mask_shift_instruction_d:
@@ -27646,11 +27993,13 @@ mask_shift_instruction_q:
     ret
 
 mask_instruction_single_source_b:
+    strings.emit 'mask_instruction_single_source_b | 27995'
     mov [opcode_prefix],66h
     jmp mask_instruction_single_source_w
     ret
 
 mask_instruction_single_source_d:
+    strings.emit 'mask_instruction_single_source_d | 28001'
     mov [opcode_prefix],66h
 
     mask_instruction_single_source_q:
@@ -27662,11 +28011,13 @@ mask_instruction_single_source_d:
     ret
 
 mask_instruction_b:
+    strings.emit 'mask_instruction_b | 28013'
     mov [opcode_prefix],66h
     jmp mask_instruction_w
     ret
 
 mask_instruction_d:
+    strings.emit 'mask_instruction_b | 28019'
     mov [opcode_prefix],66h
 
     mask_instruction_q:
@@ -27701,6 +28052,7 @@ mask_instruction_d:
     ret
 
 take_mask_register:
+    strings.emit 'take_mask_register | 28054'
     lods u8 [esi]
     cmp al,14h
     jne invalid_operand
@@ -27715,6 +28067,7 @@ convert_mask_register:
     ret
 
 kmov_instruction:
+    strings.emit 'kmov_instruction | 28069'
     mov [mmx_size],al
     or [vex_required],1
     mov [base_code],0Fh
@@ -27749,6 +28102,7 @@ kmov_instruction:
     ret
 
 setup_kmov_prefix:
+    strings.emit 'setup_kmov_prefix | 28104'
     cmp ah,4
     jb kmov_w_ok
     or [rex_prefix],8
@@ -27761,6 +28115,7 @@ setup_kmov_prefix:
     ret
 
 kmov_maskreg:
+    strings.emit 'kmov_maskreg | 28118'
     lods u8 [esi]
     call convert_mask_register
     mov [postbyte_register],al
@@ -27780,6 +28135,7 @@ kmov_maskreg:
     ret
 
 kmov_maskreg_maskreg:
+    strings.emit 'kmov_maskreg_maskreg | 28137'
     lods u8 [esi]
     call convert_mask_register
     mov bl,al
@@ -27789,6 +28145,7 @@ kmov_maskreg_maskreg:
     ret
 
 kmov_maskreg_reg:
+    strings.emit 'kmov_maskreg_reg | 28147'
     add [extended_code],2
     lods u8 [esi]
     call convert_register
@@ -27814,6 +28171,7 @@ kmov_maskreg_reg:
     ret
 
 kmov_f2_w1:
+    strings.emit 'kmov_f2_w1 | 28173'
     or [rex_prefix],8
     cmp [code_type],64
     jne illegal_instruction
@@ -27824,6 +28182,7 @@ kmov_f2_w1:
     ret
 
 kmov_reg:
+    strings.emit 'kmov_reg | 28184'
     add [extended_code],3
     lods u8 [esi]
     call convert_register
@@ -27836,6 +28195,7 @@ kmov_reg:
     ret
 
 avx512_pmov_m2_instruction_w1:
+    strings.emit 'avx512_pmov_m2_instruction_w1 | 28197'
     or [rex_prefix],8
 
     avx512_pmov_m2_instruction:
@@ -27852,6 +28212,7 @@ avx512_pmov_m2_instruction_w1:
     ret
 
 avx512_pmov_2m_instruction_w1:
+    strings.emit 'avx512_pmov_2m_instruction_w1 | 28214'
     or [rex_prefix],8
 
     avx512_pmov_2m_instruction:
@@ -27868,6 +28229,7 @@ avx512_pmov_2m_instruction_w1:
     ret
 
 setup_f3_0f_38:
+    strings.emit 'setup_f3_0f_38 | 28231'
     mov [extended_code],38h
     mov [supplemental_code],al
     mov [base_code],0Fh
@@ -27875,6 +28237,7 @@ setup_f3_0f_38:
     ret
 
 vzeroall_instruction:
+    strings.emit 'vzeroall_instruction | 28239'
     mov [operand_size],32
 
     vzeroupper_instruction:
@@ -27886,11 +28249,13 @@ vzeroall_instruction:
     ret
 
 vldmxcsr_instruction:
+    strings.emit 'vldmxcsr_instruction | 28251'
     or [vex_required],2
     jmp fxsave_instruction
     ret
 
 avx_perm2f128_instruction:
+    strings.emit 'avx_perm2f128_instruction | 28257'
     or [vex_required],2
     xor ch,ch
 
@@ -27901,6 +28266,7 @@ avx_perm2f128_instruction:
     ret
 
 avx512_shuf_q_instruction:
+    strings.emit 'avx512_shuf_q_instruction | 28268'
     or [rex_prefix],8
     or [vex_required],8
     mov ch,8
@@ -27908,12 +28274,14 @@ avx512_shuf_q_instruction:
     ret
 
 avx512_shuf_d_instruction:
+    strings.emit 'avx512_shuf_d_instruction | 28276'
     or [vex_required],8
     mov ch,4
     jmp avx_instruction_imm8_without_128bit
     ret
 
 avx_permd_instruction:
+    strings.emit 'avx_permd_instruction | 28283'
     mov ah,38h
     mov ch,4
 
@@ -27929,6 +28297,7 @@ avx_permd_instruction:
     ret
 
 setup_avx_66_supplemental:
+    strings.emit 'setup_avx_66_supplemental | 28299'
     mov [opcode_prefix],66h
     mov [broadcast_size],ch
     mov [mmx_size],cl
@@ -27939,18 +28308,21 @@ setup_avx_66_supplemental:
     ret
 
 avx_permq_instruction:
+    strings.emit 'avx_permq_instruction | 28310'
     or [rex_prefix],8
     mov ch,8
     jmp avx_permil_instruction
     ret
 
 avx_permilpd_instruction:
+    strings.emit 'avx_permilpd_instruction | 28318'
     or [rex_prefix],80h
     mov ch,8
     jmp avx_permil_instruction
     ret
 
 avx_permilps_instruction:
+    strings.emit 'avx_permilps_instruction | 28324'
     mov ch,4
 
     avx_permil_instruction:
@@ -27994,6 +28366,7 @@ avx_permilps_instruction:
     ret
 
 avx_permq_rm:
+    strings.emit 'avx_permq_rm | 28368'
     or [vex_required],8
     shl al,5
     neg al
@@ -28003,6 +28376,7 @@ avx_permq_rm:
     ret
 
 vpermil_2pd_instruction:
+    strings.emit 'vpermil_2pd_instruction | 28378'
     mov [immediate_size],-2
     mov u8 [value],al
     mov al,49h
@@ -28010,6 +28384,7 @@ vpermil_2pd_instruction:
     ret
 
 vpermil_2ps_instruction:
+    strings.emit 'vpermil_2ps_instruction | 28386'
     mov [immediate_size],-2
     mov u8 [value],al
     mov al,48h
@@ -28017,6 +28392,7 @@ vpermil_2ps_instruction:
     ret
 
 vpermil2_instruction:
+    strings.emit 'vpermil2_instruction | 28395'
     mov [immediate_size],-3
     mov u8 [value],0
 
@@ -28030,6 +28406,7 @@ vpermil2_instruction:
     ret
 
 avx_shift_q_instruction_evex:
+    strings.emit 'avx_shift_q_instruction_evex | 28408'
     or [vex_required],8
 
     avx_shift_q_instruction:
@@ -28039,11 +28416,13 @@ avx_shift_q_instruction_evex:
     ret
 
 avx_shift_d_instruction:
+    strings.emit 'avx_shift_d_instruction | 28418'
     mov cl,4
     jmp avx_shift_instruction
     ret
 
 avx_shift_bw_instruction:
+    strings.emit 'avx_shift_bw_instruction | 28424'
     xor cl,cl
 
     avx_shift_instruction:
@@ -28094,6 +28473,7 @@ avx_shift_bw_instruction:
     ret
 
 convert_avx_shift_opcode:
+    strings.emit 'convert_avx_shift_opcode | 28475'
     mov al,[extended_code]
     mov ah,al
     and ah,1111b
@@ -28107,6 +28487,7 @@ convert_avx_shift_opcode:
     ret
 
 avx_shift_reg_reg_reg:
+    strings.emit 'avx_shift_reg_reg_reg | 28489'
     pop _eax
     lods u8 [esi]
     call convert_xmm_register
@@ -28116,6 +28497,7 @@ avx_shift_reg_reg_reg:
     ret
 
 avx_shift_reg_reg_mem:
+    strings.emit 'avx_shift_reg_reg_mem | 28499'
     mov [mmx_size],16
     push _ecx
     lods u8 [esi]
@@ -28131,6 +28513,7 @@ avx_shift_reg_reg_mem:
     ret
 
 avx_shift_reg_mem:
+    strings.emit 'avx_shift_reg_mem | 28515'
     or [vex_required],8
     call take_avx_mem
     call convert_avx_shift_opcode
@@ -28138,6 +28521,7 @@ avx_shift_reg_mem:
     ret
 
 avx_shift_dq_instruction:
+    strings.emit 'avx_shift_dq_instruction | 28523'
     mov [postbyte_register],al
     mov [opcode_prefix],66h
     mov [base_code],0Fh
@@ -28162,6 +28546,7 @@ avx_shift_dq_instruction:
     ret
 
 avx_shift_dq_reg_mem:
+    strings.emit 'avx_shift_dq_reg_mem | 28548'
     or [vex_required],8
     call get_address
     jmp mmx_imm8
@@ -28174,6 +28559,7 @@ avx512_rotate_q_instruction:
     ret
 
 avx512_rotate_d_instruction:
+    strings.emit 'avx512_rotate_d_instruction | 28561'
     mov cl,4
 
     avx512_rotate_instruction:
@@ -28192,16 +28578,19 @@ avx512_rotate_d_instruction:
     ret
 
 avx_pmovsxbq_instruction:
+    strings.emit 'avx_pmovsxbq_instruction | 28580'
     mov cl,2
     jmp avx_pmovsx_instruction
     ret
 
 avx_pmovsxbd_instruction:
+    strings.emit 'avx_pmovsxbd_instruction | 28586'
     mov cl,4
     jmp avx_pmovsx_instruction
     ret
 
 avx_pmovsxbw_instruction:
+    strings.emit 'avx_pmovsxbw_instruction | 28592'
     mov cl,8
 
     avx_pmovsx_instruction:
@@ -28237,6 +28626,7 @@ avx_pmovsxbw_instruction:
     ret
 
 avx_pmovsx_reg_reg:
+    strings.emit 'avx_pmovsx_reg_reg | 28629'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28253,16 +28643,19 @@ avx_pmovsx_reg_reg:
     ret
 
 avx512_pmovqb_instruction:
+    strings.emit 'avx512_pmovqb_instruction | 28645'
     mov cl,2
     jmp avx512_pmov_instruction
     ret
 
 avx512_pmovdb_instruction:
+    strings.emit 'avx512_pmovdb_instruction | 28652'
     mov cl,4
     jmp avx512_pmov_instruction
     ret
 
 avx512_pmovwb_instruction:
+    strings.emit 'avx512_pmovwb_instruction | 28657'
     mov cl,8
 
     avx512_pmov_instruction:
@@ -28289,6 +28682,7 @@ avx512_pmovwb_instruction:
     ret
 
 avx512_pmov_common:
+    strings.emit 'avx512_pmov_common | 28684'
     call take_avx512_mask
     xor al,al
     xchg al,[operand_size]
@@ -28308,6 +28702,7 @@ avx512_pmov_common:
     ret
 
 avx512_pmov_reg:
+    strings.emit 'avx512_pmov_reg | 28704'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28321,32 +28716,38 @@ avx512_pmov_reg:
     ret
 
 avx_broadcast_128_instruction_noevex:
+    strings.emit 'avx_broadcast_128_instruction_noevex | 28718'
     or [vex_required],2
     mov cl,10h
     jmp avx_broadcast_instruction
     ret
 
 avx512_broadcast_32x2_instruction:
+    strings.emit 'avx512_broadcast_32x2_instruction | 28725'
     mov cl,08h
     jmp avx_broadcast_instruction_evex
     ret
 
 avx512_broadcast_32x4_instruction:
+    strings.emit 'avx512_broadcast_32x4_instruction | 28731'
     mov cl,10h
     jmp avx_broadcast_instruction_evex
     ret
 
 avx512_broadcast_32x8_instruction:
+    strings.emit 'avx512_broadcast_32x8_instruction | 28737'
     mov cl,20h
     jmp avx_broadcast_instruction_evex
     ret
 
 avx512_broadcast_64x2_instruction:
+    strings.emit 'avx512_broadcast_64x2_instruction | 28743'
     mov cl,10h
     jmp avx_broadcast_instruction_w1_evex
     ret
 
 avx512_broadcast_64x4_instruction:
+    strings.emit 'avx512_broadcast_64x4_instruction | 28749'
     mov cl,20h
 
     avx_broadcast_instruction_w1_evex:
@@ -28358,32 +28759,38 @@ avx512_broadcast_64x4_instruction:
     ret
 
 avx_broadcastss_instruction:
+    strings.emit 'avx_broadcastss_instruction | 28762'
     mov cl,4
     jmp avx_broadcast_instruction
     ret
 
 avx_broadcastsd_instruction:
+    strings.emit 'avx_broadcastsd_instruction | 28767'
     or [rex_prefix],80h
     mov cl,8
     jmp avx_broadcast_instruction
     ret
 
 avx_pbroadcastb_instruction:
+    strings.emit 'avx_pbroadcastb_instruction | 28774'
     mov cl,1
     jmp avx_broadcast_pi_instruction
     ret
 
 avx_pbroadcastw_instruction:
+    strings.emit 'avx_pbroadcastw_instruction | 28780'
     mov cl,2
     jmp avx_broadcast_pi_instruction
     ret
 
 avx_pbroadcastd_instruction:
+    strings.emit 'avx_pbroadcastd_instruction | 28786'
     mov cl,4
     jmp avx_broadcast_pi_instruction
     ret
 
 avx_pbroadcastq_instruction:
+    strings.emit 'avx_pbroadcastq_instruction | 28792'
     mov cl,8
     or [rex_prefix],80h
 
@@ -28439,6 +28846,7 @@ avx_pbroadcastq_instruction:
     ret
 
 avx_broadcast_reg_reg:
+    strings.emit 'avx_broadcast_reg_reg | 28848'
     lods u8 [esi]
     test [operand_flags],40h
     jz avx_broadcast_reg_avx_reg
@@ -28470,6 +28878,7 @@ avx_broadcast_reg_reg:
     ret
 
 avx_broadcast_reg_general_reg:
+    strings.emit 'avx_broadcast_reg_general_reg | 28880'
     call convert_register
     mov bl,al
     mov al,[mmx_size]
@@ -28500,6 +28909,7 @@ avx_broadcast_reg_general_reg:
     ret
 
 avx512_extract_64x4_instruction:
+    strings.emit 'avx512_extract_64x4_instruction | 28911'
     or [rex_prefix],8
 
     avx512_extract_32x8_instruction:
@@ -28509,6 +28919,7 @@ avx512_extract_64x4_instruction:
     ret
 
 avx512_extract_64x2_instruction:
+    strings.emit 'avx512_extract_64x2_instruction | 28921'
     or [rex_prefix],8
 
     avx512_extract_32x4_instruction:
@@ -28518,6 +28929,7 @@ avx512_extract_64x2_instruction:
     ret
 
 avx_extractf128_instruction:
+    strings.emit 'avx_extractf128_instruction | 28931'
     or [vex_required],2
     mov cl,16
 
@@ -28551,6 +28963,7 @@ avx_extractf128_instruction:
     ret
 
 avx_extractf_reg:
+    strings.emit 'avx_extractf_reg | 28965'
     lods u8 [esi]
     call convert_avx_register
     cmp ah,[mmx_size]
@@ -28570,6 +28983,7 @@ avx_extractf_reg:
     ret
 
 avx512_insert_64x4_instruction:
+    strings.emit 'avx512_insert_64x4_instruction | 28985'
     or [rex_prefix],8
 
     avx512_insert_32x8_instruction:
@@ -28579,6 +28993,7 @@ avx512_insert_64x4_instruction:
     ret
 
 avx512_insert_64x2_instruction:
+    strings.emit 'avx512_insert_64x2_instruction | 28995'
     or [rex_prefix],8
 
     avx512_insert_32x4_instruction:
@@ -28588,6 +29003,7 @@ avx512_insert_64x2_instruction:
     ret
 
 avx_insertf128_instruction:
+    strings.emit 'avx_insertf128_instruction | 29005'
     or [vex_required],2
     mov cl,16
 
@@ -28624,6 +29040,7 @@ avx_insertf128_instruction:
     ret
 
 avx_insertf_reg_reg_reg:
+    strings.emit 'avx_insertf_reg_reg_reg | 29043'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28633,22 +29050,26 @@ avx_insertf_reg_reg_reg:
     ret
 
 avx_extract_b_instruction:
+    strings.emit 'avx_extract_b_instruction | 29052'
     mov cl,1
     jmp avx_extract_instruction
     ret
 
 avx_extract_w_instruction:
+    strings.emit 'avx_extract_w_instruction | 29058'
     mov cl,2
     jmp avx_extract_instruction
     ret
 
 avx_extract_q_instruction:
+    strings.emit 'avx_extract_q_instruction | 29064'
     or [rex_prefix],8
     mov cl,8
     jmp avx_extract_instruction
     ret
 
 avx_extract_d_instruction:
+    strings.emit 'avx_extract_d_instruction | 29071'
     mov cl,4
 
     avx_extract_instruction:
@@ -28682,6 +29103,7 @@ avx_extract_d_instruction:
     ret
 
 avx_extractps_reg:
+    strings.emit 'avx_extractps_reg | 29106'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -28720,6 +29142,7 @@ avx_extractps_reg:
     ret
 
 avx_insertps_instruction:
+    strings.emit 'avx_insertps_instruction | 29144'
     mov [immediate_size],1
     or [operand_flags],10h
     mov [opcode_prefix],66h
@@ -28730,21 +29153,25 @@ avx_insertps_instruction:
     ret
 
 avx_pinsrb_instruction:
+    strings.emit 'avx_pinsrb_instruction | 29154'
     mov cl,1
     jmp avx_pinsr_instruction_3a
     ret
 
 avx_pinsrw_instruction:
+    strings.emit 'avx_pinsrw_instruction | 29162'
     mov cl,2
     jmp avx_pinsr_instruction
     ret
 
 avx_pinsrd_instruction:
+    strings.emit 'avx_pinsrd_instruction | 29167'
     mov cl,4
     jmp avx_pinsr_instruction_3a
     ret
 
 avx_pinsrq_instruction:
+    strings.emit 'avx_pinsrq_instruction | 29172'
     cmp [code_type],64
     jne illegal_instruction
     mov cl,8
@@ -28773,6 +29200,7 @@ avx_pinsrq_instruction:
     ret
 
 avx_cvtudq2pd_instruction:
+    strings.emit 'avx_cvtudq2pd_instruction | 29202'
     or [vex_required],8
 
     avx_cvtdq2pd_instruction:
@@ -28782,6 +29210,7 @@ avx_cvtudq2pd_instruction:
     ret
 
 avx_cvtps2qq_instruction:
+    strings.emit 'avx_cvtps2qq_instruction | 29212'
     or [operand_flags],8
 
     avx_cvttps2qq_instruction:
@@ -28793,6 +29222,7 @@ avx_cvtps2qq_instruction:
     ret
 
 avx_cvtps2pd_instruction:
+    strings.emit 'avx_cvtps2pd_instruction | 29224'
     or [operand_flags],4
     mov cl,4
 
@@ -28835,17 +29265,20 @@ avx_cvtps2pd_instruction:
     ret
 
 avx_cvt_d_reg_mem:
+    strings.emit 'avx_cvt_d_reg_mem | 29267'
     call take_avx_mem
     jmp instruction_ready
     ret
 
 avx_cvtpd2dq_instruction:
+    strings.emit 'avx_cvtpd2dq_instruction | 29273'
     or [operand_flags],4+8
     mov [opcode_prefix],0F2h
     jmp avx_cvt_q_instruction
     ret
 
 avx_cvtuqq2ps_instruction:
+    strings.emit 'avx_cvtuqq2ps_instruction | 29280'
     mov [opcode_prefix],0F2h
 
     avx_cvtpd2udq_instruction:
@@ -28858,6 +29291,7 @@ avx_cvtuqq2ps_instruction:
     ret
 
 avx_cvtpd2ps_instruction:
+    strings.emit 'avx_cvtpd2ps_instruction | 29293'
     or [operand_flags],8
 
     avx_cvttpd2dq_instruction:
@@ -28890,12 +29324,14 @@ avx_cvtpd2ps_instruction:
     ret
 
 avx_cvt_q_reg_mem:
+    strings.emit 'avx_cvt_q_reg_mem | 29326'
     pop _eax
     call avx_cvt_q_check_size
     jmp instruction_ready
     ret
 
 avx_cvt_q_check_size:
+    strings.emit 'avx_cvt_q_check_size | 29333'
     mov al,[operand_size]
     or al,al
     jz avx_cvt_q_size_not_specified
@@ -28911,12 +29347,14 @@ avx_cvt_q_check_size:
     ret
 
 avx_cvt_q_size_not_specified:
+    strings.emit 'avx_cvt_q_size_not_specified | 29349'
     cmp ah,64 shr 1
     jne recoverable_unknown_size
     mov [operand_size],64
     ret
 
 avx_cvttps2udq_instruction:
+    strings.emit 'avx_cvttps2udq_instruction | 29356'
     or [vex_required],8
     or [operand_flags],2+4
     mov cx,0400h
@@ -28924,6 +29362,7 @@ avx_cvttps2udq_instruction:
     ret
 
 avx_cvttps2dq_instruction:
+    strings.emit 'avx_cvttps2dq_instruction | 29364'
     mov [opcode_prefix],0F3h
     or [operand_flags],2+4
     mov cx,0400h
@@ -28931,6 +29370,7 @@ avx_cvttps2dq_instruction:
     ret
 
 avx_cvtph2ps_instruction:
+    strings.emit 'avx_cvtph2ps_instruction | 29372'
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     or [operand_flags],4
@@ -28940,6 +29380,7 @@ avx_cvtph2ps_instruction:
     ret
 
 avx_cvtps2ph_instruction:
+    strings.emit 'avx_cvtps2ph_instruction | 29382'
     call setup_66_0f_3a
     or [vex_required],1
     or [operand_flags],4
@@ -28963,6 +29404,7 @@ avx_cvtps2ph_instruction:
     ret
 
 vcvtps2ph_reg:
+    strings.emit 'vcvtps2ph_reg | 29406'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28989,6 +29431,7 @@ vcvtps2ph_reg:
     ret
 
 avx_cvtsd2usi_instruction:
+    strings.emit 'avx_cvtsd2usi_instruction | 29433'
     or [operand_flags],8
 
     avx_cvttsd2usi_instruction:
@@ -28997,6 +29440,7 @@ avx_cvtsd2usi_instruction:
     ret
 
 avx_cvtsd2si_instruction:
+    strings.emit 'avx_cvtsd2si_instruction | 29442'
     or [operand_flags],8
 
     avx_cvttsd2si_instruction:
@@ -29006,6 +29450,7 @@ avx_cvtsd2si_instruction:
     ret
 
 avx_cvtss2usi_instruction:
+    strings.emit 'avx_cvtss2usi_instruction | 29452'
     or [operand_flags],8
 
     avx_cvttss2usi_instruction:
@@ -29014,6 +29459,7 @@ avx_cvtss2usi_instruction:
     ret
 
 avx_cvtss2si_instruction:
+    strings.emit 'avx_cvtss2si_instruction | 29461'
     or [operand_flags],8
 
     avx_cvttss2si_instruction:
@@ -29054,6 +29500,7 @@ avx_cvtss2si_instruction:
     ret
 
 avx_cvtusi2sd_instruction:
+    strings.emit 'avx_cvtusi2sd_instruction | 29502'
     or [vex_required],8
 
     avx_cvtsi2sd_instruction:
@@ -29063,6 +29510,7 @@ avx_cvtusi2sd_instruction:
     ret
 
 avx_cvtusi2ss_instruction:
+    strings.emit 'avx_cvtusi2ss_instruction | 29512'
     or [vex_required],8
 
     avx_cvtsi2ss_instruction:
@@ -29110,12 +29558,14 @@ avx_cvtusi2ss_instruction:
     ret
 
 avx_cvtsi_reg_reg_reg32:
+    strings.emit 'avx_cvtsi_reg_reg_reg32 | 29560'
     cmp [mmx_size],8
     jne avx_cvtsi_rounding
     jmp nomem_instruction_ready
     ret
 
 avx_cvtsi_reg_reg_mem:
+    strings.emit 'avx_cvtsi_reg_reg_mem | 29567'
     call get_address
     mov al,[operand_size]
     mov [mmx_size],al
@@ -29130,6 +29580,7 @@ avx_cvtsi_reg_reg_mem:
     ret
 
 avx_maskmov_w1_instruction:
+    strings.emit 'avx_maskmov_w1_instruction | 29582'
     or [rex_prefix],8
 
     avx_maskmov_instruction:
@@ -29160,6 +29611,7 @@ avx_maskmov_w1_instruction:
     ret
 
 avx_maskmov_mem:
+    strings.emit 'avx_maskmov_mem | 29613'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -29178,6 +29630,7 @@ avx_maskmov_mem:
     ret
 
 avx_movmskpd_instruction:
+    strings.emit 'avx_movmskpd_instruction | 29632'
     mov [opcode_prefix],66h
 
     avx_movmskps_instruction:
@@ -29209,11 +29662,13 @@ avx_movmskpd_instruction:
     ret
 
 avx_maskmovdqu_instruction:
+    strings.emit 'avx_maskmovdqu_instruction | 29664'
     or [vex_required],2
     jmp maskmovdqu_instruction
     ret
 
 avx_pmovmskb_instruction:
+    strings.emit 'avx_pmovmskb_instruction | 29670'
     or [vex_required],2
     mov [opcode_prefix],66h
     mov [base_code],0Fh
@@ -29243,6 +29698,7 @@ avx_pmovmskb_instruction:
     ret
 
 gather_pd_instruction:
+    strings.emit 'gather_pd_instruction | 29700'
     or [rex_prefix],8
 
     gather_ps_instruction:
@@ -29290,6 +29746,7 @@ gather_pd_instruction:
     ret
 
 gather_reg_mem_reg:
+    strings.emit 'gather_reg_mem_reg | 29748'
     or [vex_required],2
     inc esi
     call take_avx_register
@@ -29330,6 +29787,7 @@ gather_reg_mem_reg:
     ret
 
 gather_double:
+    strings.emit 'gather_double | 29789'
     add ah,ah
 
     gather_uniform:
@@ -29339,6 +29797,7 @@ gather_double:
     ret
 
 gather_vr128:
+    strings.emit 'gather_vr128 | 29799'
     cmp ah,16
     je instruction_ready
     cmp ah,32
@@ -29351,6 +29810,7 @@ gather_vr128:
     ret
 
 scatter_pd_instruction:
+    strings.emit 'scatter_pd_instruction | 29812'
     or [rex_prefix],8
 
     scatter_ps_instruction:
@@ -29376,11 +29836,13 @@ scatter_pd_instruction:
     ret
 
 gatherpf_qpd_instruction:
+    strings.emit 'gatherpf_qpd_instruction | 29838'
     mov ah,0C7h
     jmp gatherpf_pd_instruction
     ret
 
 gatherpf_dpd_instruction:
+    strings.emit 'gatherpf_dpd_instruction | 29844'
     mov ah,0C6h
 
     gatherpf_pd_instruction:
@@ -29390,11 +29852,13 @@ gatherpf_dpd_instruction:
     ret
 
 gatherpf_qps_instruction:
+    strings.emit 'gatherpf_qps_instruction | 29854'
     mov ah,0C7h
     jmp gatherpf_ps_instruction
     ret
 
 gatherpf_dps_instruction:
+    strings.emit 'gatherpf_dps_instruction | 29860'
     mov ah,0C6h
 
     gatherpf_ps_instruction:
@@ -29438,6 +29902,7 @@ gatherpf_dps_instruction:
     ret
 
 bmi_instruction:
+    strings.emit 'bmi_instruction | 29904'
     mov [base_code],0Fh
     mov [extended_code],38h
     mov [supplemental_code],0F3h
@@ -29467,6 +29932,7 @@ bmi_instruction:
     ret
 
 bmi_reg_reg:
+    strings.emit 'bmi_reg_reg | 29934'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -29475,6 +29941,7 @@ bmi_reg_reg:
     ret
 
 operand_32or64:
+    strings.emit 'operand_32or64 | 29943'
     mov al,[operand_size]
     cmp al,4
     ;je operand_32or64_ok
@@ -29487,11 +29954,13 @@ operand_32or64:
     ret
 
 pdep_instruction:
+    strings.emit 'pdep_instruction | 29956'
     mov [opcode_prefix],0F2h
     jmp andn_instruction
     ret
 
 pext_instruction:
+    strings.emit 'pext_instruction | 29962'
     mov [opcode_prefix],0F3h
 
     andn_instruction:
@@ -29513,16 +29982,19 @@ pext_instruction:
     ret
 
 sarx_instruction:
+    strings.emit 'sarx_instruction | 29984'
     mov [opcode_prefix],0F3h
     jmp bzhi_instruction
     ret
 
 shrx_instruction:
+    strings.emit 'shrx_instruction | 29990'
     mov [opcode_prefix],0F2h
     jmp bzhi_instruction
     ret
 
 shlx_instruction:
+    strings.emit 'shlx_instruction | 29996'
     mov [opcode_prefix],66h
 
     bzhi_instruction:
@@ -29539,6 +30011,7 @@ shlx_instruction:
     ret
 
 bzhi_reg_reg:
+    strings.emit 'bzhi_reg_reg | 30013'
     call get_vex_source_register
     jc invalid_operand
     call operand_32or64
@@ -29546,6 +30019,7 @@ bzhi_reg_reg:
     ret
 
 get_vex_source_register:
+    strings.emit 'get_vex_source_register | 30021'
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -29561,6 +30035,7 @@ get_vex_source_register:
     ret
 
 bextr_instruction:
+    strings.emit 'bextr_instruction | 30037'
     mov [base_code],0Fh
     mov [extended_code],38h
     mov [supplemental_code],al
@@ -29574,6 +30049,7 @@ bextr_instruction:
     ret
 
 bextr_reg_reg:
+    strings.emit 'bextr_reg_reg | 30051'
     call get_vex_source_register
     jc bextr_reg_reg_imm32
     call operand_32or64
@@ -29581,18 +30057,21 @@ bextr_reg_reg:
     ret
 
 setup_bextr_imm_opcode:
+    strings.emit 'setup_bextr_imm_opcode | 30059'
     mov [xop_opcode_map],0Ah
     mov [base_code],10h
     call operand_32or64
     ret
 
 bextr_reg_mem_imm32:
+    strings.emit 'bextr_reg_mem_imm32 | 30066'
     call get_imm32
     call setup_bextr_imm_opcode
     jmp store_instruction_with_imm32
     ret
 
 bextr_reg_reg_imm32:
+    strings.emit 'bextr_reg_reg_imm32 | 30073'
     call get_imm32
     call setup_bextr_imm_opcode
 
@@ -29605,6 +30084,7 @@ bextr_reg_reg_imm32:
     ret
 
 get_imm32:
+    strings.emit 'get_imm32 | 30086'
     cmp al,'('
     jne invalid_operand
     push _edx _ebx _ecx
@@ -29614,6 +30094,7 @@ get_imm32:
     ret
 
 rorx_instruction:
+    strings.emit 'rorx_instruction | 30096'
     mov [opcode_prefix],0F2h
     mov [base_code],0Fh
     mov [extended_code],3Ah
@@ -29626,11 +30107,13 @@ rorx_instruction:
     ret
 
 rorx_reg_reg:
+    strings.emit 'rorx_reg_reg | 30109'
     call operand_32or64
     jmp mmx_nomem_imm8
     ret
 
 tbm_instruction:
+    strings.emit 'tbm_instruction | 30115'
     mov [xop_opcode_map],9
     mov ah,al
     shr ah,4
@@ -29638,8 +30121,10 @@ tbm_instruction:
     mov [base_code],ah
     mov [postbyte_register],al
     jmp bmi_reg
+    ret
 
 llwpcb_instruction:
+    strings.emit 'llwpcb_instruction | 30126'
     or [vex_required],2
     mov [xop_opcode_map],9
     mov [base_code],12h
@@ -29656,6 +30141,7 @@ llwpcb_instruction:
     ret
 
 lwpins_instruction:
+    strings.emit 'lwpins_instruction | 30143'
     or [vex_required],2
     mov [xop_opcode_map],0Ah
     mov [base_code],12h
@@ -29693,6 +30179,7 @@ lwpins_instruction:
     ret
 
 lwpins_reg_reg:
+    strings.emit 'lwpins_reg_reg | 30181'
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -29704,6 +30191,7 @@ lwpins_reg_reg:
     ret
 
 prepare_lwpins:
+    strings.emit 'prepare_lwpins | 30193'
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -29716,18 +30204,21 @@ prepare_lwpins:
     ret
 
 xop_single_source_sd_instruction:
+    strings.emit 'xop_single_source_sd_instruction | 30206'
     or [operand_flags],2
     mov [mmx_size],8
     jmp xop_instruction_9
     ret
 
 xop_single_source_ss_instruction:
+    strings.emit 'xop_single_source_ss_instruction | 30213'
     or [operand_flags],2
     mov [mmx_size],4
     jmp xop_instruction_9
     ret
 
 xop_single_source_instruction:
+    strings.emit 'xop_single_source_instruction | 30220'
     or [operand_flags],2
     mov [mmx_size],0
 
@@ -29738,12 +30229,14 @@ xop_single_source_instruction:
     ret
 
 xop_single_source_128bit_instruction:
+    strings.emit 'xop_single_source_128bit_instruction | 30231'
     or [operand_flags],2
     mov [mmx_size],16
     jmp xop_instruction_9
     ret
 
 xop_triple_source_128bit_instruction:
+    strings.emit 'xop_triple_source_128bit_instruction | 30238'
     mov [immediate_size],-1
     mov u8 [value],0
     mov [mmx_size],16
@@ -29751,6 +30244,7 @@ xop_triple_source_128bit_instruction:
     ret
 
 xop_128bit_instruction:
+    strings.emit 'xop_128bit_instruction | 30245'
     mov [immediate_size],-2
     mov u8 [value],0
     mov [mmx_size],16
@@ -29762,41 +30256,49 @@ xop_128bit_instruction:
     ret
 
 xop_pcom_b_instruction:
+    strings.emit 'xop_pcom_b_instruction | 30258'
     mov ah,0CCh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_d_instruction:
+    strings.emit 'xop_pcom_d_instruction | 30264'
     mov ah,0CEh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_q_instruction:
+    strings.emit 'xop_pcom_q_instruction | 30270'
     mov ah,0CFh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_w_instruction:
+    strings.emit 'xop_pcom_w_instruction | 30276'
     mov ah,0CDh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_ub_instruction:
+    strings.emit 'xop_pcom_ub_instruction | 30282'
     mov ah,0ECh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_ud_instruction:
+    strings.emit 'xop_pcom_ud_instruction | 30288'
     mov ah,0EEh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_uq_instruction:
+    strings.emit 'xop_pcom_uq_instruction | 30294'
     mov ah,0EFh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_uw_instruction:
+    strings.emit 'xop_pcom_uw_instruction | 30300'
     mov ah,0EDh
 
     xop_pcom_instruction:
@@ -29809,6 +30311,7 @@ xop_pcom_uw_instruction:
     ret
 
 vpcmov_instruction:
+    strings.emit 'vpcmov_instruction | 30313'
     or [vex_required],2
     mov [immediate_size],-2
     mov u8 [value],0
@@ -29819,6 +30322,7 @@ vpcmov_instruction:
     ret
 
 xop_shift_instruction:
+    strings.emit 'xop_shift_instruction | 30324'
     mov [base_code],al
     or [vex_required],2
     mov [xop_opcode_map],9
@@ -29859,6 +30363,7 @@ xop_shift_instruction:
     ret
 
 xop_shift_reg_reg_mem:
+    strings.emit 'xop_shift_reg_reg_mem | 30365'
     or [rex_prefix],8
     lods u8 [esi]
     call get_size_operator
@@ -29867,6 +30372,7 @@ xop_shift_reg_reg_mem:
     ret
 
 xop_shift_reg_reg_imm:
+    strings.emit 'xop_shift_reg_reg_imm | 30374'
     xor bl,bl
     xchg bl,[vex_register]
     cmp [base_code],94h
@@ -29878,6 +30384,7 @@ xop_shift_reg_reg_imm:
     ret
 
 xop_shift_reg_mem:
+    strings.emit 'xop_shift_reg_mem | 30386'
     call get_address
     lods u8 [esi]
     cmp al,','
@@ -29897,6 +30404,7 @@ xop_shift_reg_mem:
     ret
 
 xop_shift_reg_mem_imm:
+    strings.emit 'xop_shift_reg_mem_imm | 30406'
     cmp [base_code],94h
     jae invalid_operand
     add [base_code],30h
@@ -29906,11 +30414,13 @@ xop_shift_reg_mem_imm:
     ret
 
 set_evex_mode:
+    strings.emit 'set_evex_mode | 30416'
     mov [evex_mode],al
     jmp instruction_assembled
     ret
 
 take_avx_register:
+    strings.emit 'take_avx_register | 30422'
     lods u8 [esi]
     call get_size_operator
     cmp al,10h
@@ -29932,6 +30442,7 @@ take_avx_register:
     ret
 
 avx512_register_size:
+    strings.emit 'avx512_register_size | 30444'
     mov ah,64
 
     avx_register_size_ok:
@@ -29943,6 +30454,7 @@ avx512_register_size:
     ret
 
 store_vex_instruction_code:
+    strings.emit 'store_vex_instruction_code | 30456'
     test [rex_prefix],10h
     jnz invalid_operand
     test [vex_required],0F8h
@@ -30000,6 +30512,7 @@ store_vex_instruction_code:
     ret
 
 get_vex_lpp_bits:
+    strings.emit 'get_vex_lpp_bits | 30513'
     cmp [operand_size],32
     jne get_vex_pp_bits
     or al,100b
@@ -30017,18 +30530,21 @@ get_vex_lpp_bits:
     ret
 
 store_vex_0f38_instruction_code:
+    strings.emit 'store_vex_0f38_instruction_code | 30532'
     mov al,11100010b
     mov ah,[supplemental_code]
     jmp make_c4_vex
     ret
 
 store_vex_0f3a_instruction_code:
+    strings.emit 'store_vex_0f3a_instruction_code | 30539'
     mov al,11100011b
     mov ah,[supplemental_code]
     jmp make_c4_vex
     ret
 
 store_vex_0f_instruction_code:
+    strings.emit 'store_vex_0f_instruction_code | 30546'
     mov al,11100001b
 
     make_c4_vex:
@@ -30052,6 +30568,7 @@ store_vex_0f_instruction_code:
     ret
 
 check_vex:
+    strings.emit 'check_vex | 30570'
     cmp [code_type],64
     je return_ok
     not al
@@ -30063,6 +30580,7 @@ check_vex:
     ret
 
 store_xop_instruction_code:
+    strings.emit 'store_xop_instruction_code | 30582'
     mov [edi+3],al
     mov u8 [edi],8Fh
     mov al,[xop_opcode_map]
@@ -30089,6 +30607,7 @@ store_xop_instruction_code:
     ret
 
 store_evex_instruction_code:
+    strings.emit 'store_evex_instruction_code | 30609'
     test [vex_required],2
     jnz invalid_operand
     cmp [base_code],0Fh
@@ -30142,6 +30661,7 @@ store_evex_instruction_code:
     ret
 
 evex_rounding:
+    strings.emit 'evex_rounding | 30663'
     mov ah,[rounding_mode]
     shl ah,5
     or al,ah
@@ -30161,18 +30681,21 @@ evex_rounding:
     ret
 
 store_evex_0f38_instruction_code:
+    strings.emit 'store_evex_0f38_instruction_code | 30683'
     mov al,11110010b
     mov ah,[supplemental_code]
     jmp make_evex
     ret
 
 store_evex_0f3a_instruction_code:
+    strings.emit 'store_evex_0f3a_instruction_code | 30690'
     mov al,11110011b
     mov ah,[supplemental_code]
     jmp make_evex
     ret
 
 compress_displacement:
+    strings.emit 'compress_displacement | 30697'
     mov ebp,ecx
     mov [uncompressed_displacement],edx
     or edx,edx
@@ -30202,7 +30725,7 @@ compress_displacement:
     ret
 
 displacement_compressed:
-    strings.emit 'displacement_compressed | 29319'
+    strings.emit 'displacement_compressed | 30728'
     add [displacement_compression],2
 
     displacement_compression_ok:
@@ -34778,4 +35301,4 @@ section '.reloc' fixups data readable discardable
   if $=$$
         dd 0,8            ; if there are no fixups, generate dummy entry
   end if
-; 34781
+; 35304
