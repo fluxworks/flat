@@ -17893,6 +17893,7 @@ single_reg:
     ret
 
 mov_instruction:
+    strings.emit 'mov_instruction | 17896'
     mov [base_code],88h
     lods u8 [esi]
     call get_size_operator
@@ -17940,6 +17941,7 @@ mov_instruction:
     ret
 
 mov_mem_reg_8bit:
+    strings.emit 'mov_mem_reg_8bit | 17944'
     or al,bl
     or al,bh
     jnz instruction_ready
@@ -17972,6 +17974,7 @@ mov_mem_reg_8bit:
     ret
 
 mov_mem_address16_al:
+    strings.emit 'mov_mem_address16_al | 17977'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A2h
@@ -17988,6 +17991,7 @@ mov_mem_address16_al:
     ret
 
 mov_mem_address64_al:
+    strings.emit 'mov_mem_address64_al | 17994'
     call store_segment_prefix_if_necessary
     mov [base_code],0A2h
 
@@ -17998,6 +18002,7 @@ mov_mem_address64_al:
     ret
 
 mov_mem_ax:
+    strings.emit 'mov_mem_ax | 18004'
     test ch,22h
     jnz mov_mem_address16_ax
     test ch,44h
@@ -18021,6 +18026,7 @@ mov_mem_ax:
     ret
 
 mov_mem_address16_ax:
+    strings.emit 'mov_mem_address16_ax | 18029'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A3h
@@ -18028,12 +18034,14 @@ mov_mem_address16_ax:
     ret
 
 mov_mem_address64_ax:
+    strings.emit 'mov_mem_address64_ax | 18037'
     call store_segment_prefix_if_necessary
     mov [base_code],0A3h
     jmp store_mov_address64
     ret
 
 mov_mem_sreg:
+    strings.emit 'mov_mem_sreg | 18044'
     sub al,31h
     mov [postbyte_register],al
     pop _ecx _ebx _edx
@@ -18049,6 +18057,7 @@ mov_mem_sreg:
     ret
 
 mov_mem_imm:
+    strings.emit 'mov_mem_imm | 18060'
     mov al,[operand_size]
     cmp al,1
     jb mov_mem_imm_nosize
@@ -18071,6 +18080,7 @@ mov_mem_imm:
     ret
 
 mov_mem_imm_nosize:
+    strings.emit 'mov_mem_imm_nosize | 18083'
     call recoverable_unknown_size
 
     mov_mem_imm_8bit:
@@ -18084,6 +18094,7 @@ mov_mem_imm_nosize:
     ret
 
 mov_mem_imm_16bit:
+    strings.emit 'mov_mem_imm_16bit | 18097'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -18095,6 +18106,7 @@ mov_mem_imm_16bit:
     ret
 
 mov_mem_imm_32bit:
+    strings.emit 'mov_mem_imm_32bit | 18109'
     call operand_32bit
     call get_dword_value
 
@@ -18108,6 +18120,7 @@ mov_mem_imm_32bit:
     ret
 
 mov_reg:
+    strings.emit 'mov_reg | 18123'
     lods u8 [esi]
     mov ah,al
     sub ah,10h
@@ -18151,6 +18164,7 @@ mov_reg:
     ret
 
 mov_reg_sreg:
+    strings.emit 'mov_reg_sreg | 18167'
     mov bl,[postbyte_register]
     mov ah,al
     and al,1111b
@@ -18170,11 +18184,13 @@ mov_reg_sreg:
     ret
 
 mov_reg_sreg64:
+    strings.emit 'mov_reg_sreg64 | 18187'
     call operand_64bit
     jmp mov_reg_sreg_store
     ret
 
 mov_reg_sreg32:
+    strings.emit 'mov_reg_sreg32 | 18193'
     call operand_32bit
     mov_reg_sreg_store:
     mov [base_code],8Ch
@@ -18182,6 +18198,7 @@ mov_reg_sreg32:
     ret
 
 mov_reg_creg:
+    strings.emit 'mov_reg_creg | 18201'
     lods u8 [esi]
     mov bl,al
     shr al,4
@@ -18209,12 +18226,14 @@ mov_reg_creg:
     ret
 
 mov_reg_creg_64bit:
+    strings.emit 'mov_reg_creg_64bit | 18229'
     cmp [operand_size],8
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
 mov_reg_mem:
+    strings.emit 'mov_reg_mem | 18236'
     call get_address
     mov al,[operand_size]
     cmp al,1
@@ -18229,6 +18248,7 @@ mov_reg_mem:
     ret
 
 mov_reg_mem_8bit:
+    strings.emit 'mov_reg_mem_8bit | 18251'
     mov al,[postbyte_register]
     or al,bl
     or al,bh
@@ -18238,6 +18258,7 @@ mov_reg_mem_8bit:
     ret
 
 mov_al_mem:
+    strings.emit 'mov_al_mem | 18261'
     test ch,22h
     jnz mov_al_mem_address16
     test ch,44h
@@ -18261,6 +18282,7 @@ mov_al_mem:
     ret
 
 mov_al_mem_address16:
+    strings.emit 'mov_al_mem_address16 | 18285'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A0h
@@ -18268,12 +18290,14 @@ mov_al_mem_address16:
     ret
 
 mov_al_mem_address64:
+    strings.emit 'mov_al_mem_address64 | 18293'
     call store_segment_prefix_if_necessary
     mov [base_code],0A0h
     jmp store_mov_address64
     ret
 
 mov_ax_mem:
+    strings.emit 'mov_ax_mem | 18300'
     test ch,22h
     jnz mov_ax_mem_address16
     test ch,44h
@@ -18297,6 +18321,7 @@ mov_ax_mem:
     ret
 
 mov_ax_mem_address16:
+    strings.emit 'mov_ax_mem_address16 | 18324'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A1h
@@ -18304,12 +18329,14 @@ mov_ax_mem_address16:
     ret
 
 mov_ax_mem_address64:
+    strings.emit 'mov_ax_mem_address64 | 18332'
     call store_segment_prefix_if_necessary
     mov [base_code],0A1h
     jmp store_mov_address64
     ret
 
 mov_reg_imm:
+    strings.emit 'mov_reg_imm | 18339'
     mov al,[operand_size]
     cmp al,1
     je mov_reg_imm_8bit
@@ -18345,6 +18372,7 @@ mov_reg_imm:
     ret
 
 mov_reg_imm_8bit:
+    strings.emit 'mov_reg_imm_8bit | 18375'
     call get_byte_value
     mov dl,al
     mov al,0B0h
@@ -18355,6 +18383,7 @@ mov_reg_imm_8bit:
     ret
 
 mov_reg_imm_16bit:
+    strings.emit 'mov_reg_imm_16bit | 18386'
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -18367,6 +18396,7 @@ mov_reg_imm_16bit:
     ret
 
 mov_reg_imm_32bit:
+    strings.emit 'mov_reg_imm_32bit | 18399'
     call operand_32bit
     call get_dword_value
     mov edx,eax
@@ -18381,6 +18411,7 @@ mov_reg_imm_32bit:
     ret
 
 store_mov_reg_imm_code:
+    strings.emit 'store_mov_reg_imm_code | 18414'
     mov ah,[postbyte_register]
     test ah,1000b
     jz mov_reg_imm_prefix_ok
@@ -18394,6 +18425,7 @@ store_mov_reg_imm_code:
     ret
 
 mov_reg_64bit_imm_32bit:
+    strings.emit 'mov_reg_64bit_imm_32bit | 18428'
     mov edx,eax
     mov bl,[postbyte_register]
     mov [postbyte_register],0
@@ -18403,6 +18435,7 @@ mov_reg_64bit_imm_32bit:
     ret
 
 mov_sreg:
+    strings.emit 'mov_sreg | 18438'
     mov ah,al
     and al,1111b
     mov [postbyte_register],al
@@ -18437,6 +18470,7 @@ mov_sreg:
     ret
 
 mov_sreg_mem:
+    strings.emit 'mov_sreg_mem | 18473'
     call get_address
     mov al,[operand_size]
     or al,al
@@ -18450,6 +18484,7 @@ mov_sreg_mem:
     ret
 
 mov_creg:
+    strings.emit 'mov_creg | 18487'
     lods u8 [esi]
     mov ah,al
     shr ah,4
@@ -18482,12 +18517,14 @@ mov_creg:
     ret
 
 mov_creg_64bit:
+    strings.emit 'mov_creg_64bit | 18520'
     cmp ah,8
     je mov_creg_store
     jmp invalid_operand_size
     ret
 
 test_instruction:
+    strings.emit 'test_instruction | 18527'
     mov [base_code],84h
     lods u8 [esi]
     call get_size_operator
@@ -18525,6 +18562,7 @@ test_instruction:
     ret
 
 test_mem_imm:
+    strings.emit 'test_mem_imm | 18565'
     mov al,[operand_size]
     cmp al,1
     jb test_mem_imm_nosize
@@ -18547,6 +18585,7 @@ test_mem_imm:
     ret
 
 test_mem_imm_nosize:
+    strings.emit 'test_mem_imm_nosize | 18588'
     call recoverable_unknown_size
     test_mem_imm_8bit:
     call get_byte_value
@@ -18559,6 +18598,7 @@ test_mem_imm_nosize:
     ret
 
 test_mem_imm_16bit:
+    strings.emit 'test_mem_imm_16bit | 18601'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -18570,6 +18610,7 @@ test_mem_imm_16bit:
     ret
 
 test_mem_imm_32bit:
+    strings.emit 'test_mem_imm_32bit | 18613'
     call operand_32bit
     call get_dword_value
     test_mem_imm_32bit_store:
@@ -18582,6 +18623,7 @@ test_mem_imm_32bit:
     ret
 
 test_reg:
+    strings.emit 'test_reg | 18626'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -18613,6 +18655,7 @@ test_reg:
     ret
 
 test_reg_imm:
+    strings.emit 'test_reg_imm | 18658'
     mov al,[operand_size]
     cmp al,1
     je test_reg_imm_8bit
@@ -18634,6 +18677,7 @@ test_reg_imm:
     ret
 
 test_reg_imm_8bit:
+    strings.emit 'test_reg_imm_8bit | 18680'
     call get_byte_value
     mov dl,al
     mov bl,[postbyte_register]
@@ -18648,6 +18692,7 @@ test_reg_imm_8bit:
     ret
 
 test_al_imm:
+    strings.emit 'test_al_imm | 18695'
     mov [base_code],0A8h
     call store_classic_instruction_code
     mov al,dl
@@ -18656,6 +18701,7 @@ test_al_imm:
     ret
 
 test_reg_imm_16bit:
+    strings.emit 'test_reg_imm_16bit | 18704'
     call operand_16bit
     call get_word_value
     mov dx,ax
@@ -18672,6 +18718,7 @@ test_reg_imm_16bit:
     ret
 
 test_ax_imm:
+    strings.emit 'test_ax_imm | 18721'
     mov [base_code],0A9h
     call store_classic_instruction_code
     mov ax,dx
@@ -18680,6 +18727,7 @@ test_ax_imm:
     ret
 
 test_reg_imm_32bit:
+    strings.emit 'test_reg_imm_32bit | 18730'
     call operand_32bit
     call get_dword_value
 
@@ -18698,6 +18746,7 @@ test_reg_imm_32bit:
     ret
 
 test_eax_imm:
+    strings.emit 'test_eax_imm | 18748'
     mov [base_code],0A9h
     call store_classic_instruction_code
     mov eax,edx
@@ -18706,6 +18755,7 @@ test_eax_imm:
     ret
 
 test_reg_mem:
+    strings.emit 'test_reg_mem | 18758'
     call get_address
     mov al,[operand_size]
     cmp al,1
@@ -18718,6 +18768,7 @@ test_reg_mem:
     ret
 
 xchg_instruction:
+    strings.emit 'xchg_instruction | 18771'
     mov [base_code],86h
     lods u8 [esi]
     call get_size_operator
@@ -18740,6 +18791,7 @@ xchg_instruction:
     ret
 
 xchg_reg:
+    strings.emit 'xchg_reg | 18794'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -18789,6 +18841,7 @@ xchg_reg:
     ret
 
 xchg_reg_reg_store:
+    strings.emit 'xchg_reg_reg_store | 18844'
     inc [base_code]
 
     xchg_reg_reg_8bit:
@@ -18796,6 +18849,7 @@ xchg_reg_reg_store:
     ret
 
 push_instruction:
+    strings.emit 'push_instruction | 18852'
     mov [push_size],al
 
     push_next:
@@ -18831,6 +18885,7 @@ push_instruction:
     ret
 
 push_mem_16bit:
+    strings.emit 'push_mem_16bit | 18887'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -18838,6 +18893,7 @@ push_mem_16bit:
     ret
 
 push_mem_32bit:
+    strings.emit 'push_mem_32bit | 18896'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18847,6 +18903,7 @@ push_mem_32bit:
     ret
 
 push_mem_64bit:
+    strings.emit 'push_mem_64bit | 18906'
     test ah,not 8
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18860,6 +18917,7 @@ push_mem_64bit:
     ret
 
 push_reg:
+    strings.emit 'push_reg | 18920'
     lods u8 [esi]
     mov ah,al
     sub ah,10h
@@ -18893,6 +18951,7 @@ push_reg:
     ret
 
 push_reg_32bit:
+    strings.emit 'push_reg_32bit | 18954'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18902,6 +18961,7 @@ push_reg_32bit:
     ret
 
 push_reg_16bit:
+    strings.emit 'push_reg_16bit | 18964'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -18911,6 +18971,7 @@ push_reg_16bit:
     ret
 
 push_sreg:
+    strings.emit 'push_sreg | 18974'
     mov bl,al
     mov dl,[operand_size]
     mov dh,[push_size]
@@ -18932,6 +18993,7 @@ push_sreg:
     ret
 
 push_sreg16:
+    strings.emit 'push_sreg16 | 18996'
     test dh,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -18939,6 +19001,7 @@ push_sreg16:
     ret
 
 push_sreg32:
+    strings.emit 'push_sreg32 | 19004'
     test dh,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18948,6 +19011,7 @@ push_sreg32:
     ret
 
 push_sreg64:
+    strings.emit 'push_sreg64 | 19014'
     test dh,not 8
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18970,6 +19034,7 @@ push_sreg64:
     ret
 
 push_sreg_386:
+    strings.emit 'push_sreg_386 | 19037'
     sub al,4
     shl al,3
     add al,0A0h
@@ -18979,6 +19044,7 @@ push_sreg_386:
     ret
 
 push_imm:
+    strings.emit 'push_imm | 19047'
     mov al,[operand_size]
     mov ah,[push_size]
     or al,al
@@ -19023,6 +19089,7 @@ push_imm:
     ret
 
 push_imm_optimized_32bit:
+    strings.emit 'push_imm_optimized_32bit | 19092'
     cmp [code_type],64
     je illegal_instruction
     call get_dword_value
@@ -19038,6 +19105,7 @@ push_imm_optimized_32bit:
     ret
 
 push_imm_optimized_16bit:
+    strings.emit 'push_imm_optimized_16bit | 19108'
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -19058,6 +19126,7 @@ push_imm_optimized_16bit:
     ret
 
 push_imm_16bit:
+    strings.emit 'push_imm_optimized_16bit | 19108'
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -19072,6 +19141,7 @@ push_imm_16bit:
     ret
 
 push_imm_64bit:
+    strings.emit 'push_imm_64bit | 19144'
     cmp [code_type],64
     jne illegal_instruction
     call get_simm32
@@ -19080,6 +19150,7 @@ push_imm_64bit:
     ret
 
 push_imm_32bit:
+    strings.emit 'push_imm_32bit | 19153'
     cmp [code_type],64
     je illegal_instruction
     call get_dword_value
@@ -19105,6 +19176,7 @@ push_imm_32bit:
     ret
 
 pop_instruction:
+    strings.emit 'pop_instruction | 19179'
     mov [push_size],al
 
     pop_next:
@@ -19138,6 +19210,7 @@ pop_instruction:
     ret
 
 pop_mem_16bit:
+    strings.emit 'pop_mem_16bit | 19213'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19145,6 +19218,7 @@ pop_mem_16bit:
     ret
 
 pop_mem_32bit:
+    strings.emit 'pop_mem_32bit | 19221'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19154,6 +19228,7 @@ pop_mem_32bit:
     ret
 
 pop_mem_64bit:
+    strings.emit 'pop_mem_64bit | 19230'
     test ah,not 8
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19167,6 +19242,7 @@ pop_mem_64bit:
     ret
 
 pop_reg:
+    strings.emit 'pop_reg | 19245'
     lods u8 [esi]
     mov ah,al
     sub ah,10h
@@ -19194,6 +19270,7 @@ pop_reg:
     ret
 
 pop_reg_64bit:
+    strings.emit 'pop_reg_64bit | 19273'
     test ah,not 8
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19202,6 +19279,7 @@ pop_reg_64bit:
     ret
 
 pop_reg_32bit:
+    strings.emit 'pop_reg_32bit | 19282'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19211,6 +19289,7 @@ pop_reg_32bit:
     ret
 
 pop_reg_16bit:
+    strings.emit 'pop_reg_16bit | 19292'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19230,6 +19309,7 @@ pop_reg_16bit:
     ret
 
 pop_sreg:
+    strings.emit 'pop_sreg | 19312'
     mov dl,[operand_size]
     mov dh,[push_size]
     cmp al,32h
@@ -19253,6 +19333,7 @@ pop_sreg:
     ret
 
 pop_sreg16:
+    strings.emit 'pop_sreg16 | 19336'
     test dh,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19260,6 +19341,7 @@ pop_sreg16:
     ret
 
 pop_sreg32:
+    strings.emit 'pop_sreg32 | 19344'
     test dh,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19269,6 +19351,7 @@ pop_sreg32:
     ret
 
 pop_sreg64:
+    strings.emit 'pop_sreg64 | 19354'
     test dh,not 8
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19291,6 +19374,7 @@ pop_sreg64:
     ret
 
 pop_cs:
+    strings.emit 'pop_cs | 19377'
     cmp [code_type],16
     jne illegal_instruction
     cmp dl,2
@@ -19311,6 +19395,7 @@ pop_cs:
     ret
 
 pop_sreg_386:
+    strings.emit 'pop_sreg_386 | 19397'
     sub al,4
     shl al,3
     add al,0A1h
@@ -19320,6 +19405,7 @@ pop_sreg_386:
     ret
 
 inc_instruction:
+    strings.emit 'inc_instruction | 19407'
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
@@ -19343,6 +19429,7 @@ inc_instruction:
     ret
 
 inc_mem_nosize:
+    strings.emit 'inc_mem_nosize | 19432'
     call recoverable_unknown_size
 
     inc_mem_8bit:
@@ -19353,6 +19440,7 @@ inc_mem_nosize:
     ret
 
 inc_reg:
+    strings.emit 'inc_reg | 19443'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -19375,6 +19463,7 @@ inc_reg:
     ret
 
 inc_reg_long_form:
+    strings.emit 'inc_reg_long_form | 19465'
     inc [base_code]
 
     inc_reg_8bit:
@@ -19382,6 +19471,7 @@ inc_reg_long_form:
     ret
 
 set_instruction:
+    strings.emit 'set_instruction | 19473'
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -19400,6 +19490,7 @@ set_instruction:
     ret
 
 set_reg:
+    strings.emit 'set_reg | 19493'
     lods u8 [esi]
     call convert_register
     cmp ah,1
@@ -19410,6 +19501,7 @@ set_reg:
     ret
 
 arpl_instruction:
+    strings.emit 'arpl_instruction | 19504'
     cmp [code_type],64
     je illegal_instruction
     mov [base_code],63h
@@ -19431,6 +19523,7 @@ arpl_instruction:
     ret
 
 arpl_reg:
+    strings.emit 'arpl_reg | 19525'
     lods u8 [esi]
     call convert_register
     cmp ah,2
@@ -19445,6 +19538,7 @@ arpl_reg:
     ret
 
 bound_instruction:
+    strings.emit 'bound_instruction | 19541'
     cmp [code_type],64
     je illegal_instruction
     call take_register
@@ -19470,6 +19564,7 @@ bound_instruction:
     ret
 
 enter_instruction:
+    strings.emit 'enter_instruction | 19567'
     lods u8 [esi]
     call get_size_operator
     cmp ah,2
@@ -19523,12 +19618,14 @@ enter_instruction:
     ret
 
 ret_instruction_only64:
+    strings.emit 'ret_instruction_only64 | 19621'
     cmp [code_type],64
     jne illegal_instruction
     jmp ret_instruction
     ret
 
 ret_instruction_32bit_except64:
+    strings.emit 'ret_instruction_32bit_except64 | 19628'
     cmp [code_type],64
     je illegal_instruction
 
@@ -19538,11 +19635,13 @@ ret_instruction_32bit_except64:
     ret
 
 ret_instruction_16bit:
+    strings.emit 'ret_instruction_16bit | 19637'
     call operand_16bit
     jmp ret_instruction
     ret
 
 ret_instruction_64bit:
+    strings.emit 'ret_instruction_64bit | 19644'
     call operand_64bit
 
     ret_instruction:
@@ -19566,6 +19665,7 @@ ret_instruction_64bit:
     ret
 
 ret_imm:
+    strings.emit 'ret_imm | 19667'
     cmp al,'('
     jne invalid_operand
     call get_word_value
@@ -19591,12 +19691,14 @@ ret_imm:
     ret
 
 simple_ret:
+    strings.emit 'simple_ret | 19694'
     inc [base_code]
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
 retf_instruction:
+    strings.emit 'retf_instruction | 19701'
     cmp [code_type],64
     jne ret_common
 
@@ -19606,16 +19708,19 @@ retf_instruction_64bit:
     ret
 
 retf_instruction_32bit:
+    strings.emit 'retf_instruction_32bit | 19711'
     call operand_32bit
     jmp ret_common
     ret
 
 retf_instruction_16bit:
+    strings.emit 'retf_instruction_16bit | 19717'
     call operand_16bit
     jmp ret_common
     ret
 
 lea_instruction:
+    strings.emit 'lea_instruction | 19722'
     mov [base_code],8Dh
     call take_register
     mov [postbyte_register],al
@@ -19638,6 +19743,7 @@ lea_instruction:
     ret
 
 ls_instruction:
+    strings.emit 'ls_instruction | 19746'
     or al,al
     jz les_instruction
     cmp al,3
@@ -19649,11 +19755,13 @@ ls_instruction:
     ret
 
 les_instruction:
+    strings.emit 'les_instruction | 19758'
     mov [base_code],0C4h
     jmp ls_short_code
     ret
 
 lds_instruction:
+    strings.emit 'lds_instruction | 19764'
     mov [base_code],0C5h
 
     ls_short_code:
@@ -19683,21 +19791,25 @@ lds_instruction:
     ret
 
 ls_16bit:
+    strings.emit 'ls_16bit | 19794'
     call operand_16bit
     jmp instruction_ready
     ret
 
 ls_32bit:
+    strings.emit 'ls_32bit | 19800'
     call operand_32bit
     jmp instruction_ready
     ret
 
 ls_64bit:
+    strings.emit 'ls_64bit | 19806'
     call operand_64bit
     jmp instruction_ready
     ret
 
 sh_instruction:
+    strings.emit 'sh_instruction | 19812'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -19736,6 +19848,7 @@ sh_instruction:
     ret
 
 sh_mem_cl_nosize:
+    strings.emit 'sh_mem_cl_nosize | 19851'
     call recoverable_unknown_size
 
     sh_mem_cl_8bit:
@@ -19744,6 +19857,7 @@ sh_mem_cl_nosize:
     ret
 
 sh_mem_imm:
+    strings.emit 'sh_mem_imm | 19860'
     mov al,[operand_size]
     or al,al
     jz sh_mem_imm_size_ok
@@ -19766,11 +19880,13 @@ sh_mem_imm:
     ret
 
 sh_mem_1:
+    strings.emit 'sh_mem_1 | 19883'
     mov [base_code],0D1h
     jmp instruction_ready
     ret
 
 sh_mem_imm_nosize:
+    strings.emit 'sh_mem_imm_nosize | 19889'
     call recoverable_unknown_size
 
     sh_mem_imm_8bit:
@@ -19782,11 +19898,13 @@ sh_mem_imm_nosize:
     ret
 
 sh_mem_1_8bit:
+    strings.emit 'sh_mem_imm_nosize | 19901'
     mov [base_code],0D0h
     jmp instruction_ready
     ret
 
 sh_reg:
+    strings.emit 'sh_reg | 19907'
     lods u8 [esi]
     call convert_register
     mov bx,ax
@@ -19814,11 +19932,13 @@ sh_reg:
     ret
 
 sh_reg_cl_8bit:
+    strings.emit 'sh_reg_cl_8bit | 19935'
     mov [base_code],0D2h
     jmp nomem_instruction_ready
     ret
 
 sh_reg_imm:
+    strings.emit 'sh_reg_imm | 19941'
     mov al,[operand_size]
     or al,al
     jz sh_reg_imm_size_ok
@@ -19844,11 +19964,13 @@ sh_reg_imm:
     ret
 
 sh_reg_1:
+    strings.emit 'sh_reg_1 | 19966'
     mov [base_code],0D1h
     jmp nomem_instruction_ready
     ret
 
 sh_reg_imm_8bit:
+    strings.emit 'sh_reg_imm_8bit | 19973'
     cmp dl,1
     je sh_reg_1_8bit
     mov [base_code],0C0h
@@ -19859,11 +19981,13 @@ sh_reg_imm_8bit:
     ret
 
 sh_reg_1_8bit:
+    strings.emit 'sh_reg_1_8bit | 19984'
     mov [base_code],0D0h
     jmp nomem_instruction_ready
     ret
 
 shd_instruction:
+    strings.emit 'shd_instruction | 19990'
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -19902,6 +20026,7 @@ shd_instruction:
     ret
 
 shd_mem_reg_imm:
+    strings.emit 'shd_mem_reg_imm | 20029'
     mov al,[operand_size]
     or al,al
     jz shd_mem_reg_imm_size_ok
@@ -19918,6 +20043,7 @@ shd_mem_reg_imm:
     ret
 
 shd_reg:
+    strings.emit 'shd_mem_reg_imm | 20046'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -19949,6 +20075,7 @@ shd_reg:
     ret
 
 shd_reg_reg_imm:
+    strings.emit 'shd_reg_reg_imm | 20078'
     mov al,[operand_size]
     or al,al
     jz shd_reg_reg_imm_size_ok
@@ -19966,7 +20093,8 @@ shd_reg_reg_imm:
     jmp instruction_assembled
     ret
 
-    movx_instruction:
+movx_instruction:
+    strings.emit 'movx_instruction | 20097'
     mov [base_code],0Fh
     mov [extended_code],al
     call take_register
@@ -20002,11 +20130,13 @@ shd_reg_reg_imm:
     ret
 
 movx_unknown_size:
+    strings.emit 'movx_unknown_size | 20133'
     call recoverable_unknown_size
     jmp movx_mem_store
     ret
 
 movx_reg:
+    strings.emit 'movx_reg | 20139'
     lods u8 [esi]
     call convert_register
     pop _ebx
@@ -20021,17 +20151,20 @@ movx_reg:
     ret
 
 movx_reg_8bit:
+    strings.emit 'movx_reg_8bit | 20154'
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
 movx_reg_16bit:
+    strings.emit 'movx_reg_16bit | 20160'
     call operand_autodetect
     inc [extended_code]
     jmp nomem_instruction_ready
     ret
 
 movsxd_instruction:
+    strings.emit 'movsxd_instruction | 20167'
     mov [base_code],al
     call take_register
     mov [postbyte_register],al
@@ -20059,6 +20192,7 @@ movsxd_instruction:
     ret
 
 movsxd_reg:
+    strings.emit 'movsxd_reg | 20195'
     lods u8 [esi]
     call convert_register
     cmp ah,4
@@ -20069,6 +20203,7 @@ movsxd_reg:
     ret
 
 bt_instruction:
+    strings.emit 'bt_instruction | 20205'
     mov [postbyte_register],al
     shl al,3
     add al,83h
@@ -20102,6 +20237,7 @@ bt_instruction:
     ret
 
 bt_mem_imm:
+    strings.emit 'bt_mem_imm | 20240'
     xor al,al
     xchg al,[operand_size]
     push _eax
@@ -20131,11 +20267,13 @@ bt_mem_imm:
     ret
 
 bt_mem_imm_nosize:
+    strings.emit 'bt_mem_imm_nosize | 20270'
     call recoverable_unknown_size
     jmp bt_mem_imm_store
     ret
 
 bt_reg:
+    strings.emit 'bt_reg | 20276'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20158,6 +20296,7 @@ bt_reg:
     ret
 
 bt_reg_imm:
+    strings.emit 'bt_reg_imm | 20299'
     xor al,al
     xchg al,[operand_size]
     push _eax _ebx
@@ -20185,6 +20324,7 @@ bt_reg_imm:
     ret
 
 bs_instruction:
+    strings.emit 'bs_instruction | 20327'
     mov [extended_code],al
     mov [base_code],0Fh
     call get_reg_mem
@@ -20195,12 +20335,14 @@ bs_instruction:
     ret
 
 bs_reg_reg:
+    strings.emit 'bs_reg_reg | 20338'
     mov al,ah
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
 get_reg_mem:
+    strings.emit 'get_reg_mem | 20344'
     call take_register
     mov [postbyte_register],al
     lods u8 [esi]
@@ -20217,6 +20359,7 @@ get_reg_mem:
     ret
 
 get_reg_reg:
+    strings.emit 'get_reg_reg | 20362'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20224,6 +20367,7 @@ get_reg_reg:
     ret
 
 imul_instruction:
+    strings.emit 'imul_instruction | 20370'
     mov [base_code],0F6h
     mov [postbyte_register],5
     lods u8 [esi]
@@ -20245,6 +20389,7 @@ imul_instruction:
     ret
 
 imul_mem_nosize:
+    strings.emit 'imul_mem_nosize | 20392'
     call recoverable_unknown_size
 
     imul_mem_8bit:
@@ -20252,6 +20397,7 @@ imul_mem_nosize:
     ret
 
 imul_reg:
+    strings.emit 'imul_reg | 20400'
     lods u8 [esi]
     call convert_register
     cmp u8 [esi],','
@@ -20268,6 +20414,7 @@ imul_reg:
     ret
 
 imul_reg_:
+    strings.emit 'imul_reg_ | 20417'
     mov [postbyte_register],al
     inc esi
     cmp u8 [esi],'('
@@ -20299,6 +20446,7 @@ imul_reg_:
     ret
 
 imul_reg_mem_imm:
+    strings.emit 'imul_reg_mem_imm | 20449'
     inc esi
     lods u8 [esi]
     call get_size_operator
@@ -20323,6 +20471,7 @@ imul_reg_mem_imm:
     ret
 
 imul_reg_mem_imm_16bit:
+    strings.emit 'imul_reg_mem_imm_16bit | 20474'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
@@ -20343,6 +20492,7 @@ imul_reg_mem_imm_16bit:
     ret
 
 imul_reg_mem_imm_32bit:
+    strings.emit 'imul_reg_mem_imm_32bit | 20495'
     call operand_32bit
     call get_dword_value
 
@@ -20365,6 +20515,7 @@ imul_reg_mem_imm_32bit:
     ret
 
 imul_reg_mem_imm_8bit_store:
+    strings.emit 'imul_reg_mem_imm_8bit_store | 20518'
     pop _ecx _ebx _edx
     mov [base_code],6Bh
     call store_instruction_with_imm8
@@ -20372,12 +20523,14 @@ imul_reg_mem_imm_8bit_store:
     ret
 
 imul_reg_imm:
+    strings.emit 'imul_reg_imm | 20526'
     mov bl,[postbyte_register]
     dec esi
     jmp imul_reg_reg_imm
     ret
 
 imul_reg_reg:
+    strings.emit 'imul_reg_reg | 20533'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20391,6 +20544,7 @@ imul_reg_reg:
     ret
 
 imul_reg_reg_imm:
+    strings.emit 'imul_reg_reg_imm | 20547'
     inc esi
     lods u8 [esi]
     call get_size_operator
@@ -20416,6 +20570,7 @@ imul_reg_reg_imm:
     ret
 
 imul_reg_reg_imm_16bit:
+    strings.emit 'imul_reg_reg_imm_16bit | 20573'
     call operand_16bit
     push _ebx
     call get_word_value
@@ -20440,6 +20595,7 @@ imul_reg_reg_imm_16bit:
     ret
 
 imul_reg_reg_imm_32bit:
+    strings.emit 'imul_reg_reg_imm_32bit | 20598'
     call operand_32bit
     push _ebx
     call get_dword_value
@@ -20466,6 +20622,7 @@ imul_reg_reg_imm_32bit:
     ret
 
 imul_reg_reg_imm_8bit_store:
+    strings.emit 'imul_reg_reg_imm_8bit_store | 20625'
     mov [base_code],6Bh
     call store_nomem_instruction
     mov al,dl
@@ -20474,6 +20631,7 @@ imul_reg_reg_imm_8bit_store:
     ret
 
 in_instruction:
+    strings.emit 'in_instruction | 20633'
     call take_register
     or al,al
     jnz invalid_operand
@@ -20493,6 +20651,7 @@ in_instruction:
     ret
 
 in_reg:
+    strings.emit 'in_reg | 20654'
     lods u8 [esi]
     cmp al,22h
     jne invalid_operand
@@ -20512,12 +20671,14 @@ in_reg:
     ret
 
 in_al_dx:
+    strings.emit 'in_al_dx | 20674'
     mov al,0ECh
     stos u8 [edi]
     jmp instruction_assembled
     ret
 
 in_imm:
+    strings.emit 'in_imm | 20681'
     mov al,[operand_size]
     or al,al
     jz in_imm_size_ok
@@ -20545,6 +20706,7 @@ in_imm:
     ret
 
 in_al_imm:
+    strings.emit 'in_al_imm | 20709'
     mov al,0E4h
     stos u8 [edi]
     mov al,dl
@@ -20553,6 +20715,7 @@ in_al_imm:
     ret
 
 out_instruction:
+    strings.emit 'out_instruction | 20718'
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
@@ -20585,12 +20748,14 @@ out_instruction:
     ret
 
 out_dx_al:
+    strings.emit 'out_dx_al | 20750'
     mov al,0EEh
     stos u8 [edi]
     jmp instruction_assembled
     ret
 
 out_imm:
+    strings.emit 'out_imm | 20757'
     mov al,[operand_size]
     or al,al
     jz out_imm_size_ok
@@ -20625,6 +20790,7 @@ out_imm:
     ret
 
 out_imm_al:
+    strings.emit 'out_imm_al | 20792'
     mov al,0E6h
     stos u8 [edi]
     mov al,dl
@@ -20633,6 +20799,7 @@ out_imm_al:
     ret
 
 call_instruction:
+    strings.emit 'call_instruction | 20802'
     mov [postbyte_register],10b
     mov [base_code],0E8h
     mov [extended_code],9Ah
@@ -20640,6 +20807,7 @@ call_instruction:
     ret
 
 jmp_instruction:
+    strings.emit 'jmp_instruction | 20810'
     mov [postbyte_register],100b
     mov [base_code],0E9h
     mov [extended_code],0EAh
@@ -20686,6 +20854,7 @@ jmp_instruction:
     ret
 
 jmp_mem_size_not_specified:
+    strings.emit 'jmp_mem_size_not_specified | 20857'
     cmp [jump_type],3
     je jmp_mem_far
     cmp [jump_type],2
@@ -20707,6 +20876,7 @@ jmp_mem_size_not_specified:
     ret
 
 jmp_mem_far:
+    strings.emit 'jmp_mem_far | 20878'
     cmp [code_type],16
     je jmp_mem_far_32bit
     jmp_mem_48bit:
@@ -20720,16 +20890,19 @@ jmp_mem_far:
     ret
 
 jmp_mem_80bit:
+    strings.emit 'jmp_mem_80bit | 20893'
     call operand_64bit
     jmp jmp_mem_far_store
     ret
 
 jmp_mem_far_32bit:
+    strings.emit 'jmp_mem_far_32bit | 20899'
     call operand_16bit
     jmp jmp_mem_far_store
     ret
 
 jmp_mem_32bit:
+    strings.emit 'jmp_mem_32bit | 20904'
     cmp [jump_type],3
     je jmp_mem_far_32bit
     cmp [jump_type],2
@@ -20745,6 +20918,7 @@ jmp_mem_32bit:
     ret
 
 jmp_mem_16bit:
+    strings.emit 'jmp_mem_16bit | 20921'
     cmp [jump_type],3
     je invalid_operand_size
     call operand_16bit
@@ -20752,6 +20926,7 @@ jmp_mem_16bit:
     ret
 
 jmp_reg:
+    strings.emit 'jmp_reg | 20928'
     test [jump_type],1
     jnz invalid_operand
     lods u8 [esi]
@@ -20772,6 +20947,7 @@ jmp_reg:
     ret
 
 jmp_reg_32bit:
+    strings.emit 'jmp_reg_32bit | 20949'
     cmp [code_type],64
     je illegal_instruction
     call operand_32bit
@@ -20779,11 +20955,13 @@ jmp_reg_32bit:
     ret
 
 jmp_reg_16bit:
+    strings.emit 'jmp_reg_16bit | 20958'
     call operand_16bit
     jmp nomem_instruction_ready
     ret
 
 jmp_imm:
+    strings.emit 'jmp_imm | 20963'
     cmp u8 [esi],'.'
     je invalid_value
     mov ebx,esi
@@ -20841,6 +21019,7 @@ jmp_imm:
     ret
 
 jmp_imm_64bit:
+    strings.emit 'jmp_imm_64bit | 20921'
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -20860,6 +21039,7 @@ jmp_imm_64bit:
     ret
 
 jmp_imm_16bit:
+    strings.emit 'jmp_imm_16bit | 20942'
     call get_address_word_value
     cmp [code_type],16
     je jmp_imm_16bit_prefix_ok
@@ -20884,6 +21064,7 @@ jmp_imm_16bit:
     ret
 
 calculate_jump_offset:
+    strings.emit 'calculate_jump_offset | 21067'
     add edi,2
     mov ebp,[addressing_space]
     call calculate_relative_offset
@@ -20891,6 +21072,7 @@ calculate_jump_offset:
     ret
 
 check_for_short_jump:
+    strings.emit 'check_for_short_jump | 21075'
     cmp [jump_type],1
     je forced_short
     ;ja no_short_jump
@@ -20911,6 +21093,7 @@ check_for_short_jump:
     ret
 
 forced_short:
+    strings.emit 'forced_short | 21095'
     cmp [base_code],0E8h
     je illegal_instruction
     cmp [next_pass_needed],0
@@ -20928,6 +21111,7 @@ forced_short:
     ret
 
 jump_out_of_range:
+    strings.emit 'jump_out_of_range | 21114'
     cmp [error_line],0
     jne instruction_assembled
     mov _eax,u64[current_line]
@@ -20937,6 +21121,7 @@ jump_out_of_range:
     ret
 
 jmp_far:
+    strings.emit 'jmp_far | 21123'
     cmp [jump_type],2
     je invalid_operand
     cmp [code_type],64
@@ -20981,6 +21166,7 @@ jmp_far:
     ret
 
 jmp_far_32bit:
+    strings.emit 'jmp_far_32bit | 21169'
     call get_dword_value
     mov ebx,eax
     call operand_32bit
@@ -20992,6 +21178,7 @@ jmp_far_32bit:
     ret
 
 conditional_jump:
+    strings.emit 'conditional_jump | 21180'
     mov [base_code],al
     and [prefix_flags],not 10h
     lods u8 [esi]
@@ -21050,6 +21237,7 @@ conditional_jump:
     ret
 
 conditional_jump_64bit:
+    strings.emit 'conditional_jump_64bit | 21239'
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21069,6 +21257,7 @@ conditional_jump_64bit:
     ret
 
 conditional_jump_16bit:
+    strings.emit 'conditional_jump_16bit | 21259'
     call get_address_word_value
     cmp [code_type],16
     je conditional_jump_16bit_prefix_ok
@@ -21095,6 +21284,7 @@ conditional_jump_16bit:
     ret
 
 loop_instruction_16bit:
+    strings.emit 'loop_instruction_16bit | 21286'
     cmp [code_type],64
     je illegal_instruction
     cmp [code_type],16
@@ -21104,6 +21294,7 @@ loop_instruction_16bit:
     ret
 
 loop_instruction_32bit:
+    strings.emit 'loop_instruction_32bit | 21296'
     cmp [code_type],32
     je loop_instruction
     mov [operand_prefix],67h
@@ -21111,6 +21302,7 @@ loop_instruction_32bit:
     ret
 
 loop_instruction_64bit:
+    strings.emit 'loop_instruction_64bit | 21304'
     cmp [code_type],64
     jne illegal_instruction
 
@@ -21161,6 +21353,7 @@ loop_instruction_64bit:
     ret
 
 loop_counter_size:
+    strings.emit 'loop_counter_size | 21355'
     cmp [operand_prefix],0
     ;je loop_counter_size_ok
     je return_ok
@@ -21171,6 +21364,7 @@ loop_counter_size:
     ret
 
 loop_jump_64bit:
+    strings.emit 'loop_counter_size | 21367'
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21184,6 +21378,7 @@ loop_jump_64bit:
     ret
 
 loop_jump_16bit:
+    strings.emit 'loop_jump_16bit | 21380'
     call get_address_word_value
     cmp [code_type],16
     je loop_jump_16bit_prefix_ok
@@ -21199,6 +21394,7 @@ loop_jump_16bit:
     ret
 
 movs_instruction:
+    strings.emit 'movs_instruction | 21396'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21246,11 +21442,13 @@ movs_instruction:
     ret
 
 movs_address_32bit:
+    strings.emit 'movs_address_32bit | 21444'
     call address_32bit_prefix
     jmp movs_store
     ret
 
 movs_address_16bit:
+    strings.emit 'movs_address_16bit | 21450'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21277,6 +21475,7 @@ movs_address_16bit:
     ret
 
 lods_instruction:
+    strings.emit 'lods_instruction | 21477'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21298,11 +21497,13 @@ lods_instruction:
     ret
 
 lods_address_32bit:
+    strings.emit 'lods_address_32bit | 21499'
     call address_32bit_prefix
     jmp lods_store
     ret
 
 lods_address_16bit:
+    strings.emit 'lods_address_16bit | 21505'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21315,6 +21516,7 @@ lods_address_16bit:
     ret
 
 stos_instruction:
+    strings.emit 'stos_instruction | 21518'
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
@@ -21337,11 +21539,13 @@ stos_instruction:
     ret
 
 stos_address_32bit:
+    strings.emit 'stos_address_32bit | 21541'
     call address_32bit_prefix
     jmp stos_store
     ret
 
 stos_address_16bit:
+    strings.emit 'stos_address_16bit | 21547'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21354,6 +21558,7 @@ stos_address_16bit:
     ret
 
 cmps_instruction:
+    strings.emit 'cmps_instruction | 21560'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21403,11 +21608,13 @@ cmps_instruction:
     ret
 
 cmps_address_32bit:
+    strings.emit 'cmps_address_32bit | 21610'
     call address_32bit_prefix
     jmp cmps_store
     ret
 
 cmps_address_16bit:
+    strings.emit 'cmps_address_16bit | 21616'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21420,6 +21627,7 @@ cmps_address_16bit:
     ret
 
 ins_instruction:
+    strings.emit 'ins_instruction | 21629'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21441,11 +21649,13 @@ ins_instruction:
     ret
 
 ins_address_32bit:
+    strings.emit 'ins_address_32bit | 21651'
     call address_32bit_prefix
     jmp ins_store
     ret
 
 ins_address_16bit:
+    strings.emit 'ins_address_16bit | 21657'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21471,6 +21681,7 @@ ins_address_16bit:
     ret
 
 outs_instruction:
+    strings.emit 'outs_instruction | 21683'
     lods u8 [esi]
     cmp al,10h
     jne invalid_operand
@@ -21501,11 +21712,13 @@ outs_instruction:
     ret
 
 outs_address_32bit:
+    strings.emit 'outs_address_32bit | 21714'
     call address_32bit_prefix
     jmp outs_store
     ret
 
 outs_address_16bit:
+    strings.emit 'outs_address_16bit | 21720'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21518,6 +21731,7 @@ outs_address_16bit:
     ret
 
 xlat_instruction:
+    strings.emit 'xlat_instruction | 21733'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21539,11 +21753,13 @@ xlat_instruction:
     ret
 
 xlat_address_32bit:
+    strings.emit 'xlat_address_32bit | 21755'
     call address_32bit_prefix
     jmp xlat_store
     ret
 
 xlat_address_16bit:
+    strings.emit 'xlat_address_16bit | 21761'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21557,6 +21773,7 @@ xlat_address_16bit:
     ret
 
 pm_word_instruction:
+    strings.emit 'pm_word_instruction | 21775'
     mov ah,al
     shr ah,4
     and al,111b
@@ -21583,6 +21800,7 @@ pm_word_instruction:
     ret
 
 pm_reg:
+    strings.emit 'pm_reg | 21802'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -21592,6 +21810,7 @@ pm_reg:
     ret
 
 pm_store_word_instruction:
+    strings.emit 'pm_store_word_instruction | 21812'
     mov ah,al
     shr ah,4
     and al,111b
@@ -21611,6 +21830,7 @@ pm_store_word_instruction:
     ret
 
 lgdt_instruction:
+    strings.emit 'lgdt_instruction | 21832'
     mov [base_code],0Fh
     mov [extended_code],1
     mov [postbyte_register],al
@@ -21630,12 +21850,14 @@ lgdt_instruction:
     ret
 
 lgdt_mem_80bit:
+    strings.emit 'lgdt_mem_80bit | 21852'
     cmp [code_type],64
     jne illegal_instruction
     jmp lgdt_mem_store
     ret
 
 lgdt_mem_48bit:
+    strings.emit 'lgdt_mem_48bit | 21859'
     cmp [code_type],64
     je illegal_instruction
     cmp [postbyte_register],2
@@ -21647,6 +21869,7 @@ lgdt_mem_48bit:
     ret
 
 lar_instruction:
+    strings.emit 'lar_instruction | 21871'
     mov [extended_code],al
     mov [base_code],0Fh
     call take_register
@@ -21675,6 +21898,7 @@ lar_instruction:
     ret
 
 lar_reg_reg:
+    strings.emit 'lar_reg_reg | 21900'
     lods u8 [esi]
     call convert_register
     cmp ah,2
@@ -21684,6 +21908,7 @@ lar_reg_reg:
     ret
 
 invlpg_instruction:
+    strings.emit 'invlpg_instruction | 21910'
     mov [base_code],0Fh
     mov [extended_code],1
     mov [postbyte_register],7
@@ -21696,6 +21921,7 @@ invlpg_instruction:
     ret
 
 swapgs_instruction:
+    strings.emit 'swapgs_instruction | 21923'
     cmp [code_type],64
     jne illegal_instruction
 
@@ -21709,6 +21935,7 @@ swapgs_instruction:
     ret
 
 basic_486_instruction:
+    strings.emit 'basic_486_instruction | 21937'
     mov [base_code],0Fh
     mov [extended_code],al
     lods u8 [esi]
@@ -21736,6 +21963,7 @@ basic_486_instruction:
     ret
 
 basic_486_reg:
+    strings.emit 'basic_486_reg | 21965'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -21756,6 +21984,7 @@ basic_486_reg:
     ret
 
 bswap_instruction:
+    strings.emit 'bswap_instruction | 21986'
     call take_register
     test al,1000b
     jz bswap_reg_code_ok
@@ -21776,12 +22005,14 @@ bswap_instruction:
     ret
 
 bswap_reg64:
+    strings.emit 'bswap_reg64 | 22007'
     call operand_64bit
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
 cmpxchgx_instruction:
+    strings.emit 'cmpxchgx_instruction | 22014'
     mov [base_code],0Fh
     mov [extended_code],0C7h
     mov [postbyte_register],al
@@ -21808,6 +22039,7 @@ cmpxchgx_instruction:
     ret
 
 nop_instruction:
+    strings.emit 'nop_instruction | 22041'
     mov ah,[esi]
     cmp ah,10h
     je extended_nop
@@ -21820,6 +22052,7 @@ nop_instruction:
     ret
 
 extended_nop:
+    strings.emit 'extended_nop | 22054'
     mov [base_code],0Fh
     mov [extended_code],1Fh
     mov [postbyte_register],0
@@ -21840,6 +22073,7 @@ extended_nop:
     ret
 
 extended_nop_reg:
+    strings.emit 'extended_nop_reg | 22075'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -21849,6 +22083,7 @@ extended_nop_reg:
     ret
 
 basic_fpu_instruction:
+    strings.emit 'basic_fpu_instruction | 22085'
     mov [postbyte_register],al
     mov [base_code],0D8h
     lods u8 [esi]
@@ -21868,6 +22103,7 @@ basic_fpu_instruction:
     ret
 
 basic_fpu_mem:
+    strings.emit 'basic_fpu_mem | 22105'
     call get_address
     mov al,[operand_size]
     cmp al,4
@@ -21883,11 +22119,13 @@ basic_fpu_mem:
     ret
 
 basic_fpu_mem_64bit:
+    strings.emit 'basic_fpu_mem_64bit | 22122'
     mov [base_code],0DCh
     jmp instruction_ready
     ret
 
 basic_fpu_streg:
+    strings.emit 'basic_fpu_streg | 22127'
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -21919,6 +22157,7 @@ basic_fpu_streg:
     ret
 
 basic_fpu_st0:
+    strings.emit 'basic_fpu_st0 | 22159'
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -21936,6 +22175,7 @@ basic_fpu_st0:
     ret
 
 simple_fpu_instruction:
+    strings.emit 'simple_fpu_instruction | 22177'
     mov ah,al
     or ah,11000000b
     mov al,0D9h
@@ -21944,6 +22184,7 @@ simple_fpu_instruction:
     ret
 
 fi_instruction:
+    strings.emit 'fi_instruction | 22186'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -21965,11 +22206,13 @@ fi_instruction:
     ret
 
 fi_mem_16bit:
+    strings.emit 'fi_mem_16bit | 22208'
     mov [base_code],0DEh
     jmp instruction_ready
     ret
 
 fld_instruction:
+    strings.emit 'fld_instruction | 22214'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -21995,11 +22238,13 @@ fld_instruction:
     ret
 
 fld_mem_64bit:
+    strings.emit 'fld_mem_64bit | 22240'
     mov [base_code],0DDh
     jmp instruction_ready
     ret
 
 fld_mem_80bit:
+    strings.emit 'fld_mem_80bit | 22246'
     mov al,[postbyte_register]
     cmp al,0
     je fld_mem_80bit_store
@@ -22010,12 +22255,14 @@ fld_mem_80bit:
     ret
 
 fld_mem_80bit_store:
+    strings.emit 'fld_mem_80bit_store | 22257'
     add [postbyte_register],5
     mov [base_code],0DBh
     jmp instruction_ready
     ret
 
 fld_streg:
+    strings.emit 'fld_streg | 22264'
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -22026,11 +22273,13 @@ fld_streg:
     ret
 
 fst_streg:
+    strings.emit 'fst_streg | 22275'
     mov [base_code],0DDh
     jmp nomem_instruction_ready
     ret
 
 fild_instruction:
+    strings.emit 'fild_instruction | 22281'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22054,11 +22303,13 @@ fild_instruction:
     ret
 
 fild_mem_16bit:
+    strings.emit 'fild_mem_16bit | 22305'
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
 fild_mem_64bit:
+    strings.emit 'fild_mem_64bit | 22311'
     mov al,[postbyte_register]
     cmp al,1
     je fisttp_64bit_store
@@ -22070,17 +22321,20 @@ fild_mem_64bit:
     ret
 
 fild_mem_64bit_store:
+    strings.emit 'fild_mem_64bit_store | 22323'
     add [postbyte_register],5
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
 fisttp_64bit_store:
+    strings.emit 'fisttp_64bit_store | 22330'
     mov [base_code],0DDh
     jmp instruction_ready
     ret
 
 fbld_instruction:
+    strings.emit 'fbld_instruction | 22336'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22096,11 +22350,13 @@ fbld_instruction:
     ret
 
 fbld_mem_80bit:
+    strings.emit 'fbld_mem_80bit | 22352'
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
 faddp_instruction:
+    strings.emit 'faddp_instruction | 22358'
     mov [postbyte_register],al
     mov [base_code],0DEh
     mov edx,esi
@@ -22114,6 +22370,7 @@ faddp_instruction:
     ret
 
 faddp_streg:
+    strings.emit 'faddp_streg | 22372'
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -22132,28 +22389,33 @@ faddp_streg:
     ret
 
 fcompp_instruction:
+    strings.emit 'fcompp_instruction | 22391'
     mov ax,0D9DEh
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 fucompp_instruction:
+    strings.emit 'fucompp_instruction | 22398'
     mov ax,0E9DAh
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 fxch_instruction:
+    strings.emit 'fxch_instruction | 22405'
     mov dx,01D9h
     jmp fpu_single_operand
     ret
 
 ffreep_instruction:
+    strings.emit 'ffreep_instruction | 22411'
     mov dx,00DFh
     jmp fpu_single_operand
     ret
 
 ffree_instruction:
+    strings.emit 'ffree_instruction | 22417'
     mov dl,0DDh
     mov dh,al
     fpu_single_operand:
@@ -22173,6 +22435,7 @@ ffree_instruction:
     ret
 
 fpu_streg:
+    strings.emit 'fpu_streg | 22437'
     lods u8 [esi]
     call convert_fpu_register
     shl dh,3
@@ -22184,6 +22447,7 @@ fpu_streg:
     ret
 
 fstenv_instruction:
+    strings.emit 'fstenv_instruction | 22449'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22193,6 +22457,7 @@ fstenv_instruction:
     ret
 
 fstenv_instruction_16bit:
+    strings.emit 'fstenv_instruction_16bit | 22459'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22202,6 +22467,7 @@ fstenv_instruction_16bit:
     ret
 
 fstenv_instruction_32bit:
+    strings.emit 'fstenv_instruction_32bit | 22469'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22211,6 +22477,7 @@ fstenv_instruction_32bit:
     ret
 
 fsave_instruction_32bit:
+    strings.emit 'fsave_instruction_32bit | 22479'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22220,6 +22487,7 @@ fsave_instruction_32bit:
     ret
 
 fsave_instruction_16bit:
+    strings.emit 'fsave_instruction_16bit | 22489'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22229,6 +22497,7 @@ fsave_instruction_16bit:
     ret
 
 fsave_instruction:
+    strings.emit 'fsave_instruction | 22499'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22248,6 +22517,7 @@ fsave_instruction:
     ret
 
 fstcw_instruction:
+    strings.emit 'fstcw_instruction | 22519'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22268,6 +22538,7 @@ fstcw_instruction:
     ret
 
 fldcw_mem_16bit:
+    strings.emit 'fldcw_mem_16bit | 22540'
     jmp instruction_ready
     ret
 
@@ -34507,4 +34778,4 @@ section '.reloc' fixups data readable discardable
   if $=$$
         dd 0,8            ; if there are no fixups, generate dummy entry
   end if
-; 30746
+; 34781
