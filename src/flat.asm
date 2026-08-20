@@ -13,6 +13,29 @@ u64 equ qword
 u32 equ dword
 u16 equ word
 u8 equ byte 
+;
+; American Standard Code for Information Interchange 
+HEAD    equ 1
+TEXT    equ 2
+TXT     equ 3
+TAIL    equ 4
+QUERY   equ 5
+RESULT  equ 6
+NOTIFY  equ 7
+RECTIFY equ 8
+HT      equ 9
+LF      equ 0AH
+CR      equ 0DH
+SUB     equ 1AH
+SPACE   equ 20H
+SYN     equ 22H
+SEMI    equ 3BH
+AMP     equ 40H
+NUL     equ 00H
+DELINK  equ 10H
+SPACE   equ 20H
+SHIFT   equ 0FH
+QUOTE   equ 27H
 
 macro strings.emit from
 {
@@ -20,7 +43,7 @@ macro strings.emit from
 	push _esi
 	push addr
 	jmp behind
-	addr db from, 0
+	addr db from, NUL
 	behind:
 	mov _esi, u64[_esp]
 	call display_string
@@ -32,7 +55,7 @@ section '.text' code readable executable
 start:
     mov eax,STD_OUTPUT_HANDLE
     mov u64[con_handle],_eax
-	strings.emit 'flat assembler v26.08.05.1915'
+	;strings.emit 'flat assembler v26.08.05.1915'
     ;mov esi, _logo
     ;call display_string
     call get_params
@@ -50,9 +73,9 @@ start:
     call display_string
     call u64[GetTickCount]
     mov [start_time],eax
-    and [preprocessing_done],0
+    and [preprocessing_done],NUL
     call preprocessor
-    or [preprocessing_done],-1
+    or [preprocessing_done],-HEAD
     call parser
     call assembler
     call formatter
@@ -65,12 +88,12 @@ start:
     call u64[GetTickCount]
     sub eax,[start_time]
     xor edx,edx
-    mov ebx,100
+    mov ebx,'d'
     div ebx
     or eax,eax
     jz display_bytes_count
     xor edx,edx
-    mov ebx,10
+    mov ebx,LF
     div ebx
     push _edx
     call display_number
@@ -91,19 +114,19 @@ start:
     ret
 
 information:
-    strings.emit 'information | 92'
+    ;strings.emit 'information | 92'
     mov esi, _usage
     call display_string
-    mov al,1
+    mov al,HEAD
     jmp exit_program
     ret
 
 get_params:
-    strings.emit 'get_params | 100'
-    mov [input_file],0
-    mov [output_file],0
-    mov [symbols_file],0
-    mov [memory_setting],0
+    ;strings.emit 'get_params | 100'
+    mov [input_file],NUL
+    mov [output_file],NUL
+    mov [symbols_file],NUL
+    mov [memory_setting],NUL
     mov [passes_limit],100
     call u64[GetCommandLine]
     mov [definitions_pointer],predefinitions
@@ -112,14 +135,14 @@ get_params:
 
     find_command_start:
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je find_command_start
-    cmp al,22h
+    cmp al,SYN
     je skip_quoted_name
 
     skip_name:
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je find_param
     or al,al
     jz all_params
@@ -127,9 +150,9 @@ get_params:
     ret
 
 skip_quoted_name:
-    strings.emit 'skip_quoted_name | 127'
+    ;strings.emit 'skip_quoted_name | 127'
     lodsb
-    cmp al,22h
+    cmp al,SYN
     je find_param
     or al,al
     jz all_params
@@ -137,33 +160,33 @@ skip_quoted_name:
     ret
 
 find_param:
-    strings.emit 'find_param | 138'
+    ;strings.emit 'find_param | 138'
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je find_param
     cmp al,'-'
     je option_param
-    cmp al,0Dh
+    cmp al,CR
     je all_params
-    cmp al,0Ah
+    cmp al,LF
     je all_params
     or al,al
     jz all_params
-    cmp [input_file],0
+    cmp [input_file],NUL
     jne get_output_file
     mov [input_file],edi
     jmp process_param
     ret
 
 get_output_file:
-    strings.emit 'get_output_file | 138'
-    cmp [output_file],0
+    ;strings.emit 'get_output_file | 138'
+    cmp [output_file],NUL
     ;jne bad_params
     jne carry_then_return
     mov [output_file],edi
 
     process_param:
-    cmp al,22h
+    cmp al,SYN
     je string_param
 
     copy_param:
@@ -172,11 +195,11 @@ get_output_file:
     jae carry_then_return
     stosb
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je param_end
-    cmp al,0Dh
+    cmp al,CR
     je param_end
-    cmp al,22h
+    cmp al,SYN
     je param_end
     or al,al
     jz param_end
@@ -184,11 +207,11 @@ get_output_file:
     ret
 
 string_param:
-    strings.emit 'string_param | 187'
+    ;strings.emit 'string_param | 187'
     lodsb
-    cmp al,22h
+    cmp al,SYN
     je string_param_end
-    cmp al,0Dh
+    cmp al,CR
     je param_end
     or al,al
     jz param_end
@@ -200,7 +223,7 @@ string_param:
     ret
 
 option_param:
-    strings.emit 'option_param | 203'
+    ;strings.emit 'option_param | 203'
     lodsb
     cmp al,'m'
     je memory_option
@@ -222,22 +245,22 @@ option_param:
     ret
 
 get_option_value:
-    strings.emit 'get_option_value | 203'
+    ;strings.emit 'get_option_value | 203'
     xor eax,eax
     mov edx,eax
 
     get_option_digit:
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je option_value_ok
-    cmp al,0Dh
+    cmp al,CR
     je option_value_ok
     or al,al
     jz option_value_ok
-    sub al,30h
+    sub al,'0'
     ;jc invalid_option_value
     jc carry_then_return
-    cmp al,9
+    cmp al,HT
     ;ja invalid_option_value
     ja carry_then_return
     imul edx,10
@@ -250,17 +273,17 @@ get_option_value:
     ret
 
 option_value_ok:
-    strings.emit 'option_value_ok | 253'
+    ;strings.emit 'option_value_ok | 253'
     dec esi
     jmp drop_then_return
     ret
 
 memory_option:
-    strings.emit 'memory_option | 253'
+    ;strings.emit 'memory_option | 253'
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je memory_option
-    cmp al,0Dh
+    cmp al,CR
     ;je bad_params
     je carry_then_return
     or al,al
@@ -271,7 +294,7 @@ memory_option:
     or edx,edx
     ;jz bad_params
     jz carry_then_return
-    cmp edx,1 shl (32-10)
+    cmp edx,HEAD shl (32-10)
     ;jae bad_params
     jae carry_then_return
     mov [memory_setting],edx
@@ -279,11 +302,11 @@ memory_option:
     ret
 
 passes_option:
-    strings.emit 'passes_option | 281'
+    ;strings.emit 'passes_option | 281'
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je passes_option
-    cmp al,0Dh
+    cmp al,CR
     ;je bad_params
     je carry_then_return
     or al,al
@@ -302,11 +325,11 @@ passes_option:
     ret
 
 definition_option:
-    strings.emit 'definition_option | 305'
+    ;strings.emit 'definition_option | 305'
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je definition_option
-    cmp al,0Dh
+    cmp al,CR
     je carry_then_return
     or al,al
     jz carry_then_return
@@ -321,17 +344,17 @@ definition_option:
     ret
 
 symbols_option:
-    strings.emit 'symbols_option | 324'
+    ;strings.emit 'symbols_option | 324'
     mov [symbols_file],edi
     find_symbols_file_name:
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     jne process_param
     jmp find_symbols_file_name
     ret
 
 param_end:
-    strings.emit 'param_end | 333'
+    ;strings.emit 'param_end | 333'
     dec esi
     string_param_end:
     cmp edi,params+1000h
@@ -342,17 +365,17 @@ param_end:
     ret
 
 all_params:
-    strings.emit 'all_params | 344'
-    cmp [input_file],0
+    ;strings.emit 'all_params | 344'
+    cmp [input_file],NUL
     je carry_then_return
     mov eax,[definitions_pointer]
-    mov u8 [eax],0
+    mov u8 [eax],NUL
     mov [initial_definitions],predefinitions
     clc
     ret
 
 convert_definition_option:
-    strings.emit 'convert_definition_option | 354'
+    ;strings.emit 'convert_definition_option | 354'
     mov ecx,edi
     cmp edi,predefinitions+1000h
     ;jae bad_definition_option
@@ -364,10 +387,10 @@ convert_definition_option:
     lodsb
     cmp al,'='
     je copy_definition_value
-    cmp al,20h
+    cmp al,SPACE
     ;je bad_definition_option
     je carry_then_return
-    cmp al,0Dh
+    cmp al,CR
     ;je bad_definition_option
     je carry_then_return
     or al,al
@@ -383,17 +406,17 @@ convert_definition_option:
     ret
 
 copy_definition_value:
-    strings.emit 'copy_definition_value | 385'
+    ;strings.emit 'copy_definition_value | 385'
     lodsb
-    cmp al,20h
+    cmp al,SPACE
     je definition_value_end
-    cmp al,0Dh
+    cmp al,CR
     je definition_value_end
     or al,al
     jz definition_value_end
     cmp al,'\' ; '
     jne definition_value_character
-    cmp u8 [esi],20h
+    cmp u8 [esi],SPACE
     jne definition_value_character
     lodsb
 
@@ -405,7 +428,7 @@ copy_definition_value:
     ret
 
 definition_value_end:
-    strings.emit 'definition_value_end | 408'
+    ;strings.emit 'definition_value_end | 408'
     dec esi
     cmp edi,predefinitions+1000h
     jae carry_then_return
@@ -414,10 +437,10 @@ definition_value_end:
     jmp drop_then_return
     ret
 
-    CREATE_NEW	       = 1
+    CREATE_NEW	           = 1
     CREATE_ALWAYS	       = 2
     OPEN_EXISTING	       = 3
-    OPEN_ALWAYS	       = 4
+    OPEN_ALWAYS	           = 4
     TRUNCATE_EXISTING      = 5
 
     FILE_SHARE_READ        = 1
@@ -453,7 +476,7 @@ definition_value_end:
     PAGE_NOCACHE	       = 200h
 
 init_memory:
-    strings.emit 'init_memory | 455'
+    ;strings.emit 'init_memory | 455'
     xor eax,eax
     mov rcx, 0xFFFFFFFF
     call u64[AttachConsole]
@@ -471,11 +494,11 @@ init_memory:
     add rsp, 40
     mov rax, u64 [buffer+32]
     mov rdx, u64 [buffer+16]
-    cmp eax,0
+    cmp eax,NUL
     jl large_memory
-    cmp edx,0
+    cmp edx,NUL
     jl large_memory
-    shr _eax,2
+    shr _eax,TEXT
     add _eax,_edx
     jmp allocate_memory
     ret
@@ -485,7 +508,7 @@ large_memory:
 
     allocate_memory:
     mov _edx,_eax
-    shr _edx,2
+    shr _edx,TEXT
     mov _ecx,_eax
     sub _ecx,_edx
     mov u64[memory_end],_ecx
@@ -494,7 +517,7 @@ large_memory:
     mov r9d,PAGE_READWRITE
     mov r8d,MEM_COMMIT
     mov rdx,rax
-    mov rcx,0
+    mov rcx,NUL
     call u64[VirtualAlloc]
     add rsp,40
     or eax,eax
@@ -507,16 +530,16 @@ large_memory:
     ret
 
 not_enough_memory:
-    strings.emit 'not_enough_memory | 509'
+    ;strings.emit 'not_enough_memory | 509'
     mov _eax,u64[additional_memory_end]
-    shl eax,1
+    shl eax,HEAD
     cmp eax,4000h
     jb out_of_memory
     jmp allocate_memory
     ret
 
 exit_program:
-    strings.emit 'exit_program | 518'
+    ;strings.emit 'exit_program | 518'
     movzx eax,al
     push _eax
     mov _eax,u64[memory_start]
@@ -524,7 +547,7 @@ exit_program:
     jz do_exit
     sub rsp,40
     mov r8d,MEM_RELEASE
-    mov rdx,0
+    mov rdx,NUL
     mov rcx,rax
     call u64[VirtualFree]
     add rsp,40
@@ -552,45 +575,45 @@ exit_program:
     ret
 
 open:
-    strings.emit 'open | 554'
+    ;strings.emit 'open | 554'
     sub rsp,72
-    mov u64[rsp+48],0
-    mov u64[rsp+40],0
+    mov u64[rsp+48],NUL
+    mov u64[rsp+40],NUL
     mov u64[rsp+32],OPEN_EXISTING
-    mov r9d,0
+    mov r9d,NUL
     mov r8d,FILE_SHARE_READ
     mov rcx,rdx
     mov rdx,GENERIC_READ
     call u64[CreateFile]
     add rsp,72
-    cmp eax,-1
+    cmp eax,-HEAD
     je carry_then_return
     mov ebx,eax
     clc
     ret
 
 create:
-    strings.emit 'create | 572'
+    ;strings.emit 'create | 572'
     sub rsp,72
-    mov u64[rsp+48],0
-    mov u64[rsp+40],0
+    mov u64[rsp+48],NUL
+    mov u64[rsp+40],NUL
     mov u64[rsp+32],CREATE_ALWAYS
-    mov r9d,0
+    mov r9d,NUL
     mov r8d,FILE_SHARE_READ
     mov rcx,rdx
     mov rdx,GENERIC_WRITE
     call u64[CreateFile]
     add rsp,72
-    cmp eax,-1
+    cmp eax,-HEAD
     je carry_then_return
     mov ebx,eax
     clc
     ret
 
 write:
-    strings.emit 'write | 590'
+    ;strings.emit 'write | 590'
     sub rsp,56
-    mov u64[rsp+32],0
+    mov u64[rsp+32],NUL
     mov r9d,bytes_count
     mov r8,rcx
     mov rcx,rbx
@@ -602,10 +625,10 @@ write:
     ret
 
 read:
-    strings.emit 'read | 604'
+    ;strings.emit 'read | 604'
     mov ebp,ecx
     sub rsp,56
-    mov u64[rsp+32],0
+    mov u64[rsp+32],NUL
     mov r9d,bytes_count
     mov r8,rcx
     mov rcx,rbx
@@ -619,7 +642,7 @@ read:
     ret
 
 close:
-    strings.emit 'close | 621'
+    ;strings.emit 'close | 621'
     sub rsp,40
     mov rcx,rbx
     call u64[CloseHandle]
@@ -627,15 +650,15 @@ close:
     ret
 
 lseek:
-    strings.emit 'lseek | 629'
+    ;strings.emit 'lseek | 629'
     movzx eax,al
     sub rsp,40
     mov r9d,eax
-    mov r8d,0
+    mov r8d,NUL
     mov rcx,rbx
     call u64[SetFilePointer]
     add rsp,40
-    cmp eax,-1
+    cmp eax,-HEAD
     je carry_then_return
     clc
     ret
@@ -647,13 +670,13 @@ display_string:
     add rsp,40
     mov _ebp,_eax
     mov edi,esi
-    or ecx,-1
+    or ecx,-HEAD
     xor al,al
     repne scasb
     neg ecx
-    sub ecx,2
+    sub ecx,TEXT
     sub rsp,56
-    mov u64[rsp+32],0
+    mov u64[rsp+32],NUL
     mov r9d,bytes_count
     mov r8,rcx
     mov rdx,rsi
@@ -671,9 +694,9 @@ display_character:
     add rsp,40
     mov _ebx,_eax
     sub rsp,56
-    mov u64[rsp+32],0
+    mov u64[rsp+32],NUL
     mov r9d,bytes_count
-    mov r8d,1
+    mov r8d,HEAD
     mov rdx,character
     mov rcx,rbx
     call u64[WriteFile]
@@ -682,7 +705,7 @@ display_character:
     ret
 
 display_number:
-    strings.emit 'display_number | 685'
+    ;strings.emit 'display_number | 685'
     push _ebx
     mov ecx,1000000000
     xor edx,edx
@@ -691,7 +714,7 @@ display_number:
     display_loop:
     div ecx
     push _edx
-    cmp ecx,1
+    cmp ecx,HEAD
     je display_digit
     or bl,bl
     jnz display_digit
@@ -701,7 +724,7 @@ display_number:
 
     display_digit:
     mov dl,al
-    add dl,30h
+    add dl,'0'
     push _ecx
     call display_character
     pop _ecx
@@ -719,10 +742,10 @@ display_number:
     ret
 
 display_user_messages:
-    strings.emit 'display_user_messages | 721'
-    mov [displayed_count],0
+    ;strings.emit 'display_user_messages | 721'
+    mov [displayed_count],NUL
     call show_display_buffer
-    cmp [displayed_count],1
+    cmp [displayed_count],HEAD
     jb return_ok
     je make_line_break
     mov ax, u16 [last_displayed]
@@ -738,9 +761,9 @@ display_user_messages:
     call u64[GetStdHandle]
     add rsp,40
     sub rsp,56
-    mov u64[rsp+32],0
+    mov u64[rsp+32],NUL
     mov r9d,bytes_count
-    mov r8d,2
+    mov r8d,TEXT
     mov rdx,buffer
     mov rcx,rax
     call u64[WriteFile]
@@ -748,21 +771,21 @@ display_user_messages:
     ret
 
 display_block:
-    strings.emit 'display_block | 750'
+    ;strings.emit 'display_block | 750'
     add [displayed_count],ecx
-    cmp ecx,1
+    cmp ecx,HEAD
     ja take_last_two_characters
     jb block_displayed
     ;jb return_ok
-    mov al,[last_displayed+1]
+    mov al,[last_displayed+HEAD]
     mov ah,[esi]
     mov u16 [last_displayed],ax
     jmp block_ok
     ret
 
 take_last_two_characters:
-    strings.emit 'take_last_two_characters | 763'
-    mov ax,[esi+ecx-2]
+    ;strings.emit 'take_last_two_characters | 763'
+    mov ax,[esi+ecx-TEXT]
     mov u16 [last_displayed],ax
     block_ok:
     push _ecx
@@ -772,7 +795,7 @@ take_last_two_characters:
     add rsp,40
     pop _ecx
     sub rsp,56
-    mov u64[rsp+32],0
+    mov u64[rsp+32],NUL
     mov r9d,bytes_count
     mov r8d,ecx
     mov rdx,rsi
@@ -802,25 +825,25 @@ assembler_error:
     mov _ebx,u64[current_line]
     test ebx,ebx
     jz display_error_message
-    push 0
+    push NUL
     
     get_error_lines:
     mov eax,[ebx]
-    cmp u8 [eax],0
+    cmp u8 [eax],NUL
     je get_next_error_line
     push _ebx
-    test u8 [ebx+7],80h
+    test u8 [ebx+NOTIFY],80h
     jz display_error_line
     mov edx,ebx
 
     find_definition_origin:
     mov edx,[edx+12]
-    test u8 [edx+7],80h
+    test u8 [edx+NOTIFY],80h
     jnz find_definition_origin
     push _edx
 
     get_next_error_line:
-    mov ebx,[ebx+8]
+    mov ebx,[ebx+RECTIFY]
     jmp get_error_lines
     ret
 
@@ -829,7 +852,7 @@ display_error_line:
     call display_string
     mov esi,line_number_start
     call display_string
-    mov eax,[ebx+4]
+    mov eax,[ebx+TAIL]
     and eax,7FFFFFFFh
     call display_number
     mov dl,']'
@@ -837,7 +860,7 @@ display_error_line:
     pop _esi
     cmp ebx,esi
     je line_number_ok
-    mov dl,20h
+    mov dl,SPACE
     call display_character
     push _esi
     mov esi,[esi]
@@ -847,7 +870,7 @@ display_error_line:
     mov esi,line_number_start
     call display_string
     pop _esi
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     and eax,7FFFFFFFh
     call display_number
     mov dl,']'
@@ -859,10 +882,10 @@ display_error_line:
     mov esi,ebx
     mov edx,[esi]
     call open
-    mov al,2
+    mov al,TEXT
     xor edx,edx
     call lseek
-    mov edx,[esi+8]
+    mov edx,[esi+RECTIFY]
     sub eax,edx
     jz line_data_displayed
     push _eax
@@ -880,11 +903,11 @@ display_error_line:
 
     get_line_data:
     mov al,[esi]
-    cmp al,0Ah
+    cmp al,LF
     je display_line_data
-    cmp al,0Dh
+    cmp al,CR
     je display_line_data
-    cmp al,1Ah
+    cmp al,SUB
     je display_line_data
     or al,al
     jz display_line_data
@@ -903,7 +926,7 @@ display_error_line:
     pop _ebx
     or ebx,ebx
     jnz display_error_line
-    cmp [preprocessing_done],0
+    cmp [preprocessing_done],NUL
     je display_error_message
     mov esi,preprocessed_instruction_prefix
     call display_string
@@ -914,11 +937,11 @@ display_error_line:
 
     convert_instruction:
     lodsb
-    cmp al,1Ah
+    cmp al,SUB
     je copy_symbol
-    cmp al,22h
+    cmp al,SYN
     je copy_symbol
-    cmp al,3Bh
+    cmp al,SEMI
     je instruction_converted
     stosb
     or al,al
@@ -928,25 +951,25 @@ display_error_line:
     ret
 
 copy_symbol:
-    strings.emit 'copy_symbol | 930'
+    ;strings.emit 'copy_symbol | 930'
     or dl,dl
     jz space_ok
-    mov u8 [edi],20h
+    mov u8 [edi],SPACE
     inc edi
 
     space_ok:
-    cmp al,22h
+    cmp al,SYN
     je quoted
     lodsb
     movzx ecx,al
     rep movsb
-    or dl,-1
+    or dl,-HEAD
     jmp convert_instruction
     ret
 
 quoted:
-    strings.emit 'quoted | 948'
-    mov al,27h
+    ;strings.emit 'quoted | 948'
+    mov al,QUOTE
     stosb
     lodsd
     mov ecx,eax
@@ -955,7 +978,7 @@ quoted:
     copy_quoted:
     lodsb
     stosb
-    cmp al,27h
+    cmp al,QUOTE
     jne quote_ok
     stosb
 
@@ -963,14 +986,14 @@ quoted:
     loop copy_quoted
 
     quoted_copied:
-    mov al,27h
+    mov al,QUOTE
     stosb
-    or dl,-1
+    or dl,-HEAD
     jmp convert_instruction
     ret
 
 instruction_converted:
-    strings.emit 'instruction_converted | 972'
+    ;strings.emit 'instruction_converted | 972'
     xor al,al
     stosb
     mov _esi,u64[additional_memory]
@@ -985,12 +1008,12 @@ instruction_converted:
     call display_string
     mov esi,error_suffix
     call display_string
-    mov al,2
+    mov al,TEXT
     jmp exit_program
     ret
 
 make_timestamp:
-    strings.emit 'make_timestamp | 992'
+    ;strings.emit 'make_timestamp | 992'
     sub rsp,40
     mov rcx,buffer
     call u64[GetSystemTime]
@@ -1003,7 +1026,7 @@ make_timestamp:
     mov ebp,eax
     mov eax,ecx
     sub eax,1969
-    shr eax,2
+    shr eax,TEXT
     add ebp,eax
     mov eax,ecx
     sub eax,1901
@@ -1016,27 +1039,27 @@ make_timestamp:
     mov ebx,400
     div ebx
     add ebp,eax
-    movzx ecx, u16 [buffer+2]
+    movzx ecx, u16 [buffer+TEXT]
     mov eax,ecx
     dec eax
     mov ebx,30
     mul ebx
     add ebp,eax
-    cmp ecx,8
+    cmp ecx,RECTIFY
     jbe months_correction
     mov eax,ecx
-    sub eax,7
-    shr eax,1
+    sub eax,NOTIFY
+    shr eax,HEAD
     add ebp,eax
     mov ecx,8
 
     months_correction:
     mov eax,ecx
-    shr eax,1
+    shr eax,HEAD
     add ebp,eax
-    cmp ecx,2
+    cmp ecx,TEXT
     jbe day_correction_ok
-    sub ebp,2
+    sub ebp,TEXT
     movzx ecx, u16 [buffer]
     test ecx,11b
     jnz day_correction_ok
@@ -1056,12 +1079,12 @@ make_timestamp:
     inc ebp
 
     day_correction_ok:
-    movzx eax, u16 [buffer+6]
+    movzx eax, u16 [buffer+RESULT]
     dec eax
     add eax,ebp
     mov ebx,24
     mul ebx
-    movzx ecx, u16 [buffer+8]
+    movzx ecx, u16 [buffer+RECTIFY]
     add eax,ecx
     mov ebx,60
     mul ebx
@@ -1071,15 +1094,15 @@ make_timestamp:
     mul ebx
     movzx ecx, u16 [buffer+12]
     add eax,ecx
-    adc edx,0
+    adc edx,NUL
     ret
 
-    error_prefix db 'error: ',0
+    error_prefix db 'error: ',NUL
     error_suffix db '.'
-    cr_lf db 0Dh,0Ah,0
-    line_number_start db ' [',0
-    line_data_start db ':',0Dh,0Ah,0
-    preprocessed_instruction_prefix db 'processed: ',0
+    cr_lf db 0Dh,LF,NUL
+    line_number_start db ' [',NUL
+    line_data_start db ':',CR,LF,NUL
+    preprocessed_instruction_prefix db 'processed: ',NUL
     
 out_of_memory:
     push _out_of_memory
@@ -1120,7 +1143,7 @@ invalid_definition:
     push _invalid_definition
 
     general_error:
-    cmp [symbols_file],0
+    cmp [symbols_file],NUL
     je fatal_error
     call dump_preprocessed_source
     jmp fatal_error
@@ -1236,19 +1259,19 @@ undefined_symbol:
     mov esi,_undefined_symbol
     call copy_asciiz
     push message
-    cmp [error_info],0
+    cmp [error_info],NUL
     je error_with_source
     mov esi,[error_info]
     mov esi,[esi+24]
     or esi,esi
     jz error_with_source
-    mov u8 [edi-1],20h
+    mov u8 [edi-HEAD],SPACE
     call write_quoted_symbol_name
     jmp error_with_source
     ret
 
 copy_asciiz:
-    strings.emit 'copy_asciiz | 1250'
+    ;strings.emit 'copy_asciiz | 1250'
     lods u8 [esi]
     stos u8 [edi]
     test al,al
@@ -1256,31 +1279,31 @@ copy_asciiz:
     ret
 
 write_quoted_symbol_name:
-    strings.emit 'write_quoted_symbol_name | 1257'
-    mov al,27h
+    ;strings.emit 'write_quoted_symbol_name | 1257'
+    mov al,QUOTE
     stosb
-    movzx ecx, u8 [esi-1]
+    movzx ecx, u8 [esi-HEAD]
     rep movs u8 [edi],[esi]
-    mov ax,27h
+    mov ax,QUOTE
     stosw
     ret
 
 symbol_out_of_scope:
-    strings.emit 'symbol_out_of_scope | 1268'
+    ;strings.emit 'symbol_out_of_scope | 1268'
     mov edi,message
     mov esi,_symbol_out_of_scope_1
     call copy_asciiz
-    cmp [error_info],0
+    cmp [error_info],NUL
     je finish_symbol_out_of_scope_message
     mov esi,[error_info]
     mov esi,[esi+24]
     or esi,esi
     jz finish_symbol_out_of_scope_message
-    mov u8 [edi-1],20h
+    mov u8 [edi-HEAD],SPACE
     call write_quoted_symbol_name
 
     finish_symbol_out_of_scope_message:
-    mov u8 [edi-1],20h
+    mov u8 [edi-HEAD],SPACE
     mov esi,_symbol_out_of_scope_2
     call copy_asciiz
     push message
@@ -1360,7 +1383,7 @@ assertion_failed:
 invoked_error:
     push _invoked_error
     error_with_source:
-    cmp [symbols_file],0
+    cmp [symbols_file],NUL
     je assembler_error
     call dump_preprocessed_source
     call restore_preprocessed_source
@@ -1368,7 +1391,7 @@ invoked_error:
     ret
 
 dump_symbols:
-    strings.emit 'dump_symbols | 1370'
+    ;strings.emit 'dump_symbols | 1370'
     mov edi,[code_start]
     call setup_dump_header
     mov esi,[input_file]
@@ -1384,12 +1407,12 @@ dump_symbols:
     jae out_of_memory
     mov edx,[symbols_stream]
     mov _ebp,u64[free_additional_memory]
-    and [number_of_sections],0
-    cmp [output_format],4
+    and [number_of_sections],NUL
+    cmp [output_format],TAIL
     je prepare_strings_table
-    cmp [output_format],5
+    cmp [output_format],QUERY
     jne strings_table_ready
-    bt [format_flags],0
+    bt [format_flags],NUL
     jc strings_table_ready
 
     prepare_strings_table:
@@ -1403,25 +1426,25 @@ dump_symbols:
     add edx,0Ch
     cmp al,0C0h
     jb prepare_strings_table
-    add edx,4
+    add edx,TAIL
     jmp prepare_strings_table
     ret
 
 prepare_string:
-    strings.emit 'prepare_string | 1410'
+    ;strings.emit 'prepare_string | 1410'
     mov esi,edi
     sub esi,ebx
-    xchg esi,[edx+4]
+    xchg esi,[edx+TAIL]
     test al,al
     jz prepare_section_string
-    or u32 [edx+4],1 shl 31
+    or u32 [edx+TAIL],HEAD shl 31
     add edx,0Ch
 
     prepare_external_string:
     mov ecx,[esi]
-    add esi,4
+    add esi,TAIL
     rep movs u8 [edi],[esi]
-    mov u8 [edi],0
+    mov u8 [edi],NUL
     inc edi
     cmp edi,[tagged_blocks]
     jae out_of_memory
@@ -1429,28 +1452,28 @@ prepare_string:
     ret
 
 prepare_section_string:
-    strings.emit 'prepare_section_string | 1410'
+    ;strings.emit 'prepare_section_string | 1410'
     mov ecx,[number_of_sections]
     mov eax,ecx
     inc eax
     mov [number_of_sections],eax
-    xchg eax,[edx+4]
-    shl ecx,2
+    xchg eax,[edx+TAIL]
+    shl ecx,TEXT
     add _ecx,u64[free_additional_memory]
     mov [ecx],eax
-    add edx,20h
+    add edx,SPACE
     test esi,esi
     jz prepare_default_section_string
-    cmp [output_format],5
+    cmp [output_format],QUERY
     jne prepare_external_string
-    bt [format_flags],0
+    bt [format_flags],NUL
     jc prepare_external_string
     mov esi,[esi]
     add esi,[resource_data]
     ret
 
 prepare_default_section_string:
-    strings.emit 'prepare_default_section_string | 1452'
+    ;strings.emit 'prepare_default_section_string | 1452'
     mov eax,'.fla'
     stos u32 [edi]
     mov ax,'t'
@@ -1461,7 +1484,7 @@ prepare_default_section_string:
     ret
 
 strings_table_ready:
-    strings.emit 'strings_table_ready | 1463'
+    ;strings.emit 'strings_table_ready | 1463'
     mov edx,[tagged_blocks]
     mov _ebp,u64[memory_end]
     sub ebp,[labels_list]
@@ -1484,14 +1507,14 @@ strings_table_ready:
     ret
 
 label_name_outside_source:
-    strings.emit 'label_name_outside_source | 1486'
+    ;strings.emit 'label_name_outside_source | 1486'
     mov esi,eax
     mov eax,edi
     sub eax,ebx
-    or eax,1 shl 31
+    or eax,HEAD shl 31
     mov [edx+24],eax
-    movzx ecx, u8 [esi-1]
-    lea eax,[edi+ecx+1]
+    movzx ecx, u8 [esi-HEAD]
+    lea eax,[edi+ecx+HEAD]
     cmp edi,[tagged_blocks]
     jae out_of_memory
     rep movsb
@@ -1506,21 +1529,21 @@ label_name_outside_source:
     mov [edx+28],eax
 
     label_dump_line_ok:
-    test u8 [edx+9],4
+    test u8 [edx+9],TAIL
     jz convert_base_symbol_for_label
     xor eax,eax
     mov [edx],eax
-    mov [edx+4],eax
+    mov [edx+TAIL],eax
     jmp base_symbol_for_label_ok
     ret
 
 convert_base_symbol_for_label:
-    strings.emit 'convert_base_symbol_for_label | 1517'
+    ;strings.emit 'convert_base_symbol_for_label | 1517'
     mov eax,[edx+20]
     test eax,eax
     jz base_symbol_for_label_ok
     cmp eax,[symbols_stream]
-    mov eax,[eax+4]
+    mov eax,[eax+TAIL]
     jae base_symbol_for_label_ok
     xor eax,eax
 
@@ -1529,23 +1552,23 @@ convert_base_symbol_for_label:
     mov ax,[current_pass]
     cmp ax,[edx+16]
     je label_defined_flag_ok
-    and u8 [edx+8],not 1
+    and u8 [edx+RECTIFY],not HEAD
 
     label_defined_flag_ok:
     cmp ax,[edx+18]
     je label_used_flag_ok
-    and u8 [edx+8],not 8
+    and u8 [edx+RECTIFY],not RECTIFY
     label_used_flag_ok:
     add edx,LABEL_STRUCTURE_SIZE
     jmp prepare_labels_dump
     ret
 
 labels_dump_ok:
-    strings.emit 'labels_dump_ok | 1543'
+    ;strings.emit 'labels_dump_ok | 1543'
     mov eax,edi
     sub eax,ebx
     mov [ebx-40h+14h],eax
-    add eax,40h
+    add eax,AMP
     mov [ebx-40h+18h],eax
     mov _ecx,u64[memory_end]
     sub ecx,[labels_list]
@@ -1558,7 +1581,7 @@ labels_dump_ok:
     add eax,ecx
     mov [ebx-40h+28h],eax
     mov eax,[number_of_sections]
-    shl eax,2
+    shl eax,TEXT
     mov [ebx-40h+34h],eax
     call prepare_preprocessed_source
     mov esi,[labels_list]
@@ -1567,26 +1590,26 @@ labels_dump_ok:
     make_lines_dump:
     cmp esi,[tagged_blocks]
     je lines_dump_ok
-    mov eax,[esi-4]
+    mov eax,[esi-TAIL]
     mov ecx,[esi-8]
-    sub esi,8
+    sub esi,RECTIFY
     sub esi,ecx
-    cmp eax,1
+    cmp eax,HEAD
     je process_line_dump
-    cmp eax,2
+    cmp eax,TEXT
     jne make_lines_dump
-    add u32 [ebx-40h+3Ch],8
+    add u32 [ebx-40h+3Ch],RECTIFY
     jmp make_lines_dump
     ret
 
 process_line_dump:
-    strings.emit 'process_line_dump | 1582'
+    ;strings.emit 'process_line_dump | 1582'
     push _ebx
-    mov ebx,[esi+8]
-    mov eax,[esi+4]
+    mov ebx,[esi+RECTIFY]
+    mov eax,[esi+TAIL]
     sub eax,[code_start]
     add eax,[headers_size]
-    test u8 [ebx+0Ah],1
+    test u8 [ebx+0Ah],HEAD
     jz store_offset
     xor eax,eax
 
@@ -1595,12 +1618,12 @@ process_line_dump:
     mov eax,[esi]
     sub _eax,u64[memory_start]
     stos u32 [edi]
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     xor edx,edx
     xor cl,cl
     sub eax,[ebx]
-    sbb edx,[ebx+4]
-    sbb cl,[ebx+8]
+    sbb edx,[ebx+TAIL]
+    sbb cl,[ebx+RECTIFY]
     stos u32 [edi]
     mov eax,edx
     stos u32 [edi]
@@ -1610,7 +1633,7 @@ process_line_dump:
     test eax,eax
     jz base_symbol_for_line_ok
     cmp eax,[symbols_stream]
-    mov eax,[eax+4]
+    mov eax,[eax+TAIL]
     jae base_symbol_for_line_ok
     xor eax,eax
 
@@ -1621,7 +1644,7 @@ process_line_dump:
     mov al,[esi+10h]
     stos u8 [edi]
     mov al,[ebx+0Ah]
-    and al,1
+    and al,HEAD
     stos u8 [edi]
     mov al,cl
     stos u8 [edi]
@@ -1636,7 +1659,7 @@ process_line_dump:
     ret
 
 lines_dump_ok:
-    strings.emit 'lines_dump_ok | 1638'
+    ;strings.emit 'lines_dump_ok | 1638'
     mov edx,edi
     mov _eax,u64[current_offset]
     sub eax,[code_start]
@@ -1655,7 +1678,7 @@ lines_dump_ok:
     sub edx,1Ch
     cmp edx,ebp
     jb write_symbols
-    test u8 [edx+1Ah],1
+    test u8 [edx+1Ah],HEAD
     jnz find_inexisting_offsets
     cmp eax,[edx]
     jb correct_inexisting_offset
@@ -1664,20 +1687,20 @@ lines_dump_ok:
     ret
 
 correct_inexisting_offset:
-    strings.emit 'correct_inexisting_offset | 1666'
-    and u32 [edx],0
-    or u8 [edx+1Ah],2
+    ;strings.emit 'correct_inexisting_offset | 1666'
+    and u32 [edx],NUL
+    or u8 [edx+1Ah],TEXT
     jmp find_inexisting_offsets
     ret
 
 write_symbols:
-    strings.emit 'write_symbols | 1673'
+    ;strings.emit 'write_symbols | 1673'
     mov edx,[symbols_file]
     call create
     jc write_failed
     mov edx,[code_start]
     mov ecx,[edx+14h]
-    add ecx,40h
+    add ecx,AMP
     call write
     jc write_failed
     mov edx,[tagged_blocks]
@@ -1697,7 +1720,7 @@ write_symbols:
     jc write_failed
     mov _edx,u64[free_additional_memory]
     mov ecx,[number_of_sections]
-    shl ecx,2
+    shl ecx,TEXT
     call write
     jc write_failed
     mov esi,[labels_list]
@@ -1706,20 +1729,20 @@ write_symbols:
     make_references_dump:
     cmp esi,[tagged_blocks]
     je references_dump_ok
-    mov eax,[esi-4]
+    mov eax,[esi-TAIL]
     mov ecx,[esi-8]
-    sub esi,8
+    sub esi,RECTIFY
     sub esi,ecx
-    cmp eax,2
+    cmp eax,TEXT
     je dump_reference
-    cmp eax,1
+    cmp eax,HEAD
     jne make_references_dump
     mov edx,[esi]
     jmp make_references_dump
     ret
 
 dump_reference:
-    strings.emit 'dump_reference | 1721'
+    ;strings.emit 'dump_reference | 1721'
     mov _eax,u64[memory_end]
     sub eax,[esi]
     sub eax,LABEL_STRUCTURE_SIZE
@@ -1732,7 +1755,7 @@ dump_reference:
     ret
 
 references_dump_ok:
-    strings.emit 'references_dump_ok | 1734'
+    ;strings.emit 'references_dump_ok | 1734'
     mov _edx,u64[memory_start]
     mov ecx,edi
     sub ecx,edx
@@ -1742,18 +1765,18 @@ references_dump_ok:
     ret
 
 setup_dump_header:
-    strings.emit 'setup_dump_header | 1744'
+    ;strings.emit 'setup_dump_header | 1744'
     xor eax,eax
-    mov ecx,40h shr 2
+    mov ecx,AMP shr 2
     rep stos dword [edi]
     mov ebx,edi
     mov u32 [ebx-40h],'fas'+1Ah shl 24
-    mov u32 [ebx-40h+4],VERSION_MAJOR + VERSION_MINOR shl 8 + 40h shl 16
-    mov u32 [ebx-40h+10h],40h
+    mov u32 [ebx-40h+TAIL],VERSION_MAJOR + VERSION_MINOR shl 8 + 40h shl 16
+    mov u32 [ebx-40h+10h],AMP
     ret
 
 prepare_preprocessed_source:
-    strings.emit 'prepare_preprocessed_source | 1755'
+    ;strings.emit 'prepare_preprocessed_source | 1755'
     mov _esi,u64[memory_start]
     mov ebp,[source_start]
     test ebp,ebp
@@ -1773,9 +1796,9 @@ prepare_preprocessed_source:
 
     line_not_from_main_input:
     sub [esi],eax
-    test u8 [esi+7],1 shl 7
+    test u8 [esi+NOTIFY],1 shl 7
     jz prepare_next_preprocessed_line
-    sub [esi+8],eax
+    sub [esi+RECTIFY],eax
     sub [esi+12],eax
 
     prepare_next_preprocessed_line:
@@ -1784,30 +1807,30 @@ prepare_preprocessed_source:
     ret
 
 skip_preprocessed_line:
-    strings.emit 'skip_preprocessed_line | 1786'
+    ;strings.emit 'skip_preprocessed_line | 1786'
     add esi,16
 
     skip_preprocessed_line_content:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je skip_preprocessed_symbol
-    cmp al,3Bh
+    cmp al,SEMI
     je skip_preprocessed_symbol
-    cmp al,22h
+    cmp al,SYN
     je skip_preprocessed_string
     or al,al
     jnz skip_preprocessed_line_content
     ret
 
 skip_preprocessed_string:
-    strings.emit 'skip_preprocessed_string | 1802'
+    ;strings.emit 'skip_preprocessed_string | 1802'
     lods u32 [esi]
     add esi,eax
     jmp skip_preprocessed_line_content
     ret
 
 skip_preprocessed_symbol:
-    strings.emit 'skip_preprocessed_symbol | 1809'
+    ;strings.emit 'skip_preprocessed_symbol | 1809'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -1815,7 +1838,7 @@ skip_preprocessed_symbol:
     ret
 
 restore_preprocessed_source:
-    strings.emit 'restore_preprocessed_source | 1817'
+    ;strings.emit 'restore_preprocessed_source | 1817'
     mov _esi,u64[memory_start]
     mov ebp,[source_start]
     test ebp,ebp
@@ -1835,9 +1858,9 @@ restore_preprocessed_source:
     mov [esi],edx
 
     preprocessed_line_source_restored:
-    test u8 [esi+7],1 shl 7
+    test u8 [esi+NOTIFY],1 shl 7
     jz restore_next_preprocessed_line
-    add [esi+8],eax
+    add [esi+RECTIFY],eax
     add [esi+12],eax
 
     restore_next_preprocessed_line:
@@ -1846,7 +1869,7 @@ restore_preprocessed_source:
     ret
 
 dump_preprocessed_source:
-    strings.emit 'dump_preprocessed_source | 1848'
+    ;strings.emit 'dump_preprocessed_source | 1848'
     mov _edi,u64[free_additional_memory]
     call setup_dump_header
     mov esi,[input_file]
@@ -1860,7 +1883,7 @@ dump_preprocessed_source:
     mov eax,edi
     sub eax,ebx
     mov [ebx-40h+14h],eax
-    add eax,40h
+    add eax,AMP
     mov [ebx-40h+20h],eax
     call prepare_preprocessed_source
     sub _esi,u64[memory_start]
@@ -1870,7 +1893,7 @@ dump_preprocessed_source:
     jc write_failed
     mov _edx,u64[free_additional_memory]
     mov ecx,[edx+14h]
-    add ecx,40h
+    add ecx,AMP
     call write
     jc write_failed
     mov _edx,u64[memory_start]
@@ -1881,7 +1904,7 @@ dump_preprocessed_source:
     ret
 
 preprocessor:
-    strings.emit 'preprocessor | 1883'
+    ;strings.emit 'preprocessor | 1883'
     mov edi,characters
     xor al,al
 
@@ -1894,16 +1917,16 @@ preprocessor:
     mov ecx,26
     rep movsb
     mov edi,characters
-    mov esi,symbol_characters+1
-    movzx ecx, u8 [esi-1]
+    mov esi,symbol_characters+HEAD
+    movzx ecx, u8 [esi-HEAD]
     xor eax,eax
 
     mark_symbol_characters:
     lodsb
-    mov u8 [edi+eax],0
+    mov u8 [edi+eax],NUL
     loop mark_symbol_characters
     mov edi,locals_counter
-    mov ax,1 + '0' shl 8
+    mov ax,HEAD + '0' shl 8
     stos u16 [edi]
     mov _edi,u64[memory_start]
     mov [include_paths],edi
@@ -1938,7 +1961,7 @@ preprocessor:
     call add_preprocessor_symbol
     pop _esi
     mov _edi,u64[memory_start]
-    mov [edx+8],edi
+    mov [edx+RECTIFY],edi
 
     convert_predefinition:
     cmp _edi,u64[memory_end]
@@ -1946,18 +1969,18 @@ preprocessor:
     lods u8 [esi]
     or al,al
     jz predefinition_converted
-    cmp al,20h
+    cmp al,SPACE
     je convert_predefinition
     mov ah,al
     mov ebx,characters
     xlat u8 [ebx]
     or al,al
     jz predefinition_separator
-    cmp ah,27h
+    cmp ah,QUOTE
     je predefinition_string
-    cmp ah,22h
+    cmp ah,SYN
     je predefinition_string
-    mov u8 [edi],1Ah
+    mov u8 [edi],SUB
     scas u16 [edi]
     xchg al,ah
     stos u8 [edi]
@@ -1975,19 +1998,19 @@ preprocessor:
     ja invalid_definition
     mov ebx,edi
     sub ebx,ecx
-    mov u8 [ebx-2],cl
+    mov u8 [ebx-TEXT],cl
 
     found_predefinition_separator:
     dec edi
-    mov ah,[esi-1]
+    mov ah,[esi-HEAD]
 
     predefinition_separator:
     xchg al,ah
     or al,al
     jz predefinition_converted
-    cmp al,20h
+    cmp al,SPACE
     je convert_predefinition
-    cmp al,3Bh
+    cmp al,SEMI
     je invalid_definition
     cmp al,5Ch
     je predefinition_backslash
@@ -1996,8 +2019,8 @@ preprocessor:
     ret
 
 predefinition_string:
-    strings.emit 'predefinition_string | 1998'
-    mov al,22h
+    ;strings.emit 'predefinition_string | 1998'
+    mov al,SYN
     stos u8 [edi]
     scas u32 [edi]
     mov ebx,edi
@@ -2016,21 +2039,21 @@ copy_predefinition_string:
     dec edi
     mov eax,edi
     sub eax,ebx
-    mov [ebx-4],eax
+    mov [ebx-TAIL],eax
     jmp convert_predefinition
     ret
 
 predefinition_backslash:
-    strings.emit 'predefinition_backslash | 2023'
-    mov u8 [edi],0
+    ;strings.emit 'predefinition_backslash | 2023'
+    mov u8 [edi],NUL
     lods u8 [esi]
     or al,al
     jz invalid_definition
-    cmp al,20h
+    cmp al,SPACE
     je invalid_definition
-    cmp al,3Bh
+    cmp al,SEMI
     je invalid_definition
-    mov al,1Ah
+    mov al,SUB
     stos u8 [edi]
     mov ecx,edi
     mov ax,5C01h
@@ -2047,14 +2070,14 @@ predefinition_backslash:
     ret
 
 predefinition_backslashed_symbol:
-    strings.emit 'predefinition_backslashed_symbol | 2050'
-    cmp al,20h
+    ;strings.emit 'predefinition_backslashed_symbol | 2050'
+    cmp al,SPACE
     je invalid_definition
-    cmp al,22h
+    cmp al,SYN
     je invalid_definition
-    cmp al,27h
+    cmp al,QUOTE
     je invalid_definition
-    cmp al,3Bh
+    cmp al,SEMI
     je invalid_definition
     mov ah,al
     mov ebx,characters
@@ -2075,7 +2098,7 @@ predefinition_backslashed_symbol:
     ret
 
 predefinition_backslashed_symbol_character:
-    strings.emit 'predefinition_backslashed_symbol_character | 2077'
+    ;strings.emit 'predefinition_backslashed_symbol_character | 2077'
     mov al,ah
     stos u8 [edi]
     inc u8 [ecx]
@@ -2083,22 +2106,22 @@ predefinition_backslashed_symbol_character:
     ret
 
 predefinition_converted:
-    strings.emit 'predefinition_converted | 2085'
+    ;strings.emit 'predefinition_converted | 2085'
     mov u64[memory_start],_edi
-    sub edi,[edx+8]
+    sub edi,[edx+RECTIFY]
     mov [edx+12],edi
     jmp process_predefinitions
     ret
 
 predefinitions_ok:
-    strings.emit 'predefinitions_ok | 2093'
+    ;strings.emit 'predefinitions_ok | 2093'
     mov esi,[input_file]
     mov edx,esi
     call open
     jc main_file_not_found
     mov _edi,u64[memory_start]
     call preprocess_file
-    cmp [macro_status],0
+    cmp [macro_status],NUL
     je process_postponed
     mov _eax,u64[error_line]
     mov u64[current_line],_eax
@@ -2106,7 +2129,7 @@ predefinitions_ok:
     ret
 
 process_postponed:
-    strings.emit 'process_postponed | 2108'
+    ;strings.emit 'process_postponed | 2108'
     mov edx,hash_tree
     mov ecx,32
     find_postponed_list:
@@ -2132,11 +2155,11 @@ process_postponed:
     ret
 
 earliest_postponed_found:
-    strings.emit 'earliest_postponed_found | 2134'
+    ;strings.emit 'earliest_postponed_found | 2134'
     mov [ebx],eax
     call use_postponed_macro
     pop _edx
-    cmp [macro_status],0
+    cmp [macro_status],NUL
     je process_postponed_list
     mov _eax,u64[error_line]
     mov u64[current_line],_eax
@@ -2144,23 +2167,23 @@ earliest_postponed_found:
     ret
 
 preprocessing_finished:
-    strings.emit 'preprocessing_finished | 2146'
+    ;strings.emit 'preprocessing_finished | 2146'
     mov [source_start],edi
     ret
 
 use_postponed_macro:
-    strings.emit 'use_postponed_macro | 2151'
-    lea esi,[edi-1]
+    ;strings.emit 'use_postponed_macro | 2151'
+    lea esi,[edi-HEAD]
     push _ecx _esi
-    mov [struc_name],0
+    mov [struc_name],NUL
     jmp use_macro
     ret
 
 preprocess_file:
-    strings.emit 'preprocess_file | 2159'
+    ;strings.emit 'preprocess_file | 2159'
     push u64[memory_end]
     push _esi
-    mov al,2
+    mov al,TEXT
     xor edx,edx
     call lseek
     push _eax
@@ -2170,7 +2193,7 @@ preprocess_file:
     pop _ecx
     mov _edx,u64[memory_end]
     dec edx
-    mov u8 [edx],1Ah
+    mov u8 [edx],SUB
     sub edx,ecx
     jc out_of_memory
     mov esi,edx
@@ -2201,9 +2224,9 @@ preprocess_file:
     pop _edx _ebx
 
     next_line:
-    cmp u8 [esi-1],0
+    cmp u8 [esi-HEAD],NUL
     je file_end
-    cmp u8 [esi-1],1Ah
+    cmp u8 [esi-HEAD],SUB
     jne preprocess_source
 
     file_end:
@@ -2212,30 +2235,30 @@ preprocess_file:
     ret
 
 convert_line:
-    strings.emit 'convert_line | 2214'
+    ;strings.emit 'convert_line | 2214'
     push _ecx
-    test [macro_status],0Fh
+    test [macro_status],SHIFT
     jz convert_line_data
-    mov ax,3Bh
+    mov ax,SEMI
     stos u16 [edi]
     convert_line_data:
     cmp _edi,u64[memory_end]
     jae out_of_memory
     lods u8 [esi]
-    cmp al,20h
+    cmp al,SPACE
     je convert_line_data
-    cmp al,9
+    cmp al,HT
     je convert_line_data
     mov ah,al
     mov ebx,characters
     xlat u8 [ebx]
     or al,al
     jz convert_separator
-    cmp ah,27h
+    cmp ah,QUOTE
     je convert_string
-    cmp ah,22h
+    cmp ah,SYN
     je convert_string
-    mov u8 [edi],1Ah
+    mov u8 [edi],SUB
     scas u16 [edi]
     xchg al,ah
     stos u8 [edi]
@@ -2253,20 +2276,20 @@ convert_line:
     ja name_too_long
     mov ebx,edi
     sub ebx,ecx
-    mov u8 [ebx-2],cl
+    mov u8 [ebx-TEXT],cl
 
     found_separator:
     dec edi
-    mov ah,[esi-1]
+    mov ah,[esi-HEAD]
 
     convert_separator:
     xchg al,ah
-    cmp al,20h
+    cmp al,SPACE
     jb control_character
     je convert_line_data
 
     symbol_character:
-    cmp al,3Bh
+    cmp al,SEMI
     je ignore_comment
     cmp al,5Ch
     je backslash_character
@@ -2275,14 +2298,14 @@ convert_line:
     ret
 
 control_character:
-    strings.emit 'control_character | 2278'
-    cmp al,1Ah
+    ;strings.emit 'control_character | 2278'
+    cmp al,SUB
     je line_end
-    cmp al,0Dh
+    cmp al,CR
     je cr_character
-    cmp al,0Ah
+    cmp al,LF
     je lf_character
-    cmp al,9
+    cmp al,HT
     je convert_line_data
     or al,al
     jnz symbol_character
@@ -2290,26 +2313,26 @@ control_character:
     ret
 
 lf_character:
-    strings.emit 'lf_character | 2292'
+    ;strings.emit 'lf_character | 2292'
     lods u8 [esi]
-    cmp al,0Dh
+    cmp al,CR
     je line_end
     dec esi
     jmp line_end
     ret
 
 cr_character:
-    strings.emit 'cr_character | 2301'
+    ;strings.emit 'cr_character | 2301'
     lods u8 [esi]
-    cmp al,0Ah
+    cmp al,LF
     je line_end
     dec esi
     jmp line_end
     ret
 
 convert_string:
-    strings.emit 'convert_string | 2310'
-    mov al,22h
+    ;strings.emit 'convert_string | 2310'
+    mov al,SYN
     stos u8 [edi]
     scas u32 [edi]
     mov ebx,edi
@@ -2317,13 +2340,13 @@ convert_string:
 copy_string:
     lods u8 [esi]
     stos u8 [edi]
-    cmp al,0Ah
+    cmp al,LF
     je no_end_quote
-    cmp al,0Dh
+    cmp al,CR
     je no_end_quote
     or al,al
     jz no_end_quote
-    cmp al,1Ah
+    cmp al,SUB
     je no_end_quote
     cmp al,ah
     jne copy_string
@@ -2334,29 +2357,29 @@ copy_string:
     dec edi
     mov eax,edi
     sub eax,ebx
-    mov [ebx-4],eax
+    mov [ebx-TAIL],eax
     jmp convert_line_data
     ret
 
 backslash_character:
-    strings.emit 'backslash_character | 2342'
-    mov u8 [edi],0
+    ;strings.emit 'backslash_character | 2342'
+    mov u8 [edi],NUL
     lods u8 [esi]
-    cmp al,20h
+    cmp al,SPACE
     je concatenate_lines
-    cmp al,9
+    cmp al,HT
     je concatenate_lines
-    cmp al,1Ah
+    cmp al,SUB
     je unexpected_end_of_file
     or al,al
     jz unexpected_end_of_file
-    cmp al,0Ah
+    cmp al,LF
     je concatenate_lf
-    cmp al,0Dh
+    cmp al,CR
     je concatenate_cr
-    cmp al,3Bh
+    cmp al,SEMI
     je find_concatenated_line
-    mov al,1Ah
+    mov al,SUB
     stos u8 [edi]
     mov ecx,edi
     mov ax,5C01h
@@ -2374,30 +2397,30 @@ backslash_character:
     ret
 
 no_end_quote:
-    strings.emit 'no_end_quote | 2377'
-    mov u8 [ebx-5],0
+    ;strings.emit 'no_end_quote | 2377'
+    mov u8 [ebx-5],NUL
     jmp missing_end_quote
     ret
 
 backslashed_symbol:
-    strings.emit 'backslashed_symbol | 2382'
-    cmp al,1Ah
+    ;strings.emit 'backslashed_symbol | 2382'
+    cmp al,SUB
     je unexpected_end_of_file
     or al,al
     jz unexpected_end_of_file
-    cmp al,0Ah
+    cmp al,LF
     je extra_characters_on_line
-    cmp al,0Dh
+    cmp al,CR
     je extra_characters_on_line
-    cmp al,20h
+    cmp al,SPACE
     je extra_characters_on_line
-    cmp al,9
+    cmp al,HT
     je extra_characters_on_line
-    cmp al,22h
+    cmp al,SYN
     je extra_characters_on_line
-    cmp al,27h
+    cmp al,QUOTE
     je extra_characters_on_line
-    cmp al,3Bh
+    cmp al,SEMI
     je extra_characters_on_line
     mov ah,al
     mov ebx,characters
@@ -2418,7 +2441,7 @@ convert_backslashed_symbol:
     ret
 
 backslashed_symbol_character:
-    strings.emit 'backslashed_symbol_character | 2420'
+    ;strings.emit 'backslashed_symbol_character | 2420'
     mov al,ah
     stos u8 [edi]
     inc u8 [ecx]
@@ -2426,49 +2449,49 @@ backslashed_symbol_character:
     ret
 
 concatenate_lines:
-    strings.emit 'concatenate_lines | 2428'
+    ;strings.emit 'concatenate_lines | 2428'
     lods u8 [esi]
-    cmp al,20h
+    cmp al,SPACE
     je concatenate_lines
-    cmp al,9
+    cmp al,HT
     je concatenate_lines
-    cmp al,1Ah
+    cmp al,SUB
     je unexpected_end_of_file
     or al,al
     jz unexpected_end_of_file
-    cmp al,0Ah
+    cmp al,LF
     je concatenate_lf
-    cmp al,0Dh
+    cmp al,CR
     je concatenate_cr
-    cmp al,3Bh
+    cmp al,SEMI
     jne extra_characters_on_line
 
     find_concatenated_line:
     lods u8 [esi]
-    cmp al,0Ah
+    cmp al,LF
     je concatenate_lf
-    cmp al,0Dh
+    cmp al,CR
     je concatenate_cr
     or al,al
     jz concatenate_ok
-    cmp al,1Ah
+    cmp al,SUB
     jne find_concatenated_line
     jmp unexpected_end_of_file
     ret
 
 concatenate_lf:
-    strings.emit 'concatenate_lf | 2459'
+    ;strings.emit 'concatenate_lf | 2459'
     lods u8 [esi]
-    cmp al,0Dh
+    cmp al,CR
     je concatenate_ok
     dec esi
     jmp concatenate_ok
     ret
 
 concatenate_cr:
-    strings.emit 'concatenate_cr | 2468'
+    ;strings.emit 'concatenate_cr | 2468'
     lods u8 [esi]
-    cmp al,0Ah
+    cmp al,LF
     je concatenate_ok
     dec esi
 
@@ -2478,15 +2501,15 @@ concatenate_cr:
     ret
 
 ignore_comment:
-    strings.emit 'ignore_comment | 2468'
+    ;strings.emit 'ignore_comment | 2468'
     lods u8 [esi]
-    cmp al,0Ah
+    cmp al,LF
     je lf_character
-    cmp al,0Dh
+    cmp al,CR
     je cr_character
     or al,al
     jz line_end
-    cmp al,1Ah
+    cmp al,SUB
     jne ignore_comment
 
     line_end:
@@ -2496,7 +2519,7 @@ ignore_comment:
     ret
 
 lower_case:
-    strings.emit 'lower_case | 2498'
+    ;strings.emit 'lower_case | 2498'
     mov edi,converted
     mov ebx,characters
     convert_case:
@@ -2507,7 +2530,7 @@ lower_case:
     ret
 
 get_directive:
-    strings.emit 'get_directive | 2509'
+    ;strings.emit 'get_directive | 2509'
     push _edi
     mov edx,esi
     mov ebp,ecx
@@ -2535,19 +2558,19 @@ get_directive:
 
     next_directive:
     mov edi,ebx
-    add edi,2
+    add edi,TEXT
     jmp scan_directives
     ret
 
 no_directive:
-    strings.emit 'no_directive | 2509'
+    ;strings.emit 'no_directive | 2509'
     mov esi,edx
     mov ecx,ebp
     stc
     ret
 
 directive_found:
-    strings.emit 'directive_found | 2549'
+    ;strings.emit 'directive_found | 2549'
     call get_directive_handler_base
     directive_handler:
     lea esi,[edx+ebp]
@@ -2557,12 +2580,12 @@ directive_found:
     ret
 
 get_directive_handler_base:
-    strings.emit 'get_directive_handler_base | 2549'
+    ;strings.emit 'get_directive_handler_base | 2549'
     mov _eax,[_esp]
     ret
 
 preprocess_line:
-    strings.emit 'preprocess_line | 2564'
+    ;strings.emit 'preprocess_line | 2564'
     mov _eax,_esp
     sub _eax,u64[stack_limit]
     cmp eax,100h
@@ -2572,27 +2595,27 @@ preprocess_line:
     preprocess_current_line:
     mov _esi,u64[current_line]
     add esi,16
-    cmp word [esi],3Bh
+    cmp word [esi],SEMI
     jne line_start_ok
-    add esi,2
+    add esi,TEXT
 
     line_start_ok:
     test [macro_status],0F0h
     jnz macro_preprocessing
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne not_fix_constant
-    movzx edx, u8 [esi+1]
+    movzx edx, u8 [esi+HEAD]
     lea edx,[esi+2+edx]
     cmp word [edx],031Ah
     jne not_fix_constant
     mov ebx,characters
-    movzx eax, u8 [edx+2]
+    movzx eax, u8 [edx+TEXT]
     xlat u8 [ebx]
-    ror eax,8
+    ror eax,RECTIFY
     mov al,[edx+3]
     xlat u8 [ebx]
-    ror eax,8
-    mov al,[edx+4]
+    ror eax,RECTIFY
+    mov al,[edx+TAIL]
     xlat u8 [ebx]
     ror eax,16
     cmp eax,'fix'
@@ -2604,15 +2627,15 @@ preprocess_line:
     ret
 
 macro_preprocessing:
-    strings.emit 'macro_preprocessing | 2606'
+    ;strings.emit 'macro_preprocessing | 2606'
     call process_macro_operators
     initial_preprocessing_ok:
     mov _esi,u64[current_line]
     add esi,16
     mov al,[macro_status]
-    test al,2
+    test al,TEXT
     jnz skip_macro_block
-    test al,1
+    test al,HEAD
     jnz find_macro_block
 
     preprocess_instruction:
@@ -2620,49 +2643,49 @@ macro_preprocessing:
     lods u8 [esi]
     movzx ecx, u8 [esi]
     inc esi
-    cmp al,1Ah
+    cmp al,SUB
     jne not_preprocessor_symbol
-    cmp cl,3
+    cmp cl,TXT
     jb not_preprocessor_directive
     push _edi
     mov edi,preprocessor_directives
     call get_directive
     pop _edi
     jc not_preprocessor_directive
-    mov u8 [edx-2],3Bh
+    mov u8 [edx-TEXT],SEMI
     jmp near _eax
     ret
 
 not_preprocessor_directive:
-    strings.emit 'not_preprocessor_directive | 2636'
+    ;strings.emit 'not_preprocessor_directive | 2636'
     xor ch,ch
     call get_preprocessor_symbol
     jc not_macro
-    mov u8 [ebx-2],3Bh
-    mov [struc_name],0
+    mov u8 [ebx-TEXT],SEMI
+    mov [struc_name],NUL
     jmp use_macro
     ret
 
 not_macro:
-    strings.emit 'not_macro | 2646'
+    ;strings.emit 'not_macro | 2646'
     mov u64[struc_name],_esi
     add esi,ecx
     lods u8 [esi]
     cmp al,':'
     je preprocess_label
-    cmp al,1Ah
+    cmp al,SUB
     jne not_preprocessor_symbol
     lods u8 [esi]
-    cmp al,3
+    cmp al,TXT
     jne not_symbolic_constant
     mov ebx,characters
     movzx eax, u8 [esi]
     xlat u8 [ebx]
-    ror eax,8
-    mov al,[esi+1]
+    ror eax,RECTIFY
+    mov al,[esi+HEAD]
     xlat u8 [ebx]
-    ror eax,8
-    mov al,[esi+2]
+    ror eax,RECTIFY
+    mov al,[esi+TEXT]
     xlat u8 [ebx]
     ror eax,16
     cmp eax,'equ'
@@ -2670,53 +2693,53 @@ not_macro:
     mov al,3
 
 not_symbolic_constant:
-    mov ch,1
+    mov ch,HEAD
     mov cl,al
     call get_preprocessor_symbol
     jc not_preprocessor_symbol
     push _edx _esi
     mov _esi,u64[struc_name]
     mov u64[struc_label],_esi
-    sub [struc_label],2
-    mov cl,[esi-1]
+    sub [struc_label],TEXT
+    mov cl,[esi-HEAD]
     mov ch,10b
     call get_preprocessor_symbol
     jc struc_name_ok
     mov ecx,[edx+12]
-    add ecx,3
+    add ecx,TXT
     lea ebx,[edi+ecx]
     mov ecx,edi
     sub _ecx,u64[struc_label]
-    lea esi,[edi-1]
-    lea edi,[ebx-1]
+    lea esi,[edi-HEAD]
+    lea edi,[ebx-HEAD]
     std
     rep movs u8 [edi],[esi]
     cld
     mov _edi,u64[struc_label]
-    mov esi,[edx+8]
+    mov esi,[edx+RECTIFY]
     mov ecx,[edx+12]
     add u64[struc_name],_ecx
-    add [struc_name],3
+    add [struc_name],TXT
     call move_data
     mov al,3Ah
     stos u8 [edi]
-    mov ax,3Bh
+    mov ax,SEMI
     stos u16 [edi]
     mov edi,ebx
     pop _esi
     add esi,[edx+12]
-    add esi,3
+    add esi,TXT
     pop _edx
     jmp use_macro
     ret
 
 struc_name_ok:
-    strings.emit 'struc_name_ok | 2713'
+    ;strings.emit 'struc_name_ok | 2713'
     mov _edx,u64[struc_name]
-    movzx eax, u8 [edx-1]
+    movzx eax, u8 [edx-HEAD]
     add edx,eax
     push _edi
-    lea esi,[edi-1]
+    lea esi,[edi-HEAD]
     mov ecx,edi
     sub ecx,edx
     std
@@ -2727,21 +2750,21 @@ struc_name_ok:
     mov al,3Ah
     mov [edx],al
     inc al
-    mov [edx+1],al
+    mov [edx+HEAD],al
     pop _esi _edx
     inc esi
     jmp use_macro
     ret
 
 preprocess_label:
-    strings.emit 'preprocess_label | 2736'
+    ;strings.emit 'preprocess_label | 2736'
     dec esi
     sub esi,ecx
     lea ebp,[esi-2]
     mov ch,10b
     call get_preprocessor_symbol
     jnc symbolic_constant_in_label
-    lea esi,[esi+ecx+1]
+    lea esi,[esi+ecx+HEAD]
     cmp u8 [esi],':'
     jne preprocess_instruction
     inc esi
@@ -2749,17 +2772,17 @@ preprocess_label:
     ret
 
 symbolic_constant_in_label:
-    strings.emit 'symbolic_constant_in_label | 2751'
-    mov ebx,[edx+8]
+    ;strings.emit 'symbolic_constant_in_label | 2751'
+    mov ebx,[edx+RECTIFY]
     mov ecx,[edx+12]
     add ecx,ebx
 
     check_for_broken_label:
     cmp ebx,ecx
     je label_broken
-    cmp u8 [ebx],1Ah
+    cmp u8 [ebx],SUB
     jne label_broken
-    movzx eax, u8 [ebx+1]
+    movzx eax, u8 [ebx+HEAD]
     lea ebx,[ebx+2+eax]
     cmp ebx,ecx
     je label_constant_ok
@@ -2773,13 +2796,13 @@ symbolic_constant_in_label:
     ret
 
 label_broken:
-    strings.emit 'label_broken | 2775'
+    ;strings.emit 'label_broken | 2775'
     push line_preprocessed
     jmp replace_symbolic_constant
     ret
 
 label_constant_ok:
-    strings.emit 'label_constant_ok | 2781'
+    ;strings.emit 'label_constant_ok | 2781'
     mov ecx,edi
     sub ecx,esi
     mov edi,[edx+12]
@@ -2795,17 +2818,17 @@ label_constant_ok:
     ret
 
 move_rest_of_line_up:
-    strings.emit 'move_rest_of_line_up | 2797'
-    lea esi,[esi+ecx-1]
-    lea edi,[edi+ecx-1]
+    ;strings.emit 'move_rest_of_line_up | 2797'
+    lea esi,[esi+ecx-HEAD]
+    lea edi,[edi+ecx-HEAD]
     std
     rep movs u8 [edi],[esi]
     cld
     replace_label:
     mov ecx,[edx+12]
-    mov _edi,[_esp+8]
+    mov _edi,[_esp+RECTIFY]
     sub edi,ecx
-    mov esi,[edx+8]
+    mov esi,[edx+RECTIFY]
     rep movs u8 [edi],[esi]
     pop _edi _esi
     inc esi
@@ -2813,7 +2836,7 @@ move_rest_of_line_up:
     ret
 
 not_preprocessor_symbol:
-    strings.emit 'not_preprocessor_symbol | 2815'
+    ;strings.emit 'not_preprocessor_symbol | 2815'
     mov _esi,u64[current_offset]
     call process_equ_constants
 
@@ -2822,7 +2845,7 @@ not_preprocessor_symbol:
     ret
 
 get_preprocessor_symbol:
-    strings.emit 'get_preprocessor_symbol | 2824'
+    ;strings.emit 'get_preprocessor_symbol | 2824'
     push _ebp _edi _esi
     mov ebp,ecx
     shl ebp,22
@@ -2835,9 +2858,9 @@ get_preprocessor_symbol:
     or edx,edx
     jz preprocessor_symbol_not_found
     xor eax,eax
-    shl ebp,1
-    adc eax,0
-    lea ebx,[edx+eax*4]
+    shl ebp,HEAD
+    adc eax,NUL
+    lea ebx,[edx+eax*TAIL]
     dec edi
     jnz follow_hashes_roots
     mov edi,ebx
@@ -2854,9 +2877,9 @@ get_preprocessor_symbol:
     or edx,edx
     jz preprocessor_symbol_not_found
     xor eax,eax
-    shl ebp,1
-    adc eax,0
-    lea ebx,[edx+eax*4]
+    shl ebp,HEAD
+    adc eax,NUL
+    lea ebx,[edx+eax*TAIL]
     dec edi
     jnz follow_hashes_tree
     mov al,cl
@@ -2865,8 +2888,8 @@ get_preprocessor_symbol:
     jz preprocessor_symbol_not_found
 
     compare_with_preprocessor_symbol:
-    mov edi,[edx+4]
-    cmp edi,1
+    mov edi,[edx+TAIL]
+    cmp edi,HEAD
     jbe next_equal_hash
     repe cmps u8 [esi],[edi]
     je preprocessor_symbol_found
@@ -2884,13 +2907,13 @@ get_preprocessor_symbol:
     ret
 
 preprocessor_symbol_found:
-    strings.emit 'preprocessor_symbol_found | 2886'
+    ;strings.emit 'preprocessor_symbol_found | 2886'
     pop _ebx _edi _ebp
     clc
     ret
 
 calculate_hash:
-    strings.emit 'calculate_hash | 2892'
+    ;strings.emit 'calculate_hash | 2892'
     xor ebx,ebx
     mov eax,2166136261
     mov ebp,16777619
@@ -2904,7 +2927,7 @@ calculate_hash:
     ret
 
 add_preprocessor_symbol:
-    strings.emit 'add_preprocessor_symbol | 2906'
+    ;strings.emit 'add_preprocessor_symbol | 2906'
     push _edi _esi
     xor eax,eax
     or cl,cl
@@ -2936,9 +2959,9 @@ add_preprocessor_symbol:
     or edx,edx
     jz extend_hashes_tree
     xor eax,eax
-    rol ebp,1
-    adc eax,0
-    lea ebx,[edx+eax*4]
+    rol ebp,HEAD
+    adc eax,NUL
+    lea ebx,[edx+eax*TAIL]
     dec ecx
     jnz find_leave_for_symbol
     mov edx,[ebx]
@@ -2947,21 +2970,21 @@ add_preprocessor_symbol:
     shr ebp,30
     cmp ebp,11b
     je reuse_symbol_entry
-    cmp u32 [edx+4],0
+    cmp u32 [edx+TAIL],NUL
     jne add_symbol_entry
 
     find_entry_to_reuse:
     mov edi,[edx]
     or edi,edi
     jz reuse_symbol_entry
-    cmp u32 [edi+4],0
+    cmp u32 [edi+TAIL],NUL
     jne reuse_symbol_entry
     mov edx,edi
     jmp find_entry_to_reuse
     ret
 
 add_symbol_entry:
-    strings.emit 'add_symbol_entry | 2963'
+    ;strings.emit 'add_symbol_entry | 2963'
     mov eax,edx
     mov edx,[labels_list]
     sub edx,16
@@ -2973,23 +2996,23 @@ add_symbol_entry:
 
     reuse_symbol_entry:
     pop _esi _edi
-    mov [edx+4],esi
+    mov [edx+TAIL],esi
     ret
 
 extend_hashes_tree:
-    strings.emit 'extend_hashes_tree | 2979'
+    ;strings.emit 'extend_hashes_tree | 2979'
     mov edx,[labels_list]
-    sub edx,8
+    sub edx,RECTIFY
     cmp _edx,u64[free_additional_memory]
     jb out_of_memory
     mov [labels_list],edx
     xor eax,eax
     mov [edx],eax
-    mov [edx+4],eax
-    shl ebp,1
-    adc eax,0
+    mov [edx+TAIL],eax
+    shl ebp,HEAD
+    adc eax,NUL
     mov [ebx],edx
-    lea ebx,[edx+eax*4]
+    lea ebx,[edx+eax*TAIL]
     dec ecx
     jnz extend_hashes_tree
     mov edx,[labels_list]
@@ -2997,85 +3020,85 @@ extend_hashes_tree:
     cmp _edx,u64[free_additional_memory]
     jb out_of_memory
     mov [labels_list],edx
-    mov u32 [edx],0
+    mov u32 [edx],NUL
     mov [ebx],edx
     pop _esi _edi
-    mov [edx+4],esi
+    mov [edx+TAIL],esi
     ret
 
 define_fix_constant:
-    strings.emit 'define_fix_constant | 3006'
-    add edx,5
-    add esi,2
+    ;strings.emit 'define_fix_constant | 3006'
+    add edx,QUERY
+    add esi,TEXT
     push _edx
     mov ch,11b
     jmp define_preprocessor_constant
     ret
 
 define_equ_constant:
-    strings.emit 'define_equ_constant | 3015'
-    add esi,3
+    ;strings.emit 'define_equ_constant | 3015'
+    add esi,TXT
     push _esi
     call process_equ_constants
     mov _esi,u64[struc_name]
     mov ch,10b
 
     define_preprocessor_constant:
-    mov u8 [esi-2],3Bh
-    mov cl,[esi-1]
+    mov u8 [esi-TEXT],SEMI
+    mov cl,[esi-HEAD]
     call add_preprocessor_symbol
     pop _ebx
     mov ecx,edi
     dec ecx
     sub ecx,ebx
-    mov [edx+8],ebx
+    mov [edx+RECTIFY],ebx
     mov [edx+12],ecx
     jmp line_preprocessed
     ret
 
 define_symbolic_constant:
-    strings.emit 'define_symbolic_constant | 3037'
+    ;strings.emit 'define_symbolic_constant | 3037'
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_name
     lods u8 [esi]
     mov cl,al
     mov ch,10b
     call add_preprocessor_symbol
-    movzx eax, u8 [esi-1]
+    movzx eax, u8 [esi-HEAD]
     add esi,eax
-    lea ecx,[edi-1]
+    lea ecx,[edi-HEAD]
     sub ecx,esi
-    mov [edx+8],esi
+    mov [edx+RECTIFY],esi
     mov [edx+12],ecx
     jmp line_preprocessed
     ret
 
 define_struc:
-    strings.emit 'define_struc | 3054'
-    mov ch,1
+    ;strings.emit 'define_struc | 3054'
+    mov ch,HEAD
     jmp make_macro
     ret
 
 define_macro:
-    strings.emit 'define_macro | 3060'
+    ;strings.emit 'define_macro | 3060'
     xor ch,ch
 
     make_macro:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_name
     lods u8 [esi]
     mov cl,al
     call add_preprocessor_symbol
     mov _eax,u64[current_line]
     mov [edx+12],eax
-    movzx eax, u8 [esi-1]
+    movzx eax, u8 [esi-HEAD]
     add esi,eax
-    mov [edx+8],esi
+    mov [edx+RECTIFY],esi
     mov al,[macro_status]
     and al,0F0h
-    or al,1
+    or al,HEAD
     mov [macro_status],al
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
@@ -3088,16 +3111,18 @@ define_macro:
     dec esi
 
     skip_macro_arguments:
-    lods u8 [esi]
-    cmp al,1Ah
-    je skip_macro_argument
-    cmp al,'['
-    jne invalid_macro_arguments
-    or ebp,-1
-    jz invalid_macro_arguments
-    lods u8 [esi]
-    cmp al,1Ah
-    jne invalid_macro_arguments
+		lods u8 [esi]
+		cmp al,SUB
+		je skip_macro_argument
+		cmp al,'('
+		je skip_macro_argument
+		cmp al,'['
+		jne invalid_macro_arguments
+		or ebp,-HEAD
+		jz invalid_macro_arguments
+		lods u8 [esi]
+		cmp al,SUB
+		jne invalid_macro_arguments
 
     skip_macro_argument:
     movzx eax, u8 [esi]
@@ -3135,27 +3160,27 @@ end_macro_arguments:
     ret
 
 macro_argument_with_default_value:
-    strings.emit 'macro_argument_with_default_value | 3137'
-    or [skip_default_argument_value],-1
+    ;strings.emit 'macro_argument_with_default_value | 3137'
+    or [skip_default_argument_value],-HEAD
     call skip_macro_argument_value
     inc esi
     jmp macro_argument_end
     ret
 
 skip_macro_argument_value:
-    strings.emit 'skip_macro_argument_value | 3145'
+    ;strings.emit 'skip_macro_argument_value | 3145'
     cmp u8 [esi],'<'
     jne simple_argument
-    mov ecx,1
+    mov ecx,HEAD
     inc esi
 
     enclosed_argument:
     lods u8 [esi]
     or al,al
     jz invalid_macro_arguments
-    cmp al,1Ah
+    cmp al,SUB
     je enclosed_symbol
-    cmp al,22h
+    cmp al,SYN
     je enclosed_string
     cmp al,'>'
     je enclosed_argument_end
@@ -3166,7 +3191,7 @@ skip_macro_argument_value:
     ret
 
 enclosed_symbol:
-    strings.emit 'enclosed_symbol | 3168'
+    ;strings.emit 'enclosed_symbol | 3168'
     movzx eax, u8 [esi]
     inc esi
     add esi,eax
@@ -3174,21 +3199,21 @@ enclosed_symbol:
     ret
 
 enclosed_string:
-    strings.emit 'enclosed_string | 3177'
+    ;strings.emit 'enclosed_string | 3177'
     lods u32 [esi]
     add esi,eax
     jmp enclosed_argument
     ret
 
 enclosed_argument_end:
-    strings.emit 'enclosed_argument_end | 3183'
+    ;strings.emit 'enclosed_argument_end | 3183'
     loop enclosed_argument
     lods u8 [esi]
     or al,al
     jz argument_value_end
     cmp al,','
     je argument_value_end
-    cmp [skip_default_argument_value],0
+    cmp [skip_default_argument_value],NUL
     je invalid_macro_arguments
     cmp al,'{'
     je argument_value_end
@@ -3202,17 +3227,17 @@ enclosed_argument_end:
     ret
 
 simple_argument:
-    strings.emit 'simple_argument | 3204'
+    ;strings.emit 'simple_argument | 3204'
     lods u8 [esi]
     or al,al
     jz argument_value_end
     cmp al,','
     je argument_value_end
-    cmp al,22h
+    cmp al,SYN
     je argument_string
-    cmp al,1Ah
+    cmp al,SUB
     je argument_symbol
-    cmp [skip_default_argument_value],0
+    cmp [skip_default_argument_value],NUL
     je simple_argument
     cmp al,'{'
     je argument_value_end
@@ -3231,20 +3256,20 @@ simple_argument:
     ret
 
 argument_string:
-    strings.emit 'argument_string | 3233'
+    ;strings.emit 'argument_string | 3233'
     lods u32 [esi]
     add esi,eax
     jmp simple_argument
     ret
 
 argument_value_end:
-    strings.emit 'argument_value_end | 3240'
+    ;strings.emit 'argument_value_end | 3240'
     dec esi
     ret
 
 find_macro_block:
-    strings.emit 'find_macro_block | 3245'
-    add esi,2
+    ;strings.emit 'find_macro_block | 3245'
+    add esi,TEXT
     lods u8 [esi]
     or al,al
     jz line_preprocessed
@@ -3252,15 +3277,15 @@ find_macro_block:
     jne unexpected_characters
 
     found_macro_block:
-    or [macro_status],2
+    or [macro_status],TEXT
 
     skip_macro_block:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je skip_macro_symbol
-    cmp al,3Bh
+    cmp al,SEMI
     je skip_macro_symbol
-    cmp al,22h
+    cmp al,SYN
     je skip_macro_string
     or al,al
     jz line_preprocessed
@@ -3268,14 +3293,14 @@ find_macro_block:
     jne skip_macro_block
     mov al,[macro_status]
     and [macro_status],0F0h
-    test al,8
+    test al,RECTIFY
     jnz use_instant_macro
-    cmp u8 [esi],0
+    cmp u8 [esi],NUL
     je line_preprocessed
     mov ecx,edi
     sub ecx,esi
     mov edx,esi
-    lea esi,[esi+ecx-1]
+    lea esi,[esi+ecx-HEAD]
     lea edi,[edi+1+16]
     mov ebx,edi
     dec edi
@@ -3287,14 +3312,14 @@ find_macro_block:
     stos u8 [edi]
     mov _esi,u64[current_line]
     mov u64[current_line],_edi
-    mov ecx,4
+    mov ecx,TAIL
     rep movs dword [edi],[esi]
     mov edi,ebx
     jmp initial_preprocessing_ok
     ret
 
 skip_macro_symbol:
-    strings.emit 'skip_macro_symbol | 3296'
+    ;strings.emit 'skip_macro_symbol | 3296'
     movzx eax, u8 [esi]
     inc esi
     add esi,eax
@@ -3302,14 +3327,14 @@ skip_macro_symbol:
     ret
 
 skip_macro_string:
-    strings.emit 'skip_macro_string | 3304'
+    ;strings.emit 'skip_macro_string | 3304'
     lods u32 [esi]
     add esi,eax
     jmp skip_macro_block
     ret
 
 postpone_directive:
-    strings.emit 'postpone_directive | 3311'
+    ;strings.emit 'postpone_directive | 3311'
     push _esi
     mov esi,edx
     xor ecx,ecx
@@ -3318,10 +3343,10 @@ postpone_directive:
     mov u64[error_line],_eax
     mov [edx+12],eax
     pop _esi
-    mov [edx+8],esi
+    mov [edx+RECTIFY],esi
     mov al,[macro_status]
     and al,0F0h
-    or al,1
+    or al,HEAD
     mov [macro_status],al
     lods u8 [esi]
     or al,al
@@ -3332,42 +3357,42 @@ postpone_directive:
     ret
 
 rept_directive:
-    strings.emit 'rept_directive | 3334'
-    mov [base_code],0
+    ;strings.emit 'rept_directive | 3334'
+    mov [base_code],NUL
     jmp define_instant_macro
     ret
 
 irp_directive:
-    strings.emit 'irp_directive | 3340'
-    mov [base_code],1
+    ;strings.emit 'irp_directive | 3340'
+    mov [base_code],HEAD
     jmp define_instant_macro
     ret
 
 irps_directive:
-    strings.emit 'irps_directive | 3347'
-    mov [base_code],2
+    ;strings.emit 'irps_directive | 3347'
+    mov [base_code],TEXT
     jmp define_instant_macro
     ret
 
 irpv_directive:
-    strings.emit 'irpv_directive | 3353'
-    mov [base_code],3
+    ;strings.emit 'irpv_directive | 3353'
+    mov [base_code],TXT
     jmp define_instant_macro
     ret
 
 match_directive:
-    strings.emit 'match_directive | 3358'
-    mov [base_code],10h
+    ;strings.emit 'match_directive | 3358'
+    mov [base_code],DELINK
 
     define_instant_macro:
     mov al,[macro_status]
     and al,0F0h
-    or al,8+1
+    or al,RECTIFY+HEAD
     mov [macro_status],al
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov [instant_macro_start],esi
-    cmp [base_code],10h
+    cmp [base_code],DELINK
     je prepare_match
 
     skip_parameters:
@@ -3376,9 +3401,9 @@ match_directive:
     jz parameters_skipped
     cmp al,'{'
     je parameters_skipped
-    cmp al,22h
+    cmp al,SYN
     je skip_quoted_parameter
-    cmp al,1Ah
+    cmp al,SUB
     jne skip_parameters
     lods u8 [esi]
     movzx eax,al
@@ -3387,14 +3412,14 @@ match_directive:
     ret
 
 skip_quoted_parameter:
-    strings.emit 'skip_quoted_parameter | 3389'
+    ;strings.emit 'skip_quoted_parameter | 3389'
     lods u32 [esi]
     add esi,eax
     jmp skip_parameters
     ret
 
 parameters_skipped:
-    strings.emit 'parameters_skipped | 3396'
+    ;strings.emit 'parameters_skipped | 3396'
     dec esi
     mov [parameters_end],esi
     lods u8 [esi]
@@ -3406,7 +3431,7 @@ parameters_skipped:
     ret
 
 prepare_match:
-    strings.emit 'prepare_match | 3408'
+    ;strings.emit 'prepare_match | 3408'
     call skip_pattern
     mov [value_type],80h+10b
     call process_symbolic_constants
@@ -3414,30 +3439,30 @@ prepare_match:
     ret
 
 skip_pattern:
-    strings.emit 'skip_pattern | 3417'
+    ;strings.emit 'skip_pattern | 3417'
     lods u8 [esi]
     or al,al
     jz invalid_macro_arguments
     cmp al,','
     ;je pattern_skipped
     je return_ok
-    cmp al,22h
+    cmp al,SYN
     je skip_quoted_string_in_pattern
-    cmp al,1Ah
+    cmp al,SUB
     je skip_symbol_in_pattern
     cmp al,'='
     jne skip_pattern
     mov al,[esi]
-    cmp al,1Ah
+    cmp al,SUB
     je skip_pattern
-    cmp al,22h
+    cmp al,SYN
     je skip_pattern
     inc esi
     jmp skip_pattern
     ret
 
 skip_symbol_in_pattern:
-    strings.emit 'skip_symbol_in_pattern | 3439'
+    ;strings.emit 'skip_symbol_in_pattern | 3439'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -3445,43 +3470,43 @@ skip_symbol_in_pattern:
     ret
 
 skip_quoted_string_in_pattern:
-    strings.emit 'skip_quoted_string_in_pattern | 3447'
+    ;strings.emit 'skip_quoted_string_in_pattern | 3447'
     lods u32 [esi]
     add esi,eax
     jmp skip_pattern
     ret
 
 purge_macro:
-    strings.emit 'purge_macro | 3454'
+    ;strings.emit 'purge_macro | 3454'
     xor ch,ch
     jmp restore_preprocessor_symbol
     ret
 
 purge_struc:
-    strings.emit 'purge_struc | 3460'
-    mov ch,1
+    ;strings.emit 'purge_struc | 3460'
+    mov ch,HEAD
     jmp restore_preprocessor_symbol
     ret
 
 restore_equ_constant:
-    strings.emit 'restore_equ_constant | 3466'
+    ;strings.emit 'restore_equ_constant | 3466'
     mov ch,10b
 
     restore_preprocessor_symbol:
     push _ecx
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_name
     lods u8 [esi]
     mov cl,al
     call get_preprocessor_symbol
     jc no_symbol_to_restore
-    mov u32 [edx+4],0
+    mov u32 [edx+TAIL],NUL
     jmp symbol_restored
     ret
 
 no_symbol_to_restore:
-    strings.emit 'no_symbol_to_restore | 3483'
+    ;strings.emit 'no_symbol_to_restore | 3483'
     add esi,ecx
 
     symbol_restored:
@@ -3495,21 +3520,21 @@ no_symbol_to_restore:
     ret
 
 process_fix_constants:
-    strings.emit 'process_fix_constants | 3497'
+    ;strings.emit 'process_fix_constants | 3497'
     mov [value_type],11b
     jmp process_symbolic_constants
     ret
 
 process_equ_constants:
-    strings.emit 'process_equ_constants | 3503'
+    ;strings.emit 'process_equ_constants | 3503'
     mov [value_type],10b
 
     process_symbolic_constants:
     mov ebp,esi
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je check_symbol
-    cmp al,22h
+    cmp al,SYN
     je ignore_string
     cmp al,'{'
     je check_brace
@@ -3518,27 +3543,27 @@ process_equ_constants:
     ret
 
 ignore_string:
-    strings.emit 'ignore_string | 3520'
+    ;strings.emit 'ignore_string | 3520'
     lods u32 [esi]
     add esi,eax
     jmp process_symbolic_constants
     ret
 
 check_brace:
-    strings.emit 'check_brace | 3527'
+    ;strings.emit 'check_brace | 3527'
     test [value_type],80h
     jz process_symbolic_constants
     ret
 
 no_replacing:
-    strings.emit 'no_replacing | 3533'
-    movzx ecx, u8 [esi-1]
+    ;strings.emit 'no_replacing | 3533'
+    movzx ecx, u8 [esi-HEAD]
     add esi,ecx
     jmp process_symbolic_constants
     ret
 
 check_symbol:
-    strings.emit 'check_symbol | 3540'
+    ;strings.emit 'check_symbol | 3540'
     mov cl,[esi]
     inc esi
     mov ch,[value_type]
@@ -3548,17 +3573,17 @@ check_symbol:
 
     replace_symbolic_constant:
     mov ecx,[edx+12]
-    mov edx,[edx+8]
+    mov edx,[edx+RECTIFY]
     xchg esi,edx
     call move_data
     mov esi,edx
 
     process_after_replaced:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je symbol_after_replaced
     stos u8 [edi]
-    cmp al,22h
+    cmp al,SYN
     je string_after_replaced
     cmp al,'{'
     je brace_after_replaced
@@ -3572,16 +3597,16 @@ check_symbol:
     ret
 
 move_data:
-    strings.emit 'move_data | 3574'
+    ;strings.emit 'move_data | 3574'
     lea eax,[edi+ecx]
     cmp _eax,u64[memory_end]
     jae out_of_memory
-    shr ecx,1
+    shr ecx,HEAD
     jnc movsb_ok
     movs u8 [edi],[esi]
 
     movsb_ok:
-    shr ecx,1
+    shr ecx,HEAD
     jnc movsw_ok
     movs u16 [edi],[esi]
 
@@ -3590,7 +3615,7 @@ move_data:
     ret
 
 string_after_replaced:
-    strings.emit 'string_after_replaced | 3592'
+    ;strings.emit 'string_after_replaced | 3592'
     lods u32 [esi]
     stos u32 [edi]
     mov ecx,eax
@@ -3599,7 +3624,7 @@ string_after_replaced:
     ret
 
 brace_after_replaced:
-    strings.emit 'brace_after_replaced | 3592'
+    ;strings.emit 'brace_after_replaced | 3592'
     test [value_type],80h
     jz process_after_replaced
     mov edx,edi
@@ -3615,14 +3640,14 @@ brace_after_replaced:
     ret
 
 symbol_after_replaced:
-    strings.emit 'symbol_after_replaced | 3617'
+    ;strings.emit 'symbol_after_replaced | 3617'
     mov cl,[esi]
     inc esi
     mov ch,[value_type]
     call get_preprocessor_symbol
     jnc replace_symbolic_constant
-    movzx ecx, u8 [esi-1]
-    mov al,1Ah
+    movzx ecx, u8 [esi-HEAD]
+    mov al,SUB
     mov ah,cl
     stos u16 [edi]
     call move_data
@@ -3630,7 +3655,7 @@ symbol_after_replaced:
     ret
 
 process_macro_operators:
-    strings.emit 'process_macro_operators | 3632'
+    ;strings.emit 'process_macro_operators | 3632'
     xor dl,dl
     mov ebp,edi
 
@@ -3641,11 +3666,11 @@ process_macro_operators:
     je symbol_conversion
     cmp al,'#'
     je concatenation
-    cmp al,1Ah
+    cmp al,SUB
     je symbol_before_macro_operators
-    cmp al,3Bh
+    cmp al,SEMI
     je no_more_macro_operators
-    cmp al,22h
+    cmp al,SYN
     je string_before_macro_operators
     xor dl,dl
     or al,al
@@ -3654,13 +3679,13 @@ process_macro_operators:
     ret
 
 no_more_macro_operators:
-    strings.emit 'no_more_macro_operators | 3656'
+    ;strings.emit 'no_more_macro_operators | 3656'
     mov edi,ebp
     ret
 
 symbol_before_macro_operators:
-    strings.emit 'symbol_before_macro_operators | 3661'
-    mov dl,1Ah
+    ;strings.emit 'symbol_before_macro_operators | 3661'
+    mov dl,SUB
     mov ebx,esi
     lods u8 [esi]
     movzx ecx,al
@@ -3675,8 +3700,8 @@ symbol_before_macro_operators:
     ret
 
 string_before_macro_operators:
-    strings.emit 'string_before_macro_operators | 3677'
-    mov dl,22h
+    ;strings.emit 'string_before_macro_operators | 3677'
+    mov dl,SYN
     mov ebx,esi
     lods u32 [esi]
     add esi,eax
@@ -3684,35 +3709,35 @@ string_before_macro_operators:
     ret
 
 escaped_symbol:
-    strings.emit 'escaped_symbol | 3686'
-    dec u8 [edi-1]
+    ;strings.emit 'escaped_symbol | 3686'
+    dec u8 [edi-HEAD]
     dec ecx
     inc esi
-    cmp ecx,1
+    cmp ecx,HEAD
     rep movs u8 [edi],[esi]
     jne after_macro_operators
-    mov al,[esi-1]
+    mov al,[esi-HEAD]
     mov ecx,ebx
     mov ebx,characters
     xlat u8 [ebx]
     mov ebx,ecx
     or al,al
     jnz after_macro_operators
-    sub edi,3
-    mov al,[esi-1]
+    sub edi,TXT
+    mov al,[esi-HEAD]
     stos u8 [edi]
     xor dl,dl
     jmp after_macro_operators
     ret
 
 reduce_symbol_conversion:
-    strings.emit 'reduce_symbol_conversion | 3708'
+    ;strings.emit 'reduce_symbol_conversion | 3708'
     inc esi
 
     symbol_conversion:
     mov edx,esi
     mov al,[esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne symbol_character_conversion
     lods u16 [esi]
     movzx ecx,ah
@@ -3727,8 +3752,8 @@ reduce_symbol_conversion:
     ret
 
 symbol_character_conversion:
-    strings.emit 'symbol_character_conversion | 3729'
-    cmp al,22h
+    ;strings.emit 'symbol_character_conversion | 3729'
+    cmp al,SYN
     je after_macro_operators
     cmp al,'`'
     je reduce_symbol_conversion
@@ -3743,7 +3768,7 @@ symbol_character_conversion:
     convert_to_quoted_string:
     sub ebx,edx
     ja shift_line_data
-    mov al,22h
+    mov al,SYN
     mov dl,al
     stos u8 [edi]
     mov ebx,edi
@@ -3756,32 +3781,32 @@ symbol_character_conversion:
     ret
 
 shift_line_data:
-    strings.emit 'shift_line_data | 3758'
+    ;strings.emit 'shift_line_data | 3758'
     push _ecx
     mov edx,esi
-    lea esi,[ebp-1]
+    lea esi,[ebp-HEAD]
     add ebp,ebx
-    lea edi,[ebp-1]
-    lea ecx,[esi+1]
+    lea edi,[ebp-HEAD]
+    lea ecx,[esi+HEAD]
     sub ecx,edx
     std
     rep movs u8 [edi],[esi]
     cld
     pop _eax
-    sub edi,3
-    mov dl,22h
-    mov [edi-1],dl
+    sub edi,TXT
+    mov dl,SYN
+    mov [edi-HEAD],dl
     mov ebx,edi
     mov [edi],eax
-    lea esi,[edi+4+eax]
+    lea esi,[edi+TAIL+eax]
     jmp before_macro_operators
     ret
 
 concatenation:
-    strings.emit 'concatenation | 3780'
-    cmp dl,1Ah
+    ;strings.emit 'concatenation | 3780'
+    cmp dl,SUB
     je symbol_concatenation
-    cmp dl,22h
+    cmp dl,SYN
     je string_concatenation
 
     no_concatenation:
@@ -3791,8 +3816,8 @@ concatenation:
     ret
 
 symbol_concatenation:
-    strings.emit 'symbol_concatenation | 3793'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'symbol_concatenation | 3793'
+    cmp u8 [esi],SUB
     jne no_concatenation
     inc esi
     lods u8 [esi]
@@ -3809,20 +3834,20 @@ symbol_concatenation:
     ret
 
 concatenate_escaped_symbol:
-    strings.emit 'concatenate_escaped_symbol | 3811'
+    ;strings.emit 'concatenate_escaped_symbol | 3811'
     inc esi
     dec ecx
     jz do_symbol_concatenation
     movzx eax, u8 [esi]
-    cmp u8 [characters+eax],0
-    jne do_symbol_concatenation
-    sub esi,3
+    cmp u8 [characters+eax],NUL
+    jne  do_symbol_concatenation
+    sub esi,TXT
     jmp no_concatenation
     ret
 
 string_concatenation:
-    strings.emit 'string_concatenation | 3823'
-    cmp u8 [esi],22h
+    ;strings.emit 'string_concatenation | 3823'
+    cmp u8 [esi],SYN
     je do_string_concatenation
     cmp u8 [esi],'`'
     jne no_concatenation
@@ -3832,9 +3857,9 @@ string_concatenation:
     mov al,[esi]
     cmp al,'`'
     je concatenate_converted_symbol
-    cmp al,22h
+    cmp al,SYN
     je do_string_concatenation
-    cmp al,1Ah
+    cmp al,SUB
     jne concatenate_converted_symbol_character
     inc esi
     lods u8 [esi]
@@ -3852,7 +3877,7 @@ string_concatenation:
     ret
 
 concatenate_converted_symbol_character:
-    strings.emit 'concatenate_converted_symbol_character | 3854'
+    ;strings.emit 'concatenate_converted_symbol_character | 3854'
     or al,al
     jz after_macro_operators
     cmp al,'#'
@@ -3863,7 +3888,7 @@ concatenate_converted_symbol_character:
     ret
 
 do_string_concatenation:
-    strings.emit 'do_string_concatenation | 3865'
+    ;strings.emit 'do_string_concatenation | 3865'
     inc esi
     lods u32 [esi]
     mov ecx,eax
@@ -3877,11 +3902,11 @@ do_string_concatenation:
     cmp al,'#'
     je concatenation
     stos u8 [edi]
-    cmp al,1Ah
+    cmp al,SUB
     je symbol_after_macro_operators
-    cmp al,3Bh
+    cmp al,SEMI
     je no_more_macro_operators
-    cmp al,22h
+    cmp al,SYN
     je string_after_macro_operators
     xor dl,dl
     or al,al
@@ -3889,8 +3914,8 @@ do_string_concatenation:
     ret
 
 symbol_after_macro_operators:
-    strings.emit 'symbol_after_macro_operators | 3891'
-    mov dl,1Ah
+    ;strings.emit 'symbol_after_macro_operators | 3891'
+    mov dl,SUB
     mov ebx,edi
     lods u8 [esi]
     stos u8 [edi]
@@ -3905,8 +3930,8 @@ symbol_after_macro_operators:
     ret
 
 string_after_macro_operators:
-    strings.emit 'string_after_macro_operators | 3907'
-    mov dl,22h
+    ;strings.emit 'string_after_macro_operators | 3907'
+    mov dl,SYN
     mov ebx,edi
     lods u32 [esi]
     stos u32 [edi]
@@ -3916,20 +3941,20 @@ string_after_macro_operators:
     ret
 
 use_macro:
-    strings.emit 'use_macro | 3918'
+    ;strings.emit 'use_macro | 3918'
     push u64[free_additional_memory]
     push u64[macro_symbols]
-    mov [macro_symbols],0
-    push u64[counter_limit]
-    mov r8d,[edx+4]
+    mov [macro_symbols],NUL
+    push  u64[counter_limit]
+    mov r8d,[edx+TAIL]
     push r8
-    mov u32 [edx+4],1
+    mov u32 [edx+TAIL],HEAD
     push _edx
     mov ebx,esi
-    mov esi,[edx+8]
+    mov esi,[edx+RECTIFY]
     mov eax,[edx+12]
     mov [macro_line],_eax
-    mov [counter_limit],0
+    mov [counter_limit],NUL
     xor ebp,ebp
 
     process_macro_arguments:
@@ -3958,7 +3983,7 @@ use_macro:
     ret
 
 next_argument:
-    strings.emit 'next_argument | 3960'
+    ;strings.emit 'next_argument | 3960'
     cmp u8 [ebx],','
     jne process_macro_arguments
     inc ebx
@@ -3966,7 +3991,7 @@ next_argument:
     ret
 
 next_arguments_group:
-    strings.emit 'next_arguments_group | 3968'
+    ;strings.emit 'next_arguments_group | 3968'
     cmp u8 [ebx],','
     jne arguments_end
     inc ebx
@@ -3976,7 +4001,7 @@ next_arguments_group:
     ret
 
 get_macro_argument:
-    strings.emit 'get_macro_argument | 3987'
+    ;strings.emit 'get_macro_argument | 3987'
     lods u8 [esi]
     movzx ecx,al
     mov _eax,u64[counter_limit]
@@ -3994,21 +4019,21 @@ get_macro_argument:
     get_default_value:
     inc esi
     mov [default_argument_value],esi
-    or [skip_default_argument_value],-1
+    or [skip_default_argument_value],-HEAD
     call skip_macro_argument_value
     jmp default_value_ok
     ret
 
 required_value:
-    strings.emit 'required_value | 4002'
+    ;strings.emit 'required_value | 4002'
     inc esi
-    or [default_argument_value],-1
+    or [default_argument_value],-HEAD
 
     default_value_ok:
     xchg esi,ebx
     mov [edx+12],esi
-    mov [skip_default_argument_value],0
-    cmp u8 [ebx],'&'
+    mov [skip_default_argument_value],NUL
+    cmp  u8 [ebx],'&'
     je greedy_macro_argument
     call skip_macro_argument_value
     call finish_macro_argument
@@ -4016,53 +4041,53 @@ required_value:
     ret
 
 greedy_macro_argument:
-    strings.emit 'greedy_macro_argument | 4018'
+    ;strings.emit 'greedy_macro_argument | 4018'
     call skip_foreign_line
     dec esi
     mov eax,[edx+12]
     mov ecx,esi
     sub ecx,eax
-    mov [edx+8],ecx
+    mov [edx+RECTIFY],ecx
 
     got_macro_argument:
     xchg esi,ebx
-    cmp u32 [edx+8],0
+    cmp u32 [edx+RECTIFY],NUL
     ;jne macro_argument_ok
     jne return_ok
     mov eax,[default_argument_value]
     or eax,eax
     ;jz macro_argument_ok
     jz return_ok
-    cmp eax,-1
+    cmp eax,-HEAD
     je invalid_macro_arguments
     mov [edx+12],eax
     call finish_macro_argument
     ret
 
 finish_macro_argument:
-    strings.emit 'finish_macro_argument | 4042'
+    ;strings.emit 'finish_macro_argument | 4042'
     mov eax,[edx+12]
     mov ecx,esi
     sub ecx,eax
     cmp u8 [eax],'<'
     jne argument_value_length_ok
     inc u32 [edx+12]
-    sub ecx,2
+    sub ecx,TEXT
     or ecx,80000000h
 
     argument_value_length_ok:
-    mov [edx+8],ecx
+    mov [edx+RECTIFY],ecx
     ret
 
 arguments_end:
-    strings.emit 'arguments_end | 4057'
-    cmp u8 [ebx],0
-    jne invalid_macro_arguments
-    mov _eax,[_esp+8]
+    ;strings.emit 'arguments_end | 4057'
+    cmp u8 [ebx],NUL
+    jne  invalid_macro_arguments
+    mov _eax,[_esp+RECTIFY]
     dec _eax
     call process_macro
     pop _edx r8
-    mov [_edx+4],r8d
+    mov [_edx+TAIL],r8d
     pop u64[counter_limit]
     pop u64[macro_symbols]
     pop u64[free_additional_memory]
@@ -4070,31 +4095,31 @@ arguments_end:
     ret
 
 use_instant_macro:
-    strings.emit 'use_instant_macro | 4072'
+    ;strings.emit 'use_instant_macro | 4072'
     push _edi u64[current_line] _esi
     mov _eax,u64[error_line]
     mov u64[current_line],_eax
     mov u64[macro_line],_eax
     mov esi,[instant_macro_start]
-    cmp [base_code],10h
+    cmp [base_code],DELINK
     jae do_match
-    cmp [base_code],0
-    jne do_irp
+    cmp [base_code],NUL
+    jne  do_irp
     call precalculate_value
-    cmp eax,0
+    cmp eax,NUL
     jl value_out_of_range
     push u64[free_additional_memory]
     push u64[macro_symbols]
-    mov [macro_symbols],0
-    push u64[counter_limit]
-    mov [struc_name],0
+    mov [macro_symbols],NUL
+    push  u64[counter_limit]
+    mov [struc_name],NUL
     mov u64[counter_limit],_eax
     lods u8 [esi]
     or al,al
     jz rept_counters_ok
     cmp al,'{'
     je rept_counters_ok
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_macro_arguments
 
     add_rept_counter:
@@ -4106,7 +4131,7 @@ use_instant_macro:
     xor eax,eax
     mov u32 [edx+12],eax
     inc eax
-    mov u32 [edx+8],eax
+    mov u32 [edx+RECTIFY],eax
     lods u8 [esi]
     cmp al,':'
     jne rept_counter_added
@@ -4116,22 +4141,22 @@ use_instant_macro:
     add _edx,u64[counter_limit]
     jo value_out_of_range
     pop _edx
-    mov u32 [edx+8],eax
+    mov u32 [edx+RECTIFY],eax
     lods u8 [esi]
 
     rept_counter_added:
     cmp al,','
     jne rept_counters_ok
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_macro_arguments
     jmp add_rept_counter
     ret
 
 rept_counters_ok:
-    strings.emit 'rept_counters_ok | 4131'
+    ;strings.emit 'rept_counters_ok | 4131'
     dec esi
-    cmp [counter_limit],0
+    cmp [counter_limit],NUL
     je instant_macro_finish
 
     instant_macro_parameters_ok:
@@ -4145,14 +4170,14 @@ rept_counters_ok:
 
     instant_macro_done:
     pop _ebx _esi _edx
-    cmp u8 [ebx],0
+    cmp u8 [ebx],NUL
     je line_preprocessed
     mov u64[current_line],_edi
-    mov ecx,4
+    mov ecx,TAIL
     rep movs dword [edi],[esi]
-    test [macro_status],0Fh
+    test [macro_status],SHIFT
     jz instant_macro_attached_line
-    mov ax,3Bh
+    mov ax,SEMI
     stos u16 [edi]
 
     instant_macro_attached_line:
@@ -4164,23 +4189,23 @@ rept_counters_ok:
     ret
 
 precalculate_value:
-    strings.emit 'precalculate_value | 4166'
+    ;strings.emit 'precalculate_value | 4166'
     push _edi
     call convert_expression
     mov al,')'
     stosb
     push _esi
-    mov _esi,[_esp+8]
-    mov [error_line],0
-    mov [value_size],0
+    mov _esi,[_esp+RECTIFY]
+    mov [error_line],NUL
+    mov [value_size],NUL
     call calculate_expression
-    cmp [error_line],0
+    cmp [error_line],NUL
     je value_precalculated
     jmp u64[error]
 
 value_precalculated:
     mov eax,[edi]
-    mov ecx,[edi+4]
+    mov ecx,[edi+TAIL]
     cdq
     cmp edx,ecx
     jne value_out_of_range
@@ -4190,13 +4215,13 @@ value_precalculated:
     ret
 
 do_irp:
-    strings.emit 'do_irp | 4192'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'do_irp | 4192'
+    cmp u8 [esi],SUB
     jne invalid_macro_arguments
-    movzx eax, u8 [esi+1]
-    lea esi,[esi+2+eax]
+    movzx eax, u8 [esi+HEAD]
+    lea esi,[esi+TEXT+eax]
     lods u8 [esi]
-    cmp [base_code],1
+    cmp [base_code],HEAD
     ja irps_name_ok
     cmp al,':'
     je irp_with_default_value
@@ -4213,9 +4238,9 @@ irp_name_ok:
     ret
 
 irp_with_default_value:
-    strings.emit 'irp_with_default_value | 4215'
+    ;strings.emit 'irp_with_default_value | 4215'
     xor ebp,ebp
-    or [skip_default_argument_value],-1
+    or [skip_default_argument_value],-HEAD
     call skip_macro_argument_value
     cmp u8 [esi],','
     jne invalid_macro_arguments
@@ -4224,10 +4249,10 @@ irp_with_default_value:
     ret
 
 irps_name_ok:
-    strings.emit 'irps_name_ok | 4226'
+    ;strings.emit 'irps_name_ok | 4226'
     cmp al,','
     jne invalid_macro_arguments
-    cmp [base_code],3
+    cmp [base_code],TXT
     je irp_parameters_start
     mov al,[esi]
     or al,al
@@ -4243,15 +4268,15 @@ irps_name_ok:
     push u64[counter_limit]
     mov u64[counter_limit],_eax
     mov u64[struc_name],_eax
-    cmp [base_code],3
+    cmp [base_code],TXT
     je get_irpv_parameter
     mov ebx,esi
-    cmp [base_code],2
+    cmp [base_code],TEXT
     je get_irps_parameter
     mov edx,[parameters_end]
     mov al,[edx]
     push _eax
-    mov u8 [edx],0
+    mov u8 [edx],NUL
 
     get_irp_parameter:
     inc [counter_limit]
@@ -4265,7 +4290,7 @@ irps_name_ok:
     ret
 
 irp_parameters_end:
-    strings.emit 'irp_parameters_end | 4268'
+    ;strings.emit 'irp_parameters_end | 4268'
     mov esi,ebx
     pop _eax
     mov [esi],al
@@ -4273,7 +4298,7 @@ irp_parameters_end:
     ret
 
 get_irps_parameter:
-    strings.emit 'get_irps_parameter | 4275'
+    ;strings.emit 'get_irps_parameter | 4275'
     mov esi,[instant_macro_start]
     inc esi
     lods u8 [esi]
@@ -4282,30 +4307,30 @@ get_irps_parameter:
     mov _eax,u64[counter_limit]
     call add_macro_symbol
     mov [edx+12],ebx
-    cmp u8 [ebx],1Ah
+    cmp u8 [ebx],SUB
     je irps_symbol
-    cmp u8 [ebx],22h
+    cmp u8 [ebx],SYN
     je irps_quoted_string
-    mov eax,1
+    mov eax,HEAD
     jmp irps_parameter_ok
     ret
 
 irps_quoted_string:
-    strings.emit 'irps_quoted_string | 4293'
-    mov eax,[ebx+1]
-    add eax,1+4
+    ;strings.emit 'irps_quoted_string | 4293'
+    mov eax,[ebx+HEAD]
+    add eax,HEAD+TAIL
     jmp irps_parameter_ok
     ret
 
 irps_symbol:
-    strings.emit 'irps_symbol | 4300'
-    movzx eax, u8 [ebx+1]
-    add eax,1+1
+    ;strings.emit 'irps_symbol | 4300'
+    movzx eax, u8 [ebx+HEAD]
+    add eax,HEAD+1
 
     irps_parameter_ok:
-    mov [edx+8],eax
+    mov [edx+RECTIFY],eax
     add ebx,eax
-    cmp u8 [ebx],0
+    cmp u8 [ebx],NUL
     je irps_parameters_end
     cmp u8 [ebx],'{'
     jne get_irps_parameter
@@ -4316,9 +4341,9 @@ irps_symbol:
     ret
 
 get_irpv_parameter:
-    strings.emit 'get_irpv_parameter | 4318'
+    ;strings.emit 'get_irpv_parameter | 4318'
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_macro_arguments
     lods u8 [esi]
     mov ebp,esi
@@ -4330,17 +4355,17 @@ get_irpv_parameter:
 
     mark_variable_value:
     inc [counter_limit]
-    mov [edx+4],ebp
+    mov [edx+TAIL],ebp
 
     next_variable_value:
     mov edx,[edx]
     or edx,edx
     jz variable_values_marked
-    mov eax,[edx+4]
-    cmp eax,1
+    mov eax,[edx+TAIL]
+    cmp eax,HEAD
     jbe next_variable_value
     mov esi,ebp
-    movzx ecx, u8 [esi-1]
+    movzx ecx, u8 [esi-HEAD]
     xchg edi,eax
     repe cmps u8 [esi],[edi]
     xchg edi,eax
@@ -4349,7 +4374,7 @@ get_irpv_parameter:
     ret
 
 variable_values_marked:
-    strings.emit 'variable_values_marked | 4351'
+    ;strings.emit 'variable_values_marked | 4351'
     pop _edx
     push u64[counter_limit]
 
@@ -4359,20 +4384,20 @@ variable_values_marked:
     inc esi
     lods u8 [esi]
     movzx ecx,al
-    mov _eax,[_esp+8]
+    mov _eax,[_esp+RECTIFY]
     call add_macro_symbol
     mov ebx,edx
     pop _edx
     mov ecx,[edx+12]
-    mov eax,[edx+8]
+    mov eax,[edx+RECTIFY]
     mov [ebx+12],eax
-    mov [ebx+8],ecx
+    mov [ebx+RECTIFY],ecx
 
     collect_next_variable_value:
     mov edx,[edx]
     or edx,edx
     jz variable_values_collected
-    cmp ebp,[edx+4]
+    cmp ebp,[edx+TAIL]
     jne collect_next_variable_value
     dec qword [_esp]
     jnz add_irpv_value
@@ -4380,9 +4405,9 @@ variable_values_marked:
     variable_values_collected:
     pop _eax
     mov esi,ebp
-    movzx ecx, u8 [esi-1]
+    movzx ecx, u8 [esi-HEAD]
     add esi,ecx
-    cmp u8 [esi],0
+    cmp u8 [esi],NUL
     je instant_macro_parameters_ok
     cmp u8 [esi],'{'
     jne invalid_macro_arguments
@@ -4390,13 +4415,13 @@ variable_values_marked:
     ret
 
 do_match:
-    strings.emit 'do_match | 4392'
+    ;strings.emit 'do_match | 4392'
     mov ebx,esi
     call skip_pattern
     call exact_match
     mov edx,edi
     mov al,[ebx]
-    cmp al,1Ah
+    cmp al,SUB
     je free_match
     cmp al,','
     jne instant_macro_done
@@ -4406,89 +4431,89 @@ do_match:
     ret
 
 free_match:
-    strings.emit 'free_match | 4408'
+    ;strings.emit 'free_match | 4408'
     add edx,12
     cmp _edx,u64[memory_end]
     ja out_of_memory
     mov [edx-12],ebx
-    mov [edx-8],esi
+    mov [edx-RECTIFY],esi
     call skip_match_element
     jc try_different_matching
-    mov [edx-4],esi
-    movzx eax, u8 [ebx+1]
+    mov [edx-TAIL],esi
+    movzx eax, u8 [ebx+HEAD]
     lea ebx,[ebx+2+eax]
-    cmp u8 [ebx],1Ah
+    cmp u8 [ebx],SUB
     je free_match
 
     find_exact_match:
     call exact_match
     cmp esi,[parameters_end]
     je end_matching
-    cmp u8 [ebx],1Ah
+    cmp u8 [ebx],SUB
     je free_match
     mov ebx,[edx-12]
-    movzx eax, u8 [ebx+1]
+    movzx eax, u8 [ebx+HEAD]
     lea ebx,[ebx+2+eax]
-    mov esi,[edx-4]
+    mov esi,[edx-TAIL]
     jmp match_more_elements
     ret
 
 try_different_matching:
-    strings.emit 'try_different_matching | 4436'
+    ;strings.emit 'try_different_matching | 4436'
     sub edx,12
     cmp edx,edi
     je instant_macro_done
     mov ebx,[edx-12]
-    movzx eax, u8 [ebx+1]
+    movzx eax, u8 [ebx+HEAD]
     lea ebx,[ebx+2+eax]
-    cmp u8 [ebx],1Ah
+    cmp u8 [ebx],SUB
     je try_different_matching
-    mov esi,[edx-4]
+    mov esi,[edx-TAIL]
 
     match_more_elements:
     call skip_match_element
     jc try_different_matching
-    mov [edx-4],esi
+    mov [edx-TAIL],esi
     jmp find_exact_match
     ret
 
 skip_match_element:
-    strings.emit 'skip_match_element | 4455'
+    ;strings.emit 'skip_match_element | 4455'
     cmp esi,[parameters_end]
     ;je cannot_match
     je carry_then_return
     mov al,[esi]
-    cmp al,1Ah
+    cmp al,SUB
     je skip_match_symbol
-    cmp al,22h
+    cmp al,SYN
     je skip_match_quoted_string
-    add esi,1
+    add esi,HEAD
     ret
 
 skip_match_quoted_string:
-    strings.emit 'skip_match_quoted_string | 4468'
-    mov eax,[esi+1]
-    add esi,5
+    ;strings.emit 'skip_match_quoted_string | 4468'
+    mov eax,[esi+HEAD]
+    add esi,QUERY
     jmp skip_match_ok
     ret
 
 skip_match_symbol:
-    strings.emit 'skip_match_symbol | 4475'
-    movzx eax, u8 [esi+1]
-    add esi,2
+    ;strings.emit 'skip_match_symbol | 4475'
+    movzx eax, u8 [esi+HEAD]
+    add esi,TEXT
     skip_match_ok:
     add esi,eax
     ret
 
 exact_match:
-    strings.emit 'exact_match | 4483'
+    ;strings.emit 'exact_match | 4483'
     cmp esi,[parameters_end]
     je return_ok
     mov ah,[esi]
     mov al,[ebx]
     cmp al,','
     je return_ok
-    cmp al,1Ah
+    cmp al,SUB
     je return_ok
     cmp al,'='
     je match_verbatim
@@ -4497,7 +4522,7 @@ exact_match:
     ret
 
 match_verbatim:
-    strings.emit 'match_verbatim | 4499'
+    ;strings.emit 'match_verbatim | 4499'
     inc ebx
     call match_elements
     je exact_match
@@ -4505,33 +4530,33 @@ match_verbatim:
     ret
 
 match_elements:
-    strings.emit 'match_elements | 4507'
+    ;strings.emit 'match_elements | 4507'
     mov al,[ebx]
-    cmp al,1Ah
+    cmp al,SUB
     je match_symbols
-    cmp al,22h
+    cmp al,SYN
     je match_quoted_strings
     cmp al,ah
     je symbol_characters_matched
     ret
 
 symbol_characters_matched:
-    strings.emit 'symbol_characters_matched | 4518'
-    lea ebx,[ebx+1]
-    lea esi,[esi+1]
+    ;strings.emit 'symbol_characters_matched | 4518'
+    lea ebx,[ebx+HEAD]
+    lea esi,[esi+HEAD]
     ret
 
 match_quoted_strings:
-    strings.emit 'match_quoted_strings | 4524'
-    mov ecx,[ebx+1]
-    add ecx,5
+    ;strings.emit 'match_quoted_strings | 4524'
+    mov ecx,[ebx+HEAD]
+    add ecx,QUERY
     jmp compare_elements
     ret
 
 match_symbols:
-    strings.emit 'match_symbols | 4531'
-    movzx ecx, u8 [ebx+1]
-    add ecx,2
+    ;strings.emit 'match_symbols | 4531'
+    movzx ecx, u8 [ebx+HEAD]
+    add ecx,TEXT
 
     compare_elements:
     mov eax,esi
@@ -4544,13 +4569,13 @@ match_symbols:
     ret
 
 elements_mismatch:
-    strings.emit 'elements_mismatch | 4546'
+    ;strings.emit 'elements_mismatch | 4546'
     mov esi,eax
     mov edi,ebp
     ret
 
 end_matching:
-    strings.emit 'end_matching | 4552'
+    ;strings.emit 'end_matching | 4552'
     cmp u8 [ebx],','
     jne instant_macro_done
 
@@ -4573,25 +4598,25 @@ end_matching:
     movzx ecx,al
     xor eax,eax
     call add_macro_symbol
-    mov eax,[edi+4]
+    mov eax,[edi+TAIL]
     mov u32 [edx+12],eax
-    mov ecx,[edi+8]
+    mov ecx,[edi+RECTIFY]
     sub ecx,eax
-    mov u32 [edx+8],ecx
+    mov u32 [edx+RECTIFY],ecx
     add edi,12
     jmp add_matched_symbol
     ret
 
 matched_symbols_ok:
-    strings.emit 'matched_symbols_ok | 4585'
+    ;strings.emit 'matched_symbols_ok | 4585'
     pop _edx _edi _esi
     jmp instant_macro_parameters_ok
     ret
 
 process_macro:
-    strings.emit 'process_macro | 4591'
+    ;strings.emit 'process_macro | 4591'
     push u64 [macro_status]
-    or [macro_status],10h
+    or [macro_status],DELINK
     push u64[counter]
     push u64[macro_block]
     push u64[macro_block_line]
@@ -4608,7 +4633,7 @@ process_macro:
 
     find_macro_instructions:
     mov u64[macro_line],_esi
-    add _esi,16+2
+    add _esi,16+TEXT
     lods u8 [_esi]
     or al,al
     jz find_macro_instructions
@@ -4621,7 +4646,7 @@ process_macro:
     ret
 
 macro_instructions_start:
-    strings.emit 'macro_instructions_start | 4623'
+    ;strings.emit 'macro_instructions_start | 4623'
     mov ecx,80000000h
     mov u64[macro_block],_esi
     mov _eax,u64[macro_line]
@@ -4644,7 +4669,7 @@ macro_instructions_start:
     lea eax,[edi+10h]
     cmp _eax,u64[memory_end]
     jae out_of_memory
-    mov _eax,[_esp+8]
+    mov _eax,[_esp+RECTIFY]
     or eax,eax
     jz instant_macro_line_header
     stos u32 [edi]
@@ -4658,14 +4683,14 @@ macro_instructions_start:
     ret
 
 instant_macro_line_header:
-    strings.emit 'instant_macro_line_header | 4660'
+    ;strings.emit 'instant_macro_line_header | 4660'
     mov _eax,[_esp]	;current_line
     add eax,16
     find_defining_directive:
     inc eax
-    cmp u8 [eax-1],3Bh
+    cmp u8 [eax-HEAD],SEMI
     je defining_directive_ok
-    cmp u8 [eax-1],1Ah
+    cmp u8 [eax-HEAD],SUB
     jne find_defining_directive
     push _eax
     movzx eax, u8 [eax]
@@ -4676,7 +4701,7 @@ instant_macro_line_header:
     ret
 
 defining_directive_ok:
-    strings.emit 'defining_directive_ok | 4678'
+    ;strings.emit 'defining_directive_ok | 4678'
     stos u32 [edi]
     mov eax,ecx
     stos u32 [edi]
@@ -4685,11 +4710,11 @@ defining_directive_ok:
     stos u32 [edi]
 
     macro_line_header_ok:
-    or [macro_status],20h
+    or [macro_status],SPACE
     push _ebx _ecx
-    test [macro_status],0Fh
+    test [macro_status],SHIFT
     jz process_macro_line_element
-    mov ax,3Bh
+    mov ax,SEMI
     stos u16 [edi]
 
     process_macro_line_element:
@@ -4701,26 +4726,26 @@ defining_directive_ok:
     je macro_line_processed
     or al,al
     jz macro_line_processed
-    cmp al,1Ah
+    cmp al,SUB
     je process_macro_symbol
-    cmp al,3Bh
+    cmp al,SEMI
     je macro_foreign_line
-    and [macro_status],not 20h
+    and [macro_status],not SPACE
     stos u8 [edi]
-    cmp al,22h
+    cmp al,SYN
     jne process_macro_line_element
 
     copy_macro_string:
     mov ecx,[esi]
-    add ecx,4
+    add ecx,TAIL
     call move_data
     jmp process_macro_line_element
     ret
 
 process_macro_symbol:
-    strings.emit 'process_macro_symbol | 4720'
+    ;strings.emit 'process_macro_symbol | 4720'
     push _esi _edi
-    test [macro_status],20h
+    test [macro_status],SPACE
     jz not_macro_directive
     movzx ecx, u8 [esi]
     inc esi
@@ -4732,18 +4757,18 @@ process_macro_symbol:
     ret
 
 process_macro_directive:
-    strings.emit 'process_macro_directive | 4734'
+    ;strings.emit 'process_macro_directive | 4734'
     mov edx,eax
     pop _edi _eax
-    mov u8 [edi],0
+    mov u8 [edi],NUL
     inc edi
     pop _ecx _ebx
     jmp near _edx
     ret
 
 not_macro_directive:
-    strings.emit 'not_macro_directive | 4744'
-    and [macro_status],not 20h
+    ;strings.emit 'not_macro_directive | 4744'
+    and [macro_status],not SPACE
     movzx ecx, u8 [esi]
     inc esi
     mov _eax,u64[counter]
@@ -4757,7 +4782,7 @@ not_macro_directive:
 
     replace_macro_symbol:
     pop _edi _eax
-    mov ecx,[edx+8]
+    mov ecx,[edx+RECTIFY]
     mov edx,[edx+12]
     or edx,edx
     jz replace_macro_counter
@@ -4769,7 +4794,7 @@ not_macro_directive:
     ret
 
 group_macro_symbol:
-    strings.emit 'group_macro_symbol | 4771'
+    ;strings.emit 'group_macro_symbol | 4771'
     xor eax,eax
     cmp dword[counter],eax
     je replace_macro_symbol
@@ -4786,7 +4811,7 @@ group_macro_symbol:
     ret
 
 multiple_macro_symbol_values:
-    strings.emit 'multiple_macro_symbol_values | 4788'
+    ;strings.emit 'multiple_macro_symbol_values | 4788'
     inc eax
     push _eax
     call get_macro_symbol
@@ -4794,7 +4819,7 @@ multiple_macro_symbol_values:
     jc not_macro_symbol
     pop _edi
     push _ecx
-    mov ecx,[edx+8]
+    mov ecx,[edx+RECTIFY]
     mov edx,[edx+12]
     xchg esi,edx
     btr ecx,31
@@ -4804,7 +4829,7 @@ multiple_macro_symbol_values:
     ret
 
 enclose_macro_symbol_value:
-    strings.emit 'enclose_macro_symbol_value | 4806'
+    ;strings.emit 'enclose_macro_symbol_value | 4806'
     mov u8 [edi],'<'
     inc edi
     rep movs u8 [edi],[esi]
@@ -4824,14 +4849,14 @@ enclose_macro_symbol_value:
     ret
 
 multiple_macro_symbol_values_ok:
-    strings.emit 'multiple_macro_symbol_values_ok | 4826'
+    ;strings.emit 'multiple_macro_symbol_values_ok | 4826'
     pop _ecx _eax
     mov esi,edx
     jmp process_macro_line_element
     ret
 
 replace_macro_counter:
-    strings.emit 'replace_macro_counter | 4833'
+    ;strings.emit 'replace_macro_counter | 4833'
     mov _eax,u64[counter]
     and eax,not 80000000h
     jz group_macro_counter
@@ -4842,7 +4867,7 @@ replace_macro_counter:
     ret
 
 group_macro_counter:
-    strings.emit 'group_macro_counter | 4844'
+    ;strings.emit 'group_macro_counter | 4844'
     mov edx,ecx
     xor ecx,ecx
 
@@ -4860,15 +4885,15 @@ group_macro_counter:
     ret
 
 store_number_symbol:
-    strings.emit 'store_number_symbol | 4862'
-    cmp ecx,0
+    ;strings.emit 'store_number_symbol | 4862'
+    cmp ecx,NUL
     jge numer_symbol_sign_ok
     neg ecx
     mov al,'-'
     stos u8 [edi]
 
     numer_symbol_sign_ok:
-    mov ax,1Ah
+    mov ax,SUB
     stos u16 [edi]
     push _edi
     mov eax,ecx
@@ -4881,14 +4906,14 @@ store_number_symbol:
     push _edx
     or bl,bl
     jnz store_number_digit
-    cmp ecx,1
+    cmp ecx,HEAD
     je store_number_digit
     or al,al
     jz number_digit_ok
     not bl
 
     store_number_digit:
-    add al,30h
+    add al,'0'
     stos u8 [edi]
 
     number_digit_ok:
@@ -4903,13 +4928,13 @@ store_number_symbol:
     pop _ebx
     mov eax,edi
     sub eax,ebx
-    mov [ebx-1],al
+    mov [ebx-HEAD],al
     ret
 
 not_macro_symbol:
-    strings.emit 'not_macro_symbol | 4909'
+    ;strings.emit 'not_macro_symbol | 4909'
     pop _edi _esi
-    mov al,1Ah
+    mov al,SUB
     stos u8 [edi]
     mov al,[esi]
     inc esi
@@ -4919,11 +4944,11 @@ not_macro_symbol:
     mov _ebx,[_esp+16+16]
     or ebx,ebx
     jz copy_raw_symbol
-    cmp al,1
+    cmp al,HEAD
     je copy_struc_name
     xchg esi,ebx
-    movzx ecx, u8 [esi-1]
-    add [edi-1],cl
+    movzx ecx, u8 [esi-HEAD]
+    add [edi-HEAD],cl
     jc name_too_long
     rep movs u8 [edi],[esi]
     xchg esi,ebx
@@ -4935,68 +4960,68 @@ not_macro_symbol:
     ret
 
 copy_struc_name:
-    strings.emit 'copy_struc_name | 4937'
+    ;strings.emit 'copy_struc_name | 4937'
     inc esi
     xchg esi,ebx
-    movzx ecx, u8 [esi-1]
-    mov [edi-1],cl
+    movzx ecx, u8 [esi-HEAD]
+    mov [edi-HEAD],cl
     rep movs u8 [edi],[esi]
     xchg esi,ebx
     mov _eax,[_esp+16+24]
-    cmp u8 [eax],3Bh
+    cmp u8 [eax],SEMI
     je process_macro_line_element
-    cmp u8 [eax],1Ah
+    cmp u8 [eax],SUB
     jne disable_replaced_struc_name
-    mov u8 [eax],3Bh
+    mov u8 [eax],SEMI
     jmp process_macro_line_element
     ret
 
 disable_replaced_struc_name:
-    strings.emit 'disable_replaced_struc_name | 4954'
+    ;strings.emit 'disable_replaced_struc_name | 4954'
     mov _ebx,[_esp+16+16]
     push _esi _edi
     lea edi,[ebx-3]
     lea esi,[edi-2]
-    lea ecx,[esi+1]
+    lea ecx,[esi+HEAD]
     sub ecx,eax
     std
     rep movs u8 [edi],[esi]
     cld
-    mov u16 [eax],3Bh
+    mov u16 [eax],SEMI
     pop _edi _esi
     jmp process_macro_line_element
     ret
 
 skip_foreign_symbol:
-    strings.emit 'skip_foreign_symbol | 4970'
+    ;strings.emit 'skip_foreign_symbol | 4970'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
 
     skip_foreign_line:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je skip_foreign_symbol
-    cmp al,3Bh
+    cmp al,SEMI
     je skip_foreign_symbol
-    cmp al,22h
+    cmp al,SYN
     je skip_foreign_string
     or al,al
     jnz skip_foreign_line
     ret
 
 skip_foreign_string:
-    strings.emit 'skip_foreign_string | 4988'
+    ;strings.emit 'skip_foreign_string | 4988'
     lods u32 [esi]
     add esi,eax
     jmp skip_foreign_line
     ret
 
 macro_foreign_line:
-    strings.emit 'macro_foreign_line | 4995'
+    ;strings.emit 'macro_foreign_line | 4995'
     call skip_foreign_symbol
     macro_line_processed:
-    mov u8 [edi],0
+    mov u8 [edi],NUL
     inc edi
     push _eax
     call preprocess_line
@@ -5013,7 +5038,7 @@ macro_foreign_line:
     ret
 
 macro_block_processed:
-    strings.emit 'macro_block_processed | 5015'
+    ;strings.emit 'macro_block_processed | 5015'
     call close_macro_block
     jc process_macro_line
     pop u64[current_line]
@@ -5024,16 +5049,16 @@ macro_block_processed:
     pop u64[counter]
     pop _eax		;restore macro_status
     and al,0F0h
-    and [macro_status],0Fh
+    and [macro_status],SHIFT
     or [macro_status],al
     ret
 
 local_symbols:
-    strings.emit 'local_symbols | 5031'
+    ;strings.emit 'local_symbols | 5031'
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_argument
-    mov u8 [edi-1],3Bh
+    mov u8 [edi-HEAD],SEMI
     xor al,al
     stos u8 [edi]
 
@@ -5053,19 +5078,19 @@ local_symbols:
     cmp _ebp,u64[memory_end]
     jae out_of_memory
     mov ah,al
-    mov al,1Ah
+    mov al,SUB
     stos u16 [edi]
     rep movs u8 [edi],[esi]
     mov al,'?'
     stos u8 [edi]
     push _esi
-    mov esi,locals_counter+1
+    mov esi,locals_counter+HEAD
     movzx ecx,[locals_counter]
     rep movs u8 [edi],[esi]
     pop _esi
     mov eax,edi
     sub eax,[edx+12]
-    mov [edx+8],eax
+    mov [edx+RECTIFY],eax
     xor al,al
     stos u8 [edi]
     mov eax,locals_counter
@@ -5073,7 +5098,7 @@ local_symbols:
 
     counter_loop:
     inc u8 [eax+ecx]
-    cmp u8 [eax+ecx],'9'+1
+    cmp u8 [eax+ecx],'9'+HEAD
     jb counter_ok
     jne letter_digit
     mov u8 [eax+ecx],'A'
@@ -5081,8 +5106,8 @@ local_symbols:
     ret
 
 letter_digit:
-    strings.emit 'letter_digit | 5083'
-    cmp u8 [eax+ecx],'Z'+1
+    ;strings.emit 'letter_digit | 5083'
+    cmp u8 [eax+ecx],'Z'+HEAD
     jb counter_ok
     jne small_letter_digit
     mov u8 [eax+ecx],'a'
@@ -5090,8 +5115,8 @@ letter_digit:
     ret
 
 small_letter_digit:
-    strings.emit 'small_letter_digit | 5092'
-    cmp u8 [eax+ecx],'z'+1
+    ;strings.emit 'small_letter_digit | 5092'
+    cmp u8 [eax+ecx],'z'+HEAD
     jb counter_ok
     mov u8 [eax+ecx],'0'
     loop counter_loop
@@ -5110,32 +5135,32 @@ small_letter_digit:
     jne extra_characters_on_line
     dec edi
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je make_local_symbol
     jmp invalid_argument
     ret
 
 common_block:
-    strings.emit 'common_block | 5118'
+    ;strings.emit 'common_block | 5118'
     call close_macro_block
     jc process_macro_line
-    mov [counter],0
+    mov [counter],NUL
     jmp new_macro_block
     ret
 
 forward_block:
-    strings.emit 'forward_block | 5126'
-    cmp [counter_limit],0
+    ;strings.emit 'forward_block | 5126'
+    cmp [counter_limit],NUL
     je common_block
     call close_macro_block
     jc process_macro_line
-    mov [counter],1
+    mov [counter],HEAD
     jmp new_macro_block
     ret
 
 reverse_block:
-    strings.emit 'reverse_block | 5136'
-    cmp [counter_limit],0
+    ;strings.emit 'reverse_block | 5136'
+    cmp [counter_limit],NUL
     je common_block
     call close_macro_block
     jc process_macro_line
@@ -5151,11 +5176,11 @@ reverse_block:
     ret
 
 close_macro_block:
-    strings.emit 'close_macro_block | 5154'
+    ;strings.emit 'close_macro_block | 5154'
     cmp _esi,u64[macro_block]
     ;je block_closed
     je drop_then_return
-    cmp dword[counter],0
+    cmp dword[counter],NUL
     ;je block_closed
     je drop_then_return
     jl reverse_counter
@@ -5168,7 +5193,7 @@ close_macro_block:
     ret
 
 reverse_counter:
-    strings.emit 'reverse_counter | 5170'
+    ;strings.emit 'reverse_counter | 5170'
     mov _eax,u64[counter]
     dec eax
     cmp eax,80000000h
@@ -5185,7 +5210,7 @@ reverse_counter:
     ret
 
 get_macro_symbol:
-    strings.emit 'get_macro_symbol | 5187'
+    ;strings.emit 'get_macro_symbol | 5187'
     push _ecx
     call find_macro_symbol_leaf
     jc macro_symbol_not_found
@@ -5196,7 +5221,7 @@ get_macro_symbol:
     or edx,edx
     jz macro_symbol_not_found
     mov _ecx,[_esp]
-    mov edi,[edx+4]
+    mov edi,[edx+TAIL]
     repe cmps u8 [esi],[edi]
     je macro_symbol_found
     mov esi,ebx
@@ -5205,20 +5230,20 @@ get_macro_symbol:
     ret
 
 macro_symbol_found:
-    strings.emit 'macro_symbol_found | 5207'
+    ;strings.emit 'macro_symbol_found | 5207'
     pop _ecx
     clc
     ret
 
 macro_symbol_not_found:
-    strings.emit 'macro_symbol_not_found | 5213'
+    ;strings.emit 'macro_symbol_not_found | 5213'
     pop _ecx
     stc
     ret
 
 find_macro_symbol_leaf:
-    strings.emit 'find_macro_symbol_leaf | 5219'
-    shl eax,8
+    ;strings.emit 'find_macro_symbol_leaf | 5219'
+    shl eax,RECTIFY
     mov al,cl
     mov ebp,eax
     mov ebx,macro_symbols
@@ -5229,17 +5254,17 @@ find_macro_symbol_leaf:
     ;jz no_such_macro_symbol
     jz carry_then_return
     xor eax,eax
-    shr ebp,1
-    adc eax,0
-    lea ebx,[edx+eax*4]
+    shr ebp,HEAD
+    adc eax,NUL
+    lea ebx,[edx+eax*TAIL]
     or ebp,ebp
     jnz follow_macro_symbols_tree
-    add ebx,8
+    add ebx,RECTIFY
     clc
     ret
 
 add_macro_symbol:
-    strings.emit 'add_macro_symbol | 5241'
+    ;strings.emit 'add_macro_symbol | 5241'
     push _ebx _ebp
     call find_macro_symbol_leaf
     jc extend_macro_symbol_tree
@@ -5253,12 +5278,12 @@ add_macro_symbol:
     xchg _edx,u64[free_additional_memory]
     mov [ebx],edx
     mov [edx],eax
-    mov [edx+4],esi
+    mov [edx+TAIL],esi
     pop _ebp _ebx
     ret
 
 extend_macro_symbol_tree:
-    strings.emit 'extend_macro_symbol_tree | 5260'
+    ;strings.emit 'extend_macro_symbol_tree | 5260'
     mov _edx,u64[free_additional_memory]
     add edx,16
     cmp edx,[labels_list]
@@ -5266,42 +5291,42 @@ extend_macro_symbol_tree:
     xchg _edx,u64[free_additional_memory]
     xor eax,eax
     mov [edx],eax
-    mov [edx+4],eax
-    mov [edx+8],eax
+    mov [edx+TAIL],eax
+    mov [edx+RECTIFY],eax
     mov [edx+12],eax
-    shr ebp,1
-    adc eax,0
+    shr ebp,HEAD
+    adc eax,NUL
     mov [ebx],edx
-    lea ebx,[edx+eax*4]
+    lea ebx,[edx+eax*TAIL]
     or ebp,ebp
     jnz extend_macro_symbol_tree
-    add ebx,8
+    add ebx,RECTIFY
     xor eax,eax
     jmp make_macro_symbol
     ret
 
 include_file:
-    strings.emit 'include_file | 5283'
+    ;strings.emit 'include_file | 5283'
     lods u8 [esi]
-    cmp al,22h
+    cmp al,SYN
     jne invalid_argument
     lods u32 [esi]
-    cmp u8 [esi+eax],0
-    jne extra_characters_on_line
+    cmp u8 [esi+eax],NUL
+    jne  extra_characters_on_line
     push _esi
     push _edi
     mov _ebx,u64[current_line]
 
     find_current_file_path:
     mov esi,[ebx]
-    test u8 [ebx+7],80h
+    test u8 [ebx+NOTIFY],80h
     jz copy_current_file_path
-    mov ebx,[ebx+8]
+    mov ebx,[ebx+RECTIFY]
     jmp find_current_file_path
     ret
 
 copy_current_file_path:
-    strings.emit 'copy_current_file_path | 5303'
+    ;strings.emit 'copy_current_file_path | 5303'
     lods u8 [esi]
     stos u8 [edi]
     or al,al
@@ -5309,17 +5334,17 @@ copy_current_file_path:
     cut_current_file_name:
     cmp _edi,[_esp]
     je current_file_path_ok
-    cmp u8 [edi-1],'\' ; '
+    cmp u8 [edi-HEAD],'\' ; '
     je current_file_path_ok
-    cmp u8 [edi-1],'/'
+    cmp u8 [edi-HEAD],'/'
     je current_file_path_ok
     dec edi
     jmp cut_current_file_name
     ret
 
 current_file_path_ok:
-    strings.emit 'current_file_path_ok | 5320'
-    mov rsi,[rsp+8]
+    ;strings.emit 'current_file_path_ok | 5320'
+    mov rsi,[rsp+RECTIFY]
     call expand_path
     pop _edx
     mov esi,edx
@@ -5330,12 +5355,12 @@ current_file_path_ok:
     try_include_directories:
     mov edi,esi
     mov esi,ebp
-    cmp u8 [esi],0
+    cmp u8 [esi],NUL
     je try_in_current_directory
     push _ebp
     push _edi
     call get_include_directory
-    mov [_esp+8],_esi
+    mov [_esp+RECTIFY],_esi
     mov _esi,[_esp+16]
     call expand_path
     pop _edx
@@ -5364,21 +5389,21 @@ current_file_path_ok:
     or al,al
     jnz copy_preprocessed_path
     pop _esi
-    lea ecx,[edi-1]
+    lea ecx,[edi-HEAD]
     sub ecx,esi
-    mov [esi-4],ecx
+    mov [esi-TAIL],ecx
     push u64 [macro_status]
-    and [macro_status],0Fh
+    and [macro_status],SHIFT
     call preprocess_file
     pop _eax
     and al,0F0h
-    and [macro_status],0Fh
+    and [macro_status],SHIFT
     or [macro_status],al
     jmp line_preprocessed
     ret
 
 parser:
-    strings.emit 'parser | 5380'
+    ;strings.emit 'parser | 5380'
     mov _eax,u64[memory_end]
     mov [labels_list],eax
     mov _eax,u64[additional_memory]
@@ -5398,11 +5423,11 @@ parser:
     lea eax,[edi+100h]
     cmp eax,[labels_list]
     jae out_of_memory
-    cmp u8 [esi+16],0
+    cmp u8 [esi+16],NUL
     je empty_line
-    cmp u8 [esi+16],3Bh
+    cmp u8 [esi+16],SEMI
     je empty_line
-    mov al,0Fh
+    mov al,SHIFT
     stos u8 [edi]
     mov eax,esi
     stos u32 [edi]
@@ -5410,24 +5435,24 @@ parser:
     add esi,16
 
     parse_line:
-    mov [formatter_symbols_allowed],0
-    mov [decorator_symbols_allowed],0
-    cmp u8 [esi],1Ah
+    mov [formatter_symbols_allowed],NUL
+    mov [decorator_symbols_allowed],NUL
+    cmp  u8 [esi],SUB
     jne empty_instruction
     push _edi
-    add esi,2
-    movzx ecx, u8 [esi-1]
+    add esi,TEXT
+    movzx ecx, u8 [esi-HEAD]
     cmp u8 [esi+ecx],':'
     je simple_label
     cmp u8 [esi+ecx],'='
     je constant_label
     call get_instruction
     jnc main_instruction_identified
-    cmp u8 [esi+ecx],1Ah
+    cmp u8 [esi+ecx],SUB
     jne no_data_label
     push _esi _ecx
-    lea esi,[esi+ecx+2]
-    movzx ecx, u8 [esi-1]
+    lea esi,[esi+ecx+TEXT]
+    movzx ecx, u8 [esi-HEAD]
     call get_data_directive
     jnc data_label
     pop _ecx _esi
@@ -5436,19 +5461,19 @@ parser:
     call get_data_directive
     jnc main_instruction_identified
     pop _edi
-    sub esi,2
+    sub esi,TEXT
     xor bx,bx
     call parse_line_contents
     jmp parse_next_line
     ret
 
 simple_label:
-    strings.emit 'simple_label | 5445'
+    ;strings.emit 'simple_label | 5445'
     pop _edi
     call identify_label
-    cmp u8 [esi+1],':'
+    cmp u8 [esi+HEAD],':'
     je block_label
-    mov u8 [edi],2
+    mov u8 [edi],TEXT
     inc edi
     stos u32 [edi]
     inc esi
@@ -5458,19 +5483,19 @@ simple_label:
     ret
 
 block_label:
-    strings.emit 'block_label | 5460'
-    mov u8 [edi],4
+    ;strings.emit 'block_label | 5460'
+    mov u8 [edi],TAIL
     inc edi
     stos u32 [edi]
-    add esi,2
+    add esi,TEXT
     jmp parse_line
     ret
 
 constant_label:
-    strings.emit 'constant_label | 5469'
+    ;strings.emit 'constant_label | 5469'
     pop _edi
     call get_label_id
-    mov u8 [edi],3
+    mov u8 [edi],TXT
     inc edi
     stos u32 [edi]
     xor al,al
@@ -5482,14 +5507,14 @@ constant_label:
     ret
 
 data_label:
-    strings.emit 'data_label | 5484'
+    ;strings.emit 'data_label | 5484'
     pop _ecx _edx
     pop _edi
     push _eax _ebx _esi
     mov esi,edx
-    movzx ecx, u8 [esi-1]
+    movzx ecx, u8 [esi-HEAD]
     call identify_label
-    mov u8 [edi],2
+    mov u8 [edi],TEXT
     inc edi
     stos u32 [edi]
     pop _esi _ebx _eax
@@ -5499,7 +5524,7 @@ data_label:
     main_instruction_identified:
     pop _edi
     mov dl,al
-    mov al,1
+    mov al,HEAD
     stos u8 [edi]
     mov ax,bx
     stos u16 [edi]
@@ -5524,20 +5549,20 @@ data_label:
     ret
 
 empty_instruction:
-    strings.emit 'empty_instruction | 5526'
+    ;strings.emit 'empty_instruction | 5526'
     lods u8 [esi]
     or al,al
     jz parse_next_line
     cmp al,':'
     je invalid_name
     dec esi
-    mov [parenthesis_stack],0
+    mov [parenthesis_stack],NUL
     call parse_argument
     jmp parse_next_line
     ret
 
 empty_line:
-    strings.emit 'empty_line | 5539'
+    ;strings.emit 'empty_line | 5539'
     add esi,16
 
     skip_rest_of_line:
@@ -5548,7 +5573,7 @@ empty_line:
     jb parser_loop
 
     source_parsed:
-    cmp [blocks_stack],0
+    cmp [blocks_stack],NUL
     je blocks_stack_ok
     pop _eax
     pop u64[current_line]
@@ -5556,16 +5581,16 @@ empty_line:
     ret
 
 blocks_stack_ok:
-    strings.emit 'blocks_stack_ok | 5558'
+    ;strings.emit 'blocks_stack_ok | 5558'
     xor al,al
     stos u8 [edi]
-    add edi,0Fh
+    add edi,SHIFT
     and edi,not 0Fh
     mov [code_start],edi
     ret
 
 parse_block:
-    strings.emit 'parse_block | 5567'
+    ;strings.emit 'parse_block | 5567'
     mov _eax,_esp
     sub _eax,u64[stack_limit]
     cmp eax,100h
@@ -5584,8 +5609,8 @@ parse_block:
     ret
 
 parse_end_directive:
-    strings.emit 'parse_end_directive | 5586'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'parse_end_directive | 5586'
+    cmp u8 [esi],SUB
     jne common_parse
     push _edi
     inc esi
@@ -5594,14 +5619,14 @@ parse_end_directive:
     call get_instruction
     pop _edi
     jnc parse_end_block
-    sub esi,2
+    sub esi,TEXT
     jmp common_parse
     ret
 
 parse_end_block:
-    strings.emit 'parse_end_block | 5601'
+    ;strings.emit 'parse_end_block | 5601'
     mov dl,al
-    mov al,1
+    mov al,HEAD
     stos u8 [edi]
     mov ax,bx
     stos u16 [edi]
@@ -5620,10 +5645,10 @@ parse_end_block:
     ret
 
 close_parsing_block:
-    strings.emit 'close_parsing_block | 5623'
-    cmp [blocks_stack],0
+    ;strings.emit 'close_parsing_block | 5623'
+    cmp [blocks_stack],NUL
     je unexpected_instruction
-    cmp bx,[_esp+2]
+    cmp bx,[_esp+TEXT]
     jne unexpected_instruction
     dec [blocks_stack]
     pop _eax _edx
@@ -5633,12 +5658,12 @@ close_parsing_block:
     jz parse_next_line
     test al,10000b
     jnz parse_next_line
-    sub edi,8
+    sub edi,RECTIFY
     jmp parse_next_line
     ret
 
 parse_if:
-    strings.emit 'parse_if | 5640'
+    ;strings.emit 'parse_if | 5640'
     push _edi
     call parse_line_contents
     xor al,al
@@ -5656,7 +5681,7 @@ parse_if:
     ret
 
 parse_while:
-    strings.emit 'parse_while | 5658'
+    ;strings.emit 'parse_while | 5658'
     push _edi
     call parse_line_contents
     xor al,al
@@ -5674,29 +5699,29 @@ parse_while:
     ret
 
 parse_false_condition_block:
-    strings.emit 'parse_false_condition_block | 5676'
-    or u8 [_esp],1
-    sub edi,4
+    ;strings.emit 'parse_false_condition_block | 5676'
+    or u8 [_esp],HEAD
+    sub edi,TAIL
     jmp skip_parsing
     ret
 
 parse_true_condition_block:
-    strings.emit 'parse_true_condition_block | 5683'
+    ;strings.emit 'parse_true_condition_block | 5683'
     or u8 [_esp],100b
-    sub edi,4
+    sub edi,TAIL
     jmp parse_next_line
     ret
 
 parse_else:
-    strings.emit 'parse_else | 5690'
-    cmp [blocks_stack],0
+    ;strings.emit 'parse_else | 5690'
+    cmp [blocks_stack],NUL
     je unexpected_instruction
-    cmp word [_esp+2],if_directive-instruction_handler
+    cmp word [_esp+TEXT],if_directive-instruction_handler
     jne unexpected_instruction
     lods u8 [esi]
     or al,al
     jz parse_pure_else
-    cmp al,1Ah
+    cmp al,SUB
     jne extra_characters_on_line
     push _edi
     movzx ecx, u8 [esi]
@@ -5709,7 +5734,7 @@ parse_else:
     test u8 [_esp],100b
     jnz skip_true_condition_else
     mov dl,al
-    mov al,1
+    mov al,HEAD
     stos u8 [edi]
     mov ax,bx
     stos u16 [edi]
@@ -5719,7 +5744,7 @@ parse_else:
     ret
 
 parse_assert:
-    strings.emit 'parse_assert | 5721'
+    ;strings.emit 'parse_assert | 5721'
     push _edi
     call parse_line_contents
     xor al,al
@@ -5735,32 +5760,32 @@ parse_assert:
     ret
 
 skip_true_condition_else:
-    strings.emit 'skip_true_condition_else | 5737'
-    sub edi,4
-    or u8 [_esp],1
+    ;strings.emit 'skip_true_condition_else | 5737'
+    sub edi,TAIL
+    or u8 [_esp],HEAD
     jmp skip_parsing_contents
     ret
 
 parse_pure_else:
-    strings.emit 'parse_pure_else | 5744'
-    bts u32 [_esp],1
+    ;strings.emit 'parse_pure_else | 5744'
+    bts u32 [_esp],HEAD
     jc unexpected_instruction
     test u8 [_esp],100b
     jz parse_next_line
-    sub edi,4
-    or u8 [_esp],1
+    sub edi,TAIL
+    or u8 [_esp],HEAD
     jmp skip_parsing
     ret
 
 skip_parsing:
-    strings.emit 'skip_parsing | 5755'
+    ;strings.emit 'skip_parsing | 5755'
     cmp esi,[source_start]
     jae source_parsed
     mov u64[current_line],_esi
     add esi,16
 
     skip_parsing_line:
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne skip_parsing_contents
     inc esi
     movzx ecx, u8 [esi]
@@ -5776,13 +5801,13 @@ skip_parsing:
     ret
 
 skip_parsing_label:
-    strings.emit 'skip_parsing_label | 5778'
-    lea esi,[esi+ecx+1]
+    ;strings.emit 'skip_parsing_label | 5778'
+    lea esi,[esi+ecx+HEAD]
     jmp skip_parsing_line
     ret
 
 skip_parsing_instruction:
-    strings.emit 'skip_parsing_instruction | 5784'
+    ;strings.emit 'skip_parsing_instruction | 5784'
     cmp bx,if_directive-instruction_handler
     je skip_parsing_block
     cmp bx,repeat_directive-instruction_handler
@@ -5798,17 +5823,17 @@ skip_parsing_instruction:
     lods u8 [esi]
     or al,al
     jz skip_parsing
-    cmp al,1Ah
+    cmp al,SUB
     je skip_parsing_symbol
-    cmp al,3Bh
+    cmp al,SEMI
     je skip_parsing_symbol
-    cmp al,22h
+    cmp al,SYN
     je skip_parsing_string
     jmp skip_parsing_contents
     ret
 
 skip_parsing_symbol:
-    strings.emit 'skip_parsing_symbol | 5810'
+    ;strings.emit 'skip_parsing_symbol | 5810'
     lods u8 [esi]
     movzx eax,al
     add esi,eax
@@ -5816,14 +5841,14 @@ skip_parsing_symbol:
     ret
 
 skip_parsing_string:
-    strings.emit 'skip_parsing_string | 5818'
+    ;strings.emit 'skip_parsing_string | 5818'
     lods u32 [esi]
     add esi,eax
     jmp skip_parsing_contents
     ret
 
 skip_parsing_block:
-    strings.emit 'skip_parsing_block | 5825'
+    ;strings.emit 'skip_parsing_block | 5825'
     mov _eax,_esp
     sub _eax,u64[stack_limit]
     cmp eax,100h
@@ -5837,8 +5862,8 @@ skip_parsing_block:
     ret
 
 skip_parsing_end_directive:
-    strings.emit 'skip_parsing_end_directive | 5839'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'skip_parsing_end_directive | 5839'
+    cmp u8 [esi],SUB
     jne skip_parsing_contents
     push _edi
     inc esi
@@ -5852,7 +5877,7 @@ skip_parsing_end_directive:
     ret
 
 skip_parsing_end_block:
-    strings.emit 'skip_parsing_end_block | 5854'
+    ;strings.emit 'skip_parsing_end_block | 5854'
     lods u8 [esi]
     or al,al
     jnz extra_characters_on_line
@@ -5866,41 +5891,41 @@ skip_parsing_end_block:
     ret
 
 close_skip_parsing_block:
-    strings.emit 'close_skip_parsing_block | 5868'
-    cmp [blocks_stack],0
+    ;strings.emit 'close_skip_parsing_block | 5868'
+    cmp [blocks_stack],NUL
     je unexpected_instruction
-    cmp bx,[_esp+2]
+    cmp bx,[_esp+TEXT]
     jne unexpected_instruction
     dec [blocks_stack]
     pop _eax _edx
-    test al,1
+    test al,HEAD
     jz skip_parsing
     cmp bx,if_directive-instruction_handler
     jne parse_next_line
     test al,10000b
     jz parse_next_line
-    mov al,0Fh
+    mov al,SHIFT
     stos u8 [edi]
     mov _eax,u64[current_line]
     stos u32 [edi]
     inc [parsed_lines]
-    mov eax,1 + (end_directive-instruction_handler) shl 8
+    mov eax,HEAD + (end_directive-instruction_handler) shl 8
     stos u32 [edi]
-    mov eax,1 + (if_directive-instruction_handler) shl 8
+    mov eax,HEAD + (if_directive-instruction_handler) shl 8
     stos u32 [edi]
     jmp parse_next_line
     ret
 
 skip_parsing_else:
-    strings.emit 'skip_parsing_else | 5894'
-    cmp [blocks_stack],0
+    ;strings.emit 'skip_parsing_else | 5894'
+    cmp [blocks_stack],NUL
     je unexpected_instruction
-    cmp word [_esp+2],if_directive-instruction_handler
+    cmp word [_esp+TEXT],if_directive-instruction_handler
     jne unexpected_instruction
     lods u8 [esi]
     or al,al
     jz skip_parsing_pure_else
-    cmp al,1Ah
+    cmp al,SUB
     jne extra_characters_on_line
     push _edi
     movzx ecx, u8 [esi]
@@ -5911,7 +5936,7 @@ skip_parsing_else:
     cmp bx,if_directive-instruction_handler
     jne extra_characters_on_line
     mov al,[_esp]
-    test al,1
+    test al,HEAD
     jz skip_parsing_contents
     test al,100b
     jnz skip_parsing_contents
@@ -5919,36 +5944,36 @@ skip_parsing_else:
     jnz parse_else_if
     xor al,al
     mov [_esp],al
-    mov al,0Fh
+    mov al,SHIFT
     stos u8 [edi]
     mov _eax,u64[current_line]
     stos u32 [edi]
     inc [parsed_lines]
 
     parse_else_if:
-    mov eax,1 + (if_directive-instruction_handler) shl 8
+    mov eax,HEAD + (if_directive-instruction_handler) shl 8
     stos u32 [edi]
     jmp parse_if
     ret
 
 skip_parsing_pure_else:
-    strings.emit 'skip_parsing_pure_else | 5934'
-    bts u32 [_esp],1
+    ;strings.emit 'skip_parsing_pure_else | 5934'
+    bts u32 [_esp],HEAD
     jc unexpected_instruction
     mov al,[_esp]
-    test al,1
+    test al,HEAD
     jz skip_parsing
     test al,100b
     jnz skip_parsing
-    and al,not 1
+    and al,not HEAD
     or al,1000b
     mov [_esp],al
     jmp parse_next_line
     ret
 
 parse_line_contents:
-    strings.emit 'parse_line_contents | 5949'
-    mov [parenthesis_stack],0
+    ;strings.emit 'parse_line_contents | 5949'
+    mov [parenthesis_stack],NUL
 
     parse_instruction_arguments:
     cmp bx,prefix_instruction-instruction_handler
@@ -5975,8 +6000,8 @@ parse_line_contents:
     ret
 
 parse_formatter_argument:
-    strings.emit 'parse_formatter_argument | 5977'
-    or [formatter_symbols_allowed],-1
+    ;strings.emit 'parse_formatter_argument | 5977'
+    or [formatter_symbols_allowed],-HEAD
 
     parse_argument:
     lea eax,[edi+100h]
@@ -6015,16 +6040,16 @@ parse_formatter_argument:
     je unallowed_character
     cmp al,'`'
     je unallowed_character
-    cmp al,3Bh
+    cmp al,SEMI
     je foreign_argument
-    cmp [decorator_symbols_allowed],0
+    cmp [decorator_symbols_allowed],NUL
     je not_a_separator
     cmp al,'-'
     je separator
 
     not_a_separator:
     dec esi
-    cmp al,1Ah
+    cmp al,SUB
     jne expression_argument
     push _edi
     mov edi,directive_operators
@@ -6036,7 +6061,7 @@ parse_formatter_argument:
     inc esi
     call get_symbol
     jnc symbol_argument
-    cmp ecx,1
+    cmp ecx,HEAD
     jne check_argument
     cmp u8 [esi],'?'
     jne check_argument
@@ -6046,21 +6071,21 @@ parse_formatter_argument:
     ret
 
 foreign_argument:
-    strings.emit 'foreign_argument | 6048'
+    ;strings.emit 'foreign_argument | 6048'
     dec esi
     call skip_foreign_line
     jmp contents_parsed
     ret
 
 symbol_argument:
-    strings.emit 'symbol_argument | 6056'
+    ;strings.emit 'symbol_argument | 6056'
     pop _edi
     stos u16 [edi]
     jmp argument_parsed
     ret
 
 operator_argument:
-    strings.emit 'operator_argument | 6062'
+    ;strings.emit 'operator_argument | 6062'
     pop _edi
     cmp al,85h
     je ptr_argument
@@ -6081,10 +6106,10 @@ operator_argument:
     ret
 
 instruction_separator:
-    strings.emit 'instruction_separator | 6083'
+    ;strings.emit 'instruction_separator | 6083'
     stos u8 [edi]
     allow_embedded_instruction:
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne parse_argument
     push _edi
     inc esi
@@ -6095,15 +6120,15 @@ instruction_separator:
     call get_data_directive
     jnc embedded_instruction
     pop _edi
-    sub esi,2
+    sub esi,TEXT
     jmp parse_argument
     ret
 
 embedded_instruction:
-    strings.emit 'embedded_instruction | 6103'
+    ;strings.emit 'embedded_instruction | 6103'
     pop _edi
     mov dl,al
-    mov al,1
+    mov al,HEAD
     stos u8 [edi]
     mov ax,bx
     stos u16 [edi]
@@ -6113,7 +6138,7 @@ embedded_instruction:
     ret
 
 parse_times_directive:
-    strings.emit 'parse_times_directive | 6115'
+    ;strings.emit 'parse_times_directive | 6115'
     mov al,'('
     stos u8 [edi]
     call convert_expression
@@ -6126,10 +6151,10 @@ parse_times_directive:
     ret
 
 parse_segment_directive:
-    strings.emit 'parse_segment_directive | 6128'
-    or [formatter_symbols_allowed],-1
+    ;strings.emit 'parse_segment_directive | 6128'
+    or [formatter_symbols_allowed],-HEAD
     parse_label_directive:
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne argument_parsed
     push _esi
     inc esi
@@ -6137,9 +6162,9 @@ parse_segment_directive:
     inc esi
     call identify_label
     pop _ebx
-    cmp eax,0Fh
+    cmp eax,SHIFT
     je non_label_identified
-    mov u8 [edi],2
+    mov u8 [edi],TEXT
     inc edi
     stos u32 [edi]
     xor al,al
@@ -6148,14 +6173,14 @@ parse_segment_directive:
     ret
 
 non_label_identified:
-    strings.emit 'non_label_identified | 6150'
+    ;strings.emit 'non_label_identified | 6150'
     mov esi,ebx
     jmp argument_parsed
     ret
 
 parse_load_directive:
-    strings.emit 'parse_load_directive | 6156'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'parse_load_directive | 6156'
+    cmp u8 [esi],SUB
     jne argument_parsed
     push _esi
     inc esi
@@ -6163,9 +6188,9 @@ parse_load_directive:
     inc esi
     call get_label_id
     pop _ebx
-    cmp eax,0Fh
+    cmp eax,SHIFT
     je non_label_identified
-    mov u8 [edi],2
+    mov u8 [edi],TEXT
     inc edi
     stos u32 [edi]
     xor al,al
@@ -6174,8 +6199,8 @@ parse_load_directive:
     ret
 
 parse_public_directive:
-    strings.emit 'parse_public_directive | 6176'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'parse_public_directive | 6176'
+    cmp u8 [esi],SUB
     jne parse_argument
     inc esi
     push _esi
@@ -6183,9 +6208,9 @@ parse_public_directive:
     inc esi
     push _esi _ecx
     push _edi
-    or [formatter_symbols_allowed],-1
+    or [formatter_symbols_allowed],-HEAD
     call get_symbol
-    mov [formatter_symbols_allowed],0
+    mov [formatter_symbols_allowed],NUL
     pop _edi
     jc parse_public_label
     cmp al,1Dh
@@ -6196,9 +6221,9 @@ parse_public_directive:
     ret
 
 parse_public_label:
-    strings.emit 'parse_public_label | 6198'
+    ;strings.emit 'parse_public_label | 6198'
     pop _ecx _esi
-    mov al,2
+    mov al,TEXT
     stos u8 [edi]
     call get_label_id
     stos u32 [edi]
@@ -6227,14 +6252,14 @@ parse_public_label:
     ret
 
 parse_extrn_directive:
-    strings.emit 'parse_extrn_directive | 6229'
-    cmp u8 [esi],22h
+    ;strings.emit 'parse_extrn_directive | 6229'
+    cmp u8 [esi],SYN
     je parse_quoted_extrn
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne parse_argument
     push _esi
-    movzx ecx, u8 [esi+1]
-    add esi,2
+    movzx ecx, u8 [esi+HEAD]
+    add esi,TEXT
     mov ax,'('
     stos u16 [edi]
     mov eax,ecx
@@ -6245,12 +6270,12 @@ parse_extrn_directive:
     pop _esi
 
     parse_label_operator:
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne argument_parsed
     inc esi
     movzx ecx, u8 [esi]
     inc esi
-    mov al,2
+    mov al,TEXT
     stos u8 [edi]
     call get_label_id
     stos u32 [edi]
@@ -6260,14 +6285,14 @@ parse_extrn_directive:
     ret
 
 parse_from_operator:
-    strings.emit 'parse_from_operator | 6262'
-    cmp u8 [esi],22h
+    ;strings.emit 'parse_from_operator | 6262'
+    cmp u8 [esi],SYN
     jne forced_multipart_expression
     jmp argument_parsed
     ret
 
 parse_quoted_extrn:
-    strings.emit 'parse_quoted_extrn | 6269'
+    ;strings.emit 'parse_quoted_extrn | 6269'
     inc esi
     mov ax,'('
     stos u16 [edi]
@@ -6290,15 +6315,15 @@ parse_quoted_extrn:
     ret
 
 ptr_argument:
-    strings.emit 'ptr_argument | 6292'
+    ;strings.emit 'ptr_argument | 6292'
     call parse_address
     jmp address_parsed
     ret
 
 check_argument:
-    strings.emit 'check_argument | 6298'
+    ;strings.emit 'check_argument | 6298'
     push _esi _ecx
-    sub esi,2
+    sub esi,TEXT
     mov edi,single_operand_operators
     call get_operator
     pop _ecx _esi
@@ -6311,13 +6336,13 @@ check_argument:
 
     not_instruction:
     pop _edi
-    sub esi,2
+    sub esi,TEXT
 
     expression_argument:
-    cmp u8 [esi],22h
+    cmp u8 [esi],SYN
     jne not_string
-    mov eax,[esi+1]
-    lea ebx,[esi+5+eax]
+    mov eax,[esi+HEAD]
+    lea ebx,[esi+QUERY+eax]
     push _ebx _ecx _esi _edi
     call parse_expression
     pop _eax _edx _ecx _ebx
@@ -6333,12 +6358,12 @@ check_argument:
     lods u32 [esi]
     mov ecx,eax
     stos u32 [edi]
-    shr ecx,1
+    shr ecx,HEAD
     jnc string_movsb_ok
     movs u8 [edi],[esi]
 
     string_movsb_ok:
-    shr ecx,1
+    shr ecx,HEAD
     jnc string_movsw_ok
     movs u16 [edi],[esi]
 
@@ -6350,7 +6375,7 @@ check_argument:
     ret
 
 parse_expression:
-    strings.emit 'parse_expression | 6352'
+    ;strings.emit 'parse_expression | 6352'
     mov al,'('
     stos u8 [edi]
     call convert_expression
@@ -6359,7 +6384,7 @@ parse_expression:
     ret
 
 not_string:
-    strings.emit 'not_string | 6361'
+    ;strings.emit 'not_string | 6361'
     cmp u8 [esi],'('
     jne expression
     mov _eax,_esp
@@ -6375,13 +6400,13 @@ not_string:
     ret
 
 expression_comparator:
-    strings.emit 'expression_comparator | 6377'
+    ;strings.emit 'expression_comparator | 6377'
     stos u8 [edi]
     jmp forced_expression
     ret
 
 greater:
-    strings.emit 'greater | 6383'
+    ;strings.emit 'greater | 6383'
     cmp u8 [esi],'='
     jne separator
     inc esi
@@ -6390,8 +6415,8 @@ greater:
     ret
 
 less:
-    strings.emit 'less | 6392'
-    cmp u8 [edi-1],0F6h
+    ;strings.emit 'less | 6392'
+    cmp u8 [edi-HEAD],0F6h
     je separator
     cmp u8 [esi],'>'
     je not_equal
@@ -6403,20 +6428,20 @@ less:
     ret
 
 not_equal:
-    strings.emit 'not_equal | 6405'
+    ;strings.emit 'not_equal | 6405'
     inc esi
     mov al,0F1h
     jmp expression_comparator
     ret
 
 expression:
-    strings.emit 'expression | 6412'
+    ;strings.emit 'expression | 6412'
     call parse_expression
     jmp expression_argument_parsed
     ret
 
 forced_expression:
-    strings.emit 'forced_expression | 6418'
+    ;strings.emit 'forced_expression | 6418'
     xor al,al
     xchg al,[formatter_symbols_allowed]
     push _eax
@@ -6429,7 +6454,7 @@ forced_expression:
     ret
 
 forced_multipart_expression:
-    strings.emit 'forced_multipart_expression | 6431'
+    ;strings.emit 'forced_multipart_expression | 6431'
     xor al,al
     xchg al,[formatter_symbols_allowed]
     push _eax
@@ -6442,7 +6467,7 @@ forced_multipart_expression:
     ret
 
 address_argument:
-    strings.emit 'address_argument | 6444'
+    ;strings.emit 'address_argument | 6444'
     call parse_address
     lods u8 [esi]
     cmp al,']'
@@ -6456,51 +6481,51 @@ address_argument:
     ret
 
 divided_address:
-    strings.emit 'divided_address | 6458'
+    ;strings.emit 'divided_address | 6458'
     mov ax,'),'
     stos u16 [edi]
     jmp expression
     ret
 
 address_parsed:
-    strings.emit 'address_parsed | 6465'
+    ;strings.emit 'address_parsed | 6465'
     mov al,']'
     stos u8 [edi]
     jmp argument_parsed
     ret
 
 parse_address:
-    strings.emit 'parse_address | 6472'
+    ;strings.emit 'parse_address | 6472'
     mov al,'['
     stos u8 [edi]
     cmp word [esi],021Ah
     jne convert_address
     push _esi
-    add esi,4
-    lea ebx,[esi+1]
+    add esi,TAIL
+    lea ebx,[esi+HEAD]
     cmp u8 [esi],':'
     pop _esi
     jne convert_address
-    add esi,2
-    mov ecx,2
+    add esi,TEXT
+    mov ecx,TEXT
     push _ebx _edi
     call get_symbol
     pop _edi _esi
     jc unknown_segment_prefix
-    cmp al,10h
+    cmp al,DELINK
     jne unknown_segment_prefix
     mov al,ah
     and ah,11110000b
-    cmp ah,30h
+    cmp ah,'0'
     jne unknown_segment_prefix
-    add al,30h
+    add al,'0'
     stos u8 [edi]
     jmp convert_address
     ret
 
 unknown_segment_prefix:
-    strings.emit 'unknown_segment_prefix | 6501'
-    sub esi,5
+    ;strings.emit 'unknown_segment_prefix | 6501'
+    sub esi,QUERY
 
     convert_address:
     push _edi
@@ -6515,7 +6540,7 @@ unknown_segment_prefix:
     ret
 
 forced_parenthesis:
-    strings.emit 'forced_parenthesis | 6517'
+    ;strings.emit 'forced_parenthesis | 6517'
     cmp u8 [esi],'('
     jne argument_parsed
     inc esi
@@ -6524,32 +6549,32 @@ forced_parenthesis:
     ret
 
 unallowed_character:
-    strings.emit 'unallowed_character | 6526'
+    ;strings.emit 'unallowed_character | 6526'
     mov al,0FFh
     jmp separator
     ret
 
 open_decorator:
-    strings.emit 'open_decorator | 6532'
+    ;strings.emit 'open_decorator | 6532'
     inc [decorator_symbols_allowed]
     jmp separator
     ret
 
 close_decorator:
-    strings.emit 'close_decorator | 6538'
+    ;strings.emit 'close_decorator | 6538'
     dec [decorator_symbols_allowed]
     jmp separator
     ret
 
 close_parenthesis:
-    strings.emit 'close_parenthesis | 6544'
+    ;strings.emit 'close_parenthesis | 6544'
     mov al,92h
 
     separator:
     stos u8 [edi]
 
     argument_parsed:
-    cmp [parenthesis_stack],0
+    cmp [parenthesis_stack],NUL
     je parse_argument
     dec [parenthesis_stack]
     add _esp,16
@@ -6557,8 +6582,8 @@ close_parenthesis:
     ret
 
 expression_argument_parsed:
-    strings.emit 'expression_argument_parsed | 6559'
-    cmp [parenthesis_stack],0
+    ;strings.emit 'expression_argument_parsed | 6559'
+    cmp [parenthesis_stack],NUL
     je parse_argument
     cmp u8 [esi],')'
     jne argument_parsed
@@ -6568,8 +6593,8 @@ expression_argument_parsed:
     ret
 
 contents_parsed:
-    strings.emit 'contents_parsed | 6570'
-    cmp [parenthesis_stack],0
+    ;strings.emit 'contents_parsed | 6570'
+    cmp [parenthesis_stack],NUL
     ;je contents_ok
     je return_ok
     dec [parenthesis_stack]
@@ -6578,11 +6603,11 @@ contents_parsed:
     ret
 
 identify_label:
-    strings.emit 'identify_label | 6580'
+    ;strings.emit 'identify_label | 6580'
     cmp u8 [esi],'.'
     je local_label_name
     call get_label_id
-    cmp eax,10h
+    cmp eax,DELINK
     ;jb label_identified
     jb return_ok
     or ebx,ebx
@@ -6592,20 +6617,20 @@ identify_label:
     ret
 
 anonymous_label_name:
-    strings.emit 'anonymous_label_name | 6594'
-    cmp u8 [esi-1],'@'
+    ;strings.emit 'anonymous_label_name | 6594'
+    cmp u8 [esi-HEAD],'@'
     je return_ok
-    mov eax,0Fh
+    mov eax,SHIFT
     ret
 
 local_label_name:
-    strings.emit 'local_label_name | 6601'
+    ;strings.emit 'local_label_name | 6601'
     call get_label_id
     ret
 
 get_operator:
-    strings.emit 'get_operator | 6606'
-    cmp u8 [esi],1Ah
+    ;strings.emit 'get_operator | 6606'
+    cmp u8 [esi],SUB
     jne get_simple_operator
     mov edx,esi
     push _ebp
@@ -6637,7 +6662,7 @@ get_operator:
     ret
 
 no_operator:
-    strings.emit 'no_operator | 6639'
+    ;strings.emit 'no_operator | 6639'
     mov esi,edx
     mov ecx,ebp
     pop _ebp
@@ -6646,7 +6671,7 @@ no_operator:
     ret
 
 operator_found:
-    strings.emit 'operator_found | 6648'
+    ;strings.emit 'operator_found | 6648'
     lea esi,[edx+2+ebp]
     mov ecx,ebp
     pop _ebp
@@ -6654,49 +6679,49 @@ operator_found:
     ret
 
 get_simple_operator:
-    strings.emit 'get_simple_operator | 6656'
+    ;strings.emit 'get_simple_operator | 6656'
     mov al,[esi]
-    cmp al,22h
+    cmp al,SYN
     je no_simple_operator
 
     simple_operator:
-    cmp u8 [edi],1
+    cmp u8 [edi],HEAD
     jb no_simple_operator
     ja simple_next_operator
-    cmp al,[edi+1]
+    cmp al,[edi+HEAD]
     je simple_operator_found
     simple_next_operator:
     movzx ecx, u8 [edi]
-    lea edi,[edi+1+ecx+1]
+    lea edi,[edi+HEAD + ecx+HEAD]
     jmp simple_operator
     ret
 
 simple_operator_found:
-    strings.emit 'simple_operator_found | 6674'
+    ;strings.emit 'simple_operator_found | 6674'
     inc esi
-    mov al,[edi+2]
+    mov al,[edi+TEXT]
     ret
 
 get_symbol:
-    strings.emit 'get_symbol | 6681'
+    ;strings.emit 'get_symbol | 6681'
     push _esi
     mov ebp,ecx
     call lower_case
     mov ecx,ebp
     cmp cl,11
     ja no_symbol
-    sub cl,1
+    sub cl,HEAD
     jc no_symbol
-    movzx ebx, u16 [symbols+ecx*4]
+    movzx ebx, u16 [symbols+ecx*TAIL]
     add ebx,symbols
-    movzx edx, u16 [symbols+ecx*4+2]
+    movzx edx, u16 [symbols+ecx*4+TEXT]
 
     scan_symbols:
     or edx,edx
     jz no_symbol
     mov eax,edx
-    shr eax,1
-    lea edi,[ebp+2]
+    shr eax,HEAD
+    lea edi,[ebp+TEXT]
     imul eax,edi
     lea edi,[ebx+eax]
     mov esi,converted
@@ -6709,7 +6734,7 @@ get_symbol:
     jb symbol_ok
     cmp al,1Fh
     je decorator_symbol
-    cmp [formatter_symbols_allowed],0
+    cmp [formatter_symbols_allowed],NUL
     je no_symbol
 
     symbol_ok:
@@ -6719,9 +6744,9 @@ get_symbol:
     ret
 
 decorator_symbol:
-    strings.emit 'decorator_symbol | 6721'
-    cmp [decorator_symbols_allowed],0
-    jne symbol_ok
+    ;strings.emit 'decorator_symbol | 6721'
+    cmp [decorator_symbols_allowed],NUL
+    jne  symbol_ok
     no_symbol:
     pop _esi
     mov ecx,ebp
@@ -6729,54 +6754,54 @@ decorator_symbol:
     ret
 
 symbols_down:
-    strings.emit 'symbols_down | 6732'
-    shr edx,1
+    ;strings.emit 'symbols_down | 6732'
+    shr edx,HEAD
     jmp scan_symbols
     ret
 
 symbols_up:
-    strings.emit 'symbols_up | 6737'
-    lea ebx,[edi+ecx+2]
-    shr edx,1
-    adc edx,-1
+    ;strings.emit 'symbols_up | 6737'
+    lea ebx,[edi+ecx+TEXT]
+    shr edx,HEAD
+    adc edx,-HEAD
     jmp scan_symbols
     ret
 
 get_data_directive:
-    strings.emit 'get_data_directive | 6745'
+    ;strings.emit 'get_data_directive | 6745'
     push _esi
     mov ebp,ecx
     call lower_case
     mov ecx,ebp
-    cmp cl,4
+    cmp cl,TAIL
     ja no_instruction
-    sub cl,2
+    sub cl,TEXT
     jc no_instruction
-    movzx ebx, u16 [data_directives+ecx*4]
+    movzx ebx, u16 [data_directives+ecx*TAIL]
     add ebx,data_directives
-    movzx edx, u16 [data_directives+ecx*4+2]
+    movzx edx, u16 [data_directives+ecx*4+TEXT]
     jmp scan_instructions
     ret
 
 get_instruction:
-    strings.emit 'get_instruction | 6761'
+    ;strings.emit 'get_instruction | 6761'
     push _esi
     mov ebp,ecx
     call lower_case
     mov ecx,ebp
     cmp cl,16
     ja no_instruction
-    sub cl,2
+    sub cl,TEXT
     jc no_instruction
-    movzx ebx, u16 [instructions+ecx*4]
+    movzx ebx, u16 [instructions+ecx*TAIL]
     add ebx,instructions
-    movzx edx, u16 [instructions+ecx*4+2]
+    movzx edx, u16 [instructions+ecx*4+TEXT]
 
     scan_instructions:
     or edx,edx
     jz no_instruction
     mov eax,edx
-    shr eax,1
+    shr eax,HEAD
     lea edi,[ebp+3]
     imul eax,edi
     lea edi,[ebx+eax]
@@ -6788,46 +6813,46 @@ get_instruction:
     pop _esi
     add esi,ebp
     mov al,[edi]
-    mov bx,[edi+1]
+    mov bx,[edi+HEAD]
     clc
     ret
 
 no_instruction:
-    strings.emit 'no_instruction | 6795'
+    ;strings.emit 'no_instruction | 6795'
     pop _esi
     mov ecx,ebp
     stc
     ret
 
 instructions_down:
-    strings.emit 'instructions_down | 6802'
-    shr edx,1
+    ;strings.emit 'instructions_down | 6802'
+    shr edx,HEAD
     jmp scan_instructions
     ret
 
 instructions_up:
-    strings.emit 'instructions_up | 6808'
+    ;strings.emit 'instructions_up | 6808'
     lea ebx,[edi+ecx+3]
-    shr edx,1
-    adc edx,-1
+    shr edx,HEAD
+    adc edx,-HEAD
     jmp scan_instructions
     ret
 
 get_label_id:
-    strings.emit 'get_label_id | 6816'
+    ;strings.emit 'get_label_id | 6816'
     cmp ecx,100h
     jae name_too_long
     cmp u8 [esi],'@'
     je anonymous_label
     cmp u8 [esi],'.'
     jne standard_label
-    cmp u8 [esi+1],'.'
+    cmp u8 [esi+HEAD],'.'
     je standard_label
-    cmp [current_locals_prefix],0
+    cmp [current_locals_prefix],NUL
     je standard_label
     push _edi
     mov _edi,u64[additional_memory_end]
-    sub edi,2
+    sub edi,TEXT
     sub edi,ecx
     push _ecx _esi
     mov esi,[current_locals_prefix]
@@ -6836,8 +6861,8 @@ get_label_id:
     sub edi,ecx
     cmp _edi,u64[free_additional_memory]
     jb out_of_memory
-    mov u16 [edi],0
-    add edi,2
+    mov u16 [edi],NUL
+    add edi,TEXT
     mov ebx,edi
     rep movs u8 [edi],[esi]
     pop _esi _ecx
@@ -6847,22 +6872,22 @@ get_label_id:
     pop _edi
     push _ebx _esi
     movzx ecx,al
-    mov u8 [ebx-1],al
+    mov u8 [ebx-HEAD],al
     mov esi,ebx
     call get_label_id
     pop _esi _ebx
     cmp ebx,[eax+24]
     ;jne composed_label_id_ok
     jne return_ok
-    lea edx,[ebx-2]
+    lea edx,[ebx-TEXT]
     mov u64[additional_memory_end],_edx
     ret
 
 anonymous_label:
-    strings.emit 'anonymous_label | 6861'
-    cmp ecx,2
+    ;strings.emit 'anonymous_label | 6861'
+    cmp ecx,TEXT
     jne standard_label
-    mov al,[esi+1]
+    mov al,[esi+HEAD]
     mov ebx,characters
     xlat u8 [ebx]
     cmp al,'@'
@@ -6873,7 +6898,7 @@ anonymous_label:
     je anonymous_back
     cmp al,'f'
     jne standard_label
-    add esi,2
+    add esi,TEXT
     mov eax,[anonymous_forward]
     or eax,eax
     jnz anonymous_ok
@@ -6887,24 +6912,24 @@ anonymous_label:
     ret
 
 anonymous_back:
-    strings.emit 'anonymous_back | 6889'
+    ;strings.emit 'anonymous_back | 6889'
     mov eax,[anonymous_reverse]
-    add esi,2
+    add esi,TEXT
     or eax,eax
     jz bogus_anonymous
     jmp anonymous_ok
     ret
 
 bogus_anonymous:
-    strings.emit 'bogus_anonymous | 6898'
+    ;strings.emit 'bogus_anonymous | 6898'
     call allocate_label
     mov [anonymous_reverse],eax
     jmp anonymous_ok
     ret
 
 new_anonymous:
-    strings.emit 'new_anonymous | 6905'
-    add esi,2
+    ;strings.emit 'new_anonymous | 6905'
+    add esi,TEXT
     mov eax,[anonymous_forward]
     or eax,eax
     jnz new_anonymous_ok
@@ -6912,70 +6937,70 @@ new_anonymous:
 
     new_anonymous_ok:
     mov [anonymous_reverse],eax
-    mov [anonymous_forward],0
+    mov [anonymous_forward],NUL
     jmp anonymous_ok
     ret
 
 standard_label:
-    strings.emit 'standard_label | 6919'
+    ;strings.emit 'standard_label | 6919'
     cmp u8 [esi],'%'
     je get_predefined_id
     cmp u8 [esi],'$'
     je current_address_label
     cmp u8 [esi],'?'
     jne find_label
-    cmp ecx,1
+    cmp ecx,HEAD
     jne find_label
     inc esi
-    mov eax,0Fh
+    mov eax,SHIFT
     ret
 
 current_address_label:
-    strings.emit 'current_address_label | 6933'
-    cmp ecx,2
+    ;strings.emit 'current_address_label | 6933'
+    cmp ecx,TEXT
     ja find_label
     inc esi
     jb get_current_offset_id
     inc esi
-    cmp u8 [esi-1],'$'
+    cmp u8 [esi-HEAD],'$'
     je get_org_origin_id
-    sub esi,2
+    sub esi,TEXT
     jmp find_label
     ret
 
 get_current_offset_id:
-    strings.emit 'get_current_offset_id | 6946'
+    ;strings.emit 'get_current_offset_id | 6946'
     xor eax,eax
     ret
 
 get_counter_id:
-    strings.emit 'get_counter_id | 6951'
-    mov eax,1
+    ;strings.emit 'get_counter_id | 6951'
+    mov eax,HEAD
     ret
 
 get_timestamp_id:
-    strings.emit 'get_timestamp_id | 6956'
-    mov eax,2
+    ;strings.emit 'get_timestamp_id | 6956'
+    mov eax,TEXT
     ret
 
 get_org_origin_id:
-    strings.emit 'get_org_origin_id | 6961'
-    mov eax,3
+    ;strings.emit 'get_org_origin_id | 6961'
+    mov eax,TXT
     ret
 
 get_predefined_id:
-    strings.emit 'get_predefined_id | 6966'
-    cmp ecx,2
+    ;strings.emit 'get_predefined_id | 6966'
+    cmp ecx,TEXT
     ja find_label
     inc esi
-    cmp cl,1
+    cmp cl,HEAD
     je get_counter_id
     lods u8 [esi]
     mov ebx,characters
     xlat [ebx]
     cmp al,'t'
     je get_timestamp_id
-    sub esi,2
+    sub esi,TEXT
 
     find_label:
     xor ebx,ebx
@@ -6989,7 +7014,7 @@ get_predefined_id:
     cmp bl,cl
     jb hash_label
     mov ebp,eax
-    shl eax,8
+    shl eax,RECTIFY
     and ebp,0FFh shl 24
     xor ebp,eax
     or ebp,ebx
@@ -7004,9 +7029,9 @@ get_predefined_id:
     or edx,edx
     jz extend_tree
     xor eax,eax
-    shl ebp,1
-    adc eax,0
-    lea ebx,[edx+eax*4]
+    shl ebp,HEAD
+    adc eax,NUL
+    lea ebx,[edx+eax*TAIL]
     dec ecx
     jnz follow_tree
     mov [label_leaf],ebx
@@ -7020,7 +7045,7 @@ get_predefined_id:
     compare_labels:
     mov esi,ebx
     mov ecx,edx
-    mov edi,[eax+4]
+    mov edi,[eax+TAIL]
     mov edi,[edi+24]
     repe cmps u8 [esi],[edi]
     je label_found
@@ -7031,26 +7056,26 @@ get_predefined_id:
     ret
 
 label_found:
-    strings.emit 'label_found | 7033'
-    add _esp,8
+    ;strings.emit 'label_found | 7033'
+    add _esp,RECTIFY
     pop _edi
-    mov eax,[eax+4]
+    mov eax,[eax+TAIL]
     ret
 
 extend_tree:
-    strings.emit 'extend_tree | 7040'
+    ;strings.emit 'extend_tree | 7040'
     mov _edx,u64[free_additional_memory]
-    lea eax,[edx+8]
+    lea eax,[edx+RECTIFY]
     cmp _eax,u64[additional_memory_end]
     ja out_of_memory
     mov u64[free_additional_memory],_eax
     xor eax,eax
     mov [edx],eax
-    mov [edx+4],eax
-    shl ebp,1
-    adc eax,0
+    mov [edx+TAIL],eax
+    shl ebp,HEAD
+    adc eax,NUL
     mov [ebx],edx
-    lea ebx,[edx+eax*4]
+    lea ebx,[edx+eax*TAIL]
     dec ecx
     jnz extend_tree
     mov [label_leaf],ebx
@@ -7059,10 +7084,10 @@ extend_tree:
     add_label:
     mov ecx,edx
     pop _esi
-    cmp u8 [esi-2],0
+    cmp u8 [esi-TEXT],NUL
     je label_name_ok
     mov al,[esi]
-    cmp al,30h
+    cmp al,'0'
     jb name_first_char_ok
     cmp al,39h
     jbe numeric_name
@@ -7075,19 +7100,19 @@ extend_tree:
     add esi,ecx
 
     reserved_word:
-    mov eax,0Fh
+    mov eax,SHIFT
     pop _edi
     ret
 
 check_for_reserved_word:
-    strings.emit 'check_for_reserved_word | 7082'
+    ;strings.emit 'check_for_reserved_word | 7082'
     call get_instruction
     jnc reserved_word
     call get_data_directive
     jnc reserved_word
     call get_symbol
     jnc reserved_word
-    sub esi,2
+    sub esi,TEXT
     mov edi,operators
     call get_operator
     or al,al
@@ -7106,7 +7131,7 @@ check_for_reserved_word:
 
     label_name_ok:
     mov _edx,u64[free_additional_memory]
-    lea eax,[edx+8]
+    lea eax,[edx+RECTIFY]
     cmp _eax,u64[additional_memory_end]
     ja out_of_memory
     mov u64[free_additional_memory],_eax
@@ -7117,19 +7142,19 @@ check_for_reserved_word:
     mov [edx],edi
     mov [eax],edx
     call allocate_label
-    mov [edx+4],eax
+    mov [edx+TAIL],eax
     mov [eax+24],ebx
     pop _edi
     ret
 
 allocate_label:
-    strings.emit 'allocate_label | 7125'
+    ;strings.emit 'allocate_label | 7125'
     mov eax,[labels_list]
     mov ecx,LABEL_STRUCTURE_SIZE shr 2
 
     initialize_label:
-    sub eax,4
-    mov u32 [eax],0
+    sub eax,TAIL
+    mov u32 [eax],NUL
     loop initialize_label
     mov [labels_list],eax
     ret
@@ -7137,7 +7162,7 @@ allocate_label:
     LABEL_STRUCTURE_SIZE = 32
 
 convert_expression:
-    strings.emit 'convert_expression | 7140'
+    ;strings.emit 'convert_expression | 7140'
     push _ebp
     call get_fp_value
     jnc fp_expression
@@ -7157,11 +7182,11 @@ convert_expression:
     ret
 
 expression_element:
-    strings.emit 'expression_element | 7159'
+    ;strings.emit 'expression_element | 7159'
     mov al,[esi]
-    cmp al,1Ah
+    cmp al,SUB
     je expression_number
-    cmp al,22h
+    cmp al,SYN
     je expression_number
     cmp al,'('
     je expression_number
@@ -7171,7 +7196,7 @@ expression_element:
     ret
 
 expression_number:
-    strings.emit 'expression_number | 7173'
+    ;strings.emit 'expression_number | 7173'
     call convert_number
 
     expression_operator:
@@ -7198,13 +7223,13 @@ expression_number:
     ret
 
 push_operator:
-    strings.emit 'push_operator | 7200'
+    ;strings.emit 'push_operator | 7200'
     push _eax
     jmp expression_loop
     ret
 
 expression_end:
-    strings.emit 'expression_end | 7206'
+    ;strings.emit 'expression_end | 7206'
     cmp _esp,u64[current_offset]
     je expression_converted
     pop _eax
@@ -7213,28 +7238,28 @@ expression_end:
     ret
 
 expression_converted:
-    strings.emit 'expression_converted | 7216'
+    ;strings.emit 'expression_converted | 7216'
     pop _ebp
     ret
 
 fp_expression:
-    strings.emit 'fp_expression | 7220'
+    ;strings.emit 'fp_expression | 7220'
     mov al,'.'
     stos u8 [edi]
     mov eax,[fp_value]
     stos u32 [edi]
-    mov eax,[fp_value+4]
+    mov eax,[fp_value+TAIL]
     stos u32 [edi]
-    mov eax,[fp_value+8]
+    mov eax,[fp_value+RECTIFY]
     stos u32 [edi]
     pop _ebp
     ret
 
 convert_number:
-    strings.emit 'convert_number | 7233'
+    ;strings.emit 'convert_number | 7233'
     lea eax,[edi+20h]
     mov _edx,u64[memory_end]
-    cmp [source_start],0
+    cmp [source_start],NUL
     je check_memory_for_number
     mov edx,[labels_list]
 
@@ -7252,43 +7277,43 @@ convert_number:
     jc symbol_value
     or ebp,ebp
     jz valid_number
-    mov u8 [edi-1],0Fh
+    mov u8 [edi-HEAD],SHIFT
     ret
 
 valid_number:
-    strings.emit 'valid_number | 7258'
-    cmp u32 [edi+4],0
-    jne qword_number
-    cmp word [edi+2],0
-    jne dword_number
-    cmp u8 [edi+1],0
-    jne word_number
+    ;strings.emit 'valid_number | 7258'
+    cmp u32 [edi+TAIL],NUL
+    jne  qword_number
+    cmp word [edi+TEXT],NUL
+    jne  dword_number
+    cmp u8 [edi+HEAD],NUL
+    jne  word_number
 
 byte_number:
-    mov u8 [edi-1],1
+    mov u8 [edi-HEAD],HEAD
     inc edi
     ret
 
 qword_number:
-    strings.emit 'qword_number | 7272'
-    mov u8 [edi-1],8
-    add edi,8
+    ;strings.emit 'qword_number | 7272'
+    mov u8 [edi-HEAD],RECTIFY
+    add edi,RECTIFY
     ret
 
 dword_number:
-    strings.emit 'dword_number | 7278'
-    mov u8 [edi-1],4
+    ;strings.emit 'dword_number | 7278'
+    mov u8 [edi-HEAD],TAIL
     scas u32 [edi]
     ret
 
 word_number:
-    strings.emit 'word_number | 7284'
-    mov u8 [edi-1],2
+    ;strings.emit 'word_number | 7284'
+    mov u8 [edi-HEAD],TEXT
     scas u16 [edi]
     ret
 
 expression_value:
-    strings.emit 'expression_value | 7290'
+    ;strings.emit 'expression_value | 7290'
     inc esi
     push u64[current_offset]
     call convert_expression
@@ -7303,28 +7328,28 @@ expression_value:
     ret
 
 symbol_value:
-    strings.emit 'symbol_value | 7305'
-    cmp [source_start],0
+    ;strings.emit 'symbol_value | 7305'
+    cmp [source_start],NUL
     je preprocessor_value
     push _edi _esi
     lods u16 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne no_address_register
     movzx ecx,ah
     call get_symbol
     jc no_address_register
-    cmp al,10h
+    cmp al,DELINK
     jne no_address_register
     mov al,ah
-    shr ah,4
-    cmp ah,4
+    shr ah,TAIL
+    cmp ah,TAIL
     je register_value
-    and ah,not 1
-    cmp ah,8
+    and ah,not HEAD
+    cmp ah,RECTIFY
     je register_value
     cmp ah,0Ch
     jae register_value
-    cmp ah,6
+    cmp ah,RESULT
     je register_value
     cmp al,23h
     je register_value
@@ -7332,7 +7357,7 @@ symbol_value:
     je register_value
     cmp al,26h
     je register_value
-    cmp al,27h
+    cmp al,QUOTE
     je register_value
 
     no_address_register:
@@ -7343,37 +7368,37 @@ symbol_value:
     or al,al
     jnz broken_value
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_value
     lods u8 [esi]
     movzx ecx,al
     call get_label_id
 
     store_label_value:
-    mov u8 [edi-1],11h
+    mov u8 [edi-HEAD],11h
     stos u32 [edi]
     ret
 
 broken_value:
-    strings.emit 'broken_value | 7358'
-    mov eax,0Fh
+    ;strings.emit 'broken_value | 7358'
+    mov eax,SHIFT
     jmp store_label_value
     ret
 
 register_value:
-    strings.emit 'register_value | 7363'
+    ;strings.emit 'register_value | 7363'
     pop _edx _edi
-    mov u8 [edi-1],10h
+    mov u8 [edi-HEAD],DELINK
     stos u8 [edi]
     ret
 
 preprocessor_value:
-    strings.emit 'preprocessor_value | 7370'
+    ;strings.emit 'preprocessor_value | 7370'
     dec edi
-    cmp [hash_tree],0
+    cmp [hash_tree],NUL
     je invalid_value
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne invalid_value
     lods u8 [esi]
     mov cl,al
@@ -7381,7 +7406,7 @@ preprocessor_value:
     call get_preprocessor_symbol
     jc invalid_value
     push _esi
-    mov esi,[edx+8]
+    mov esi,[edx+RECTIFY]
     push u64[current_offset]
     call convert_expression
     pop u64[current_offset]
@@ -7389,12 +7414,12 @@ preprocessor_value:
     ret
 
 get_number:
-    strings.emit 'get_number | 7391'
+    ;strings.emit 'get_number | 7391'
     xor ebp,ebp
     lods u8 [esi]
-    cmp al,22h
+    cmp al,SYN
     je get_text_number
-    cmp al,1Ah
+    cmp al,SUB
     jne not_number
     lods u8 [esi]
     movzx ecx,al
@@ -7402,8 +7427,8 @@ get_number:
     mov al,[esi]
     cmp al,'$'
     je number_begin
-    sub al,30h
-    cmp al,9
+    sub al,'0'
+    cmp al,HT
     ja invalid_number
 
     number_begin:
@@ -7411,9 +7436,9 @@ get_number:
     add esi,ecx
     push _esi
     dec esi
-    mov u32 [edi],0
-    mov u32 [edi+4],0
-    cmp u8 [ebx],'$'
+    mov u32 [edi],NUL
+    mov u32 [edi+TAIL],NUL
+    cmp  u8 [ebx],'$'
     je pascal_hex_number
     cmp word [ebx],'0x'
     je get_hex_number
@@ -7448,38 +7473,38 @@ get_number:
     get_dec_digit:
     cmp esi,ebx
     ja number_ok
-    cmp u8 [esi],27h
+    cmp u8 [esi],QUOTE
     je next_dec_digit
     cmp u8 [esi],'_'
     je next_dec_digit
     xor edx,edx
     mov eax,[edi]
-    shld edx,eax,2
-    shl eax,2
+    shld edx,eax,TEXT
+    shl eax,TEXT
     add eax,[edi]
-    adc edx,0
+    adc edx,NUL
     add eax,eax
     adc edx,edx
     mov [edi],eax
-    mov eax,[edi+4]
+    mov eax,[edi+TAIL]
     add eax,eax
     jc dec_out_of_range
     add eax,eax
     jc dec_out_of_range
-    add eax,[edi+4]
+    add eax,[edi+TAIL]
     jc dec_out_of_range
     add eax,eax
     jc dec_out_of_range
     add eax,edx
     jc dec_out_of_range
-    mov [edi+4],eax
+    mov [edi+TAIL],eax
     movzx eax, u8 [esi]
-    sub al,30h
+    sub al,'0'
     jc bad_number
-    cmp al,9
+    cmp al,HT
     ja bad_number
     add [edi],eax
-    adc u32 [edi+4],0
+    adc u32 [edi+TAIL],NUL
     jc dec_out_of_range
 
     next_dec_digit:
@@ -7488,29 +7513,29 @@ get_number:
     ret
 
 dec_out_of_range:
-    strings.emit 'dec_out_of_range | 7490'
+    ;strings.emit 'dec_out_of_range | 7490'
     cmp esi,ebx
     ja dec_out_of_range_finished
     lods u8 [esi]
-    cmp al,27h
+    cmp al,QUOTE
     je bad_number
     cmp al,'_'
     je bad_number
-    sub al,30h
+    sub al,'0'
     jc bad_number
-    cmp al,9
+    cmp al,HT
     ja bad_number
     jmp dec_out_of_range
     ret
 
 dec_out_of_range_finished:
-    strings.emit 'dec_out_of_range_finished | 7506'
-    or ebp,-1
+    ;strings.emit 'dec_out_of_range_finished | 7506'
+    or ebp,-HEAD
     jmp number_ok
     ret
 
 bad_number:
-    strings.emit 'bad_number | 7513'
+    ;strings.emit 'bad_number | 7513'
     pop _eax
     invalid_number:
     mov esi,[number_start]
@@ -7522,18 +7547,18 @@ bad_number:
     ret
 
 get_bin_number:
-    strings.emit 'get_bin_number | 7524'
+    ;strings.emit 'get_bin_number | 7524'
     xor bl,bl
     get_bin_digit:
     cmp esi,[number_start]
     jb number_ok
     movzx eax, u8 [esi]
-    cmp al,27h
+    cmp al,QUOTE
     je bin_digit_skip
     cmp al,'_'
     je bin_digit_skip
-    sub al,30h
-    cmp al,1
+    sub al,'0'
+    cmp al,HEAD
     ja bad_number
     xor edx,edx
     mov cl,bl
@@ -7549,30 +7574,30 @@ get_bin_number:
     ret
 
 bin_digit_high:
-    strings.emit 'bin_digit_high | 7551'
+    ;strings.emit 'bin_digit_high | 7551'
     sub cl,32
     shl eax,cl
-    or u32 [edi+4],eax
+    or u32 [edi+TAIL],eax
     jmp get_bin_digit
     ret
 
 bin_out_of_range:
-    strings.emit 'bin_out_of_range | 7559'
+    ;strings.emit 'bin_out_of_range | 7559'
     or al,al
     jz get_bin_digit
-    or ebp,-1
+    or ebp,-HEAD
     jmp get_bin_digit
     ret
 
 bin_digit_skip:
-    strings.emit 'bin_digit_skip | 7567'
+    ;strings.emit 'bin_digit_skip | 7567'
     dec esi
     jmp get_bin_digit
     ret
 
 pascal_hex_number:
-    strings.emit 'pascal_hex_number | 7573'
-    cmp cl,1
+    ;strings.emit 'pascal_hex_number | 7573'
+    cmp cl,HEAD
     je bad_number
 
     get_hex_number:
@@ -7582,7 +7607,7 @@ pascal_hex_number:
     cmp esi,[number_start]
     jb number_ok
     movzx eax, u8 [esi]
-    cmp al,27h
+    cmp al,QUOTE
     je hex_digit_skip
     cmp al,'_'
     je hex_digit_skip
@@ -7590,13 +7615,13 @@ pascal_hex_number:
     je hex_number_ok
     cmp al,'$'
     je pascal_hex_ok
-    sub al,30h
-    cmp al,9
+    sub al,'0'
+    cmp al,HT
     jbe hex_digit_ok
-    sub al,7
+    sub al,NOTIFY
     cmp al,15
     jbe hex_letter_digit_ok
-    sub al,20h
+    sub al,SPACE
     cmp al,15
     ja bad_number
 
@@ -7610,7 +7635,7 @@ pascal_hex_number:
     dec esi
     cmp bl,64
     je hex_out_of_range
-    add bl,4
+    add bl,TAIL
     cmp cl,32
     jae hex_digit_high
     shl eax,cl
@@ -7619,41 +7644,41 @@ pascal_hex_number:
     ret
 
 hex_digit_high:
-    strings.emit 'hex_digit_high | 7621'
+    ;strings.emit 'hex_digit_high | 7621'
     sub cl,32
     shl eax,cl
-    or u32 [edi+4],eax
+    or u32 [edi+TAIL],eax
     jmp get_hex_digit
     ret
 
 hex_out_of_range:
-    strings.emit 'hex_out_of_range | 7629'
+    ;strings.emit 'hex_out_of_range | 7629'
     or al,al
     jz get_hex_digit
-    or ebp,-1
+    or ebp,-HEAD
     jmp get_hex_digit
     ret
 
 hex_digit_skip:
-    strings.emit 'hex_digit_skip | 7637'
+    ;strings.emit 'hex_digit_skip | 7637'
     dec esi
     jmp get_hex_digit
     ret
 
 get_oct_number:
-    strings.emit 'get_oct_number | 7644'
+    ;strings.emit 'get_oct_number | 7644'
     xor bl,bl
 
     get_oct_digit:
     cmp esi,[number_start]
     jb number_ok
     movzx eax, u8 [esi]
-    cmp al,27h
+    cmp al,QUOTE
     je oct_digit_skip
     cmp al,'_'
     je oct_digit_skip
-    sub al,30h
-    cmp al,7
+    sub al,'0'
+    cmp al,NOTIFY
     ja bad_number
 
     oct_digit_ok:
@@ -7663,11 +7688,11 @@ get_oct_number:
     cmp bl,63
     ja oct_out_of_range
     jne oct_range_ok
-    cmp al,1
+    cmp al,HEAD
     ja oct_out_of_range
 
     oct_range_ok:
-    add bl,3
+    add bl,TXT
     cmp cl,30
     je oct_digit_wrap
     ja oct_digit_high
@@ -7677,37 +7702,37 @@ get_oct_number:
     ret
 
 oct_digit_wrap:
-    strings.emit 'oct_digit_wrap | 7680'
+    ;strings.emit 'oct_digit_wrap | 7680'
     shl eax,cl
-    adc u32 [edi+4],0
+    adc u32 [edi+TAIL],NUL
     or u32 [edi],eax
     jmp get_oct_digit
     ret
 
 oct_digit_high:
-    strings.emit 'oct_digit_high | 7687'
+    ;strings.emit 'oct_digit_high | 7687'
     sub cl,32
     shl eax,cl
-    or u32 [edi+4],eax
+    or u32 [edi+TAIL],eax
     jmp get_oct_digit
     ret
 
 oct_digit_skip:
-    strings.emit 'oct_digit_skip | 7696'
+    ;strings.emit 'oct_digit_skip | 7696'
     dec esi
     jmp get_oct_digit
     ret
 
 oct_out_of_range:
-    strings.emit 'oct_out_of_range | 7701'
+    ;strings.emit 'oct_out_of_range | 7701'
     or al,al
     jz get_oct_digit
-    or ebp,-1
+    or ebp,-HEAD
     jmp get_oct_digit
     ret
 
 hex_number_ok:
-    strings.emit 'hex_number_ok | 7709'
+    ;strings.emit 'hex_number_ok | 7709'
     dec esi
 
     pascal_hex_ok:
@@ -7720,15 +7745,15 @@ hex_number_ok:
     ret
 
 get_text_number:
-    strings.emit 'get_text_number | 7722'
+    ;strings.emit 'get_text_number | 7722'
     lods u32 [esi]
     mov edx,eax
     xor bl,bl
-    mov u32 [edi],0
-    mov u32 [edi+4],0
+    mov u32 [edi],NUL
+    mov u32 [edi+TAIL],NUL
 
     get_text_character:
-    sub edx,1
+    sub edx,HEAD
     ;jc number_done
     jc drop_then_return
     movzx eax, u8 [esi]
@@ -7736,7 +7761,7 @@ get_text_number:
     mov cl,bl
     cmp bl,64
     je text_out_of_range
-    add bl,8
+    add bl,RECTIFY
     cmp cl,32
     jae text_character_high
     shl eax,cl
@@ -7745,24 +7770,24 @@ get_text_number:
     ret
 
 text_character_high:
-    strings.emit 'text_character_high | 7746'
+    ;strings.emit 'text_character_high | 7746'
     sub cl,32
     shl eax,cl
-    or u32 [edi+4],eax
+    or u32 [edi+TAIL],eax
     jmp get_text_character
     ret
 
 text_out_of_range:
-    strings.emit 'text_out_of_range | 7755'
-    or ebp,-1
+    ;strings.emit 'text_out_of_range | 7755'
+    or ebp,-HEAD
     jmp get_text_character
     ret
 
 get_fp_value:
-    strings.emit 'get_fp_value | 7761'
+    ;strings.emit 'get_fp_value | 7761'
     push _edi _esi
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je fp_value_start
     cmp al,'-'
     je fp_sign_ok
@@ -7771,15 +7796,15 @@ get_fp_value:
 
     fp_sign_ok:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     jne not_fp_value
 
     fp_value_start:
     lods u8 [esi]
     movzx ecx,al
-    cmp cl,1
+    cmp cl,HEAD
     jbe not_fp_value
-    lea edx,[esi+1]
+    lea edx,[esi+HEAD]
     xor ah,ah
 
     check_fp_value:
@@ -7804,12 +7829,12 @@ get_fp_value:
     ret
 
 fp_character_dot:
-    strings.emit 'fp_character_dot | 7806'
+    ;strings.emit 'fp_character_dot | 7806'
     cmp esi,edx
     je not_fp_value
     or ah,ah
     jnz not_fp_value
-    or ah,1
+    or ah,HEAD
     lods u8 [esi]
     loop digit_expected
 
@@ -7819,21 +7844,21 @@ fp_character_dot:
     ret
 
 fp_last_character:
-    strings.emit 'fp_last_character | 7821'
-    cmp cl,1
+    ;strings.emit 'fp_last_character | 7821'
+    cmp cl,HEAD
     jne not_fp_value
-    or ah,4
+    or ah,TAIL
     jmp fp_character_ok
     ret
 
 fp_character_exp:
-    strings.emit 'fp_character_exp | 7829'
+    ;strings.emit 'fp_character_exp | 7829'
     cmp esi,edx
     je not_fp_value
-    cmp ah,1
+    cmp ah,HEAD
     ja not_fp_value
-    or ah,2
-    cmp ecx,1
+    or ah,TEXT
+    cmp ecx,HEAD
     jne fp_character_ok
     cmp u8 [esi],'+'
     je fp_exp_sign
@@ -7842,7 +7867,7 @@ fp_character_exp:
 
     fp_exp_sign:
     inc esi
-    cmp u8 [esi],1Ah
+    cmp u8 [esi],SUB
     jne not_fp_value
     inc esi
     lods u8 [esi]
@@ -7856,13 +7881,13 @@ fp_character_exp:
     jz not_fp_value
     pop _esi
     lods u8 [esi]
-    mov [fp_sign],0
-    cmp al,1Ah
+    mov [fp_sign],NUL
+    cmp  al,SUB
     je fp_get
     inc esi
     cmp al,'+'
     je fp_get
-    mov [fp_sign],1
+    mov [fp_sign],HEAD
 
     fp_get:
     lods u8 [esi]
@@ -7870,10 +7895,10 @@ fp_character_exp:
     xor edx,edx
     mov edi,fp_value
     mov [edi],edx
-    mov [edi+4],edx
+    mov [edi+TAIL],edx
     mov [edi+12],edx
     call fp_optimize
-    mov [fp_format],0
+    mov [fp_format],NUL
     mov al,[esi]
 
     fp_before_dot:
@@ -7888,15 +7913,15 @@ fp_character_exp:
     je fp_done
     cmp al,'f'
     je fp_done
-    sub al,30h
+    sub al,'0'
     mov edi,fp_value+16
     xor edx,edx
     mov u32 [edi+12],edx
     mov u32 [edi],edx
-    mov u32 [edi+4],edx
-    mov [edi+7],al
-    mov dl,7
-    mov u32 [edi+8],edx
+    mov u32 [edi+TAIL],edx
+    mov [edi+NOTIFY],al
+    mov dl,NOTIFY
+    mov u32 [edi+RECTIFY],edx
     call fp_optimize
     mov edi,fp_value
     push _ecx
@@ -7911,9 +7936,9 @@ fp_character_exp:
     mov edi,fp_value+16
     xor edx,edx
     mov [edi],edx
-    mov [edi+4],edx
-    mov u8 [edi+7],80h
-    mov [edi+8],edx
+    mov [edi+TAIL],edx
+    mov u8 [edi+NOTIFY],80h
+    mov [edi+RECTIFY],edx
     mov u32 [edi+12],edx
     dec ecx
     jz fp_done
@@ -7940,16 +7965,16 @@ fp_character_exp:
     mov ecx,10
     call fp_div
     push qword [edi]
-    push qword [edi+8]
+    push qword [edi+RECTIFY]
     lods u8 [esi]
-    sub al,30h
+    sub al,'0'
     movzx ecx,al
     call fp_mul
     mov ebx,edi
     mov edi,fp_value
     call fp_add
     mov edi,fp_value+16
-    pop qword [edi+8]
+    pop qword [edi+RECTIFY]
     pop qword [edi]
     pop _ecx
     dec ecx
@@ -7958,7 +7983,7 @@ fp_character_exp:
     ret
 
 fp_exponent:
-    strings.emit 'fp_exponent | 7960'
+    ;strings.emit 'fp_exponent | 7960'
     or [fp_format],80h
     xor edx,edx
     xor ebp,ebp
@@ -7971,14 +7996,14 @@ fp_exponent:
     not ebp
 
     fp_exponent_sign:
-    add esi,2
+    add esi,TEXT
     lods u8 [esi]
     movzx ecx,al
 
     get_exponent:
     movzx eax, u8 [esi]
     inc esi
-    sub al,30h
+    sub al,'0'
     cmp al,10
     jae exponent_ok
     imul edx,10
@@ -8005,7 +8030,7 @@ fp_exponent:
     ret
 
 fp_negative_power:
-    strings.emit 'fp_negative_power | 8007'
+    ;strings.emit 'fp_negative_power | 8007'
     push _ecx
     mov ecx,10
     call fp_div
@@ -8020,15 +8045,15 @@ fp_negative_power:
     mov [edi+11],al
     test u8 [edi+15],80h
     jz fp_ok
-    add u32 [edi],1
-    adc u32 [edi+4],0
+    add u32 [edi],HEAD
+    adc u32 [edi+TAIL],NUL
     jnc fp_ok
-    mov eax,[edi+4]
-    shrd [edi],eax,1
-    shr eax,1
+    mov eax,[edi+TAIL]
+    shrd [edi],eax,HEAD
+    shr eax,HEAD
     or eax,80000000h
-    mov [edi+4],eax
-    inc u16 [edi+8]
+    mov [edi+TAIL],eax
+    inc u16 [edi+RECTIFY]
 
     fp_ok:
     pop _edi
@@ -8036,7 +8061,7 @@ fp_negative_power:
     ret
 
 fp_mul:
-    strings.emit 'fp_mul | 8039'
+    ;strings.emit 'fp_mul | 8039'
     or ecx,ecx
     jz fp_zero
     mov eax,[edi+12]
@@ -8046,27 +8071,27 @@ fp_mul:
     mov eax,[edi]
     mul ecx
     add eax,ebx
-    adc edx,0
+    adc edx,NUL
     mov [edi],eax
     mov ebx,edx
-    mov eax,[edi+4]
+    mov eax,[edi+TAIL]
     mul ecx
     add eax,ebx
-    adc edx,0
-    mov [edi+4],eax
+    adc edx,NUL
+    mov [edi+TAIL],eax
 
     .loop:
     or edx,edx
     jz	.done
     mov eax,[edi]
-    shrd [edi+12],eax,1
-    mov eax,[edi+4]
-    shrd [edi],eax,1
-    shrd eax,edx,1
-    mov [edi+4],eax
-    shr edx,1
-    inc u32 [edi+8]
-    cmp u32 [edi+8],8000h
+    shrd [edi+12],eax,HEAD
+    mov eax,[edi+TAIL]
+    shrd [edi],eax,HEAD
+    shrd eax,edx,HEAD
+    mov [edi+TAIL],eax
+    shr edx,HEAD
+    inc u32 [edi+RECTIFY]
+    cmp u32 [edi+RECTIFY],8000h
     jge value_out_of_range
     jmp	.loop
     ret
@@ -8075,11 +8100,11 @@ fp_mul:
     ret
 
 fp_div:
-    strings.emit 'fp_div | 8077'
-    mov eax,[edi+4]
+    ;strings.emit 'fp_div | 8077'
+    mov eax,[edi+TAIL]
     xor edx,edx
     div ecx
-    mov [edi+4],eax
+    mov [edi+TAIL],eax
     mov eax,[edi]
     div ecx
     mov [edi],eax
@@ -8088,19 +8113,19 @@ fp_div:
     mov [edi+12],eax
     mov ebx,eax
     or ebx,[edi]
-    or ebx,[edi+4]
+    or ebx,[edi+TAIL]
     jz fp_zero
 
     .loop:
-    test u8 [edi+7],80h
+    test u8 [edi+NOTIFY],80h
     jnz	.exp_ok
     mov eax,[edi]
-    shld [edi+4],eax,1
+    shld [edi+TAIL],eax,HEAD
     mov eax,[edi+12]
-    shld [edi],eax,1
+    shld [edi],eax,HEAD
     add eax,eax
     mov [edi+12],eax
-    dec u32 [edi+8]
+    dec u32 [edi+RECTIFY]
     add edx,edx
     jmp	.loop
     ret
@@ -8110,31 +8135,31 @@ fp_div:
     xor edx,edx
     div ecx
     add [edi+12],eax
-    adc u32 [edi],0
-    adc u32 [edi+4],0
+    adc u32 [edi],NUL
+    adc u32 [edi+TAIL],NUL
     jnc	.done
-    mov eax,[edi+4]
+    mov eax,[edi+TAIL]
     mov ebx,[edi]
-    shrd [edi],eax,1
-    shrd [edi+12],ebx,1
-    shr eax,1
+    shrd [edi],eax,HEAD
+    shrd [edi+12],ebx,HEAD
+    shr eax,HEAD
     or eax,80000000h
-    mov [edi+4],eax
-    inc u32 [edi+8]
+    mov [edi+TAIL],eax
+    inc u32 [edi+RECTIFY]
 
     .done:
     ret
 
 fp_add:
-    strings.emit 'fp_add | 8128'
-    cmp u32 [ebx+8],8000h
+    ;strings.emit 'fp_add | 8128'
+    cmp u32 [ebx+RECTIFY],8000h
     je .done
-    cmp u32 [edi+8],8000h
+    cmp u32 [edi+RECTIFY],8000h
     je .copy
-    mov eax,[ebx+8]
-    cmp eax,[edi+8]
+    mov eax,[ebx+RECTIFY]
+    cmp eax,[edi+RECTIFY]
     jge .exp_ok
-    mov eax,[edi+8]
+    mov eax,[edi+RECTIFY]
 
     .exp_ok:
     call .change_exp
@@ -8143,19 +8168,19 @@ fp_add:
     xchg ebx,edi
     mov edx,[ebx+12]
     mov eax,[ebx]
-    mov ebx,[ebx+4]
+    mov ebx,[ebx+TAIL]
     add [edi+12],edx
     adc [edi],eax
-    adc [edi+4],ebx
+    adc [edi+TAIL],ebx
     jnc	.done
     mov eax,[edi]
-    shrd [edi+12],eax,1
-    mov eax,[edi+4]
-    shrd [edi],eax,1
-    shr eax,1
+    shrd [edi+12],eax,HEAD
+    mov eax,[edi+TAIL]
+    shrd [edi],eax,HEAD
+    shr eax,HEAD
     or eax,80000000h
-    mov [edi+4],eax
-    inc u32 [edi+8]
+    mov [edi+TAIL],eax
+    inc u32 [edi+RECTIFY]
 
     .done:
     ret
@@ -8163,10 +8188,10 @@ fp_add:
     .copy:
     mov eax,[ebx]
     mov [edi],eax
-    mov eax,[ebx+4]
-    mov [edi+4],eax
-    mov eax,[ebx+8]
-    mov [edi+8],eax
+    mov eax,[ebx+TAIL]
+    mov [edi+TAIL],eax
+    mov eax,[ebx+RECTIFY]
+    mov [edi+RECTIFY],eax
     mov eax,[ebx+12]
     mov [edi+12],eax
     ret
@@ -8174,40 +8199,40 @@ fp_add:
     .change_exp:
     push _ecx
     mov ecx,eax
-    sub ecx,[ebx+8]
-    mov edx,[ebx+4]
+    sub ecx,[ebx+RECTIFY]
+    mov edx,[ebx+TAIL]
     jecxz	.exp_done
 
     .exp_loop:
     mov ebp,[ebx]
-    shrd [ebx+12],ebp,1
-    shrd [ebx],edx,1
-    shr edx,1
-    inc u32 [ebx+8]
+    shrd [ebx+12],ebp,HEAD
+    shrd [ebx],edx,HEAD
+    shr edx,HEAD
+    inc u32 [ebx+RECTIFY]
     loop	.exp_loop
 
     .exp_done:
-    mov [ebx+4],edx
+    mov [ebx+TAIL],edx
     pop _ecx
     ret
 
 fp_optimize:
-    strings.emit 'fp_optimize | 8193'
+    ;strings.emit 'fp_optimize | 8193'
     mov eax,[edi]
-    mov ebp,[edi+4]
+    mov ebp,[edi+TAIL]
     or ebp,[edi]
     or ebp,[edi+12]
     jz fp_zero
 
     .loop:
-    test u8 [edi+7],80h
+    test u8 [edi+NOTIFY],80h
     jnz	.done
-    shld [edi+4],eax,1
+    shld [edi+TAIL],eax,HEAD
     mov ebp,[edi+12]
-    shld eax,ebp,1
+    shld eax,ebp,HEAD
     mov [edi],eax
-    shl u32 [edi+12],1
-    dec u32 [edi+8]
+    shl u32 [edi+12],HEAD
+    dec u32 [edi+RECTIFY]
     jmp	.loop
     ret
 
@@ -8215,12 +8240,12 @@ fp_optimize:
     ret
 
 fp_zero:
-    strings.emit 'fp_zero | 8216'
-    mov u32 [edi+8],8000h
+    ;strings.emit 'fp_zero | 8216'
+    mov u32 [edi+RECTIFY],8000h
     ret
 
 preevaluate_logical_expression:
-    strings.emit 'preevaluate_logical_expression | 8221'
+    ;strings.emit 'preevaluate_logical_expression | 8221'
     xor al,al
 
     preevaluate_embedded_logical_expression:
@@ -8248,7 +8273,7 @@ preevaluate_logical_expression:
     ret
 
 preevaluate_or:
-    strings.emit 'preevaluate_or | 8249'
+    ;strings.emit 'preevaluate_or | 8249'
     cmp al,'1'
     je quick_true
     cmp al,'0'
@@ -8268,7 +8293,7 @@ preevaluate_or:
     ret
 
 preevaluate_and:
-    strings.emit 'preevaluate_and | 8269'
+    ;strings.emit 'preevaluate_and | 8269'
     cmp al,'0'
     je quick_false
     cmp al,'1'
@@ -8288,21 +8313,21 @@ preevaluate_and:
     ret
 
 leave_only_following:
-    strings.emit 'leave_only_following | 8289'
+    ;strings.emit 'leave_only_following | 8289'
     mov _edi,[_esp]
     call preevaluate_logical_value
     jmp preevaluation_loop
     ret
 
 leave_only_preceding:
-    strings.emit 'leave_only_preceding | 8296'
+    ;strings.emit 'leave_only_preceding | 8296'
     mov edi,ebx
     xor al,al
     jmp preevaluation_loop
     ret
 
 quick_true:
-    strings.emit 'quick_true | 8303'
+    ;strings.emit 'quick_true | 8303'
     call skip_logical_value
     jc invalid_logical_expression
     mov _edi,[_esp]
@@ -8311,7 +8336,7 @@ quick_true:
     ret
 
 quick_false:
-    strings.emit 'quick_false | 8312'
+    ;strings.emit 'quick_false | 8312'
     call skip_logical_value
     jc invalid_logical_expression
     mov _edi,[_esp]
@@ -8320,7 +8345,7 @@ quick_false:
     ret
 
 invalid_logical_expression:
-    strings.emit 'invalid_logical_expression | 8321'
+    ;strings.emit 'invalid_logical_expression | 8321'
     pop _edi
     mov esi,edi
     mov al,0FFh
@@ -8328,7 +8353,7 @@ invalid_logical_expression:
     ret
 
 skip_logical_value:
-    strings.emit 'skip_logical_value | 8330'
+    ;strings.emit 'skip_logical_value | 8330'
     cmp u8 [esi],'~'
     jne negation_skipped
     inc esi
@@ -8336,7 +8361,7 @@ skip_logical_value:
     ret
 
 negation_skipped:
-    strings.emit 'negation_skipped | 8337'
+    ;strings.emit 'negation_skipped | 8337'
     mov al,[esi]
     cmp al,91h
     jne skip_simple_logical_value
@@ -8349,7 +8374,7 @@ negation_skipped:
     lods u8 [esi]
     or al,al
     jz wrongly_structured_logical_expression
-    cmp al,0Fh
+    cmp al,SHIFT
     je wrongly_structured_logical_expression
     cmp al,'|'
     je skip_logical_expression
@@ -8363,21 +8388,21 @@ negation_skipped:
     ret
 
 wrongly_structured_logical_expression:
-    strings.emit 'wrongly_structured_logical_expression | 8364'
+    ;strings.emit 'wrongly_structured_logical_expression | 8364'
     pop _eax
     stc
     ret
 
 skip_simple_logical_value:
-    strings.emit 'skip_simple_logical_value | 8370'
-    mov [logical_value_parentheses],0
+    ;strings.emit 'skip_simple_logical_value | 8370'
+    mov [logical_value_parentheses],NUL
 
     find_simple_logical_value_end:
     mov al,[esi]
     or al,al
     ;jz logical_value_skipped
     jz drop_then_return
-    cmp al,0Fh
+    cmp al,SHIFT
     ;je logical_value_skipped
     je drop_then_return
     cmp al,'|'
@@ -8390,7 +8415,7 @@ skip_simple_logical_value:
     je skip_logical_value_internal_parenthesis
     cmp al,92h
     jne skip_logical_value_symbol
-    sub [logical_value_parentheses],1
+    sub [logical_value_parentheses],HEAD
     jnc skip_logical_value_symbol
     cmp [logical_value_wrapping],91h
     jne skip_logical_value_symbol
@@ -8399,7 +8424,7 @@ skip_simple_logical_value:
     ret
 
 skip_logical_value_internal_parenthesis:
-    strings.emit 'skip_logical_value_internal_parenthesis | 8400'
+    ;strings.emit 'skip_logical_value_internal_parenthesis | 8400'
     inc [logical_value_parentheses]
     skip_logical_value_symbol:
     call skip_symbol
@@ -8407,7 +8432,7 @@ skip_logical_value_internal_parenthesis:
     ret
 
 preevaluate_logical_value:
-    strings.emit 'preevaluate_logical_value | 8408'
+    ;strings.emit 'preevaluate_logical_value | 8408'
     mov ebp,edi
 
     preevaluate_negation:
@@ -8418,7 +8443,7 @@ preevaluate_logical_value:
     ret
 
 preevaluate_negation_ok:
-    strings.emit 'preevaluate_negation_ok | 8419'
+    ;strings.emit 'preevaluate_negation_ok | 8419'
     mov ebx,esi
     cmp u8 [esi],91h
     jne preevaluate_simple_logical_value
@@ -8441,26 +8466,26 @@ preevaluate_negation_ok:
     ret
 
 preevaluated_expression_value:
-    strings.emit 'preevaluated_expression_value | 8442'
+    ;strings.emit 'preevaluated_expression_value | 8442'
     inc esi
-    lea edx,[edi-1]
+    lea edx,[edi-HEAD]
     sub edx,ebp
-    test edx,1
+    test edx,HEAD
     jz expression_negation_ok
-    xor al,1
+    xor al,HEAD
 
     expression_negation_ok:
     mov edi,ebp
     ret
 
 invalid_logical_value:
-    strings.emit 'invalid_logical_value | 8455'
+    ;strings.emit 'invalid_logical_value | 8455'
     mov edi,ebp
     mov al,0FFh
     ret
 
 preevaluate_simple_logical_value:
-    strings.emit 'preevaluate_simple_logical_value | 8461'
+    ;strings.emit 'preevaluate_simple_logical_value | 8461'
     xor edx,edx
     mov [logical_value_parentheses],edx
 
@@ -8494,14 +8519,14 @@ preevaluate_simple_logical_value:
     ret
 
 logical_value_internal_parentheses:
-    strings.emit 'logical_value_internal_parentheses | 8495'
+    ;strings.emit 'logical_value_internal_parentheses | 8495'
     inc [logical_value_parentheses]
     jmp next_symbol_in_logical_value
     ret
 
 logical_value_boundaries_parenthesis_close:
-    strings.emit 'logical_value_boundaries_parenthesis_close | 8501'
-    sub [logical_value_parentheses],1
+    ;strings.emit 'logical_value_boundaries_parenthesis_close | 8501'
+    sub [logical_value_parentheses],HEAD
     jnc next_symbol_in_logical_value
     cmp [logical_value_wrapping],91h
     jne next_symbol_in_logical_value
@@ -8529,15 +8554,15 @@ logical_value_boundaries_parenthesis_close:
     ret
 
 leave_logical_value_intact:
-    strings.emit 'leave_logical_value_intact | 8531'
+    ;strings.emit 'leave_logical_value_intact | 8531'
     add edi,ecx
     add esi,ecx
     xor al,al
     ret
 
 compare_symbols:
-    strings.emit 'compare_symbols | 8537'
-    lea ecx,[esi-1]
+    ;strings.emit 'compare_symbols | 8537'
+    lea ecx,[esi-HEAD]
     sub ecx,edx
     mov eax,edx
     sub eax,ebx
@@ -8545,7 +8570,7 @@ compare_symbols:
     jne preevaluated_false
     push _esi _edi
     mov esi,ebx
-    lea edi,[edx+1]
+    lea edi,[edx+HEAD]
     repe cmps u8 [esi],[edi]
     pop _edi _esi
     je preevaluated_true
@@ -8553,7 +8578,7 @@ compare_symbols:
     preevaluated_false:
     mov eax,edi
     sub eax,ebp
-    test eax,1
+    test eax,HEAD
     jnz store_true
 
     store_false:
@@ -8562,10 +8587,10 @@ compare_symbols:
     ret
 
 preevaluated_true:
-    strings.emit 'preevaluated_true | 8563'
+    ;strings.emit 'preevaluated_true | 8563'
     mov eax,edi
     sub eax,ebp
-    test eax,1
+    test eax,HEAD
     jnz store_false
 
     store_true:
@@ -8574,9 +8599,9 @@ preevaluated_true:
     ret
 
 compare_symbol_types:
-    strings.emit 'compare_symbol_types | 8575'
+    ;strings.emit 'compare_symbol_types | 8575'
     push _esi
-    lea esi,[edx+1]
+    lea esi,[edx+HEAD]
 
     type_comparison:
     cmp _esi,[_esp]
@@ -8586,8 +8611,8 @@ compare_symbol_types:
     jne different_type
     cmp al,'('
     jne equal_type
-    mov al,[esi+1]
-    mov ah,[ebx+1]
+    mov al,[esi+HEAD]
+    mov ah,[ebx+HEAD]
     cmp al,ah
     je equal_type
     or al,al
@@ -8608,7 +8633,7 @@ compare_symbol_types:
     ret
 
 types_compared:
-    strings.emit 'types_compared | 8610'
+    ;strings.emit 'types_compared | 8610'
     pop _esi
     cmp u8 [ebx],0F7h
     jne preevaluated_false
@@ -8616,15 +8641,15 @@ types_compared:
     ret
 
 different_type:
-    strings.emit 'different_type | 8618'
+    ;strings.emit 'different_type | 8618'
     pop _esi
     jmp preevaluated_false
     ret
 
 scan_symbols_list:
-    strings.emit 'scan_symbols_list | 8624'
+    ;strings.emit 'scan_symbols_list | 8624'
     push _edi _esi
-    lea esi,[edx+1]
+    lea esi,[edx+HEAD]
     sub edx,ebx
     lods u8 [esi]
     cmp al,'<'
@@ -8645,7 +8670,7 @@ scan_symbols_list:
     ret
 
 compare_in_list:
-    strings.emit 'compare_in_list | 8646'
+    ;strings.emit 'compare_in_list | 8646'
     mov ecx,esi
     sub ecx,edi
     cmp ecx,edx
@@ -8665,7 +8690,7 @@ compare_in_list:
     ret
 
 check_list_end:
-    strings.emit 'check_list_end | 8666'
+    ;strings.emit 'check_list_end | 8666'
     inc esi
     cmp _esi,[_esp]
     jne invalid_symbols_list
@@ -8674,7 +8699,7 @@ check_list_end:
     ret
 
 not_equal_in_list:
-    strings.emit 'not_equal_in_list | 8675'
+    ;strings.emit 'not_equal_in_list | 8675'
     add esi,ecx
 
     not_equal_length_in_list:
@@ -8688,16 +8713,16 @@ not_equal_in_list:
     ret
 
 invalid_symbols_list:
-    strings.emit 'invalid_symbols_list | 8689'
+    ;strings.emit 'invalid_symbols_list | 8689'
     pop _esi _edi
     jmp invalid_logical_value
     ret
 
 calculate_expression:
-    strings.emit 'calculate_expression | 8695'
+    ;strings.emit 'calculate_expression | 8695'
     mov u64[current_offset],_edi
-    mov [value_undefined],0
-    cmp u8 [esi],0
+    mov [value_undefined],NUL
+    cmp  u8 [esi],NUL
     je get_string_value
     cmp u8 [esi],'.'
     je convert_fp
@@ -8708,17 +8733,17 @@ calculate_expression:
     cmp eax,edi
     jbe out_of_memory
     lods u8 [esi]
-    cmp al,1
+    cmp al,HEAD
     je get_byte_number
-    cmp al,2
+    cmp al,TEXT
     je get_word_number
-    cmp al,4
+    cmp al,TAIL
     je get_dword_number
-    cmp al,8
+    cmp al,RECTIFY
     je get_qword_number
-    cmp al,0Fh
+    cmp al,SHIFT
     je value_out_of_range
-    cmp al,10h
+    cmp al,DELINK
     je get_register
     cmp al,11h
     je get_label
@@ -8743,8 +8768,8 @@ calculate_expression:
     je calculate_bsr
     cmp al,083h
     je calculate_neg
-    mov dx,[ebx+8]
-    or dx,[edi+8]
+    mov dx,[ebx+RECTIFY]
+    or dx,[edi+RECTIFY]
     cmp al,80h
     je calculate_add
     cmp al,81h
@@ -8777,19 +8802,19 @@ calculate_expression:
     ret
 
 expression_calculated:
-    strings.emit 'expression_calculated | 8778'
+    ;strings.emit 'expression_calculated | 8778'
     sub edi,14h
-    cmp [value_undefined],0
+    cmp [value_undefined],NUL
     ;je expression_value_ok
     je return_ok
     xor eax,eax
     mov [edi],eax
-    mov [edi+4],eax
+    mov [edi+TAIL],eax
     mov [edi+12],eax
     ret
 
 get_byte_number:
-    strings.emit 'get_byte_number | 8790'
+    ;strings.emit 'get_byte_number | 8790'
     xor eax,eax
     lods u8 [esi]
     stos dword [edi]
@@ -8797,15 +8822,15 @@ get_byte_number:
     stos dword [edi]
 
     got_number:
-    and u16 [edi-8+8],0
-    and u16 [edi-8+12],0
-    and dword [edi-8+16],0
+    and u16 [edi-RECTIFY+RECTIFY],NUL
+    and u16 [edi-RECTIFY+12],NUL
+    and dword [edi-RECTIFY+16],NUL
     add edi,0Ch
     jmp calculation_loop
     ret
 
 get_word_number:
-    strings.emit 'get_word_number | 8806'
+    ;strings.emit 'get_word_number | 8806'
     xor eax,eax
     lods u16 [esi]
     stos dword [edi]
@@ -8815,7 +8840,7 @@ get_word_number:
     ret
 
 get_dword_number:
-    strings.emit 'get_dword_number | 8816'
+    ;strings.emit 'get_dword_number | 8816'
     movs dword [edi],[esi]
     xor eax,eax
     stos dword [edi]
@@ -8823,19 +8848,19 @@ get_dword_number:
     ret
 
 get_qword_number:
-    strings.emit 'get_qword_number | 8826'
+    ;strings.emit 'get_qword_number | 8826'
     movs dword [edi],[esi]
     movs dword [edi],[esi]
     jmp got_number
     ret
 
 get_register:
-    strings.emit 'get_register | 8832'
-    mov u8 [edi+9],0
-    and u16 [edi+12],0
+    ;strings.emit 'get_register | 8832'
+    mov u8 [edi+9],NUL
+    and u16 [edi+12],NUL
     lods u8 [esi]
-    mov [edi+8],al
-    mov u8 [edi+10],1
+    mov [edi+RECTIFY],al
+    mov u8 [edi+10],HEAD
     xor eax,eax
     mov [edi+16],eax
     stos dword [edi]
@@ -8845,80 +8870,80 @@ get_register:
     ret
 
 get_label:
-    strings.emit 'get_label | 8848'
+    ;strings.emit 'get_label | 8848'
     xor eax,eax
-    mov [edi+8],eax
+    mov [edi+RECTIFY],eax
     mov [edi+12],eax
     mov [edi+20],eax
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb predefined_label
     je reserved_word_used_as_symbol
     mov ebx,eax
     mov ax,[current_pass]
     mov [ebx+18],ax
     mov cl,[ebx+9]
-    shr cl,1
-    and cl,1
+    shr cl,HEAD
+    and cl,HEAD
     neg cl
-    or u8 [ebx+8],8
-    test u8 [ebx+8],1
+    or u8 [ebx+RECTIFY],RECTIFY
+    test u8 [ebx+RECTIFY],HEAD
     jz label_undefined
     cmp ax,[ebx+16]
     je unadjusted_label
-    test u8 [ebx+8],4
+    test u8 [ebx+RECTIFY],TAIL
     jnz label_out_of_scope
-    test u8 [ebx+9],1
+    test u8 [ebx+9],HEAD
     jz unadjusted_label
     mov eax,[ebx]
     sub eax,dword [adjustment]
     stos dword [edi]
-    mov eax,[ebx+4]
-    sbb eax,dword [adjustment+4]
+    mov eax,[ebx+TAIL]
+    sbb eax,dword [adjustment+TAIL]
     stos dword [edi]
     sbb cl,[adjustment_sign]
-    mov [edi-8+13],cl
+    mov [edi-RECTIFY+13],cl
     mov eax,dword [adjustment]
     or al,[adjustment_sign]
-    or eax,dword [adjustment+4]
+    or eax,dword [adjustment+TAIL]
     jz got_label
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
     jmp got_label
     ret
 
 unadjusted_label:
-    strings.emit 'unadjusted_label | 8889'
+    ;strings.emit 'unadjusted_label | 8889'
     mov eax,[ebx]
     stos dword [edi]
-    mov eax,[ebx+4]
+    mov eax,[ebx+TAIL]
     stos dword [edi]
-    mov [edi-8+13],cl
+    mov [edi-RECTIFY+13],cl
 
     got_label:
-    test u8 [ebx+9],4
+    test u8 [ebx+9],TAIL
     jnz invalid_use_of_symbol
     call store_label_reference
     mov al,[ebx+11]
-    mov [edi-8+12],al
+    mov [edi-RECTIFY+12],al
     mov eax,[ebx+12]
-    mov [edi-8+8],eax
+    mov [edi-RECTIFY+RECTIFY],eax
     cmp al,ah
     jne labeled_registers_ok
     shr eax,16
     add al,ah
     jo labeled_registers_ok
     xor ah,ah
-    mov [edi-8+10],ax
-    mov [edi-8+9],ah
+    mov [edi-RECTIFY+10],ax
+    mov [edi-RECTIFY+9],ah
 
     labeled_registers_ok:
     mov eax,[ebx+20]
-    mov [edi-8+16],eax
+    mov [edi-RECTIFY+16],eax
     add edi,0Ch
     mov al,[ebx+10]
     or al,al
     jz calculation_loop
-    test [operand_flags],1
+    test [operand_flags],HEAD
     jnz calculation_loop
 
     check_size:
@@ -8931,15 +8956,15 @@ unadjusted_label:
     ret
 
 current_offset_label:
-    strings.emit 'current_offset_label | 8934'
+    ;strings.emit 'current_offset_label | 8934'
     mov _eax,u64[current_offset]
     make_current_offset_label:
     xor edx,edx
     xor ch,ch
     mov ebp,[addressing_space]
     sub eax,[ds:ebp]
-    sbb edx,[ds:ebp+4]
-    sbb ch,[ds:ebp+8]
+    sbb edx,[ds:ebp+TAIL]
+    sbb ch,[ds:ebp+RECTIFY]
     jp current_offset_label_ok
     call recoverable_overflow
     current_offset_label_ok:
@@ -8952,19 +8977,19 @@ current_offset_label:
     mov [edi-12+12],cx
     mov eax,[ds:ebp+14h]
     mov [edi-12+16],eax
-    add edi,8
+    add edi,RECTIFY
     jmp calculation_loop
     ret
 
 org_origin_label:
-    strings.emit 'org_origin_label | 8959'
+    ;strings.emit 'org_origin_label | 8959'
     mov eax,[addressing_space]
     mov eax,[eax+18h]
     jmp make_current_offset_label
     ret
 
 counter_label:
-    strings.emit 'counter_label | 8966'
+    ;strings.emit 'counter_label | 8966'
     mov _eax,u64[counter]
     make_dword_label_value:
     stos dword [edi]
@@ -8975,7 +9000,7 @@ counter_label:
     ret
 
 timestamp_label:
-    strings.emit 'timestamp_label | 8977'
+    ;strings.emit 'timestamp_label | 8977'
     call make_timestamp
     make_qword_label_value:
     stos dword [edi]
@@ -8986,45 +9011,45 @@ timestamp_label:
     ret
 
 predefined_label:
-    strings.emit 'predefined_label | 8988'
+    ;strings.emit 'predefined_label | 8988'
     or eax,eax
     jz current_offset_label
-    cmp eax,1
+    cmp eax,HEAD
     je counter_label
-    cmp eax,2
+    cmp eax,TEXT
     je timestamp_label
-    cmp eax,3
+    cmp eax,TXT
     je org_origin_label
     mov edx,invalid_value
     jmp error_undefined
     ret
 
 label_out_of_scope:
-    strings.emit 'label_out_of_scope | 9002'
+    ;strings.emit 'label_out_of_scope | 9002'
     mov edx,symbol_out_of_scope
     jmp error_undefined
     ret
 
 label_undefined:
-    strings.emit 'label_undefined | 9008'
+    ;strings.emit 'label_undefined | 9008'
     mov edx,undefined_symbol
 
     error_undefined:
-    cmp [current_pass],1
+    cmp [current_pass],HEAD
     ja undefined_value
 
     force_next_pass:
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
 
     undefined_value:
-    or [value_undefined],-1
-    and u16 [edi+12],0
+    or [value_undefined],-HEAD
+    and u16 [edi+12],NUL
     xor eax,eax
     stos dword [edi]
     stos dword [edi]
     add edi,0Ch
-    cmp [error_line],0
-    jne calculation_loop
+    cmp [error_line],NUL
+    jne  calculation_loop
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov u64[error],_edx
@@ -9033,7 +9058,7 @@ label_undefined:
     ret
 
 calculate_add:
-    strings.emit 'calculate_add | 9035'
+    ;strings.emit 'calculate_add | 9035'
     xor ah,ah
     mov ah,[ebx+12]
     mov al,[edi+12]
@@ -9053,7 +9078,7 @@ calculate_add:
     ret
 
 add_relocatable:
-    strings.emit 'add_relocatable | 9054'
+    ;strings.emit 'add_relocatable | 9054'
     mov ah,al
     mov ecx,[edi+16]
     mov [ebx+16],ecx
@@ -9062,8 +9087,8 @@ add_relocatable:
     mov [ebx+12],ah
     mov eax,[edi]
     add [ebx],eax
-    mov eax,[edi+4]
-    adc [ebx+4],eax
+    mov eax,[edi+TAIL]
+    adc [ebx+TAIL],eax
     mov al,[edi+13]
     adc [ebx+13],al
     jp add_sign_ok
@@ -9075,7 +9100,7 @@ add_relocatable:
     push _esi
     mov esi, ebx
     mov cl,[edi+10]
-    mov al,[edi+8]
+    mov al,[edi+RECTIFY]
     call add_register
     mov cl,[edi+11]
     mov al,[edi+9]
@@ -9085,55 +9110,55 @@ add_relocatable:
     ret
 
 add_register:
-    strings.emit 'add_register | 9087'
+    ;strings.emit 'add_register | 9087'
     or al,al
     ;jz add_register_done
     jz return_ok
 
     add_register_start:
-    cmp [esi+8],al
+    cmp [esi+RECTIFY],al
     jne add_in_second_slot
     add [esi+10],cl
     jo value_out_of_range
     ;jnz add_register_done
     jnz return_ok
-    mov u8 [esi+8],0
+    mov u8 [esi+RECTIFY],NUL
     ret
 
 add_in_second_slot:
-    strings.emit 'add_in_second_slot | 9103'
+    ;strings.emit 'add_in_second_slot | 9103'
     cmp [esi+9],al
     jne create_in_first_slot
     add [esi+11],cl
     jo value_out_of_range
     ;jnz add_register_done
     jnz return_ok
-    mov u8 [esi+9],0
+    mov u8 [esi+9],NUL
     ret
 
 create_in_first_slot:
-    strings.emit 'create_in_first_slot | 9114'
-    cmp u8 [esi+8],0
-    jne create_in_second_slot
-    mov [esi+8],al
+    ;strings.emit 'create_in_first_slot | 9114'
+    cmp u8 [esi+RECTIFY],NUL
+    jne  create_in_second_slot
+    mov [esi+RECTIFY],al
     mov [esi+10],cl
     ret
 
 create_in_second_slot:
-    strings.emit 'create_in_second_slot | 9122'
-    cmp u8 [esi+9],0
-    jne invalid_expression
+    ;strings.emit 'create_in_second_slot | 9122'
+    cmp u8 [esi+9],NUL
+    jne  invalid_expression
     mov [esi+9],al
     mov [esi+11],cl
     ret
 
 out_of_range:
-    strings.emit 'out_of_range | 9130'
+    ;strings.emit 'out_of_range | 9130'
     jmp calculation_loop
     ret
 
 calculate_sub:
-    strings.emit 'calculate_sub | 9135'
+    ;strings.emit 'calculate_sub | 9135'
     xor ah,ah
     mov ah,[ebx+12]
     mov al,[edi+12]
@@ -9154,7 +9179,7 @@ calculate_sub:
     ret
 
 negate_relocatable:
-    strings.emit 'negate_relocatable | 9156'
+    ;strings.emit 'negate_relocatable | 9156'
     neg al
     mov ah,al
     mov ecx,[edi+16]
@@ -9164,13 +9189,13 @@ negate_relocatable:
     mov [ebx+12],ah
     mov eax,[edi]
     sub [ebx],eax
-    mov eax,[edi+4]
-    sbb [ebx+4],eax
+    mov eax,[edi+TAIL]
+    sbb [ebx+TAIL],eax
     mov al,[edi+13]
     sbb [ebx+13],al
     jp sub_sign_ok
-    cmp [error_line],0
-    jne sub_sign_ok
+    cmp [error_line],NUL
+    jne  sub_sign_ok
     call recoverable_overflow
 
     sub_sign_ok:
@@ -9179,7 +9204,7 @@ negate_relocatable:
     push _esi
     mov esi, ebx
     mov cl,[edi+10]
-    mov al,[edi+8]
+    mov al,[edi+RECTIFY]
     call sub_register
     mov cl,[edi+11]
     mov al,[edi+9]
@@ -9189,7 +9214,7 @@ negate_relocatable:
     ret
 
 sub_register:
-    strings.emit 'sub_register | 9191'
+    ;strings.emit 'sub_register | 9191'
     or al,al
     ;jz add_register_done
     jz return_ok
@@ -9199,18 +9224,18 @@ sub_register:
     ret
 
 calculate_mul:
-    strings.emit 'calculate_mul | 9201'
+    ;strings.emit 'calculate_mul | 9201'
     or dx,dx
     jz mul_start
-    cmp u16 [ebx+8],0
-    jne mul_start
+    cmp u16 [ebx+RECTIFY],NUL
+    jne  mul_start
     xor ecx,ecx
 
     swap_values:
     mov eax,[ebx+ecx]
     xchg eax,[edi+ecx]
     mov [ebx+ecx],eax
-    add ecx,4
+    add ecx,TAIL
     cmp ecx,16
     jb swap_values
 
@@ -9218,62 +9243,62 @@ calculate_mul:
     push _esi _edx
     mov esi, ebx
     xor bl,bl
-    cmp u8 [esi+13],0
+    cmp u8 [esi+13],NUL
     je mul_first_sign_ok
-    xor bl,-1
+    xor bl,-HEAD
     mov eax,[esi]
-    mov edx,[esi+4]
+    mov edx,[esi+TAIL]
     not eax
     not edx
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     mov [esi],eax
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     or eax,edx
     jz mul_overflow
 
     mul_first_sign_ok:
-    cmp u8 [edi+13],0
+    cmp u8 [edi+13],NUL
     je mul_second_sign_ok
-    xor bl,-1
-    cmp u8 [esi+8],0
+    xor bl,-HEAD
+    cmp u8 [esi+RECTIFY],NUL
     je mul_first_register_sign_ok
     neg u8 [esi+10]
     jo invalid_expression
 
     mul_first_register_sign_ok:
-    cmp u8 [esi+9],0
+    cmp u8 [esi+9],NUL
     je mul_second_register_sign_ok
     neg u8 [esi+11]
     jo invalid_expression
 
     mul_second_register_sign_ok:
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     not eax
     not edx
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     mov [edi],eax
-    mov [edi+4],edx
+    mov [edi+TAIL],edx
     or eax,edx
     jz mul_overflow
 
     mul_second_sign_ok:
-    cmp dword [esi+4],0
+    cmp dword [esi+TAIL],NUL
     jz mul_numbers
-    cmp dword [edi+4],0
+    cmp dword [edi+TAIL],NUL
     jz mul_numbers
     jnz mul_overflow
 
     mul_numbers:
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     mul dword [edi]
     or edx,edx
     jnz mul_overflow
     mov ecx,eax
     mov eax,[esi]
-    mul dword [edi+4]
+    mul dword [edi+TAIL]
     or edx,edx
     jnz mul_overflow
     add ecx,eax
@@ -9283,15 +9308,15 @@ calculate_mul:
     add edx,ecx
     jc mul_overflow
     mov [esi],eax
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     or bl,bl
     jz mul_ok
     not eax
     not edx
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     mov [esi],eax
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     or eax,edx
     jnz mul_ok
     not bl
@@ -9301,9 +9326,9 @@ calculate_mul:
     pop _edx
     or dx,dx
     jz mul_calculated
-    cmp u16 [edi+8],0
-    jne invalid_value
-    cmp u8 [esi+8],0
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_value
+    cmp u8 [esi+RECTIFY],NUL
     je mul_first_register_ok
     call get_byte_scale
     imul u8 [esi+10]
@@ -9314,10 +9339,10 @@ calculate_mul:
     mov [esi+10],al
     or al,al
     jnz mul_first_register_ok
-    mov [esi+8],al
+    mov [esi+RECTIFY],al
 
     mul_first_register_ok:
-    cmp u8 [esi+9],0
+    cmp u8 [esi+9],NUL
     je mul_calculated
     call get_byte_scale
     imul u8 [esi+11]
@@ -9336,33 +9361,33 @@ calculate_mul:
     ret
 
 mul_overflow:
-    strings.emit 'mul_overflow | 9338'
+    ;strings.emit 'mul_overflow | 9338'
     pop _edx _esi
     call recoverable_overflow
     jmp calculation_loop
     ret
 
 get_byte_scale:
-    strings.emit 'get_byte_scale | 9345'
+    ;strings.emit 'get_byte_scale | 9345'
     mov al,[edi]
     cbw
     cwde
     cdq
-    cmp edx,[edi+4]
+    cmp edx,[edi+TAIL]
     jne value_out_of_range
     cmp eax,[edi]
     jne value_out_of_range
     ret
 
 calculate_div:
-    strings.emit 'calculate_div | 9357'
+    ;strings.emit 'calculate_div | 9357'
     push _esi _edx
     mov esi, ebx
     call div_64
     pop _edx
     or dx,dx
     jz div_calculated
-    cmp u8 [esi+8],0
+    cmp u8 [esi+RECTIFY],NUL
     je div_first_register_ok
     call get_byte_scale
     or al,al
@@ -9375,7 +9400,7 @@ calculate_div:
     mov [esi+10],al
 
     div_first_register_ok:
-    cmp u8 [esi+9],0
+    cmp u8 [esi+9],NUL
     je div_calculated
     call get_byte_scale
     or al,al
@@ -9393,66 +9418,66 @@ calculate_div:
     ret
 
 calculate_mod:
-    strings.emit 'calculate_mod | 9395'
+    ;strings.emit 'calculate_mod | 9395'
     push _esi
     mov esi, ebx
     call div_64
     mov [esi],eax
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     mov [esi+13],bh
     pop _esi
     jmp calculation_loop
     ret
 
 calculate_and:
-    strings.emit 'calculate_and | 9407'
+    ;strings.emit 'calculate_and | 9407'
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     mov cl,[edi+13]
     and [ebx],eax
-    and [ebx+4],edx
+    and [ebx+TAIL],edx
     and [ebx+13],cl
     jmp calculation_loop
     ret
 
 calculate_or:
-    strings.emit 'calculate_or | 9418'
+    ;strings.emit 'calculate_or | 9418'
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     mov cl,[edi+13]
     or [ebx],eax
-    or [ebx+4],edx
+    or [ebx+TAIL],edx
     or [ebx+13],cl
     jmp calculation_loop
     ret
 
 calculate_xor:
-    strings.emit 'calculate_xor | 9429'
+    ;strings.emit 'calculate_xor | 9429'
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     mov cl,[edi+13]
     xor [ebx],eax
-    xor [ebx+4],edx
+    xor [ebx+TAIL],edx
     xor [ebx+13],cl
     jmp calculation_loop
     ret
 
 shr_negative:
-    strings.emit 'shr_negative | 9440'
-    mov u8 [edi+13],0
+    ;strings.emit 'shr_negative | 9440'
+    mov u8 [edi+13],NUL
     not dword [edi]
-    not dword [edi+4]
-    add dword [edi],1
-    adc dword [edi+4],0
+    not dword [edi+TAIL]
+    add dword [edi],HEAD
+    adc dword [edi+TAIL],NUL
     jc shl_over
 
     calculate_shl:
-    cmp u8 [edi+13],0
-    jne shl_negative
-    mov edx,[ebx+4]
+    cmp u8 [edi+13],NUL
+    jne  shl_negative
+    mov edx,[ebx+TAIL]
     mov eax,[ebx]
-    cmp dword [edi+4],0
-    jne shl_over
+    cmp dword [edi+TAIL],NUL
+    jne  shl_over
     movsx ecx, u8 [ebx+13]
     xchg ecx,[edi]
     cmp ecx,64
@@ -9464,14 +9489,14 @@ shr_negative:
     shld edx,eax,cl
     shl eax,cl
     mov [ebx],eax
-    mov [ebx+4],edx
+    mov [ebx+TAIL],edx
     jmp shl_done
     ret
 
 shl_over:
-    strings.emit 'shl_over | 9471'
-    cmp u8 [ebx+13],0
-    jne shl_overflow
+    ;strings.emit 'shl_over | 9471'
+    cmp u8 [ebx+13],NUL
+    jne  shl_overflow
 
     shl_max:
     movsx ecx, u8 [ebx+13]
@@ -9481,19 +9506,19 @@ shl_over:
     jne shl_overflow
     xor eax,eax
     mov [ebx],eax
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     jmp calculation_loop
     ret
 
 shl_high:
-    strings.emit 'shl_high | 9489'
+    ;strings.emit 'shl_high | 9489'
     sub cl,32
     shld [edi],edx,cl
     shld edx,eax,cl
     shl eax,cl
-    mov [ebx+4],eax
-    and dword [ebx],0
-    cmp edx,[edi]
+    mov [ebx+TAIL],eax
+    and dword [ebx],NUL
+    cmp  edx,[edi]
     jne shl_overflow
 
     shl_done:
@@ -9507,22 +9532,22 @@ shl_high:
     ret
 
 shl_negative:
-    strings.emit 'shl_negative | 9509'
-    mov u8 [edi+13],0
+    ;strings.emit 'shl_negative | 9509'
+    mov u8 [edi+13],NUL
     not dword [edi]
-    not dword [edi+4]
-    add dword [edi],1
-    adc dword [edi+4],0
+    not dword [edi+TAIL]
+    add dword [edi],HEAD
+    adc dword [edi+TAIL],NUL
     jnc calculate_shr
-    dec dword [edi+4]
+    dec dword [edi+TAIL]
 
     calculate_shr:
-    cmp u8 [edi+13],0
-    jne shr_negative
-    mov edx,[ebx+4]
+    cmp u8 [edi+13],NUL
+    jne  shr_negative
+    mov edx,[ebx+TAIL]
     mov eax,[ebx]
-    cmp dword [edi+4],0
-    jne shr_over
+    cmp dword [edi+TAIL],NUL
+    jne  shr_over
     mov ecx,[edi]
     cmp ecx,64
     jae shr_over
@@ -9533,50 +9558,50 @@ shl_negative:
     shrd eax,edx,cl
     shrd edx,esi,cl
     mov [ebx],eax
-    mov [ebx+4],edx
+    mov [ebx+TAIL],edx
     pop _esi
     jmp calculation_loop
     ret
 
 shr_high:
-    strings.emit 'shr_high | 9541'
+    ;strings.emit 'shr_high | 9541'
     sub cl,32
     shrd edx,esi,cl
     mov [ebx],edx
-    mov [ebx+4],esi
+    mov [ebx+TAIL],esi
     pop _esi
     jmp calculation_loop
     ret
 
 shr_over:
-    strings.emit 'shr_over | 9551'
+    ;strings.emit 'shr_over | 9551'
     movsx eax, u8 [ebx+13]
     mov dword [ebx],eax
-    mov dword [ebx+4],eax
+    mov dword [ebx+TAIL],eax
     jmp calculation_loop
     ret
 
 calculate_not:
-    strings.emit 'calculate_not | 9559'
-    cmp u16 [edi+8],0
-    jne invalid_expression
-    cmp u8 [edi+12],0
+    ;strings.emit 'calculate_not | 9559'
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_expression
+    cmp u8 [edi+12],NUL
     je not_ok
     call recoverable_misuse
 
     not_ok:
     not dword [edi]
-    not dword [edi+4]
+    not dword [edi+TAIL]
     not u8 [edi+13]
     add edi,14h
     jmp calculation_loop
     ret
 
 calculate_bsf:
-    strings.emit 'calculate_bsf | 9575'
-    cmp u16 [edi+8],0
-    jne invalid_expression
-    cmp u8 [edi+12],0
+    ;strings.emit 'calculate_bsf | 9575'
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_expression
+    cmp u8 [edi+12],NUL
     je bsf_ok
     call recoverable_misuse
 
@@ -9585,10 +9610,10 @@ calculate_bsf:
     bsf eax,[edi]
     jnz finish_bs
     mov ecx,32
-    bsf eax,[edi+4]
+    bsf eax,[edi+TAIL]
     jnz finish_bs
-    cmp u8 [edi+13],0
-    jne finish_bs
+    cmp u8 [edi+13],NUL
+    jne  finish_bs
 
     bs_overflow:
     call recoverable_overflow
@@ -9597,17 +9622,17 @@ calculate_bsf:
     ret
 
 calculate_bsr:
-    strings.emit 'calculate_bsr | 9599'
-    cmp u16 [edi+8],0
-    jne invalid_expression
-    cmp u8 [edi+12],0
+    ;strings.emit 'calculate_bsr | 9599'
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_expression
+    cmp u8 [edi+12],NUL
     je bsr_ok
     call recoverable_misuse
     bsr_ok:
-    cmp u8 [edi+13],0
-    jne bs_overflow
+    cmp u8 [edi+13],NUL
+    jne  bs_overflow
     mov ecx,32
-    bsr eax,[edi+4]
+    bsr eax,[edi+TAIL]
     jnz finish_bs
     xor ecx,ecx
     bsr eax,[edi]
@@ -9617,21 +9642,21 @@ calculate_bsr:
     add eax,ecx
     xor edx,edx
     mov [edi],eax
-    mov [edi+4],edx
+    mov [edi+TAIL],edx
     mov [edi+13],dl
     add edi,14h
     jmp calculation_loop
     ret
 
 calculate_neg:
-    strings.emit 'calculate_neg | 9626'
-    cmp u8 [edi+8],0
+    ;strings.emit 'calculate_neg | 9626'
+    cmp u8 [edi+RECTIFY],NUL
     je neg_first_register_ok
     neg u8 [edi+10]
     jo invalid_expression
 
     neg_first_register_ok:
-    cmp u8 [edi+9],0
+    cmp u8 [edi+9],NUL
     je neg_second_register_ok
     neg u8 [edi+11]
     jo invalid_expression
@@ -9642,10 +9667,10 @@ calculate_neg:
     xor edx,edx
     xor cl,cl
     xchg eax,[edi]
-    xchg edx,[edi+4]
+    xchg edx,[edi+TAIL]
     xchg cl,[edi+13]
     sub [edi],eax
-    sbb [edi+4],edx
+    sbb [edi+TAIL],edx
     sbb [edi+13],cl
     jp neg_sign_ok
     call recoverable_overflow
@@ -9656,20 +9681,20 @@ calculate_neg:
     ret
 
 calculate_rva:
-    strings.emit 'calculate_rva | 9658'
-    cmp u16 [edi+8],0
-    jne invalid_expression
+    ;strings.emit 'calculate_rva | 9658'
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_expression
     mov al,[output_format]
-    cmp al,5
+    cmp al,QUERY
     je calculate_gotoff
-    cmp al,4
+    cmp al,TAIL
     je calculate_coff_rva
-    cmp al,3
+    cmp al,TXT
     jne invalid_expression
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz pe64_rva
-    mov al,2
-    bt      [resolver_flags],0
+    mov al,TEXT
+    bt      [resolver_flags],NUL
     jc rva_type_ok
     xor al,al
 
@@ -9679,15 +9704,15 @@ calculate_rva:
     call recoverable_misuse
 
     rva_ok:
-    mov u8 [edi+12],0
+    mov u8 [edi+12],NUL
     mov eax,[code_start]
     mov eax,[eax+34h]
     xor edx,edx
 
     finish_rva:
     sub [edi],eax
-    sbb [edi+4],edx
-    sbb u8 [edi+13],0
+    sbb [edi+TAIL],edx
+    sbb u8 [edi+13],NUL
     jp rva_finished
     call recoverable_overflow
 
@@ -9697,9 +9722,9 @@ calculate_rva:
     ret
 
 pe64_rva:
-    strings.emit 'pe64_rva | 9699'
-    mov al,4
-    bt      [resolver_flags],0
+    ;strings.emit 'pe64_rva | 9699'
+    mov al,TAIL
+    bt      [resolver_flags],NUL
     jc pe64_rva_type_ok
     xor al,al
 
@@ -9709,7 +9734,7 @@ pe64_rva:
     call recoverable_misuse
 
     pe64_rva_ok:
-    mov u8 [edi+12],0
+    mov u8 [edi+12],NUL
     mov eax,[code_start]
     mov edx,[eax+34h]
     mov eax,[eax+30h]
@@ -9717,13 +9742,13 @@ pe64_rva:
     ret
 
 calculate_gotoff:
-    strings.emit 'calculate_gotoff | 9718'
-    test [format_flags],8+1
+    ;strings.emit 'calculate_gotoff | 9718'
+    test [format_flags],RECTIFY+HEAD
     jnz invalid_expression
 
     calculate_coff_rva:
-    mov dl,5
-    cmp u8 [edi+12],2
+    mov dl,QUERY
+    cmp u8 [edi+12],TEXT
     je change_value_type
 
     incorrect_change_of_value_type:
@@ -9736,22 +9761,22 @@ calculate_gotoff:
     ret
 
 calculate_plt:
-    strings.emit 'calculate_plt | 9738'
-    cmp u16 [edi+8],0
+    ;strings.emit 'calculate_plt | 9738'
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_expression
+    cmp [output_format],QUERY
     jne invalid_expression
-    cmp [output_format],5
-    jne invalid_expression
-    test [format_flags],1
+    test [format_flags],HEAD
     jnz invalid_expression
-    mov dl,6
-    mov dh,2
-    test [format_flags],8
+    mov dl,RESULT
+    mov dh,TEXT
+    test [format_flags],RECTIFY
     jz check_value_for_plt
-    mov dh,4
+    mov dh,TAIL
 
     check_value_for_plt:
     mov eax,[edi]
-    or eax,[edi+4]
+    or eax,[edi+TAIL]
     jnz incorrect_change_of_value_type
     cmp u8 [edi+12],dh
     jne incorrect_change_of_value_type
@@ -9762,56 +9787,56 @@ calculate_plt:
     ret
 
 div_64:
-    strings.emit 'div_64 | 9764'
+    ;strings.emit 'div_64 | 9764'
     xor ebx,ebx
-    cmp dword [edi],0
-    jne divider_ok
-    cmp dword [edi+4],0
-    jne divider_ok
-    cmp [next_pass_needed],0
+    cmp dword [edi],NUL
+    jne  divider_ok
+    cmp dword [edi+TAIL],NUL
+    jne  divider_ok
+    cmp [next_pass_needed],NUL
     je value_out_of_range
     jmp div_done
     ret
 
 divider_ok:
-    strings.emit 'divider_ok | 9776'
-    cmp u8 [esi+13],0
+    ;strings.emit 'divider_ok | 9776'
+    cmp u8 [esi+13],NUL
     je div_first_sign_ok
     mov eax,[esi]
-    mov edx,[esi+4]
+    mov edx,[esi+TAIL]
     not eax
     not edx
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     mov [esi],eax
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     or eax,edx
     jz value_out_of_range
-    xor bx,-1
+    xor bx,-HEAD
 
     div_first_sign_ok:
-    cmp u8 [edi+13],0
+    cmp u8 [edi+13],NUL
     je div_second_sign_ok
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     not eax
     not edx
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     mov [edi],eax
-    mov [edi+4],edx
+    mov [edi+TAIL],edx
     or eax,edx
     jz value_out_of_range
-    xor bl,-1
+    xor bl,-HEAD
 
     div_second_sign_ok:
-    cmp dword [edi+4],0
-    jne div_high
+    cmp dword [edi+TAIL],NUL
+    jne  div_high
     mov ecx,[edi]
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     xor edx,edx
     div ecx
-    mov [esi+4],eax
+    mov [esi+TAIL],eax
     mov eax,[esi]
     div ecx
     mov [esi],eax
@@ -9821,14 +9846,14 @@ divider_ok:
     ret
 
 div_high:
-    strings.emit 'div_high | 9823'
+    ;strings.emit 'div_high | 9823'
     push _ebx
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     xor edx,edx
-    div dword [edi+4]
+    div dword [edi+TAIL]
     mov ebx,[esi]
     mov [esi],eax
-    and dword [esi+4],0
+    and dword [esi+TAIL],NUL
     mov ecx,edx
     mul dword [edi]
 
@@ -9842,7 +9867,7 @@ div_high:
     div_high_correction:
     dec dword [esi]
     sub eax,[edi]
-    sbb edx,[edi+4]
+    sbb edx,[edi+TAIL]
     jnc div_high_loop
 
     div_high_done:
@@ -9855,40 +9880,40 @@ div_high:
     ret
 
 div_high_large_correction:
-    strings.emit 'div_high_large_correction | 9857'
+    ;strings.emit 'div_high_large_correction | 9857'
     push _eax _edx
     mov eax,edx
     sub eax,ecx
     xor edx,edx
-    div dword [edi+4]
-    shr eax,1
+    div dword [edi+TAIL]
+    shr eax,HEAD
     jz div_high_small_correction
     sub [esi],eax
     push _eax
-    mul dword [edi+4]
-    sub u64 [_esp+8],_eax
+    mul dword [edi+TAIL]
+    sub u64 [_esp+RECTIFY],_eax
     pop _eax
     mul dword [edi]
-    sub u64 [_esp+8],_eax
+    sub u64 [_esp+RECTIFY],_eax
     sbb u64 [_esp],_edx
     pop _edx _eax
     jmp div_high_loop
     ret
 
 div_high_small_correction:
-    strings.emit 'div_high_small_correction | 9878'
+    ;strings.emit 'div_high_small_correction | 9878'
     pop _edx _eax
     jmp div_high_correction
     ret
 
 div_done:
-    strings.emit 'div_done | 9884'
+    ;strings.emit 'div_done | 9884'
     or bh,bh
     jz remainder_ok
     not eax
     not edx
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     mov ecx,eax
     or ecx,edx
     jnz remainder_ok
@@ -9898,11 +9923,11 @@ div_done:
     or bl,bl
     jz div_ok
     not dword [esi]
-    not dword [esi+4]
-    add dword [esi],1
-    adc dword [esi+4],0
+    not dword [esi+TAIL]
+    add dword [esi],HEAD
+    adc dword [esi+TAIL],NUL
     mov ecx,[esi]
-    or ecx,[esi+4]
+    or ecx,[esi+TAIL]
     jnz div_ok
     not bl
 
@@ -9911,17 +9936,17 @@ div_done:
     ret
 
 store_label_reference:
-    strings.emit 'store_label_reference | 9913'
-    cmp [symbols_file],0
+    ;strings.emit 'store_label_reference | 9913'
+    cmp [symbols_file],NUL
     ;je label_reference_ok
     je return_ok
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     ;jne label_reference_ok
     jne return_ok
     mov eax,[tagged_blocks]
-    mov dword [eax-4],2
-    mov dword [eax-8],4
-    sub eax,8+4
+    mov dword [eax-TAIL],TEXT
+    mov dword [eax-RECTIFY],TAIL
+    sub eax,RECTIFY+TAIL
     cmp eax,edi
     jbe out_of_memory
     mov [tagged_blocks],eax
@@ -9929,53 +9954,53 @@ store_label_reference:
     ret
 
 convert_fp:
-    strings.emit 'convert_fp | 9931'
+    ;strings.emit 'convert_fp | 9931'
     inc esi
-    and u16 [edi+8],0
-    and u16 [edi+12],0
+    and u16 [edi+RECTIFY],NUL
+    and u16 [edi+12],NUL
     mov al,[value_size]
-    cmp al,2
+    cmp al,TEXT
     je convert_fp_word
-    cmp al,4
+    cmp al,TAIL
     je convert_fp_dword
-    test al,not 8
+    test al,not RECTIFY
     jz convert_fp_qword
     call recoverable_misuse
 
     convert_fp_qword:
     xor eax,eax
     xor edx,edx
-    cmp u16 [esi+8],8000h
+    cmp u16 [esi+RECTIFY],8000h
     je fp_qword_store
-    mov bx,[esi+8]
+    mov bx,[esi+RECTIFY]
     mov eax,[esi]
-    mov edx,[esi+4]
+    mov edx,[esi+TAIL]
     add eax,eax
     adc edx,edx
     mov ecx,edx
     shr edx,12
     shrd eax,ecx,12
     jnc fp_qword_ok
-    add eax,1
-    adc edx,0
+    add eax,HEAD
+    adc edx,NUL
     bt edx,20
     jnc fp_qword_ok
-    and edx,1 shl 20 - 1
+    and edx,HEAD shl 20 - HEAD
     inc bx
-    shr edx,1
-    rcr eax,1
+    shr edx,HEAD
+    rcr eax,HEAD
 
     fp_qword_ok:
     add bx,3FFh
     cmp bx,7FFh
     jge value_out_of_range
-    cmp bx,0
+    cmp bx,NUL
     jg fp_qword_exp_ok
-    or edx,1 shl 20
+    or edx,HEAD shl 20
     mov cx,bx
     neg cx
     inc cx
-    cmp cx,52+1
+    cmp cx,52+HEAD
     ja value_out_of_range
     cmp cx,32
     jb fp_qword_small_shift
@@ -9987,18 +10012,18 @@ convert_fp:
     ret
 
 fp_qword_small_shift:
-    strings.emit 'fp_qword_small_shift | 9990'
+    ;strings.emit 'fp_qword_small_shift | 9990'
     mov ebx,edx
     shr edx,cl
     shrd eax,ebx,cl
     fp_qword_shift_done:
-    mov bx,0
+    mov bx,NUL
     jnc fp_qword_exp_ok
-    add eax,1
-    adc edx,0
-    test edx,1 shl 20
+    add eax,HEAD
+    adc edx,NUL
+    test edx,HEAD shl 20
     jz fp_qword_exp_ok
-    and edx,1 shl 20 - 1
+    and edx,HEAD shl 20 - HEAD
     inc bx
     fp_qword_exp_ok:
     shl ebx,20
@@ -10011,46 +10036,46 @@ fp_qword_small_shift:
     shl ebx,31
     or edx,ebx
     mov [edi],eax
-    mov [edi+4],edx
+    mov [edi+TAIL],edx
     add esi, 13
     ret
 
 convert_fp_word:
-    strings.emit 'convert_fp_word | 10019'
+    ;strings.emit 'convert_fp_word | 10019'
     xor eax,eax
-    cmp u16 [esi+8],8000h
+    cmp u16 [esi+RECTIFY],8000h
     je fp_word_store
-    mov bx,[esi+8]
-    mov ax,[esi+6]
-    shl ax,1
-    shr ax,6
+    mov bx,[esi+RECTIFY]
+    mov ax,[esi+RESULT]
+    shl ax,HEAD
+    shr ax,RESULT
     jnc fp_word_ok
     inc ax
     bt ax,10
     jnc fp_word_ok
-    and ax,1 shl 10 - 1
+    and ax,HEAD shl 10 - HEAD
     inc bx
-    shr ax,1
+    shr ax,HEAD
 
     fp_word_ok:
-    add bx,0Fh
+    add bx,SHIFT
     cmp bx,01Fh
     jge value_out_of_range
-    cmp bx,0
+    cmp bx,NUL
     jg fp_word_exp_ok
-    or ax,1 shl 10
+    or ax,HEAD shl 10
     mov cx,bx
     neg cx
     inc cx
-    cmp cx,10+1
+    cmp cx,10+HEAD
     ja value_out_of_range
     xor bx,bx
     shr ax,cl
     jnc fp_word_exp_ok
     inc ax
-    test ax,1 shl 10
+    test ax,HEAD shl 10
     jz fp_word_exp_ok
-    and ax,1 shl 10 - 1
+    and ax,HEAD shl 10 - HEAD
     inc bx
 
     fp_word_exp_ok:
@@ -10063,45 +10088,45 @@ convert_fp_word:
     or ax,bx
     mov [edi],eax
     xor eax,eax
-    mov [edi+4],eax
+    mov [edi+TAIL],eax
     add esi, 13
     ret
 
 convert_fp_dword:
-    strings.emit 'convert_fp_dword | 10071'
+    ;strings.emit 'convert_fp_dword | 10071'
     xor eax,eax
-    cmp u16 [esi+8],8000h
+    cmp u16 [esi+RECTIFY],8000h
     je fp_dword_store
-    mov bx,[esi+8]
-    mov eax,[esi+4]
-    shl eax,1
-    shr eax,9
+    mov bx,[esi+RECTIFY]
+    mov eax,[esi+TAIL]
+    shl eax,HEAD
+    shr eax,HT
     jnc fp_dword_ok
     inc eax
     bt eax,23
     jnc fp_dword_ok
-    and eax,1 shl 23 - 1
+    and eax,HEAD shl 23 - HEAD
     inc bx
-    shr eax,1
+    shr eax,HEAD
     fp_dword_ok:
     add bx,7Fh
     cmp bx,0FFh
     jge value_out_of_range
-    cmp bx,0
+    cmp bx,NUL
     jg fp_dword_exp_ok
-    or eax,1 shl 23
+    or eax,HEAD shl 23
     mov cx,bx
     neg cx
     inc cx
-    cmp cx,23+1
+    cmp cx,23+HEAD
     ja value_out_of_range
     xor bx,bx
     shr eax,cl
     jnc fp_dword_exp_ok
     inc eax
-    test eax,1 shl 23
+    test eax,HEAD shl 23
     jz fp_dword_exp_ok
-    and eax,1 shl 23 - 1
+    and eax,HEAD shl 23 - HEAD
     inc bx
     fp_dword_exp_ok:
     shl ebx,23
@@ -10114,16 +10139,16 @@ convert_fp_dword:
     or eax,ebx
     mov [edi],eax
     xor eax,eax
-    mov [edi+4],eax
+    mov [edi+TAIL],eax
     add esi, 13
     ret
 
 get_string_value:
-    strings.emit 'get_string_value | 10121'
+    ;strings.emit 'get_string_value | 10121'
     inc esi
     lods dword [esi]
     mov ecx,eax
-    cmp ecx,8
+    cmp ecx,RECTIFY
     ja value_out_of_range
     mov edx,edi
     xor eax,eax
@@ -10133,14 +10158,14 @@ get_string_value:
     rep movs u8 [edi],[esi]
     mov edi,edx
     inc esi
-    and u16 [edi+8],0
-    and u16 [edi+12],0
+    and u16 [edi+RECTIFY],NUL
+    and u16 [edi+12],NUL
     ret
 
 get_byte_value:
-    strings.emit 'get_byte_value | 10141'
-    mov [value_size],1
-    or [operand_flags],1
+    ;strings.emit 'get_byte_value | 10141'
+    mov [value_size],HEAD
+    or [operand_flags],HEAD
     call calculate_value
     or al,al
     jz check_byte_value
@@ -10148,17 +10173,17 @@ get_byte_value:
 
     check_byte_value:
     mov eax,[edi]
-    mov edx,[edi+4]
-    cmp u8 [edi+13],0
+    mov edx,[edi+TAIL]
+    cmp u8 [edi+13],NUL
     je byte_positive
-    cmp edx,-1
+    cmp edx,-HEAD
     jne range_exceeded
     cmp eax,-100h
     jb range_exceeded
     ret
 
 byte_positive:
-    strings.emit 'byte_positive | 10161'
+    ;strings.emit 'byte_positive | 10161'
     test edx,edx
     jnz range_exceeded
     cmp eax,100h
@@ -10166,22 +10191,22 @@ byte_positive:
     ret
 
 range_exceeded:
-    strings.emit 'range_exceeded | 10168'
+    ;strings.emit 'range_exceeded | 10168'
     xor eax,eax
     xor edx,edx
     recoverable_overflow:
-    cmp [error_line],0
+    cmp [error_line],NUL
     ;jne ignore_overflow
     jne return_ok
     push u64[current_line]
     pop u64[error_line]
     mov [error],value_out_of_range
-    or [value_undefined],-1
+    or [value_undefined],-HEAD
     ret
 
 recoverable_misuse:
-    strings.emit 'recoverable_misuse | 10181'
-    cmp [error_line],0
+    ;strings.emit 'recoverable_misuse | 10181'
+    cmp [error_line],NUL
     ;jne ignore_misuse
     jne return_ok
     push u64[current_line]
@@ -10190,27 +10215,27 @@ recoverable_misuse:
     ret
 
 get_word_value:
-    strings.emit 'get_word_value | 10192'
-    mov [value_size],2
-    or [operand_flags],1
+    ;strings.emit 'get_word_value | 10192'
+    mov [value_size],TEXT
+    or [operand_flags],HEAD
     call calculate_value
-    cmp al,2
+    cmp al,TEXT
     jb check_word_value
     call recoverable_misuse
 
     check_word_value:
     mov eax,[edi]
-    mov edx,[edi+4]
-    cmp u8 [edi+13],0
+    mov edx,[edi+TAIL]
+    cmp u8 [edi+13],NUL
     je word_positive
-    cmp edx,-1
+    cmp edx,-HEAD
     jne range_exceeded
     cmp eax,-10000h
     jb range_exceeded
     ret
 
 word_positive:
-    strings.emit 'word_positive | 10212'
+    ;strings.emit 'word_positive | 10212'
     test edx,edx
     jnz range_exceeded
     cmp eax,10000h
@@ -10218,16 +10243,16 @@ word_positive:
     ret
 
 get_dword_value:
-    strings.emit 'get_dword_value | 10220'
-    mov [value_size],4
-    or [operand_flags],1
+    ;strings.emit 'get_dword_value | 10220'
+    mov [value_size],TAIL
+    or [operand_flags],HEAD
     call calculate_value
-    cmp al,4
+    cmp al,TAIL
     jne check_dword_value
-    mov [value_type],2
+    mov [value_type],TEXT
     mov eax,[edi]
     cdq
-    cmp edx,[edi+4]
+    cmp edx,[edi+TAIL]
     jne range_exceeded
     mov ecx,edx
     shr ecx,31
@@ -10236,82 +10261,82 @@ get_dword_value:
     ret
 
 check_dword_value:
-    strings.emit 'check_dword_value | 10239'
+    ;strings.emit 'check_dword_value | 10239'
     mov eax,[edi]
-    mov edx,[edi+4]
-    cmp u8 [edi+13],0
+    mov edx,[edi+TAIL]
+    cmp u8 [edi+13],NUL
     je dword_positive
-    cmp edx,-1
+    cmp edx,-HEAD
     jne range_exceeded
     ret
 
 dword_positive:
-    strings.emit 'dword_positive | 10248'
+    ;strings.emit 'dword_positive | 10248'
     test edx,edx
     jne range_exceeded
     ret
 
 get_pword_value:
-    strings.emit 'get_pword_value | 10255'
-    mov [value_size],6
-    or [operand_flags],1
+    ;strings.emit 'get_pword_value | 10255'
+    mov [value_size],RESULT
+    or [operand_flags],HEAD
     call calculate_value
-    cmp al,4
+    cmp al,TAIL
     jne check_pword_value
     call recoverable_misuse
 
     check_pword_value:
     mov eax,[edi]
-    mov edx,[edi+4]
-    cmp u8 [edi+13],0
+    mov edx,[edi+TAIL]
+    cmp u8 [edi+13],NUL
     je pword_positive
     cmp edx,-10000h
     jb range_exceeded
     ret
 
 pword_positive:
-    strings.emit 'pword_positive | 10272'
+    ;strings.emit 'pword_positive | 10272'
     cmp edx,10000h
     jae range_exceeded
     ret
 
 get_qword_value:
-    strings.emit 'get_qword_value | 10278'
-    mov [value_size],8
-    or [operand_flags],1
+    ;strings.emit 'get_qword_value | 10278'
+    mov [value_size],RECTIFY
+    or [operand_flags],HEAD
     call calculate_value
 
     check_qword_value:
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     ret
 
 get_count_value:
-    strings.emit 'get_count_value | 10289'
-    mov [value_size],8
-    or [operand_flags],1
+    ;strings.emit 'get_count_value | 10289'
+    mov [value_size],RECTIFY
+    or [operand_flags],HEAD
     call calculate_expression
-    cmp u16 [edi+8],0
-    jne invalid_value
-    mov [value_sign],0
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_value
+    mov [value_sign],NUL
     mov al,[edi+12]
     or al,al
     jz check_count_value
     call recoverable_misuse
 
     check_count_value:
-    cmp u8 [edi+13],0
-    jne invalid_count_value
+    cmp u8 [edi+13],NUL
+    jne  invalid_count_value
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     or edx,edx
     jnz invalid_count_value
     ret
 
 invalid_count_value:
-    strings.emit 'invalid_count_value | 10311'
-    cmp [error_line],0
-    jne zero_count
+    ;strings.emit 'invalid_count_value | 10311'
+    cmp [error_line],NUL
+    jne  zero_count
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov [error],invalid_value
@@ -10321,36 +10346,36 @@ invalid_count_value:
     ret
 
 get_value:
-    strings.emit 'get_value | 10323'
-    mov [operand_size],0
+    ;strings.emit 'get_value | 10323'
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     jne invalid_value
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je value_byte
-    cmp al,2
+    cmp al,TEXT
     je value_word
-    cmp al,4
+    cmp al,TAIL
     je value_dword
-    cmp al,6
+    cmp al,RESULT
     je value_pword
-    cmp al,8
+    cmp al,RECTIFY
     je value_qword
     or al,al
     jnz invalid_value
     mov [value_size],al
     call calculate_value
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     ret
 
 calculate_value:
-    strings.emit 'calculate_value | 10349'
+    ;strings.emit 'calculate_value | 10349'
     call calculate_expression
-    cmp u16 [edi+8],0
-    jne invalid_value
+    cmp u16 [edi+RECTIFY],NUL
+    jne  invalid_value
     mov eax,[edi+16]
     mov u64[symbol_identifier],_eax
     mov al,[edi+13]
@@ -10360,28 +10385,28 @@ calculate_value:
     ret
 
 value_qword:
-    strings.emit 'value_qword | 10362'
+    ;strings.emit 'value_qword | 10362'
     call get_qword_value
     truncated_value:
-    mov [value_sign],0
+    mov [value_sign],NUL
     ret
 
 value_pword:
-    strings.emit 'value_pword | 10369'
+    ;strings.emit 'value_pword | 10369'
     call get_pword_value
     movzx edx,dx
     jmp truncated_value
     ret
 
 value_dword:
-    strings.emit 'value_dword | 10376'
+    ;strings.emit 'value_dword | 10376'
     call get_dword_value
     xor edx,edx
     jmp truncated_value
     ret
 
 value_word:
-    strings.emit 'value_word | 10383'
+    ;strings.emit 'value_word | 10383'
     call get_word_value
     xor edx,edx
     movzx eax,ax
@@ -10389,7 +10414,7 @@ value_word:
     ret
 
 value_byte:
-    strings.emit 'value_byte | 10390'
+    ;strings.emit 'value_byte | 10390'
     call get_byte_value
     xor edx,edx
     movzx eax,al
@@ -10397,34 +10422,34 @@ value_byte:
     ret
 
 get_address_word_value:
-    strings.emit 'get_address_word_value | 10399'
-    mov [address_size],2
-    mov [value_size],2
-    mov [free_address_range],0
+    ;strings.emit 'get_address_word_value | 10399'
+    mov [address_size],TEXT
+    mov [value_size],TEXT
+    mov [free_address_range],NUL
     jmp calculate_address
     ret
 
 get_address_dword_value:
-    strings.emit 'get_address_dword_value | 10407'
-    mov [address_size],4
-    mov [value_size],4
-    mov [free_address_range],0
+    ;strings.emit 'get_address_dword_value | 10407'
+    mov [address_size],TAIL
+    mov [value_size],TAIL
+    mov [free_address_range],NUL
     jmp calculate_address
     ret
 
 get_address_qword_value:
-    strings.emit 'get_address_qword_value | 10415'
-    mov [address_size],8
-    mov [value_size],8
-    mov [free_address_range],0
+    ;strings.emit 'get_address_qword_value | 10415'
+    mov [address_size],RECTIFY
+    mov [value_size],RECTIFY
+    mov [free_address_range],NUL
     jmp calculate_address
     ret
 
 get_address_value:
-    strings.emit 'get_address_value | 10423'
-    mov [address_size],0
-    mov [value_size],8
-    or [free_address_range],-1
+    ;strings.emit 'get_address_value | 10423'
+    mov [address_size],NUL
+    mov [value_size],RECTIFY
+    or [free_address_range],-HEAD
 
     calculate_address:
     cmp u8 [esi],'.'
@@ -10436,33 +10461,33 @@ get_address_value:
     mov [address_sign],al
     mov al,[edi+12]
     mov [value_type],al
-    cmp al,0
+    cmp al,NUL
     je address_size_ok
     jg get_address_symbol_size
     neg al
 
     get_address_symbol_size:
-    cmp al,6
+    cmp al,RESULT
     je special_address_type_32bit
-    cmp al,5
+    cmp al,QUERY
     je special_address_type_32bit
     ja invalid_address_type
-    test al,1
+    test al,HEAD
     jnz invalid_address_type
-    shl al,5
+    shl al,QUERY
     jmp address_symbol_ok
     ret
 
 invalid_address_type:
-    strings.emit 'invalid_address_type | 10456'
+    ;strings.emit 'invalid_address_type | 10456'
     call recoverable_misuse
     special_address_type_32bit:
-    mov al,40h
+    mov al,AMP
 
     address_symbol_ok:
     mov ah,[address_size]
     or [address_size],al
-    shr al,4
+    shr al,TAIL
     or ah,ah
     jz address_size_ok
     cmp al,ah
@@ -10473,17 +10498,17 @@ invalid_address_type:
     jne address_sizes_do_not_agree
 
     address_sizes_mixed:
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jne address_sizes_mixed_type_ok
-    mov [value_type],2
+    mov [value_type],TEXT
 
     address_sizes_mixed_type_ok:
     mov eax,[edi]
     cdq
-    cmp edx,[edi+4]
+    cmp edx,[edi+TAIL]
     je address_size_ok
-    cmp [error_line],0
-    jne address_size_ok
+    cmp [error_line],NUL
+    jne  address_size_ok
     call recoverable_overflow
 
     address_size_ok:
@@ -10492,17 +10517,17 @@ invalid_address_type:
     mov cl,[value_type]
     shl ecx,16
     mov ch,[address_size]
-    cmp u16 [edi+8],0
+    cmp u16 [edi+RECTIFY],NUL
     je check_immediate_address
-    mov al,[edi+8]
+    mov al,[edi+RECTIFY]
     mov dl,[edi+10]
     call get_address_register
     mov al,[edi+9]
     mov dl,[edi+11]
     call get_address_register
     mov ax,bx
-    shr ah,4
-    shr al,4
+    shr ah,TAIL
+    shr al,TAIL
     or bh,bh
     jz check_address_registers
     or bl,bl
@@ -10514,36 +10539,36 @@ invalid_address_type:
     or al,ah
     cmp al,0Ch
     jae check_vsib
-    cmp al,6
+    cmp al,RESULT
     je check_vsib
-    cmp al,7
+    cmp al,NOTIFY
     je check_vsib
     mov ah,[address_size]
-    and ah,0Fh
+    and ah,SHIFT
     jz address_registers_sizes_ok
     cmp al,ah
     jne invalid_address
 
     address_registers_sizes_ok:
-    cmp al,4
+    cmp al,TAIL
     je sib_allowed
-    cmp al,8
+    cmp al,RECTIFY
     je sib_allowed
-    cmp al,9
+    cmp al,HT
     je check_ip_relative_address
-    cmp cl,1
+    cmp cl,HEAD
     ja invalid_address
-    cmp [free_address_range],0
-    jne check_qword_value
+    cmp [free_address_range],NUL
+    jne  check_qword_value
     jmp check_word_value
     ret
 
 address_sizes_do_not_match:
-    strings.emit 'address_sizes_do_not_match | 10540'
-    cmp al,0Fh
+    ;strings.emit 'address_sizes_do_not_match | 10540'
+    cmp al,SHIFT
     jne invalid_address
     mov al,bh
-    and al,0Fh
+    and al,SHIFT
     cmp al,ah
     jne invalid_address
 
@@ -10554,28 +10579,28 @@ address_sizes_do_not_match:
     je check_rip_relative_address
     cmp bh,94h
     jne invalid_address
-    cmp [free_address_range],0
+    cmp [free_address_range],NUL
     je check_dword_value
     mov eax,[edi]
-    mov edx,[edi+4]
+    mov edx,[edi+TAIL]
     ret
 
 check_rip_relative_address:
-    strings.emit 'check_rip_relative_address | 10563'
+    ;strings.emit 'check_rip_relative_address | 10563'
     mov eax,[edi]
     cdq
-    cmp edx,[edi+4]
+    cmp edx,[edi+TAIL]
     jne range_exceeded
     cmp dl,[edi+13]
     jne range_exceeded
     ret
 
 get_address_register:
-    strings.emit 'get_address_register | 10573'
+    ;strings.emit 'get_address_register | 10573'
     or al,al
     ;jz address_register_ok
     jz return_ok
-    cmp dl,1
+    cmp dl,HEAD
     jne scaled_register
     or bh,bh
     jnz scaled_register
@@ -10583,7 +10608,7 @@ get_address_register:
     ret
 
 scaled_register:
-    strings.emit 'scaled_register | 10585'
+    ;strings.emit 'scaled_register | 10585'
     or bl,bl
     jnz invalid_address
     mov bl,al
@@ -10593,47 +10618,47 @@ scaled_register:
     ret
 
 sib_allowed:
-    strings.emit 'sib_allowed | 10594'
+    ;strings.emit 'sib_allowed | 10594'
     or bh,bh
     jnz check_index_with_base
-    cmp cl,3
+    cmp cl,TXT
     je special_index_scale
-    cmp cl,5
+    cmp cl,QUERY
     je special_index_scale
-    cmp cl,9
+    cmp cl,HT
     je special_index_scale
-    cmp cl,2
+    cmp cl,TEXT
     jne check_index_scale
     cmp bl,45h
     jne special_index_scale
     cmp [code_type],64
     je special_index_scale
-    cmp [segment_register],4
+    cmp [segment_register],TAIL
     jne special_index_scale
-    cmp [value_type],0
-    jne check_index_scale
+    cmp [value_type],NUL
+    jne  check_index_scale
     mov al,[edi]
     cbw
     cwde
     cmp eax,[edi]
     jne check_index_scale
     cdq
-    cmp edx,[edi+4]
+    cmp edx,[edi+TAIL]
     jne check_immediate_address
 
     special_index_scale:
     mov bh,bl
     dec cl
     check_immediate_address:
-    cmp [free_address_range],0
-    jne check_qword_value
+    cmp [free_address_range],NUL
+    jne  check_qword_value
     mov al,[address_size]
-    and al,0Fh
-    cmp al,2
+    and al,SHIFT
+    cmp al,TEXT
     je check_word_value
-    cmp al,4
+    cmp al,TAIL
     je check_dword_value
-    cmp al,8
+    cmp al,RECTIFY
     je check_qword_value
     or al,al
     jnz invalid_value
@@ -10643,8 +10668,8 @@ sib_allowed:
     ret
 
 check_index_with_base:
-    strings.emit 'check_index_with_base | 10645'
-    cmp cl,1
+    ;strings.emit 'check_index_with_base | 10645'
+    cmp cl,HEAD
     jne check_index_scale
     cmp bl,44h
     je swap_base_with_index
@@ -10654,16 +10679,16 @@ check_index_with_base:
     je check_for_rbp_base
     cmp bl,45h
     jne check_for_ebp_base
-    cmp [segment_register],3
+    cmp [segment_register],TXT
     je swap_base_with_index
     jmp check_immediate_address
     ret
 
 check_for_ebp_base:
-    strings.emit 'check_for_ebp_base | 10662'
+    ;strings.emit 'check_for_ebp_base | 10662'
     cmp bh,45h
     jne check_immediate_address
-    cmp [segment_register],4
+    cmp [segment_register],TAIL
     jne check_immediate_address
 
     swap_base_with_index:
@@ -10672,7 +10697,7 @@ check_for_ebp_base:
     ret
 
 check_for_rbp_base:
-    strings.emit 'check_for_rbp_base | 10674'
+    ;strings.emit 'check_for_rbp_base | 10674'
     cmp bh,45h
     je swap_base_with_index
     cmp bh,85h
@@ -10681,7 +10706,7 @@ check_for_rbp_base:
     ret
 
 check_index_scale:
-    strings.emit 'check_index_scale | 10684'
+    ;strings.emit 'check_index_scale | 10684'
     test cl,not 1111b
     jnz invalid_address
     mov al,cl
@@ -10692,24 +10717,24 @@ check_index_scale:
     ret
 
 check_vsib:
-    strings.emit 'check_vsib | 10694'
+    ;strings.emit 'check_vsib | 10694'
     xor ah,ah
 
     check_vsib_base:
     test bh,bh
     jz check_vsib_index
     mov al,bh
-    shr al,4
-    cmp al,4
+    shr al,TAIL
+    cmp al,TAIL
     je check_vsib_base_size
     cmp [code_type],64
     jne swap_vsib_registers
-    cmp al,8
+    cmp al,RECTIFY
     jne swap_vsib_registers
 
     check_vsib_base_size:
     mov ah,[address_size]
-    and ah,0Fh
+    and ah,SHIFT
     jz check_vsib_index
     cmp al,ah
     jne invalid_address
@@ -10725,19 +10750,19 @@ check_vsib:
     ret
 
 swap_vsib_registers:
-    strings.emit 'swap_vsib_registers | 10726'
-    xor ah,-1
+    ;strings.emit 'swap_vsib_registers | 10726'
+    xor ah,-HEAD
     jz invalid_address
-    cmp cl,1
+    cmp cl,HEAD
     ja invalid_address
     xchg bl,bh
-    mov cl,1
+    mov cl,HEAD
     jmp check_vsib_base
     ret
 
 calculate_relative_offset:
-    strings.emit 'calculate_relative_offset | 10738'
-    cmp [value_undefined],0
+    ;strings.emit 'calculate_relative_offset | 10738'
+    cmp [value_undefined],NUL
     ;jne relative_offset_ok
     jne return_ok
     test bh,bh
@@ -10750,22 +10775,22 @@ calculate_relative_offset:
     jne invalid_value
 
     origin_registers_ok:
-    cmp cx,[ds:ebp+10h+2]
+    cmp cx,[ds:ebp+10h+TEXT]
     jne invalid_value
     mov bl,[address_sign]
     add eax,[ds:ebp]
-    adc edx,[ds:ebp+4]
-    adc bl,[ds:ebp+8]
+    adc edx,[ds:ebp+TAIL]
+    adc bl,[ds:ebp+RECTIFY]
     sub eax,edi
-    sbb edx,0
-    sbb bl,0
+    sbb edx,NUL
+    sbb bl,NUL
     mov [value_sign],bl
     mov bl,[value_type]
     mov _ecx,u64[address_symbol]
     mov u64[symbol_identifier],_ecx
-    test bl,1
+    test bl,HEAD
     jnz relative_offset_unallowed
-    cmp bl,6
+    cmp bl,RESULT
     je plt_relative_offset
     mov bh,[ds:ebp+9]
     cmp bl,bh
@@ -10777,28 +10802,28 @@ calculate_relative_offset:
     call recoverable_misuse
 
     set_relative_offset_type:
-    cmp [value_type],0
+    cmp [value_type],NUL
     ;je relative_offset_ok
     je return_ok
-    mov [value_type],0
-    cmp ecx,[ds:ebp+14h]
+    mov [value_type],NUL
+    cmp  ecx,[ds:ebp+14h]
     ;je relative_offset_ok
     je return_ok
-    mov [value_type],3
+    mov [value_type],TXT
     ret
 
 plt_relative_offset:
-    strings.emit 'plt_relative_offset | 10790'
-    mov [value_type],7
-    cmp u8 [ds:ebp+9],2
+    ;strings.emit 'plt_relative_offset | 10790'
+    mov [value_type],NOTIFY
+    cmp u8 [ds:ebp+9],TEXT
     ;je relative_offset_ok
     je return_ok
-    cmp u8 [ds:ebp+9],4
+    cmp u8 [ds:ebp+9],TAIL
     jne recoverable_misuse
     ret
 
 calculate_logical_expression:
-    strings.emit 'calculate_logical_expression | 10800'
+    ;strings.emit 'calculate_logical_expression | 10800'
     xor al,al
     calculate_embedded_logical_expression:
     mov [logical_value_wrapping],al
@@ -10812,7 +10837,7 @@ calculate_logical_expression:
     ret
 
 logical_or:
-    strings.emit 'logical_or | 10815'
+    ;strings.emit 'logical_or | 10815'
     inc esi
     or al,al
     jnz logical_value_already_determined
@@ -10824,7 +10849,7 @@ logical_or:
     ret
 
 logical_and:
-    strings.emit 'logical_and | 10826'
+    ;strings.emit 'logical_and | 10826'
     inc esi
     or al,al
     jz logical_value_already_determined
@@ -10836,7 +10861,7 @@ logical_and:
     ret
 
 logical_value_already_determined:
-    strings.emit 'logical_value_already_determined | 10838'
+    ;strings.emit 'logical_value_already_determined | 10838'
     push _eax
     call skip_logical_value
     jc invalid_expression
@@ -10845,19 +10870,19 @@ logical_value_already_determined:
     ret
 
 get_value_for_comparison:
-    strings.emit 'get_value_for_comparison | 10847'
-    mov [value_size],8
-    or [operand_flags],1
+    ;strings.emit 'get_value_for_comparison | 10847'
+    mov [value_size],RECTIFY
+    or [operand_flags],HEAD
     lods u8 [esi]
     call calculate_expression
-    cmp u8 [edi+8],0
-    jne first_register_size_ok
-    mov u8 [edi+10],0
+    cmp u8 [edi+RECTIFY],NUL
+    jne  first_register_size_ok
+    mov u8 [edi+10],NUL
 
     first_register_size_ok:
-    cmp u8 [edi+9],0
-    jne second_register_size_ok
-    mov u8 [edi+11],0
+    cmp u8 [edi+9],NUL
+    jne  second_register_size_ok
+    mov u8 [edi+11],NUL
 
     second_register_size_ok:
     mov eax,[edi+16]
@@ -10866,23 +10891,23 @@ get_value_for_comparison:
     mov [value_sign],al
     mov bl,[edi+12]
     mov eax,[edi]
-    mov edx,[edi+4]
-    mov ecx,[edi+8]
+    mov edx,[edi+TAIL]
+    mov ecx,[edi+RECTIFY]
     ret
 
 get_logical_value:
-    strings.emit 'get_logical_value | 10873'
+    ;strings.emit 'get_logical_value | 10873'
     xor al,al
     check_for_negation:
     cmp u8 [esi],'~'
     jne negation_ok
     inc esi
-    xor al,-1
+    xor al,-HEAD
     jmp check_for_negation
     ret
 
 negation_ok:
-    strings.emit 'negation_ok | 10884'
+    ;strings.emit 'negation_ok | 10884'
     push _eax
     mov al,[esi]
     cmp al,91h
@@ -10905,7 +10930,7 @@ negation_ok:
     mov al,[esi]
     or al,al
     jz logical_number
-    cmp al,0Fh
+    cmp al,SHIFT
     je logical_number
     cmp al,92h
     je logical_number
@@ -10918,7 +10943,7 @@ negation_ok:
     cmp u8 [esi],'('
     jne invalid_value
     call get_value_for_comparison
-    cmp bl,[_esp+8]
+    cmp bl,[_esp+RECTIFY]
     jne values_not_relative
     or bl,bl
     jz check_values_registers
@@ -10943,7 +10968,7 @@ negation_ok:
     ret
 
 invalid_comparison:
-    strings.emit 'invalid_comparison | 10945'
+    ;strings.emit 'invalid_comparison | 10945'
     call recoverable_misuse
 
     values_relative:
@@ -10975,7 +11000,7 @@ invalid_comparison:
     ret
 
 check_equal:
-    strings.emit 'check_equal | 10977'
+    ;strings.emit 'check_equal | 10977'
     cmp bh,[value_sign]
     jne return_false
     cmp eax,ebp
@@ -10986,7 +11011,7 @@ check_equal:
     ret
 
 check_greater:
-    strings.emit 'check_greater | 10988'
+    ;strings.emit 'check_greater | 10988'
     cmp bh,[value_sign]
     jg return_true
     jl return_false
@@ -11041,7 +11066,7 @@ check_greater:
     ret
 
 logical_number:
-    strings.emit 'logical_number | 11044'
+    ;strings.emit 'logical_number | 11044'
     pop _ecx _ebx _eax _edx _eax
     or bl,bl
     jnz invalid_logical_number
@@ -11060,8 +11085,8 @@ logical_number:
     ret
 
 check_for_defined:
-    strings.emit 'check_for_defined | 11063'
-    or bl,-1
+    ;strings.emit 'check_for_defined | 11063'
+    or bl,-HEAD
     lods u16 [esi]
     cmp ah,'('
     jne invalid_expression
@@ -11076,9 +11101,9 @@ check_for_defined:
     je expression_checked
     cmp al,'!'
     je invalid_expression
-    cmp al,0Fh
+    cmp al,SHIFT
     je check_expression
-    cmp al,10h
+    cmp al,DELINK
     je defined_register
     cmp al,11h
     je check_if_symbol_defined
@@ -11090,19 +11115,19 @@ check_for_defined:
     ret
 
 defined_register:
-    strings.emit 'defined_register | 11092'
+    ;strings.emit 'defined_register | 11092'
     inc esi
     jmp check_expression
     ret
 
 defined_fp_value:
-    strings.emit 'defined_fp_value | 11098'
-    add esi, 12+1
+    ;strings.emit 'defined_fp_value | 11098'
+    add esi, 12+HEAD
     jmp expression_checked
     ret
 
 defined_string:
-    strings.emit 'defined_string | 11104'
+    ;strings.emit 'defined_string | 11104'
     lods dword [esi]
     add esi, eax
     inc esi
@@ -11110,29 +11135,29 @@ defined_string:
     ret
 
 check_if_symbol_defined:
-    strings.emit 'check_if_symbol_defined | 11112'
+    ;strings.emit 'check_if_symbol_defined | 11112'
     lods dword [esi]
-    cmp eax,-1
+    cmp eax,-HEAD
     je invalid_expression
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb check_expression
     je reserved_word_used_as_symbol
-    test u8 [eax+8],4
+    test u8 [eax+RECTIFY],TAIL
     jnz no_prediction
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jz symbol_predicted_undefined
     mov cx,[current_pass]
     sub cx,[eax+16]
     jz check_expression
-    cmp cx,1
+    cmp cx,HEAD
     ja symbol_predicted_undefined
-    or u8 [eax+8],40h+80h
+    or u8 [eax+RECTIFY],AMP+80h
     jmp check_expression
     ret
 
 no_prediction:
-    strings.emit 'no_prediction | 11133'
-    test u8 [eax+8],1
+    ;strings.emit 'no_prediction | 11133'
+    test u8 [eax+RECTIFY],HEAD
     jz symbol_undefined
     mov cx,[current_pass]
     sub cx,[eax+16]
@@ -11141,9 +11166,9 @@ no_prediction:
     ret
 
 symbol_predicted_undefined:
-    strings.emit 'symbol_predicted_undefined | 11144'
-    or u8 [eax+8],40h
-    and u8 [eax+8],not 80h
+    ;strings.emit 'symbol_predicted_undefined | 11144'
+    or u8 [eax+RECTIFY],AMP
+    and u8 [eax+RECTIFY],not 80h
 
     symbol_undefined:
     xor bl,bl
@@ -11151,41 +11176,41 @@ symbol_predicted_undefined:
     ret
 
 expression_checked:
-    strings.emit 'expression_checked | 11153'
+    ;strings.emit 'expression_checked | 11153'
     mov al,bl
     jmp logical_value_ok
     ret
 
 check_for_used:
-    strings.emit 'check_for_used | 11159'
+    ;strings.emit 'check_for_used | 11159'
     lods u16 [esi]
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_expression
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     inc esi
-    test u8 [eax+8],8
+    test u8 [eax+RECTIFY],RECTIFY
     jz not_used
     mov cx,[current_pass]
     sub cx,[eax+18]
     jz return_true
-    cmp cx,1
+    cmp cx,HEAD
     ja not_used
-    or u8 [eax+8],10h+20h
+    or u8 [eax+RECTIFY],DELINK+SPACE
     jmp return_true
     ret
 
 not_used:
-    strings.emit 'not_used | 11180'
-    or u8 [eax+8],10h
-    and u8 [eax+8],not 20h
+    ;strings.emit 'not_used | 11180'
+    or u8 [eax+RECTIFY],DELINK
+    and u8 [eax+RECTIFY],not SPACE
     jmp return_false
     ret
 
 given_false:
-    strings.emit 'given_false | 11187'
+    ;strings.emit 'given_false | 11187'
     inc esi
 
     return_false:
@@ -11194,16 +11219,16 @@ given_false:
     ret
 
 given_true:
-    strings.emit 'given_true | 11196'
+    ;strings.emit 'given_true | 11196'
     inc esi
 
     return_true:
-    or al,-1
+    or al,-HEAD
     jmp logical_value_ok
     ret
 
 logical_expression:
-    strings.emit 'logical_expression | 11205'
+    ;strings.emit 'logical_expression | 11205'
     lods u8 [esi]
     mov dl,[logical_value_wrapping]
     push _edx
@@ -11222,21 +11247,21 @@ logical_expression:
     ret
 
 skip_symbol:
-    strings.emit 'skip_symbol | 11224'
+    ;strings.emit 'skip_symbol | 11224'
     lods u8 [esi]
     or al,al
     jz nothing_to_skip
-    cmp al,0Fh
+    cmp al,SHIFT
     je nothing_to_skip
-    cmp al,1
+    cmp al,HEAD
     je skip_instruction
-    cmp al,2
+    cmp al,TEXT
     je skip_label
-    cmp al,3
+    cmp al,TXT
     je skip_label
-    cmp al,4
+    cmp al,TAIL
     je skip_special_label
-    cmp al,20h
+    cmp al,SPACE
     jb skip_assembler_symbol
     cmp al,'('
     je skip_expression
@@ -11246,7 +11271,7 @@ skip_symbol:
     ret
 
 skip_label:
-    strings.emit 'skip_label | 11248'
+    ;strings.emit 'skip_label | 11248'
     add esi, 2
 
     skip_instruction:
@@ -11258,13 +11283,13 @@ skip_label:
     ret
 
 skip_special_label:
-    strings.emit 'skip_special_label | 11260'
+    ;strings.emit 'skip_special_label | 11260'
     add esi, 4
     jmp drop_then_return
     ret
 
 skip_address:
-    strings.emit 'skip_address | 11266'
+    ;strings.emit 'skip_address | 11266'
     mov al,[esi]
     and al,11110000b
     cmp al,60h
@@ -11276,7 +11301,7 @@ skip_address:
     ret
 
 skip_expression:
-    strings.emit 'skip_expression | 11278'
+    ;strings.emit 'skip_expression | 11278'
     lods u8 [esi]
     or al,al
     jz skip_string
@@ -11290,9 +11315,9 @@ skip_expression:
     je drop_then_return
     cmp al,'!'
     je skip_expression
-    cmp al,0Fh
+    cmp al,SHIFT
     je skip_expression
-    cmp al,10h
+    cmp al,DELINK
     je skip_register
     cmp al,11h
     je skip_label_value
@@ -11304,7 +11329,7 @@ skip_expression:
     ret
 
 skip_label_value:
-    strings.emit 'skip_label_value | 11306'
+    ;strings.emit 'skip_label_value | 11306'
     add esi, 3
 
     skip_register:
@@ -11313,14 +11338,14 @@ skip_label_value:
     ret
 
 skip_fp_value:
-    strings.emit 'skip_fp_value | 11315'
+    ;strings.emit 'skip_fp_value | 11315'
     add esi, 12
     ;jmp skip_done
     jmp drop_then_return
     ret
 
 skip_string:
-    strings.emit 'skip_string | 11322'
+    ;strings.emit 'skip_string | 11322'
     lods dword [esi]
     add esi, eax
     inc esi
@@ -11329,13 +11354,13 @@ skip_string:
     ret
 
 nothing_to_skip:
-    strings.emit 'nothing_to_skip | 11331'
+    ;strings.emit 'nothing_to_skip | 11331'
     dec esi
     stc
     ret
 
 expand_path:
-    strings.emit 'expand_path | 11337'
+    ;strings.emit 'expand_path | 11337'
     lods u8 [esi]
     cmp al,'%'
     je environment_variable
@@ -11347,7 +11372,7 @@ expand_path:
     ret
 
 environment_variable:
-    strings.emit 'environment_variable | 11349'
+    ;strings.emit 'environment_variable | 11349'
     mov ebx,esi
 
     find_variable_end:
@@ -11356,17 +11381,17 @@ environment_variable:
     jz not_environment_variable
     cmp al,'%'
     jne find_variable_end
-    mov u8 [esi-1],0
-    push _esi
+    mov u8 [esi-HEAD],NUL
+    push  _esi
     mov esi, ebx
     call get_environment_variable
     pop _esi
-    mov u8 [esi-1],'%'
+    mov u8 [esi-HEAD],'%'
     jmp expand_path
     ret
 
 not_environment_variable:
-    strings.emit 'not_environment_variable | 11367'
+    ;strings.emit 'not_environment_variable | 11367'
     mov al,'%'
     stos u8 [edi]
     mov esi, ebx
@@ -11374,7 +11399,7 @@ not_environment_variable:
     ret
 
 get_include_directory:
-    strings.emit 'get_include_directory | 11376'
+    ;strings.emit 'get_include_directory | 11376'
     lods u8 [esi]
     cmp al,';'
     je include_directory_ok
@@ -11385,10 +11410,10 @@ get_include_directory:
     dec edi
 
     include_directory_ok:
-    cmp u8 [edi-1],'/'
+    cmp u8 [edi-HEAD],'/'
     ;je path_separator_ok
     je return_ok
-    cmp u8 [edi-1],'\' ; '
+    cmp u8 [edi-HEAD],'\' ; '
     ;je path_separator_ok
     je return_ok
     mov al,'/'
@@ -11396,7 +11421,7 @@ get_include_directory:
     ret
 
 assembler:
-    strings.emit 'assembler | 11398'
+    ;strings.emit 'assembler | 11398'
     xor eax,eax
     mov [stub_size],eax
     mov [current_pass],ax
@@ -11415,7 +11440,7 @@ assembler:
     mov edi,[code_start]
     xor eax,eax
     mov dword [adjustment],eax
-    mov dword [adjustment+4],eax
+    mov dword [adjustment+TAIL],eax
     mov [addressing_space],eax
     mov u64[error_line],_eax
     mov u64[counter],_eax
@@ -11437,90 +11462,90 @@ assembler:
     cmp eax,[structures_buffer]
     je pass_done
     sub eax,18h
-    mov eax,[eax+4]
+    mov eax,[eax+TAIL]
     mov u64[current_line],_eax
     jmp missing_end_directive
     ret
 
 pass_done:
-    strings.emit 'pass_done | 11445'
+    ;strings.emit 'pass_done | 11445'
     call close_pass
     mov eax,[labels_list]
 
     check_symbols:
     cmp _eax,u64[memory_end]
     jae symbols_checked
-    test u8 [eax+8],8
+    test u8 [eax+RECTIFY],RECTIFY
     jz symbol_defined_ok
     mov cx,[current_pass]
     cmp cx,[eax+18]
     jne symbol_defined_ok
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jz symbol_defined_ok
     sub cx,[eax+16]
-    cmp cx,1
+    cmp cx,HEAD
     jne symbol_defined_ok
-    and u8 [eax+8],not 1
-    or [next_pass_needed],-1
+    and u8 [eax+RECTIFY],not HEAD
+    or [next_pass_needed],-HEAD
 
     symbol_defined_ok:
-    test u8 [eax+8],10h
+    test u8 [eax+RECTIFY],DELINK
     jz use_prediction_ok
     mov cx,[current_pass]
-    and u8 [eax+8],not 10h
-    test u8 [eax+8],20h
+    and u8 [eax+RECTIFY],not 10h
+    test u8 [eax+RECTIFY],SPACE
     jnz check_use_prediction
     cmp cx,[eax+18]
     jne use_prediction_ok
-    test u8 [eax+8],8
+    test u8 [eax+RECTIFY],RECTIFY
     jz use_prediction_ok
     jmp use_misprediction
     ret
 
 check_use_prediction:
-    strings.emit 'check_use_prediction | 11480'
-    test u8 [eax+8],8
+    ;strings.emit 'check_use_prediction | 11480'
+    test u8 [eax+RECTIFY],RECTIFY
     jz use_misprediction
     cmp cx,[eax+18]
     je use_prediction_ok
 
     use_misprediction:
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
 
     use_prediction_ok:
-    test u8 [eax+8],40h
+    test u8 [eax+RECTIFY],AMP
     jz check_next_symbol
-    and u8 [eax+8],not 40h
-    test u8 [eax+8],4
+    and u8 [eax+RECTIFY],not 40h
+    test u8 [eax+RECTIFY],TAIL
     jnz define_misprediction
     mov cx,[current_pass]
-    test u8 [eax+8],80h
+    test u8 [eax+RECTIFY],80h
     jnz check_define_prediction
     cmp cx,[eax+16]
     jne check_next_symbol
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jz check_next_symbol
     jmp define_misprediction
     ret
 
 check_define_prediction:
-    strings.emit 'check_define_prediction | 11506'
-    test u8 [eax+8],1
+    ;strings.emit 'check_define_prediction | 11506'
+    test u8 [eax+RECTIFY],HEAD
     jz define_misprediction
     cmp cx,[eax+16]
     je check_next_symbol
 
     define_misprediction:
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
     check_next_symbol:
     add eax,LABEL_STRUCTURE_SIZE
     jmp check_symbols
     ret
 
 symbols_checked:
-    strings.emit 'symbols_checked | 11521'
-    cmp [next_pass_needed],0
-    jne next_pass
+    ;strings.emit 'symbols_checked | 11521'
+    cmp [next_pass_needed],NUL
+    jne  next_pass
     mov _eax,u64[error_line]
     or eax,eax
     ;jz assemble_ok
@@ -11531,7 +11556,7 @@ symbols_checked:
     mov eax,[error_info]
     or eax,eax
     jz error_confirmed
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jnz next_pass
 
     error_confirmed:
@@ -11544,7 +11569,7 @@ symbols_checked:
     ret
 
 next_pass:
-    strings.emit 'next_pass | 11546'
+    ;strings.emit 'next_pass | 11546'
     inc [current_pass]
     mov ax,[current_pass]
     cmp ax,[passes_limit]
@@ -11553,11 +11578,11 @@ next_pass:
     ret
 
 create_addressing_space:
-    strings.emit 'create_addressing_space | 11555'
+    ;strings.emit 'create_addressing_space | 11555'
     mov ebx,[addressing_space]
     test ebx,ebx
     jz init_addressing_space
-    test u8 [ebx+0Ah],1
+    test u8 [ebx+0Ah],HEAD
     jnz illegal_instruction
     mov eax,edi
     sub eax,[ebx+18h]
@@ -11565,17 +11590,17 @@ create_addressing_space:
 
     init_addressing_space:
     mov ebx,[tagged_blocks]
-    mov dword [ebx-4],10h
-    mov dword [ebx-8],24h
-    sub ebx,8+24h
+    mov dword [ebx-TAIL],DELINK
+    mov dword [ebx-RECTIFY],24h
+    sub ebx,RECTIFY+24h
     cmp ebx,edi
     jbe out_of_memory
     mov [tagged_blocks],ebx
     mov [addressing_space],ebx
     xor eax,eax
     mov [ebx],edi
-    mov [ebx+4],eax
-    mov [ebx+8],eax
+    mov [ebx+TAIL],eax
+    mov [ebx+RECTIFY],eax
     mov [ebx+10h],eax
     mov [ebx+14h],eax
     mov [ebx+18h],edi
@@ -11584,70 +11609,70 @@ create_addressing_space:
     ret
 
 assemble_line:
-    strings.emit 'assemble_line | 11586'
+    ;strings.emit 'assemble_line | 11586'
     mov eax,[tagged_blocks]
     sub eax,100h
     cmp edi,eax
     ja out_of_memory
     lods u8 [esi]
-    cmp al,1
+    cmp al,HEAD
     je assemble_instruction
     jb source_end
-    cmp al,3
+    cmp al,TXT
     jb define_label
     je define_constant
-    cmp al,4
+    cmp al,TAIL
     je label_addressing_space
-    cmp al,0Fh
+    cmp al,SHIFT
     je new_line
     cmp al,13h
     je code_type_setting
-    cmp al,10h
+    cmp al,DELINK
     jne illegal_instruction
     lods u8 [esi]
     jmp segment_prefix
     ret
 
 code_type_setting:
-    strings.emit 'code_type_setting | 11611'
+    ;strings.emit 'code_type_setting | 11611'
     lods u8 [esi]
     mov [code_type],al
     jmp instruction_assembled
     ret
 
 new_line:
-    strings.emit 'new_line | 11618'
+    ;strings.emit 'new_line | 11618'
     lods dword [esi]
     mov u64[current_line],_eax
-    and [prefix_flags],0
-    cmp [symbols_file],0
+    and [prefix_flags],NUL
+    cmp  [symbols_file],NUL
     je continue_line
-    cmp [next_pass_needed],0
-    jne continue_line
+    cmp [next_pass_needed],NUL
+    jne  continue_line
     mov ebx,[tagged_blocks]
-    mov dword [ebx-4],1
-    mov dword [ebx-8],14h
-    sub ebx,8+14h
+    mov dword [ebx-TAIL],HEAD
+    mov dword [ebx-RECTIFY],14h
+    sub ebx,RECTIFY+14h
     cmp ebx,edi
     jbe out_of_memory
     mov [tagged_blocks],ebx
     mov [ebx],eax
-    mov [ebx+4],edi
+    mov [ebx+TAIL],edi
     mov eax,[addressing_space]
-    mov [ebx+8],eax
+    mov [ebx+RECTIFY],eax
     mov al,[code_type]
     mov [ebx+10h],al
     continue_line:
-    cmp u8 [esi],0Fh
+    cmp u8 [esi],SHIFT
     ;je line_assembled
     je drop_then_return
     jmp assemble_line
     ret
 
 define_label:
-    strings.emit 'define_label | 11647'
+    ;strings.emit 'define_label | 11647'
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     mov ebx,eax
@@ -11658,33 +11683,33 @@ define_label:
     ret
 
 make_label:
-    strings.emit 'make_label | 11660'
+    ;strings.emit 'make_label | 11660'
     mov eax,edi
     xor edx,edx
     xor cl,cl
     mov ebp,[addressing_space]
     sub eax,[ds:ebp]
-    sbb edx,[ds:ebp+4]
-    sbb cl,[ds:ebp+8]
+    sbb edx,[ds:ebp+TAIL]
+    sbb cl,[ds:ebp+RECTIFY]
     jp label_value_ok
     call recoverable_overflow
 
 label_value_ok:
     mov [address_sign],cl
-    test u8 [ds:ebp+0Ah],1
+    test u8 [ds:ebp+0Ah],HEAD
     jnz make_virtual_label
-    or u8 [ebx+9],1
+    or u8 [ebx+9],HEAD
     xchg eax,[ebx]
-    xchg edx,[ebx+4]
+    xchg edx,[ebx+TAIL]
     mov ch,[ebx+9]
-    shr ch,1
-    and ch,1
+    shr ch,HEAD
+    and ch,HEAD
     neg ch
     sub eax,[ebx]
-    sbb edx,[ebx+4]
+    sbb edx,[ebx+TAIL]
     sbb ch,cl
     mov dword [adjustment],eax
-    mov dword [adjustment+4],edx
+    mov dword [adjustment+TAIL],edx
     mov [adjustment_sign],ch
     or al,ch
     or eax,edx
@@ -11693,13 +11718,13 @@ label_value_ok:
     ret
 
 make_virtual_label:
-    strings.emit 'make_virtual_label | 11695'
-    and u8 [ebx+9],not 1
+    ;strings.emit 'make_virtual_label | 11695'
+    and u8 [ebx+9],not HEAD
     cmp eax,[ebx]
     mov [ebx],eax
     setne ah
-    cmp edx,[ebx+4]
-    mov [ebx+4],edx
+    cmp edx,[ebx+TAIL]
+    mov [ebx+TAIL],edx
     setne al
     or ah,al
 
@@ -11740,12 +11765,12 @@ make_virtual_label:
     xchg [ebx+16],cx
     mov _edx,u64[current_line]
     mov [ebx+28],edx
-    and u8 [ebx+8],not 2
-    test u8 [ebx+8],1
+    and u8 [ebx+RECTIFY],not 2
+    test u8 [ebx+RECTIFY],HEAD
     jz new_label
     cmp cx,[ebx+16]
     je symbol_already_defined
-    btr dword [ebx+8],10
+    btr dword [ebx+RECTIFY],10
     jc requalified_label
     inc cx
     sub cx,[ebx+16]
@@ -11753,7 +11778,7 @@ make_virtual_label:
     or ah,al
     ;jz label_made
     jz return_ok
-    test u8 [ebx+8],8
+    test u8 [ebx+RECTIFY],RECTIFY
     ;jz label_made
     jz return_ok
     mov cx,[current_pass]
@@ -11762,37 +11787,37 @@ make_virtual_label:
     jne return_ok
 
     requalified_label:
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
     ret
 
 new_label:
-    strings.emit 'new_label | 11768'
-    or u8 [ebx+8],1
+    ;strings.emit 'new_label | 11768'
+    or u8 [ebx+RECTIFY],HEAD
     ret
 
 define_constant:
-    strings.emit 'define_constant | 11773'
+    ;strings.emit 'define_constant | 11773'
     lods dword [esi]
     inc esi
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     push _eax
-    or [operand_flags],1
+    or [operand_flags],HEAD
     call get_value
     pop _ebx
     xor cl,cl
     mov ch,[value_type]
-    cmp ch,3
+    cmp ch,TXT
     je invalid_use_of_symbol
 
     make_constant:
-    and u8 [ebx+9],not 1
+    and u8 [ebx+9],not HEAD
     cmp eax,[ebx]
     mov [ebx],eax
     setne ah
-    cmp edx,[ebx+4]
-    mov [ebx+4],edx
+    cmp edx,[ebx+TAIL]
+    mov [ebx+TAIL],edx
     setne al
     or ah,al
     mov al,[value_sign]
@@ -11826,93 +11851,93 @@ define_constant:
     xchg [ebx+16],cx
     mov _edx,u64[current_line]
     mov [ebx+28],edx
-    test u8 [ebx+8],1
+    test u8 [ebx+RECTIFY],HEAD
     jz new_constant
     cmp cx,[ebx+16]
     jne redeclare_constant
-    test u8 [ebx+8],2
+    test u8 [ebx+RECTIFY],TEXT
     jz symbol_already_defined
-    or u8 [ebx+8],4
+    or u8 [ebx+RECTIFY],TAIL
     and u8 [ebx+9],not 4
     jmp instruction_assembled
     ret
 
 redeclare_constant:
-    strings.emit 'redeclare_constant | 11840'
-    btr dword [ebx+8],10
+    ;strings.emit 'redeclare_constant | 11840'
+    btr dword [ebx+RECTIFY],10
     jc requalified_constant
     inc cx
     sub cx,[ebx+16]
     setnz al
     or ah,al
     jz instruction_assembled
-    test u8 [ebx+8],4
+    test u8 [ebx+RECTIFY],TAIL
     jnz instruction_assembled
-    test u8 [ebx+8],8
+    test u8 [ebx+RECTIFY],RECTIFY
     jz instruction_assembled
     mov cx,[current_pass]
     cmp cx,[ebx+18]
     jne instruction_assembled
 
     requalified_constant:
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
     jmp instruction_assembled
     ret
 
 new_constant:
-    strings.emit 'new_constant | 11862'
-    or u8 [ebx+8],1+2
+    ;strings.emit 'new_constant | 11862'
+    or u8 [ebx+RECTIFY],HEAD+TEXT
     jmp instruction_assembled
     ret
 
 label_addressing_space:
-    strings.emit 'label_addressing_space | 11868'
+    ;strings.emit 'label_addressing_space | 11868'
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     mov cx,[current_pass]
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jz make_addressing_space_label
     cmp cx,[eax+16]
     je symbol_already_defined
-    test u8 [eax+9],4
+    test u8 [eax+9],TAIL
     jnz make_addressing_space_label
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
 
     make_addressing_space_label:
-    mov dx,[eax+8]
-    and dx,not (2 or 100h)
-    or dx,1 or 4 or 400h
-    mov [eax+8],dx
+    mov dx,[eax+RECTIFY]
+    and dx,not (TEXT or 100h)
+    or dx,HEAD or 4 or 400h
+    mov [eax+RECTIFY],dx
     mov [eax+16],cx
     mov _edx,u64[current_line]
     mov [eax+28],edx
     mov ebx,[addressing_space]
     mov [eax],ebx
-    or u8 [ebx+0Ah],2
+    or u8 [ebx+0Ah],TEXT
     jmp continue_line
     ret
 
 assemble_instruction:
-    strings.emit 'assemble_instruction | 11897'
-    and dword [operand_size],0
-    and dword [opcode_prefix],0
+    ;strings.emit 'assemble_instruction | 11897'
+    and dword [operand_size],NUL
+    and dword [opcode_prefix],NUL
     call instruction_handler
 
     instruction_handler:
     movzx ebx, u16 [esi]
-    mov al,[esi+2]
-    add esi, 3
+    mov al,[esi+TEXT]
+    add esi,TXT
     add [_esp],_ebx
     ret
 
 instruction_assembled:
-    strings.emit 'instruction_assembled | 11910'
-    test [prefix_flags],not 1
+    ;strings.emit 'instruction_assembled | 11910'
+    test [prefix_flags],not HEAD
     jnz illegal_instruction
     mov al,[esi]
-    cmp al,0Fh
+    cmp al,SHIFT
     ;je line_assembled
     je drop_then_return
     or al,al
@@ -11921,13 +11946,13 @@ instruction_assembled:
     ret
 
 source_end:
-    strings.emit 'source_end | 11923'
+    ;strings.emit 'source_end | 11923'
     dec esi
     stc
     ret
 
 org_directive:
-    strings.emit 'org_directive | 11929'
+    ;strings.emit 'org_directive | 11929'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -11935,60 +11960,60 @@ org_directive:
     je invalid_value
     call get_qword_value
     mov cl,[value_type]
-    test cl,1
+    test cl,HEAD
     jnz invalid_use_of_symbol
     push _eax
     mov ebx,[addressing_space]
     mov eax,edi
     sub eax,[ebx+18h]
     mov [ebx+1Ch],eax
-    test u8 [ebx+0Ah],1
+    test u8 [ebx+0Ah],HEAD
     jnz in_virtual
     call init_addressing_space
     jmp org_space_ok
     ret
 
 in_virtual:
-    strings.emit 'in_virtual | 11951'
+    ;strings.emit 'in_virtual | 11951'
     call close_virtual_addressing_space
     call init_addressing_space
-    or u8 [ebx+0Ah],1
+    or u8 [ebx+0Ah],HEAD
 
     org_space_ok:
     pop _eax
     mov [ebx+9],cl
     mov cl,[value_sign]
     sub [ebx],eax
-    sbb [ebx+4],edx
-    sbb u8 [ebx+8],cl
+    sbb [ebx+TAIL],edx
+    sbb u8 [ebx+RECTIFY],cl
     jp org_value_ok
     call recoverable_overflow
 
     org_value_ok:
     mov _edx,u64[symbol_identifier]
     mov [ebx+14h],edx
-    cmp [output_format],1
+    cmp [output_format],HEAD
     ja instruction_assembled
     cmp edi,[code_start]
     jne instruction_assembled
     cmp eax,100h
     jne instruction_assembled
-    bts [format_flags],0
+    bts [format_flags],NUL
     jmp instruction_assembled
     ret
 
 label_directive:
-    strings.emit 'label_directive | 11980'
+    ;strings.emit 'label_directive | 11980'
     lods u8 [esi]
-    cmp al,2
+    cmp al,TEXT
     jne invalid_argument
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     inc esi
     mov ebx,eax
-    mov [label_size],0
+    mov [label_size],NUL
     lods u8 [esi]
     cmp al,':'
     je get_label_size
@@ -12009,13 +12034,13 @@ label_directive:
     ret
 
 get_free_label_value:
-    strings.emit 'get_free_label_value | 12011'
+    ;strings.emit 'get_free_label_value | 12011'
     inc esi
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
     push _ebx _ecx
-    or u8 [ebx+8],4
+    or u8 [ebx+RECTIFY],TAIL
     cmp u8 [esi],'.'
     je invalid_value
     call get_address_value
@@ -12027,18 +12052,18 @@ get_free_label_value:
     xchg bl,bh
     mov bp,bx
     pop _ecx _ebx
-    and u8 [ebx+8],not 4
+    and u8 [ebx+RECTIFY],not 4
     mov ch,[value_type]
-    test ch,1
+    test ch,HEAD
     jnz invalid_use_of_symbol
 
     make_free_label:
-    and u8 [ebx+9],not 1
+    and u8 [ebx+9],not HEAD
     cmp eax,[ebx]
     mov [ebx],eax
     setne ah
-    cmp edx,[ebx+4]
-    mov [ebx+4],edx
+    cmp edx,[ebx+TAIL]
+    mov [ebx+TAIL],edx
     setne al
     or ah,al
     mov _edx,u64[address_symbol]
@@ -12048,28 +12073,28 @@ get_free_label_value:
     ret
 
 load_directive:
-    strings.emit 'load_directive | 12050'
+    ;strings.emit 'load_directive | 12050'
     lods u8 [esi]
-    cmp al,2
+    cmp al,TEXT
     jne invalid_argument
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     inc esi
     push _eax
-    mov al,1
+    mov al,HEAD
     cmp u8 [esi],11h
     jne load_size_ok
     lods u8 [esi]
     lods u8 [esi]
 
     load_size_ok:
-    cmp al,8
+    cmp al,RECTIFY
     ja invalid_value
     mov [operand_size],al
-    and dword [value],0
-    and dword [value+4],0
+    and dword [value],NUL
+    and dword [value+TAIL],NUL
     lods u8 [esi]
     cmp al,82h
     jne invalid_argument
@@ -12082,16 +12107,16 @@ load_directive:
     pop _edi _esi
 
     value_loaded:
-    mov [value_sign],0
+    mov [value_sign],NUL
     mov eax,dword [value]
-    mov edx,dword [value+4]
+    mov edx,dword [value+TAIL]
     pop _ebx
     xor cx,cx
     jmp make_constant
     ret
 
 get_data_point:
-    strings.emit 'get_data_point | 12093'
+    ;strings.emit 'get_data_point | 12093'
     mov ebx,[addressing_space]
     mov ecx,edi
     sub ecx,[ebx+18h]
@@ -12101,7 +12126,7 @@ get_data_point:
     jne invalid_argument
     cmp u8 [esi],11h
     jne get_data_address
-    cmp u16 [esi+1+4],'):'
+    cmp u16 [esi+1+TAIL],'):'
     jne get_data_address
     inc esi
     lods dword [esi]
@@ -12109,21 +12134,21 @@ get_data_point:
     cmp u8 [esi],'('
     jne invalid_argument
     inc esi
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jbe reserved_word_used_as_symbol
     mov edx,undefined_symbol
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jz addressing_space_unavailable
     mov edx,symbol_out_of_scope
     mov cx,[eax+16]
     cmp cx,[current_pass]
     jne addressing_space_unavailable
-    test u8 [eax+9],4
+    test u8 [eax+9],TAIL
     jz invalid_use_of_symbol
     mov ebx,eax
     mov ax,[current_pass]
     mov [ebx+18],ax
-    or u8 [ebx+8],8
+    or u8 [ebx+RECTIFY],RECTIFY
     call store_label_reference
 
     get_addressing_space:
@@ -12133,14 +12158,14 @@ get_data_point:
     push _ebx
     cmp u8 [esi],'.'
     je invalid_value
-    or [operand_flags],1
+    or [operand_flags],HEAD
     call get_address_value
     pop _ebp
     call calculate_relative_offset
-    cmp [next_pass_needed],0
-    jne data_address_type_ok
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [next_pass_needed],NUL
+    jne  data_address_type_ok
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
 
     data_address_type_ok:
     mov ebx,edi
@@ -12159,9 +12184,9 @@ get_data_point:
     ret
 
 addressing_space_unavailable:
-    strings.emit 'addressing_space_unavailable | 12161'
-    cmp [error_line],0
-    jne get_data_address
+    ;strings.emit 'addressing_space_unavailable | 12161'
+    cmp [error_line],NUL
+    jne  get_data_address
     push u64[current_line]
     pop u64[error_line]
     mov u64[error],_edx
@@ -12170,13 +12195,13 @@ addressing_space_unavailable:
     ret
 
 bad_data_address:
-    strings.emit 'bad_data_address | 12172'
+    ;strings.emit 'bad_data_address | 12172'
     call recoverable_overflow
     stc
     ret
 
 store_directive:
-    strings.emit 'store_directive | 12178'
+    ;strings.emit 'store_directive | 12178'
     cmp u8 [esi],11h
     je sized_store
     lods u8 [esi]
@@ -12185,19 +12210,19 @@ store_directive:
     call get_byte_value
     xor edx,edx
     movzx eax,al
-    mov [operand_size],1
+    mov [operand_size],HEAD
     jmp store_value_ok
     ret
 
 sized_store:
-    strings.emit 'sized_store | 12192'
-    or [operand_flags],1
+    ;strings.emit 'sized_store | 12192'
+    or [operand_flags],HEAD
     call get_value
     store_value_ok:
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov dword [value],eax
-    mov dword [value+4],edx
+    mov dword [value+TAIL],edx
     lods u8 [esi]
     cmp al,80h
     jne invalid_argument
@@ -12218,18 +12243,18 @@ sized_store:
     ret
 
 display_directive:
-    strings.emit 'display_directive | 12220'
+    ;strings.emit 'display_directive | 12220'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
-    cmp u8 [esi],0
-    jne display_byte
+    cmp u8 [esi],NUL
+    jne  display_byte
     inc esi
     lods dword [esi]
     mov ecx,eax
     push _edi
     mov edi,[tagged_blocks]
-    sub edi,8
+    sub edi,RECTIFY
     sub edi,eax
     cmp _edi,[_esp]
     jbe out_of_memory
@@ -12244,14 +12269,14 @@ display_directive:
     ret
 
 display_byte:
-    strings.emit 'display_byte | 12247'
+    ;strings.emit 'display_byte | 12247'
     call get_byte_value
     push _edi
     mov edi,[tagged_blocks]
-    sub edi,8+1
+    sub edi,RECTIFY+HEAD
     mov [tagged_blocks],edi
     stos u8 [edi]
-    mov eax,1
+    mov eax,HEAD
     stos dword [edi]
     dec eax
     stos dword [edi]
@@ -12268,7 +12293,7 @@ display_byte:
     ret
 
 show_display_buffer:
-    strings.emit 'show_display_buffer | 12270'
+    ;strings.emit 'show_display_buffer | 12270'
     mov eax,[tagged_blocks]
     or eax,eax
     ;jz display_done
@@ -12280,11 +12305,11 @@ show_display_buffer:
 
 
     display_messages:
-    sub esi, 8
-    mov eax,[esi+4]
+    sub esi, RECTIFY
+    mov eax,[esi+TAIL]
     mov ecx,[esi]
     sub esi, ecx
-    cmp eax,10h
+    cmp eax,DELINK
     je write_addressing_space
     test eax,eax
     jnz skip_block
@@ -12298,7 +12323,7 @@ show_display_buffer:
     ret
 
 write_addressing_space:
-    strings.emit 'write_addressing_space | 12301'
+    ;strings.emit 'write_addressing_space | 12301'
     mov ecx,[esi+20h]
     jecxz skip_block
     push _esi
@@ -12326,16 +12351,16 @@ write_addressing_space:
     ret
 
 new_path_segment:
-    strings.emit 'new_path_segment | 12329'
+    ;strings.emit 'new_path_segment | 12329'
     xor ebx,ebx
     jmp copy_output_path
     ret
 
 output_path_copied:
-    strings.emit 'output_path_copied | 12334'
+    ;strings.emit 'output_path_copied | 12334'
     test ebx,ebx
     jnz append_extension
-    mov u8 [edi-1],'.'
+    mov u8 [edi-HEAD],'.'
     mov ebx,edi
 
     append_extension:
@@ -12366,14 +12391,14 @@ output_path_copied:
     ret
 
 times_directive:
-    strings.emit 'times_directive | 12368'
+    ;strings.emit 'times_directive | 12368'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
     cmp u8 [esi],'.'
     je invalid_value
     call get_count_value
-    cmp eax,0
+    cmp eax,NUL
     je zero_times
     cmp u8 [esi],':'
     jne times_argument_ok
@@ -12383,7 +12408,7 @@ times_directive:
     push u64[counter]
     push u64[counter_limit]
     mov u64[counter_limit],_eax
-    mov [counter],1
+    mov [counter],HEAD
 
     times_loop:
     mov _eax,_esp
@@ -12391,7 +12416,7 @@ times_directive:
     cmp eax,100h
     jb stack_overflow
     push _esi
-    or [prefix_flags],1
+    or [prefix_flags],HEAD
     call continue_line
     mov _eax,u64[counter_limit]
     cmp dword[counter],eax
@@ -12402,7 +12427,7 @@ times_directive:
     ret
 
 times_done:
-    strings.emit 'times_done | 12404'
+    ;strings.emit 'times_done | 12404'
     pop _eax
     pop u64[counter_limit]
     pop u64[counter]
@@ -12410,14 +12435,14 @@ times_done:
     ret
 
 zero_times:
-    strings.emit 'zero_times | 12412'
+    ;strings.emit 'zero_times | 12412'
     call skip_symbol
     jnc zero_times
     jmp instruction_assembled
     ret
 
 virtual_directive:
-    strings.emit 'virtual_directive | 12419'
+    ;strings.emit 'virtual_directive | 12419'
     lods u8 [esi]
     cmp al,'('
     je continue_virtual_area
@@ -12436,7 +12461,7 @@ virtual_directive:
     ret
 
 virtual_at_current:
-    strings.emit 'virtual_at_current | 12438'
+    ;strings.emit 'virtual_at_current | 12438'
     dec esi
 
     virtual_fallback:
@@ -12447,11 +12472,11 @@ virtual_at_current:
     xor edx,edx
     xor cl,cl
     sub eax,[ds:ebp]
-    sbb edx,[ds:ebp+4]
-    sbb cl,[ds:ebp+8]
+    sbb edx,[ds:ebp+TAIL]
+    sbb cl,[ds:ebp+RECTIFY]
     mov [address_sign],cl
     mov bx,[ds:ebp+10h]
-    mov cx,[ds:ebp+10h+2]
+    mov cx,[ds:ebp+10h+TEXT]
     xchg bh,bl
     xchg ch,cl
     mov ebp,[ds:ebp+14h]
@@ -12464,16 +12489,16 @@ virtual_at_current:
     push _ecx _eax
     call allocate_virtual_structure_data
     call init_addressing_space
-    or u8 [ebx+0Ah],1
+    or u8 [ebx+0Ah],HEAD
     cmp u8 [esi],86h
     jne addressing_space_extension_ok
-    cmp u16 [esi+1],'('
+    cmp u16 [esi+HEAD],'('
     jne invalid_argument
     mov ecx,[esi+3]
-    add esi, 3+4
+    add esi, 3+TAIL
     add [ebx+18h],ecx
     mov [ebx+20h],ecx
-    or u8 [ebx+0Ah],2
+    or u8 [ebx+0Ah],TEXT
     push _ebx
     mov ebx,characters
 
@@ -12493,26 +12518,26 @@ virtual_at_current:
     not eax
     not edx
     not cl
-    add eax,1
-    adc edx,0
-    adc cl,0
+    add eax,HEAD
+    adc edx,NUL
+    adc cl,NUL
     add eax,edi
-    adc edx,0
-    adc cl,0
+    adc edx,NUL
+    adc cl,NUL
     mov [ebx],eax
-    mov [ebx+4],edx
-    mov [ebx+8],cl
+    mov [ebx+TAIL],edx
+    mov [ebx+RECTIFY],cl
     pop u64 [ebx+10h]
     mov [ebx+14h],ebp
     mov al,[value_type]
-    test al,1
+    test al,HEAD
     jnz invalid_use_of_symbol
     mov [ebx+9],al
     jmp instruction_assembled
     ret
 
 allocate_structure_data:
-    strings.emit 'allocate_structure_data | 12514'
+    ;strings.emit 'allocate_structure_data | 12514'
     mov ebx,[structures_buffer]
     sub ebx,18h
     cmp _ebx,u64[free_additional_memory]
@@ -12521,7 +12546,7 @@ allocate_structure_data:
     ret
 
 find_structure_data:
-    strings.emit 'find_structure_data | 12523'
+    ;strings.emit 'find_structure_data | 12523'
     mov ebx,[structures_buffer]
 
     scan_structures:
@@ -12536,14 +12561,14 @@ find_structure_data:
     ret
 
 allocate_virtual_structure_data:
-    strings.emit 'allocate_virtual_structure_data | 12538'
+    ;strings.emit 'allocate_virtual_structure_data | 12538'
     call allocate_structure_data
     mov u16 [ebx],virtual_directive-instruction_handler
     mov ecx,[addressing_space]
     mov [ebx+12],ecx
-    mov [ebx+8],edi
+    mov [ebx+RECTIFY],edi
     mov _ecx,u64[current_line]
-    mov [ebx+4],ecx
+    mov [ebx+TAIL],ecx
     mov ebx,[addressing_space]
     mov eax,edi
     sub eax,[ebx+18h]
@@ -12551,33 +12576,33 @@ allocate_virtual_structure_data:
     ret
 
 continue_virtual_area:
-    strings.emit 'continue_virtual_area | 12553'
+    ;strings.emit 'continue_virtual_area | 12553'
     cmp u8 [esi],11h
     jne invalid_argument
-    cmp u8 [esi+1+4],')'
+    cmp u8 [esi+1+TAIL],')'
     jne invalid_argument
     inc esi
     lods dword [esi]
     inc esi
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jbe reserved_word_used_as_symbol
     mov edx,undefined_symbol
-    test u8 [eax+8],1
+    test u8 [eax+RECTIFY],HEAD
     jz virtual_area_unavailable
     mov edx,symbol_out_of_scope
     mov cx,[eax+16]
     cmp cx,[current_pass]
     jne virtual_area_unavailable
     mov edx,invalid_use_of_symbol
-    test u8 [eax+9],4
+    test u8 [eax+9],TAIL
     jz virtual_area_unavailable
     mov ebx,eax
     mov ax,[current_pass]
     mov [ebx+18],ax
-    or u8 [ebx+8],8
+    or u8 [ebx+RECTIFY],RECTIFY
     call store_label_reference
     mov ebx,[ebx]
-    test u8 [ebx+0Ah],4
+    test u8 [ebx+0Ah],TAIL
     jz virtual_area_unavailable
     and u8 [ebx+0Ah],not 4
     mov edx,ebx
@@ -12596,10 +12621,10 @@ continue_virtual_area:
     sub eax,edi
     sub [edx+18h],eax
     sub [edx],eax
-    sbb dword [edx+4],0
-    sbb u8 [edx+8],0
+    sbb dword [edx+TAIL],NUL
+    sbb u8 [edx+RECTIFY],NUL
     mov al,cl
-    shr ecx,2
+    shr ecx,TEXT
     rep movs dword [edi],[esi]
     mov cl,al
     and cl,11b
@@ -12609,9 +12634,9 @@ continue_virtual_area:
     ret
 
 virtual_area_unavailable:
-    strings.emit 'virtual_area_unavailable | 12611'
-    cmp [error_line],0
-    jne virtual_fallback
+    ;strings.emit 'virtual_area_unavailable | 12611'
+    cmp [error_line],NUL
+    jne  virtual_fallback
     push u64[current_line]
     pop u64[error_line]
     mov u64[error],_edx
@@ -12620,7 +12645,7 @@ virtual_area_unavailable:
     ret
 
 end_virtual:
-    strings.emit 'end_virtual | 12622'
+    ;strings.emit 'end_virtual | 12622'
     call find_structure_data
     jc unexpected_instruction
     push _ebx
@@ -12628,14 +12653,14 @@ end_virtual:
     pop _ebx
     mov eax,[ebx+12]
     mov [addressing_space],eax
-    mov edi,[ebx+8]
+    mov edi,[ebx+RECTIFY]
 
     remove_structure_data:
     push _esi _edi
     mov ecx,ebx
     sub ecx,[structures_buffer]
-    shr ecx,2
-    lea esi, [ebx-4]
+    shr ecx,TEXT
+    lea esi, [ebx-TAIL]
     lea edi,[esi+18h]
     std
     rep movs dword [edi],[esi]
@@ -12645,58 +12670,58 @@ end_virtual:
     ret
 
 close_virtual_addressing_space:
-    strings.emit 'close_virtual_addressing_space | 12647'
+    ;strings.emit 'close_virtual_addressing_space | 12647'
     mov ebx,[addressing_space]
     mov eax,edi
     sub eax,[ebx+18h]
     mov [ebx+1Ch],eax
     add eax,[ebx+20h]
-    test u8 [ebx+0Ah],2
+    test u8 [ebx+0Ah],TEXT
     ;jz addressing_space_closed
     jz return_ok
-    or u8 [ebx+0Ah],4
+    or u8 [ebx+0Ah],TAIL
     push _esi _edi _ecx _edx
     mov ecx,eax
     mov eax,[tagged_blocks]
-    mov dword [eax-4],11h
-    mov dword [eax-8],ecx
-    sub eax,8
+    mov dword [eax-TAIL],11h
+    mov dword [eax-RECTIFY],ecx
+    sub eax,RECTIFY
     sub eax,ecx
     mov [tagged_blocks],eax
-    lea edi,[eax+ecx-1]
+    lea edi,[eax+ecx-HEAD]
     add eax,[ebx+20h]
     xchg eax,[ebx+18h]
     sub eax,[ebx+20h]
-    lea esi, [eax+ecx-1]
+    lea esi, [eax+ecx-HEAD]
     mov eax,edi
     sub eax,esi
     std
-    shr ecx,1
+    shr ecx,HEAD
     jnc virtual_byte_ok
     movs u8 [edi],[esi]
 
     virtual_byte_ok:
     dec esi
     dec edi
-    shr ecx,1
+    shr ecx,HEAD
     jnc virtual_word_ok
     movs u16 [edi],[esi]
 
     virtual_word_ok:
     sub esi, 2
-    sub edi,2
+    sub edi,TEXT
     rep movs dword [edi],[esi]
     cld
     xor edx,edx
     add [ebx],eax
-    adc dword [ebx+4],edx
-    adc u8 [ebx+8],dl
+    adc dword [ebx+TAIL],edx
+    adc u8 [ebx+RECTIFY],dl
     pop _edx _ecx _edi _esi
     ret
 
 repeat_directive:
-    strings.emit 'repeat_directive | 12697'
-    test [prefix_flags],1
+    ;strings.emit 'repeat_directive | 12697'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     lods u8 [esi]
     cmp al,'('
@@ -12704,24 +12729,24 @@ repeat_directive:
     cmp u8 [esi],'.'
     je invalid_value
     call get_count_value
-    cmp eax,0
+    cmp eax,NUL
     je zero_repeat
     call allocate_structure_data
     mov u16 [ebx],repeat_directive-instruction_handler
     xchg _eax,u64[counter_limit]
     mov [ebx+10h],eax
-    mov eax,1
+    mov eax,HEAD
     xchg _eax,u64[counter]
     mov [ebx+14h],eax
-    mov [ebx+8],esi
+    mov [ebx+RECTIFY],esi
     mov _eax,u64[current_line]
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     jmp instruction_assembled
     ret
 
 end_repeat:
-    strings.emit 'end_repeat | 12722'
-    test [prefix_flags],1
+    ;strings.emit 'end_repeat | 12722'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     call find_structure_data
     jc unexpected_instruction
@@ -12740,41 +12765,41 @@ end_repeat:
     ret
 
 continue_repeating:
-    strings.emit 'continue_repeating | 12742'
-    mov esi, [ebx+8]
+    ;strings.emit 'continue_repeating | 12742'
+    mov esi, [ebx+RECTIFY]
     jmp instruction_assembled
     ret
 
 zero_repeat:
-    strings.emit 'zero_repeat | 12748'
+    ;strings.emit 'zero_repeat | 12748'
     mov al,[esi]
     or al,al
     jz missing_end_directive
-    cmp al,0Fh
+    cmp al,SHIFT
     jne extra_characters_on_line
     call find_end_repeat
     jmp instruction_assembled
     ret
 
 find_end_repeat:
-    strings.emit 'find_end_repeat | 12759'
+    ;strings.emit 'find_end_repeat | 12759'
     call find_structure_end
     cmp ax,repeat_directive-instruction_handler
     jne unexpected_instruction
     ret
 
 while_directive:
-    strings.emit 'while_directive | 12766'
-    test [prefix_flags],1
+    ;strings.emit 'while_directive | 12766'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     call allocate_structure_data
     mov u16 [ebx],while_directive-instruction_handler
-    mov eax,1
+    mov eax,HEAD
     xchg _eax,u64[counter]
     mov [ebx+10h],eax
-    mov [ebx+8],esi
+    mov [ebx+RECTIFY],esi
     mov _eax,u64[current_line]
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     do_while:
     push _ebx
     call calculate_logical_expression
@@ -12783,7 +12808,7 @@ while_directive:
     mov al,[esi]
     or al,al
     jz missing_end_directive
-    cmp al,0Fh
+    cmp al,SHIFT
     jne extra_characters_on_line
 
     stop_while:
@@ -12796,94 +12821,94 @@ while_directive:
     ret
 
 while_true:
-    strings.emit 'while_true | 12798'
+    ;strings.emit 'while_true | 12798'
     pop _ebx
     jmp instruction_assembled
     ret
 
 end_while:
-    strings.emit 'end_while | 12805'
-    test [prefix_flags],1
+    ;strings.emit 'end_while | 12805'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     call find_structure_data
     jc unexpected_instruction
-    mov eax,[ebx+4]
+    mov eax,[ebx+TAIL]
     mov u64[current_line],_eax
     inc [counter]
     jz too_many_repeats
-    mov esi, [ebx+8]
+    mov esi, [ebx+RECTIFY]
     jmp do_while
     ret
 
 find_end_while:
-    strings.emit 'find_end_while | 12819'
+    ;strings.emit 'find_end_while | 12819'
     call find_structure_end
     cmp ax,while_directive-instruction_handler
     jne unexpected_instruction
     ret
 
 if_directive:
-    strings.emit 'if_directive | 12825'
-    test [prefix_flags],1
+    ;strings.emit 'if_directive | 12825'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     call calculate_logical_expression
     mov dl,al
     mov al,[esi]
     or al,al
     jz missing_end_directive
-    cmp al,0Fh
+    cmp al,SHIFT
     jne extra_characters_on_line
     or dl,dl
     jnz if_true
     call find_else
     jc instruction_assembled
     mov al,[esi]
-    cmp al,1
+    cmp al,HEAD
     jne else_true
-    cmp u16 [esi+1],if_directive-instruction_handler
+    cmp u16 [esi+HEAD],if_directive-instruction_handler
     jne else_true
     add esi, 4
     jmp if_directive
     ret
 
 if_true:
-    strings.emit 'if_true | 12848'
+    ;strings.emit 'if_true | 12848'
     xor al,al
 
     make_if_structure:
     call allocate_structure_data
     mov u16 [ebx],if_directive-instruction_handler
-    mov u8 [ebx+2],al
+    mov u8 [ebx+TEXT],al
     mov _eax,u64[current_line]
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     jmp instruction_assembled
     ret
 
 else_true:
-    strings.emit 'else_true | 12862'
+    ;strings.emit 'else_true | 12862'
     or al,al
     jz missing_end_directive
-    cmp al,0Fh
+    cmp al,SHIFT
     jne extra_characters_on_line
-    or al,-1
+    or al,-HEAD
     jmp make_if_structure
     ret
 
 else_directive:
-    strings.emit 'else_directive | 12872'
-    test [prefix_flags],1
+    ;strings.emit 'else_directive | 12872'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     mov ax,if_directive-instruction_handler
     call find_structure_data
     jc unexpected_instruction
-    cmp u8 [ebx+2],0
-    jne unexpected_instruction
+    cmp u8 [ebx+TEXT],NUL
+    jne  unexpected_instruction
 
     found_else:
     mov al,[esi]
-    cmp al,1
+    cmp al,HEAD
     jne skip_else
-    cmp u16 [esi+1],if_directive-instruction_handler
+    cmp u16 [esi+HEAD],if_directive-instruction_handler
     jne skip_else
     add esi, 4
     call find_else
@@ -12893,10 +12918,10 @@ else_directive:
     ret
 
 skip_else:
-    strings.emit 'skip_else | 12895'
+    ;strings.emit 'skip_else | 12895'
     or al,al
     jz missing_end_directive
-    cmp al,0Fh
+    cmp al,SHIFT
     jne extra_characters_on_line
     call find_end_if
     call remove_structure_data
@@ -12904,8 +12929,8 @@ skip_else:
     ret
 
 end_if:
-    strings.emit 'end_if | 12906'
-    test [prefix_flags],1
+    ;strings.emit 'end_if | 12906'
+    test [prefix_flags],HEAD
     jnz unexpected_instruction
     call find_structure_data
     jc unexpected_instruction
@@ -12914,7 +12939,7 @@ end_if:
     ret
 
 find_else:
-    strings.emit 'find_else | 12916'
+    ;strings.emit 'find_else | 12916'
     call find_structure_end
     cmp ax,else_directive-instruction_handler
     ;je else_found
@@ -12925,14 +12950,14 @@ find_else:
     ret
 
 find_end_if:
-    strings.emit 'find_end_if | 12927'
+    ;strings.emit 'find_end_if | 12927'
     call find_structure_end
     cmp ax,if_directive-instruction_handler
     jne unexpected_instruction
     ret
 
 find_structure_end:
-    strings.emit 'find_structure_end | 12934'
+    ;strings.emit 'find_structure_end | 12934'
     push u64[error_line]
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
@@ -12941,23 +12966,23 @@ find_structure_end:
     call skip_symbol
     jnc find_end_directive
     lods u8 [esi]
-    cmp al,0Fh
+    cmp al,SHIFT
     jne no_end_directive
     lods dword [esi]
     mov u64[current_line],_eax
 
     skip_labels:
-    cmp u8 [esi],2
+    cmp u8 [esi],TEXT
     jne labels_ok
     add esi, 6
     jmp skip_labels
     ret
 
 labels_ok:
-    strings.emit 'labels_ok | 12956'
-    cmp u8 [esi],1
+    ;strings.emit 'labels_ok | 12956'
+    cmp u8 [esi],HEAD
     jne find_end_directive
-    mov ax,[esi+1]
+    mov ax,[esi+HEAD]
     cmp ax,prefix_instruction-instruction_handler
     je find_end_directive
     add esi, 4
@@ -12971,9 +12996,9 @@ labels_ok:
     je structure_end
     cmp ax,end_directive-instruction_handler
     jne find_end_directive
-    cmp u8 [esi],1
+    cmp u8 [esi],HEAD
     jne find_end_directive
-    mov ax,[esi+1]
+    mov ax,[esi+HEAD]
     add esi, 4
     cmp ax,repeat_directive-instruction_handler
     je structure_end
@@ -12987,52 +13012,52 @@ labels_ok:
     ret
 
 no_end_directive:
-    strings.emit 'no_end_directive | 12989'
+    ;strings.emit 'no_end_directive | 12989'
     mov _eax,u64[error_line]
     mov u64[current_line],_eax
     jmp missing_end_directive
     ret
 
 skip_repeat:
-    strings.emit 'skip_repeat | 12996'
+    ;strings.emit 'skip_repeat | 12996'
     call find_end_repeat
     jmp find_end_directive
     ret
 
 skip_while:
-    strings.emit 'skip_while | 13002'
+    ;strings.emit 'skip_while | 13002'
     call find_end_while
     jmp find_end_directive
     ret
 
 skip_if:
-    strings.emit 'skip_if | 13008'
+    ;strings.emit 'skip_if | 13008'
     call skip_if_block
     jmp find_end_directive
     ret
 
 skip_if_block:
-    strings.emit 'skip_if_block | 13014'
+    ;strings.emit 'skip_if_block | 13014'
     call find_else
     ;jc if_block_skipped
     jc return_ok
-    cmp u8 [esi],1
+    cmp u8 [esi],HEAD
     jne skip_after_else
-    cmp u16 [esi+1],if_directive-instruction_handler
+    cmp u16 [esi+HEAD],if_directive-instruction_handler
     jne skip_after_else
     add esi, 4
     jmp skip_if_block
     ret
 
 skip_after_else:
-    strings.emit 'skip_after_else | 13028'
+    ;strings.emit 'skip_after_else | 13028'
     call find_end_if
     ret
 
 end_directive:
-    strings.emit 'end_directive | 13032'
+    ;strings.emit 'end_directive | 13032'
     lods u8 [esi]
-    cmp al,1
+    cmp al,HEAD
     jne invalid_argument
     lods u16 [esi]
     inc esi
@@ -13050,12 +13075,12 @@ end_directive:
     ret
 
 break_directive:
-    strings.emit 'break_directive | 13052'
+    ;strings.emit 'break_directive | 13052'
     mov ebx,[structures_buffer]
     mov al,[esi]
     or al,al
     jz find_breakable_structure
-    cmp al,0Fh
+    cmp al,SHIFT
     jne extra_characters_on_line
 
     find_breakable_structure:
@@ -13073,9 +13098,9 @@ break_directive:
     ret
 
 break_if:
-    strings.emit 'break_if | 13075'
+    ;strings.emit 'break_if | 13075'
     push u64[current_line]
-    mov eax,[ebx+4]
+    mov eax,[ebx+TAIL]
     mov u64[current_line],_eax
     call remove_structure_data
     call skip_if_block
@@ -13085,7 +13110,7 @@ break_if:
     ret
 
 break_repeat:
-    strings.emit 'break_repeat | 13087'
+    ;strings.emit 'break_repeat | 13087'
     push _ebx
     call find_end_repeat
     pop _ebx
@@ -13093,13 +13118,13 @@ break_repeat:
     ret
 
 break_while:
-    strings.emit 'break_while | 13095'
+    ;strings.emit 'break_while | 13095'
     push _ebx
     jmp stop_while
     ret
 
 define_data:
-    strings.emit 'define_data | 13101'
+    ;strings.emit 'define_data | 13101'
     cmp edi,[tagged_blocks]
     jae out_of_memory
     cmp u8 [esi],'('
@@ -13140,7 +13165,7 @@ define_data:
     ret
 
 duplicate_single_data_value:
-    strings.emit 'duplicate_single_data_value | 13142'
+    ;strings.emit 'duplicate_single_data_value | 13142'
     cmp edi,[tagged_blocks]
     jae out_of_memory
     push _eax _esi
@@ -13154,7 +13179,7 @@ duplicate_single_data_value:
     ret
 
 duplicate_zero_times:
-    strings.emit 'duplicate_zero_times | 13156'
+    ;strings.emit 'duplicate_zero_times | 13156'
     cmp u8 [esi],91h
     jne skip_single_data_value
     inc esi
@@ -13169,13 +13194,13 @@ duplicate_zero_times:
     ret
 
 skip_single_data_value:
-    strings.emit 'skip_single_data_value | 13171'
+    ;strings.emit 'skip_single_data_value | 13171'
     call skip_symbol
     jmp data_defined
     ret
 
 simple_data_value:
-    strings.emit 'simple_data_value | 13177'
+    ;strings.emit 'simple_data_value | 13177'
     cmp edi,[tagged_blocks]
     jae out_of_memory
     clc
@@ -13190,7 +13215,7 @@ simple_data_value:
     ret
 
 data_bytes:
-    strings.emit 'data_bytes | 13192'
+    ;strings.emit 'data_bytes | 13192'
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -13199,21 +13224,21 @@ data_bytes:
     cmp al,'?'
     jne invalid_argument
     mov eax,edi
-    mov u8 [edi],0
+    mov u8 [edi],NUL
     inc edi
     jmp undefined_data
     ret
 
 get_byte:
-    strings.emit 'get_byte | 13207'
-    cmp u8 [esi],0
+    ;strings.emit 'get_byte | 13207'
+    cmp u8 [esi],NUL
     je get_string
     call get_byte_value
     stos u8 [edi]
     ret
 
 get_string:
-    strings.emit 'get_string | 13215'
+    ;strings.emit 'get_string | 13215'
     inc esi
     lods dword [esi]
     mov ecx,eax
@@ -13225,14 +13250,14 @@ get_string:
     ret
 
 undefined_data:
-    strings.emit 'undefined_data | 13227'
+    ;strings.emit 'undefined_data | 13227'
     mov ebp,[addressing_space]
-    test u8 [ds:ebp+0Ah],1
+    test u8 [ds:ebp+0Ah],HEAD
     jz mark_undefined_data
     ret
 
 mark_undefined_data:
-    strings.emit 'mark_undefined_data | 13234'
+    ;strings.emit 'mark_undefined_data | 13234'
     cmp eax,[undefined_data_end]
     je undefined_data_ok
     mov [undefined_data_start],eax
@@ -13242,14 +13267,14 @@ mark_undefined_data:
     ret
 
 data_unicode:
-    strings.emit 'data_unicode | 13244'
-    or [base_code],-1
+    ;strings.emit 'data_unicode | 13244'
+    or [base_code],-HEAD
     jmp define_words
     ret
 
 data_words:
-    strings.emit 'data_words | 13250'
-    mov [base_code],0
+    ;strings.emit 'data_words | 13250'
+    mov [base_code],NUL
 
     define_words:
     call define_data
@@ -13260,16 +13285,16 @@ data_words:
     cmp al,'?'
     jne invalid_argument
     mov eax,edi
-    and u16 [edi],0
+    and u16 [edi],NUL
     scas u16 [edi]
     jmp undefined_data
     ret
 
 get_word:
-    strings.emit 'get_word | 13268'
-    cmp [base_code],0
+    ;strings.emit 'get_word | 13268'
+    cmp [base_code],NUL
     je word_data_value
-    cmp u8 [esi],0
+    cmp u8 [esi],NUL
     je word_string
 
     word_data_value:
@@ -13279,7 +13304,7 @@ get_word:
     ret
 
 word_string:
-    strings.emit 'word_string | 13281'
+    ;strings.emit 'word_string | 13281'
     inc esi
     lods dword [esi]
     mov ecx,eax
@@ -13299,7 +13324,7 @@ word_string:
     ret
 
 data_dwords:
-    strings.emit 'word_string | 13281'
+    ;strings.emit 'word_string | 13281'
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -13308,13 +13333,13 @@ data_dwords:
     cmp al,'?'
     jne invalid_argument
     mov eax,edi
-    and dword [edi],0
+    and dword [edi],NUL
     scas dword [edi]
     jmp undefined_data
     ret
 
 get_dword:
-    strings.emit 'get_dword | 13316'
+    ;strings.emit 'get_dword | 13316'
     push _esi
     call get_dword_value
     pop _ebx
@@ -13325,7 +13350,7 @@ get_dword:
     ret
 
 complex_dword:
-    strings.emit 'complex_dword | 13328'
+    ;strings.emit 'complex_dword | 13328'
     mov esi, ebx
     cmp u8 [esi],'.'
     je invalid_value
@@ -13350,7 +13375,7 @@ complex_dword:
     ret
 
 data_pwords:
-    strings.emit 'data_pwords | 13352'
+    ;strings.emit 'data_pwords | 13352'
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -13359,15 +13384,15 @@ data_pwords:
     cmp al,'?'
     jne invalid_argument
     mov eax,edi
-    and dword [edi],0
+    and dword [edi],NUL
     scas dword [edi]
-    and u16 [edi],0
+    and u16 [edi],NUL
     scas u16 [edi]
     jmp undefined_data
     ret
 
 get_pword:
-    strings.emit 'get_pword | 13370'
+    ;strings.emit 'get_pword | 13370'
     push _esi
     call get_pword_value
     pop _ebx
@@ -13380,7 +13405,7 @@ get_pword:
     ret
 
 complex_pword:
-    strings.emit 'complex_pword | 13382'
+    ;strings.emit 'complex_pword | 13382'
     mov esi, ebx
     cmp u8 [esi],'.'
     je invalid_value
@@ -13405,7 +13430,7 @@ complex_pword:
     ret
 
 data_qwords:
-    strings.emit 'data_qwords | 13408'
+    ;strings.emit 'data_qwords | 13408'
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -13414,15 +13439,15 @@ data_qwords:
     cmp al,'?'
     jne invalid_argument
     mov eax,edi
-    and dword [edi],0
+    and dword [edi],NUL
     scas dword [edi]
-    and dword [edi],0
+    and dword [edi],NUL
     scas dword [edi]
     jmp undefined_data
     ret
 
 get_qword:
-    strings.emit 'get_qword | 13424'
+    ;strings.emit 'get_qword | 13424'
     call get_qword_value
     call mark_relocation
     stos dword [edi]
@@ -13431,7 +13456,7 @@ get_qword:
     ret
 
 data_twords:
-    strings.emit 'data_twords | 13433'
+    ;strings.emit 'data_twords | 13433'
     call define_data
     jc instruction_assembled
     lods u8 [esi]
@@ -13440,32 +13465,32 @@ data_twords:
     cmp al,'?'
     jne invalid_argument
     mov eax,edi
-    and dword [edi],0
+    and dword [edi],NUL
     scas dword [edi]
-    and dword [edi],0
+    and dword [edi],NUL
     scas dword [edi]
-    and u16 [edi],0
+    and u16 [edi],NUL
     scas u16 [edi]
     jmp undefined_data
     ret
 
 get_tword:
-    strings.emit 'get_tword | 13452'
+    ;strings.emit 'get_tword | 13452'
     cmp u8 [esi],'.'
     jne complex_tword
     inc esi
-    cmp u16 [esi+8],8000h
+    cmp u16 [esi+RECTIFY],8000h
     je fp_zero_tword
     mov eax,[esi]
     stos dword [edi]
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     stos dword [edi]
-    mov ax,[esi+8]
+    mov ax,[esi+RECTIFY]
     add ax,3FFFh
     jo value_out_of_range
     cmp ax,7FFFh
     jge value_out_of_range
-    cmp ax,0
+    cmp ax,NUL
     jg tword_exp_ok
     mov cx,ax
     neg cx
@@ -13475,7 +13500,7 @@ get_tword:
     cmp cx,32
     ja large_shift
     mov eax,[esi]
-    mov edx,[esi+4]
+    mov edx,[esi+TAIL]
     mov ebx,edx
     shr edx,cl
     shrd eax,ebx,cl
@@ -13483,21 +13508,21 @@ get_tword:
     ret
 
 large_shift:
-    strings.emit 'large_shift | 13485'
+    ;strings.emit 'large_shift | 13485'
     sub cx,32
     xor edx,edx
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     shr eax,cl
     tword_mantissa_shift_done:
     jnc store_shifted_mantissa
-    add eax,1
+    add eax,HEAD
     adc edx,0
 
     store_shifted_mantissa:
-    mov [edi-8],eax
-    mov [edi-4],edx
+    mov [edi-RECTIFY],eax
+    mov [edi-TAIL],edx
     xor ax,ax
-    test edx,1 shl 31
+    test edx,HEAD shl 31
     jz tword_exp_ok
     inc ax
     tword_exp_ok:
@@ -13509,7 +13534,7 @@ large_shift:
     ret
 
 fp_zero_tword:
-    strings.emit 'fp_zero_tword | 13511'
+    ;strings.emit 'fp_zero_tword | 13511'
     xor eax,eax
     stos dword [edi]
     stos dword [edi]
@@ -13520,7 +13545,7 @@ fp_zero_tword:
     ret
 
 complex_tword:
-    strings.emit 'complex_tword | 13522'
+    ;strings.emit 'complex_tword | 13522'
     call get_word_value
     push _eax
     cmp u8 [esi],':'
@@ -13546,15 +13571,15 @@ complex_tword:
     ret
 
 data_file:
-    strings.emit 'data_file | 13548'
+    ;strings.emit 'data_file | 13548'
     lods u16 [esi]
     cmp ax,'('
     jne invalid_argument
     add esi, 4
     call open_binary_file
-    mov eax,[esi-4]
-    lea esi, [esi+eax+1]
-    mov al,2
+    mov eax,[esi-TAIL]
+    lea esi, [esi+eax+HEAD]
+    mov al,TEXT
     xor edx,edx
     call lseek
     push _eax
@@ -13608,21 +13633,21 @@ data_file:
     ret
 
 open_binary_file:
-    strings.emit 'open_binary_file | 13610'
+    ;strings.emit 'open_binary_file | 13610'
     push _esi
     push _edi
     mov _eax,u64[current_line]
 
     find_current_source_path:
     mov esi, [eax]
-    test u8 [eax+7],80h
+    test u8 [eax+NOTIFY],80h
     jz get_current_path
-    mov eax,[eax+8]
+    mov eax,[eax+RECTIFY]
     jmp find_current_source_path
     ret
 
 get_current_path:
-    strings.emit 'get_current_path | 13624'
+    ;strings.emit 'get_current_path | 13624'
     lodsb
     stosb
     or al,al
@@ -13631,17 +13656,17 @@ get_current_path:
     cut_current_path:
     cmp _edi,[_esp]
     je current_path_ok
-    cmp u8 [edi-1],'\' ; '
+    cmp u8 [edi-HEAD],'\' ; '
     je current_path_ok
-    cmp u8 [edi-1],'/'
+    cmp u8 [edi-HEAD],'/'
     je current_path_ok
     dec edi
     jmp cut_current_path
     ret
 
 current_path_ok:
-    strings.emit 'current_path_ok | 13642'
-    mov _esi,[_esp+8]
+    ;strings.emit 'current_path_ok | 13642'
+    mov _esi,[_esp+RECTIFY]
     call expand_path
     pop _edx
     mov esi, edx
@@ -13652,9 +13677,9 @@ current_path_ok:
     search_in_include_paths:
     push _edx _esi
     mov edi,esi
-    mov _esi,[_esp+8]
+    mov _esi,[_esp+RECTIFY]
     call get_include_directory
-    mov [_esp+8],_esi
+    mov [_esp+RECTIFY],_esi
     mov _esi,[_esp+16]
     call expand_path
     pop _edx
@@ -13662,8 +13687,8 @@ current_path_ok:
     call open
     pop _edx
     jnc file_opened
-    cmp u8 [edx],0
-    jne search_in_include_paths
+    cmp u8 [edx],NUL
+    jne  search_in_include_paths
     mov edi,esi
     mov _esi,[_esp]
     push _edi
@@ -13679,7 +13704,7 @@ current_path_ok:
     ret
 
 reserve_bytes:
-    strings.emit 'reserve_bytes | 13681'
+    ;strings.emit 'reserve_bytes | 13681'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13693,21 +13718,21 @@ reserve_bytes:
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je zero_bytes
     add edi,ecx
     jmp reserved_data
     ret
 
 zero_bytes:
-    strings.emit 'zero_bytes | 13702'
+    ;strings.emit 'zero_bytes | 13702'
     xor eax,eax
-    shr ecx,1
+    shr ecx,HEAD
     jnc bytes_stosb_ok
     stos u8 [edi]
 
     bytes_stosb_ok:
-    shr ecx,1
+    shr ecx,HEAD
     jnc bytes_stosw_ok
     stos u16 [edi]
 
@@ -13721,7 +13746,7 @@ zero_bytes:
     ret
 
 reserve_words:
-    strings.emit 'reserve_words | 13723'
+    ;strings.emit 'reserve_words | 13723'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13730,23 +13755,23 @@ reserve_words:
     call get_count_value
     mov ecx,eax
     mov edx,ecx
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
     add edx,edi
     jc out_of_memory
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je zero_words
     lea edi,[edi+ecx*2]
     jmp reserved_data
     ret
 
 zero_words:
-    strings.emit 'zero_words | 13746'
+    ;strings.emit 'zero_words | 13746'
     xor eax,eax
-    shr ecx,1
+    shr ecx,HEAD
     jnc words_stosw_ok
     stos u16 [edi]
     words_stosw_ok:
@@ -13755,7 +13780,7 @@ zero_words:
     ret
 
 reserve_dwords:
-    strings.emit 'reserve_dwords | 13757'
+    ;strings.emit 'reserve_dwords | 13757'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13764,30 +13789,30 @@ reserve_dwords:
     call get_count_value
     mov ecx,eax
     mov edx,ecx
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
     add edx,edi
     jc out_of_memory
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je zero_dwords
-    lea edi,[edi+ecx*4]
+    lea edi,[edi+ecx*TAIL]
     jmp reserved_data
     ret
 
 zero_dwords:
-    strings.emit 'zero_dwords | 13782'
+    ;strings.emit 'zero_dwords | 13782'
     xor eax,eax
     rep stos dword [edi]
     jmp reserved_data
     ret
 
 reserve_pwords:
-    strings.emit 'reserve_pwords | 13789'
+    ;strings.emit 'reserve_pwords | 13789'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13795,25 +13820,25 @@ reserve_pwords:
     je invalid_value
     call get_count_value
     mov ecx,eax
-    shl ecx,1
+    shl ecx,HEAD
     jc out_of_memory
     add ecx,eax
     mov edx,ecx
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
     add edx,edi
     jc out_of_memory
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je zero_words
     lea edi,[edi+ecx*2]
     jmp reserved_data
     ret
 
 reserve_qwords:
-    strings.emit 'reserve_qwords | 13815'
+    ;strings.emit 'reserve_qwords | 13815'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13821,26 +13846,26 @@ reserve_qwords:
     je invalid_value
     call get_count_value
     mov ecx,eax
-    shl ecx,1
+    shl ecx,HEAD
     jc out_of_memory
     mov edx,ecx
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
     add edx,edi
     jc out_of_memory
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je zero_dwords
-    lea edi,[edi+ecx*4]
+    lea edi,[edi+ecx*TAIL]
     jmp reserved_data
     ret
 
 reserve_twords:
-    strings.emit 'reserve_twords | 13842'
+    ;strings.emit 'reserve_twords | 13842'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13848,25 +13873,25 @@ reserve_twords:
     je invalid_value
     call get_count_value
     mov ecx,eax
-    shl ecx,2
+    shl ecx,TEXT
     jc out_of_memory
     add ecx,eax
     mov edx,ecx
-    shl edx,1
+    shl edx,HEAD
     jc out_of_memory
     add edx,edi
     jc out_of_memory
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je zero_words
     lea edi,[edi+ecx*2]
     jmp reserved_data
     ret
 
 align_directive:
-    strings.emit 'align_directive | 13868'
+    ;strings.emit 'align_directive | 13868'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
@@ -13879,27 +13904,27 @@ align_directive:
     jnz invalid_align_value
     or eax,eax
     jz invalid_align_value
-    cmp eax,1
+    cmp eax,HEAD
     je instruction_assembled
     mov ecx,edi
     mov ebp,[addressing_space]
     sub ecx,[ds:ebp]
-    cmp dword [ds:ebp+10h],0
-    jne section_not_aligned_enough
-    cmp u8 [ds:ebp+9],0
+    cmp dword [ds:ebp+10h],NUL
+    jne  section_not_aligned_enough
+    cmp u8 [ds:ebp+9],NUL
     je make_alignment
-    cmp [output_format],3
+    cmp [output_format],TXT
     je pe_alignment
     mov ebx,[ds:ebp+14h]
-    cmp u8 [ebx],0
-    jne section_not_aligned_enough
+    cmp u8 [ebx],NUL
+    jne  section_not_aligned_enough
     cmp eax,[ebx+10h]
     jbe make_alignment
     jmp section_not_aligned_enough
     ret
 
 pe_alignment:
-    strings.emit 'pe_alignment | 13901'
+    ;strings.emit 'pe_alignment | 13901'
     cmp eax,1000h
     ja section_not_aligned_enough
 
@@ -13916,16 +13941,16 @@ pe_alignment:
     cmp edx,[tagged_blocks]
     ja out_of_memory
     push _edi
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     je nops
     add edi,ecx
     jmp reserved_data
     ret
 
 invalid_align_value:
-    strings.emit 'invalid_align_value | 13926'
-    cmp [error_line],0
-    jne instruction_assembled
+    ;strings.emit 'invalid_align_value | 13926'
+    cmp [error_line],NUL
+    jne  instruction_assembled
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov [error],invalid_value
@@ -13933,13 +13958,13 @@ invalid_align_value:
     ret
 
 nops:
-    strings.emit 'nops | 13935'
+    ;strings.emit 'nops | 13935'
     mov eax,90909090h
-    shr ecx,1
+    shr ecx,HEAD
     jnc nops_stosb_ok
     stos u8 [edi]
     nops_stosb_ok:
-    shr ecx,1
+    shr ecx,HEAD
     jnc nops_stosw_ok
     stos u16 [edi]
 
@@ -13949,9 +13974,9 @@ nops:
     ret
 
 err_directive:
-    strings.emit 'err_directive | 13951'
+    ;strings.emit 'err_directive | 13951'
     mov al,[esi]
-    cmp al,0Fh
+    cmp al,SHIFT
     je invoked_error
     or al,al
     jz invoked_error
@@ -13959,12 +13984,12 @@ err_directive:
     ret
 
 assert_directive:
-    strings.emit 'assert_directive | 13961'
+    ;strings.emit 'assert_directive | 13961'
     call calculate_logical_expression
     or al,al
     jnz instruction_assembled
-    cmp [error_line],0
-    jne instruction_assembled
+    cmp [error_line],NUL
+    jne  instruction_assembled
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov [error],assertion_failed
@@ -13972,10 +13997,10 @@ assert_directive:
     ret
 
 formatter:
-    strings.emit 'formatter | 13974'
+    ;strings.emit 'formatter | 13974'
     mov u64[current_offset],_edi
-    cmp [output_file],0
-    jne output_path_ok
+    cmp [output_file],NUL
+    jne  output_path_ok
     mov esi, [input_file]
     mov _edi,u64[free_additional_memory]
 
@@ -14005,59 +14030,59 @@ formatter:
     lea eax,[edi+9]
     cmp eax,[structures_buffer]
     jae out_of_memory
-    cmp [file_extension],0
-    jne extension_specified
+    cmp [file_extension],NUL
+    jne  extension_specified
     mov al,[output_format]
-    cmp al,2
+    cmp al,TEXT
     je exe_extension
     jb bin_extension
-    cmp al,4
+    cmp al,TAIL
     je obj_extension
-    cmp al,5
+    cmp al,QUERY
     je o_extension
-    cmp al,3
+    cmp al,TXT
     jne no_extension
-    cmp [subsystem],1
+    cmp [subsystem],HEAD
     je sys_extension
     cmp [subsystem],10
     jae efi_extension
-    bt      [format_flags],8
+    bt      [format_flags],RECTIFY
     jnc exe_extension
     mov eax,'.dll'
     jmp make_extension
     ret
 
 sys_extension:
-    strings.emit 'sys_extension | 14030'
+    ;strings.emit 'sys_extension | 14030'
     mov eax,'.sys'
     jmp make_extension
     ret
 
 efi_extension:
-    strings.emit 'efi_extension | 14037'
+    ;strings.emit 'efi_extension | 14037'
     mov eax,'.efi'
     jmp make_extension
     ret
 
 bin_extension:
-    strings.emit 'bin_extension | 14042'
+    ;strings.emit 'bin_extension | 14042'
     mov eax,'.bin'
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jnc make_extension
     mov eax,'.com'
     jmp make_extension
     ret
 
 obj_extension:
-    strings.emit 'obj_extension | 14051'
+    ;strings.emit 'obj_extension | 14051'
     mov eax,'.obj'
     jmp make_extension
     ret
 
 o_extension:
-    strings.emit 'o_extension | 14057'
+    ;strings.emit 'o_extension | 14057'
     mov eax,'.o'
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jnc make_extension
 
     no_extension:
@@ -14066,17 +14091,17 @@ o_extension:
     ret
 
 exe_extension:
-    strings.emit 'exe_extension | 14068'
+    ;strings.emit 'exe_extension | 14068'
     mov eax,'.exe'
 
     make_extension:
     xchg eax,[edi]
     scas dword [edi]
-    mov u8 [edi],0
+    mov u8 [edi],NUL
     scas u8 [edi]
     mov esi, edi
     stos dword [edi]
-    sub edi,9
+    sub edi,HT
     xor eax,eax
     mov ebx,characters
 
@@ -14087,18 +14112,18 @@ exe_extension:
     xlat u8 [ebx]
     cmp al,[esi]
     je adapt_ok
-    sub u8 [edi],20h
+    sub u8 [edi],SPACE
     adapt_ok:
     inc esi
     adapt_next:
     inc edi
-    cmp u8 [edi],0
-    jne adapt_case
+    cmp u8 [edi],NUL
+    jne  adapt_case
     jmp extension_ok
     ret
 
 extension_specified:
-    strings.emit 'extension_specified | 14100'
+    ;strings.emit 'extension_specified | 14100'
     mov al,'.'
     stos u8 [edi]
     mov esi, [file_extension]
@@ -14112,7 +14137,7 @@ extension_specified:
 
     extension_ok:
     mov esi, edi
-    lea ecx,[esi+1]
+    lea ecx,[esi+HEAD]
     sub _ecx,u64[free_additional_memory]
     mov edi,[structures_buffer]
     dec edi
@@ -14124,14 +14149,14 @@ extension_specified:
     mov [output_file],edi
 
     output_path_ok:
-    cmp [symbols_file],0
+    cmp [symbols_file],NUL
     je labels_table_ok
     mov _ecx,u64[memory_end]
     sub ecx,[labels_list]
     mov edi,[tagged_blocks]
-    sub edi,8
+    sub edi,RECTIFY
     mov [edi],ecx
-    or dword [edi+4],-1
+    or dword [edi+TAIL],-HEAD
     sub edi,ecx
     cmp _edi,u64[current_offset]
     jbe out_of_memory
@@ -14149,9 +14174,9 @@ extension_specified:
     ret
 
 labels_table_ok:
-    strings.emit 'labels_table_ok | 14151'
+    ;strings.emit 'labels_table_ok | 14151'
     mov _edi,u64[current_offset]
-    cmp [output_format],4
+    cmp [output_format],TAIL
     je coff_formatter
 
     common_formatter:
@@ -14166,11 +14191,11 @@ labels_table_ok:
     mov u64[current_offset],_edi
     sub edi,[code_start]
     mov [code_size],edi
-    and [written_size],0
+    and [written_size],NUL
     mov edx,[output_file]
     call create
     jc write_failed
-    cmp [output_format],3
+    cmp [output_format],TXT
     jne stub_written
     mov edx,[code_start]
     mov ecx,[stub_size]
@@ -14179,7 +14204,7 @@ labels_table_ok:
     call write
 
     stub_written:
-    cmp [output_format],2
+    cmp [output_format],TEXT
     jne write_output
     call write_mz_header
 
@@ -14188,12 +14213,12 @@ labels_table_ok:
 
     output_written:
     call close
-    cmp [symbols_file],0
-    jne dump_symbols
+    cmp [symbols_file],NUL
+    jne  dump_symbols
     ret
 
 write_code:
-    strings.emit 'write_code | 14195'
+    ;strings.emit 'write_code | 14195'
     mov eax,[written_size]
     mov [headers_size],eax
     mov edx,[code_start]
@@ -14205,14 +14230,14 @@ write_code:
     ret
 
 format_directive:
-    strings.emit 'format_directive | 14207'
+    ;strings.emit 'format_directive | 14207'
     cmp edi,[code_start]
     jne unexpected_instruction
     mov ebp,[addressing_space]
-    test u8 [ds:ebp+0Ah],1
+    test u8 [ds:ebp+0Ah],HEAD
     jnz unexpected_instruction
-    cmp [output_format],0
-    jne unexpected_instruction
+    cmp [output_format],NUL
+    jne  unexpected_instruction
     lods u8 [esi]
     cmp al,1Ch
     je format_prefix
@@ -14222,29 +14247,29 @@ format_directive:
 
     select_format:
     mov dl,al
-    shr al,4
+    shr al,TAIL
     mov [output_format],al
-    and edx,0Fh
+    and edx,SHIFT
     or [format_flags],edx
-    cmp al,3
+    cmp al,TXT
     je format_pe
-    cmp al,4
+    cmp al,TAIL
     je format_coff
 
     format_defined:
     cmp u8 [esi],86h
     jne instruction_assembled
-    cmp u16 [esi+1],'('
+    cmp u16 [esi+HEAD],'('
     jne invalid_argument
     mov eax,[esi+3]
-    add esi, 3+4
+    add esi, 3+TAIL
     mov [file_extension],esi
-    lea esi, [esi+eax+1]
+    lea esi, [esi+eax+HEAD]
     jmp instruction_assembled
     ret
 
 format_prefix:
-    strings.emit 'format_prefix | 14246'
+    ;strings.emit 'format_prefix | 14246'
     lods u8 [esi]
     mov ah,al
     lods u8 [esi]
@@ -14252,8 +14277,8 @@ format_prefix:
     jne invalid_argument
     lods u8 [esi]
     mov edx,eax
-    shr dl,4
-    shr dh,4
+    shr dl,TAIL
+    shr dh,TAIL
     cmp dl,dh
     jne invalid_argument
     or al,ah
@@ -14261,78 +14286,78 @@ format_prefix:
     ret
 
 entry_directive:
-    strings.emit 'entry_directive | 14263'
-    bts [format_flags],10h
+    ;strings.emit 'entry_directive | 14263'
+    bts [format_flags],DELINK
     jc setting_already_specified
     mov al,[output_format]
-    cmp al,3
+    cmp al,TXT
     je pe_entry
-    cmp al,5
+    cmp al,QUERY
     jmp illegal_instruction
     ret
 
 stack_directive:
-    strings.emit 'stack_directive | 14274'
+    ;strings.emit 'stack_directive | 14274'
     bts [format_flags],11h
     jc setting_already_specified
     mov al,[output_format]
-    cmp al,3
+    cmp al,TXT
     je pe_stack
     jmp illegal_instruction
     ret
 
 heap_directive:
-    strings.emit 'heap_directive | 14284'
+    ;strings.emit 'heap_directive | 14284'
     bts [format_flags],12h
     jc setting_already_specified
     mov al,[output_format]
-    cmp al,3
+    cmp al,TXT
     je pe_heap
     jmp illegal_instruction
     ret
 
 section_directive:
-    strings.emit 'section_directive | 14294'
+    ;strings.emit 'section_directive | 14294'
     mov al,[output_format]
-    cmp al,3
+    cmp al,TXT
     je pe_section
-    cmp al,4
+    cmp al,TAIL
     je coff_section
     jmp illegal_instruction
     ret
 
 public_directive:
-    strings.emit 'public_directive | 14304'
+    ;strings.emit 'public_directive | 14304'
     mov al,[output_format]
-    cmp al,4
+    cmp al,TAIL
     je public_allowed
-    cmp al,5
+    cmp al,QUERY
     jne illegal_instruction
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jc illegal_instruction
     public_allowed:
     mov [base_code],0C0h
     lods u8 [esi]
-    cmp al,2
+    cmp al,TEXT
     je public_label
     cmp al,1Dh
     jne invalid_argument
     lods u8 [esi]
-    and al,7
+    and al,NOTIFY
     add [base_code],al
     lods u8 [esi]
-    cmp al,2
+    cmp al,TEXT
     jne invalid_argument
 
 public_label:
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     inc esi
     mov dx,[current_pass]
     mov [eax+18],dx
-    or u8 [eax+8],8
+    or u8 [eax+RECTIFY],RECTIFY
     mov ebx,eax
     call store_label_reference
     mov eax,ebx
@@ -14341,7 +14366,7 @@ public_label:
     cmp edx,[structures_buffer]
     jae out_of_memory
     mov u64[free_additional_memory],_edx
-    mov [ebx+8],eax
+    mov [ebx+RECTIFY],eax
     mov _eax,u64[current_line]
     mov [ebx+0Ch],eax
     lods u8 [esi]
@@ -14350,22 +14375,22 @@ public_label:
     lods u16 [esi]
     cmp ax,'('
     jne invalid_argument
-    mov [ebx+4],esi
+    mov [ebx+TAIL],esi
     lods dword [esi]
-    lea esi, [esi+eax+1]
+    lea esi, [esi+eax+HEAD]
     mov al,[base_code]
     mov [ebx],al
     jmp instruction_assembled
     ret
 
 extrn_directive:
-    strings.emit 'extrn_directive | 14361'
+    ;strings.emit 'extrn_directive | 14361'
     mov al,[output_format]
-    cmp al,4
+    cmp al,TAIL
     je extrn_allowed
-    cmp al,5
+    cmp al,QUERY
     jne illegal_instruction
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jc illegal_instruction
 
     extrn_allowed:
@@ -14374,22 +14399,22 @@ extrn_directive:
     jne invalid_argument
     mov ebx,esi
     lods dword [esi]
-    lea esi, [esi+eax+1]
+    lea esi, [esi+eax+HEAD]
     mov _edx,u64[free_additional_memory]
     lea eax,[edx+0Ch]
     cmp eax,[structures_buffer]
     jae out_of_memory
     mov u64[free_additional_memory],_eax
     mov u8 [edx],80h
-    mov [edx+4],ebx
+    mov [edx+TAIL],ebx
     lods u8 [esi]
     cmp al,86h
     jne invalid_argument
     lods u8 [esi]
-    cmp al,2
+    cmp al,TEXT
     jne invalid_argument
     lods dword [esi]
-    cmp eax,0Fh
+    cmp eax,SHIFT
     jb invalid_use_of_symbol
     je reserved_word_used_as_symbol
     inc esi
@@ -14410,45 +14435,45 @@ extrn_directive:
     mov u64[address_symbol],_edx
     mov [label_size],ah
     movzx ecx,ah
-    mov [edx+8],ecx
+    mov [edx+RECTIFY],ecx
     xor eax,eax
     xor edx,edx
     xor ebp,ebp
-    mov [address_sign],0
-    mov ch,2
-    test [format_flags],8
+    mov [address_sign],NUL
+    mov ch,TEXT
+    test [format_flags],RECTIFY
     jz make_free_label
-    mov ch,4
+    mov ch,TAIL
     jmp make_free_label
     ret
 
 mark_relocation:
-    strings.emit 'mark_relocation | 14425'
-    cmp [value_type],0
+    ;strings.emit 'mark_relocation | 14425'
+    cmp [value_type],NUL
     ;je relocation_ok
     je return_ok
     mov ebp,[addressing_space]
-    test u8 [ds:ebp+0Ah],1
+    test u8 [ds:ebp+0Ah],HEAD
     ;jnz relocation_ok
     jnz return_ok
-    cmp [output_format],3
+    cmp [output_format],TXT
     je mark_pe_relocation
-    cmp [output_format],4
+    cmp [output_format],TAIL
     je mark_coff_relocation
     ret
 
 close_pass:
-    strings.emit 'close_pass | 14440'
+    ;strings.emit 'close_pass | 14440'
     mov al,[output_format]
-    cmp al,3
+    cmp al,TXT
     je close_pe
-    cmp al,4
+    cmp al,TAIL
     je close_coff
     ret
 
 recoverable_invalid_address:
-    strings.emit 'recoverable_invalid_address | 14448'
-    cmp [error_line],0
+    ;strings.emit 'recoverable_invalid_address | 14448'
+    cmp [error_line],NUL
     ;jne ignore_invalid_address
     jne return_ok
     push u64[current_line]
@@ -14457,16 +14482,16 @@ recoverable_invalid_address:
     ret
 
 write_mz_header:
-    strings.emit 'write_mz_header | 14459'
+    ;strings.emit 'write_mz_header | 14459'
     mov _edx,u64[additional_memory]
-    bt      [format_flags],4
+    bt      [format_flags],TAIL
     jc mz_stack_ok
     mov eax,[real_code_size]
     dec eax
-    shr eax,4
+    shr eax,TAIL
     inc eax
     mov [edx+0Eh],ax
-    shl eax,4
+    shl eax,TAIL
     movzx ecx, u16 [edx+10h]
     add eax,ecx
     mov [real_code_size],eax
@@ -14474,23 +14499,23 @@ write_mz_header:
     mz_stack_ok:
     mov _edi,u64[free_additional_memory]
     mov eax,[number_of_relocations]
-    shl eax,2
+    shl eax,TEXT
     add eax,1Ch
     sub edi,eax
     xchg _edi,u64[free_additional_memory]
-    mov ecx,0Fh
-    add eax,0Fh
+    mov ecx,SHIFT
+    add eax,SHIFT
     and eax,1111b
     sub ecx,eax
     xor al,al
     rep stos u8 [edi]
     sub _edi,u64[free_additional_memory]
     mov ecx,edi
-    shr edi,4
+    shr edi,TAIL
     mov u16 [edx],'MZ'
-    mov [edx+8],di
+    mov [edx+RECTIFY],di
     mov eax,[number_of_relocations]
-    mov [edx+6],ax
+    mov [edx+RESULT],ax
     mov eax,[code_size]
     add eax,ecx
     mov esi, eax
@@ -14502,11 +14527,11 @@ write_mz_header:
     dec si
 
     mz_size_ok:
-    mov [edx+2],ax
-    mov [edx+4],si
+    mov [edx+TEXT],ax
+    mov [edx+TAIL],si
     mov eax,[real_code_size]
     dec eax
-    shr eax,4
+    shr eax,TAIL
     inc eax
     mov esi, [code_size]
     dec esi
@@ -14525,26 +14550,26 @@ write_mz_header:
     ret
 
 make_stub:
-    strings.emit 'make_stub | 14527'
+    ;strings.emit 'make_stub | 14527'
     mov [stub_file],edx
     or edx,edx
     jnz stub_from_file
     push _esi
     mov edx,edi
     xor eax,eax
-    mov ecx,20h
+    mov ecx,SPACE
     rep stos dword [edi]
-    mov eax,40h+default_stub_end-default_stub
+    mov eax,AMP+default_stub_end-default_stub
     mov cx,100h+default_stub_end-default_stub
     mov u16 [edx],'MZ'
-    mov u8 [edx+4],1
-    mov u16 [edx+2],ax
-    mov u8 [edx+8],4
-    mov u8 [edx+0Ah],10h
+    mov u8 [edx+TAIL],HEAD
+    mov u16 [edx+TEXT],ax
+    mov u8 [edx+RECTIFY],TAIL
+    mov u8 [edx+0Ah],DELINK
     mov u16 [edx+0Ch],0FFFFh
     mov u16 [edx+10h],cx
     mov u16 [edx+3Ch],ax
-    mov u8 [edx+18h],40h
+    mov u8 [edx+18h],AMP
     lea edi,[edx+40h]
     mov esi, default_stub
     mov ecx,default_stub_end-default_stub
@@ -14553,16 +14578,16 @@ make_stub:
     ret
 
 default_stub:
-    strings.emit 'default_stub | 14527'
+    ;strings.emit 'default_stub | 14527'
     use16
     push cs
     pop ds
     mov dx,stub_message-default_stub
-    mov ah,9
+    mov ah,HT
     int     21h
     mov ax,4C01h
     int     21h
-    stub_message db 'This program cannot be run in DOS mode.',0Dh,0Ah,24h
+    stub_message db 'This program cannot be run in DOS mode.',CR,LF,24h
     rq      1
 
     default_stub_end:
@@ -14580,34 +14605,34 @@ default_stub:
     cmp u16 [esi],'MZ'
     jne binary_stub
     add edi,1Ch
-    movzx ecx, u16 [esi+6]
+    movzx ecx, u16 [esi+RESULT]
     add ecx,11b
     and ecx,not 11b
     add ecx,(40h-1Ch) shr 2
-    lea eax,[edi+ecx*4]
+    lea eax,[edi+ecx*TAIL]
     cmp edi,[tagged_blocks]
     jae out_of_memory
     xor eax,eax
     rep stos dword [edi]
-    mov edx,40h
+    mov edx,AMP
     xchg dx,[esi+18h]
     xor al,al
     call lseek
-    movzx ecx, u16 [esi+6]
-    shl ecx,2
+    movzx ecx, u16 [esi+RESULT]
+    shl ecx,TEXT
     lea edx,[esi+40h]
     call read
     mov edx,edi
     sub edx,esi
-    shr edx,4
-    xchg dx,[esi+8]
-    shl edx,4
+    shr edx,TAIL
+    xchg dx,[esi+RECTIFY]
+    shl edx,TAIL
     xor al,al
     call lseek
-    movzx ecx, u16 [esi+4]
+    movzx ecx, u16 [esi+TAIL]
     dec ecx
-    shl ecx,9
-    movzx edx, u16 [esi+2]
+    shl ecx,HT
+    movzx edx, u16 [esi+TEXT]
     test edx,edx
     jnz stub_header_size_ok
     mov dx,200h
@@ -14620,10 +14645,10 @@ default_stub:
     jb stub_code_ok
     push _ecx
     dec ecx
-    shr ecx,3
+    shr ecx,TXT
     inc ecx
-    shl ecx,1
-    lea eax,[edi+ecx*4]
+    shl ecx,HEAD
+    lea eax,[edi+ecx*TAIL]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     xor eax,eax
@@ -14639,11 +14664,11 @@ default_stub:
     sub edx,esi
     mov ax,dx
     and ax,1FFh
-    mov [esi+2],ax
+    mov [esi+TEXT],ax
     dec edx
-    shr edx,9
+    shr edx,HT
     inc edx
-    mov [esi+4],dx
+    mov [esi+TAIL],dx
     mov eax,edi
     sub eax,esi
     mov [esi+3Ch],eax
@@ -14651,12 +14676,12 @@ default_stub:
     ret
 
 binary_stub:
-    strings.emit 'binary_stub | 14653'
+    ;strings.emit 'binary_stub | 14653'
     mov esi, edi
-    mov ecx,40h shr 2
+    mov ecx,AMP shr 2
     xor eax,eax
     rep stos dword [edi]
-    mov al,2
+    mov al,TEXT
     xor edx,edx
     call lseek
     push _eax
@@ -14664,25 +14689,25 @@ binary_stub:
     xor edx,edx
     call lseek
     mov _ecx,[_esp]
-    add ecx,40h+111b
+    add ecx,AMP+111b
     and ecx,not 111b
     mov ax,cx
     and ax,1FFh
-    mov [esi+2],ax
+    mov [esi+TEXT],ax
     lea eax,[ecx+1FFh]
-    shr eax,9
-    mov [esi+4],ax
+    shr eax,HT
+    mov [esi+TAIL],ax
     mov [esi+3Ch],ecx
-    sub ecx,40h
+    sub ecx,AMP
     mov eax,10000h
     sub eax,ecx
     jbe binary_heap_ok
-    shr eax,4
+    shr eax,TAIL
     mov [esi+0Ah],ax
 
     binary_heap_ok:
     mov u16 [esi],'MZ'
-    mov u8 [esi+8],4
+    mov u8 [esi+RECTIFY],TAIL
     mov ax,0FFFFh
     mov [esi+0Ch],ax
     dec ax
@@ -14691,13 +14716,13 @@ binary_stub:
     mov [esi+0Eh],ax
     mov [esi+16h],ax
     mov u16 [esi+14h],100h
-    mov u8 [esi+18h],40h
+    mov u8 [esi+18h],AMP
     mov eax,[tagged_blocks]
     sub eax,ecx
     cmp edi,eax
     jae out_of_memory
     mov edx,edi
-    shr ecx,2
+    shr ecx,TEXT
     xor eax,eax
     rep stos dword [edi]
     pop _ecx
@@ -14707,17 +14732,17 @@ binary_stub:
     ret
 
 format_pe:
-    strings.emit 'format_pe | 14709'
+    ;strings.emit 'format_pe | 14709'
     xor edx,edx
     mov [machine],14Ch
-    mov [subsystem],3
+    mov [subsystem],TXT
     mov [subsystem_version],3 + 10 shl 16
     mov [image_base],400000h
-    and [image_base_high],0
-    test [format_flags],8
+    and [image_base_high],NUL
+    test [format_flags],RECTIFY
     jz pe_settings
     mov [machine],8664h
-    mov [subsystem_version],5 + 0 shl 16
+    mov [subsystem_version], QUERY + NUL shl 16
 
     pe_settings:
     cmp u8 [esi],84h
@@ -14742,45 +14767,44 @@ format_pe:
     ret
 
 dll_flag:
-    strings.emit 'dll_flag | 14744'
-    bts [format_flags],8
+    ;strings.emit 'dll_flag | 14744'
+    bts [format_flags],RECTIFY
     jc setting_already_specified
     jmp pe_settings
     ret
 
 wdm_flag:
-    strings.emit 'wdm_flag | 14751'
-    bts [format_flags],9
+    ;strings.emit 'wdm_flag | 14751'
+    bts [format_flags],HT
     jc setting_already_specified
     jmp pe_settings
     ret
 
 large_flag:
-    strings.emit 'large_flag | 14758'
+    ;strings.emit 'large_flag | 14758'
     bts [format_flags],11
     jc setting_already_specified
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz invalid_argument
     jmp pe_settings
     ret
 
 nx_flag:
-    strings.emit 'nx_flag | 14767'
+    ;strings.emit 'nx_flag | 14767'
     bts [format_flags],12
     jc setting_already_specified
     jmp pe_settings
     ret
 
 subsystem_setting:
-    strings.emit 'subsystem_setting | 14774'
-    bts [format_flags],7
+    ;strings.emit 'subsystem_setting | 14774'
+    bts [format_flags],NOTIFY
     jc setting_already_specified
     and ax,3Fh
     mov [subsystem],ax
     cmp ax,10
     jb subsystem_type_ok
-    or [format_flags],4
-
+    or [format_flags],TAIL
 subsystem_type_ok:
     cmp u8 [esi],'('
     jne pe_settings
@@ -14789,19 +14813,19 @@ subsystem_type_ok:
     jne invalid_value
     inc esi
     push _edx
-    cmp u8 [esi+11],0
-    jne invalid_value
-    cmp u8 [esi+10],2
+    cmp u8 [esi+11],NUL
+    jne  invalid_value
+    cmp u8 [esi+10],TEXT
     ja invalid_value
-    mov dx,[esi+8]
+    mov dx,[esi+RECTIFY]
     cmp dx,8000h
     je zero_version
-    mov eax,[esi+4]
-    cmp dx,7
+    mov eax,[esi+TAIL]
+    cmp dx,NOTIFY
     jg invalid_value
-    mov cx,7
+    mov cx,NOTIFY
     sub cx,dx
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     shr eax,cl
     mov ebx,eax
     shr ebx,24
@@ -14821,7 +14845,7 @@ subsystem_type_ok:
     ret
 
 zero_version:
-    strings.emit 'zero_version | 14823'
+    ;strings.emit 'zero_version | 14823'
     xor eax,eax
 
     subsystem_version_ok:
@@ -14832,7 +14856,7 @@ zero_version:
     ret
 
 get_pe_base:
-    strings.emit 'get_pe_base | 14834'
+    ;strings.emit 'get_pe_base | 14834'
     bts [format_flags],10
     jc setting_already_specified
     lods u16 [esi]
@@ -14842,7 +14866,7 @@ get_pe_base:
     je invalid_value
     push _edx _edi
     add edi,[stub_size]
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz get_peplus_base
     call get_dword_value
     mov [image_base],eax
@@ -14850,15 +14874,15 @@ get_pe_base:
     ret
 
 get_peplus_base:
-    strings.emit 'get_peplus_base | 14852'
+    ;strings.emit 'get_peplus_base | 14852'
     call get_qword_value
     mov [image_base],eax
     mov [image_base_high],edx
 
     pe_base_ok:
     pop _edi _edx
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     cmp u8 [esi],84h
     jne pe_settings_ok
 
@@ -14892,57 +14916,57 @@ get_peplus_base:
     pe_stub_ok:
     mov edx,edi
     mov ecx,18h+0E0h
-    test [format_flags],4
+    test [format_flags],TAIL
     jz zero_pe_header
-    add ecx,10h
+    add ecx,DELINK
 
     zero_pe_header:
     add ebp,ecx
-    shr ecx,2
+    shr ecx,TEXT
     xor eax,eax
     rep stos dword [edi]
     mov u16 [edx],'PE'
     mov ax,[machine]
-    mov u16 [edx+4],ax
-    mov u8 [edx+38h+1],10h
-    mov u8 [edx+3Ch+1],2
-    mov u8 [edx+40h],1
+    mov u16 [edx+TAIL],ax
+    mov u8 [edx+38h+HEAD],DELINK
+    mov u8 [edx+3Ch+HEAD],TEXT
+    mov u8 [edx+40h],HEAD
     mov eax,[subsystem_version]
     mov [edx+48h],eax
     mov ax,[subsystem]
     mov [edx+5Ch],ax
-    cmp ax,1
+    cmp ax,HEAD
     jne pe_alignment_ok
-    mov eax,20h
+    mov eax,SPACE
     mov dword [edx+38h],eax
     mov dword [edx+3Ch],eax
 
     pe_alignment_ok:
     mov u16 [edx+1Ah],VERSION_MAJOR + VERSION_MINOR shl 8
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz init_peplus_specific
     mov u8 [edx+14h],0E0h
     mov dword [edx+16h],10B010Fh
     mov eax,[image_base]
     mov [edx+34h],eax
-    mov u8 [edx+60h+1],10h
-    mov u8 [edx+64h+1],10h
-    mov u8 [edx+68h+2],1
+    mov u8 [edx+60h+HEAD],DELINK
+    mov u8 [edx+64h+HEAD],DELINK
+    mov u8 [edx+68h+TEXT],HEAD
     mov u8 [edx+74h],16
     jmp pe_header_ok
     ret
 
 init_peplus_specific:
-    strings.emit 'init_peplus_specific | 14935'
+    ;strings.emit 'init_peplus_specific | 14935'
     mov u8 [edx+14h],0F0h
     mov dword [edx+16h],20B002Fh
     mov eax,[image_base]
     mov [edx+30h],eax
     mov eax,[image_base_high]
     mov [edx+34h],eax
-    mov u8 [edx+60h+1],10h
-    mov u8 [edx+68h+1],10h
-    mov u8 [edx+70h+2],1
+    mov u8 [edx+60h+HEAD],DELINK
+    mov u8 [edx+68h+HEAD],DELINK
+    mov u8 [edx+70h+TEXT],HEAD
     mov u8 [edx+84h],16
 
     pe_header_ok:
@@ -14964,7 +14988,7 @@ init_peplus_specific:
     sub eax,ecx
     cmp edi,eax
     jae out_of_memory
-    shr ecx,2
+    shr ecx,TEXT
     xor eax,eax
     rep stos dword [edi]
     mov eax,edi
@@ -14976,17 +15000,17 @@ init_peplus_specific:
     add eax,ecx
     not ecx
     and eax,ecx
-    bt      [format_flags],8
+    bt      [format_flags],RECTIFY
     jc pe_entry_init_ok
     mov [edx+28h],eax
 
     pe_entry_init_ok:
-    and [number_of_sections],0
+    and [number_of_sections],NUL
     movzx ebx, u16 [edx+14h]
     lea ebx,[edx+18h+ebx]
     mov [current_section],ebx
     mov dword [ebx],'.fla'
-    mov dword [ebx+4],'t'
+    mov dword [ebx+TAIL],'t'
     mov [ebx+14h],edi
     mov [ebx+0Ch],eax
     mov dword [ebx+24h],0E0000060h
@@ -14995,41 +15019,41 @@ init_peplus_specific:
     not eax
     not ecx
     not bl
-    add eax,1
-    adc ecx,0
-    adc bl,0
+    add eax,HEAD
+    adc ecx,NUL
+    adc bl,NUL
     add eax,edi
-    adc ecx,0
-    adc bl,0
-    test [format_flags],4
+    adc ecx,NUL
+    adc bl,NUL
+    test [format_flags],TAIL
     jnz peplus_org
     sub eax,[edx+34h]
-    sbb ecx,0
-    sbb bl,0
+    sbb ecx,NUL
+    sbb bl,NUL
     jmp pe_org_ok
     ret
 
 peplus_org:
-    strings.emit 'peplus_org | 15012'
+    ;strings.emit 'peplus_org | 15012'
     sub eax,[edx+30h]
     sbb ecx,[edx+34h]
     sbb bl,0
 
     pe_org_ok:
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz pe64_code
-    mov bh,2
+    mov bh,TEXT
     mov [code_type],32
     jmp pe_code_type_ok
     ret
 
 pe64_code:
-    strings.emit 'pe64_code | 15026'
-    mov bh,4
+    ;strings.emit 'pe64_code | 15026'
+    mov bh,TAIL
     mov [code_type],64
 
     pe_code_type_ok:
-    bt      [resolver_flags],0
+    bt      [resolver_flags],NUL
     jc pe_labels_type_ok
     xor bh,bh
 
@@ -15039,46 +15063,46 @@ pe64_code:
     mov ebp,ebx
     pop _ebx _eax
     mov [ds:ebp],eax
-    mov [ds:ebp+4],ecx
-    mov [ds:ebp+8],bx
+    mov [ds:ebp+TAIL],ecx
+    mov [ds:ebp+RECTIFY],bx
     mov [ds:ebp+18h],edi
-    bt      [format_flags],8
+    bt      [format_flags],RECTIFY
     jnc dll_flag_ok
-    or u8 [edx+16h+1],20h
+    or u8 [edx+16h+HEAD],SPACE
 
     dll_flag_ok:
-    bt      [format_flags],9
+    bt      [format_flags],HT
     jnc wdm_flag_ok
-    or u8 [edx+5Eh+1],20h
+    or u8 [edx+5Eh+HEAD],SPACE
     wdm_flag_ok:
     bt      [format_flags],11
     jnc large_flag_ok
-    or u8 [edx+16h],20h
+    or u8 [edx+16h],SPACE
 
     large_flag_ok:
     bt      [format_flags],12
     jnc nx_ok
-    or u8 [edx+5Eh+1],1
+    or u8 [edx+5Eh+HEAD],HEAD
 
     nx_ok:
     jmp format_defined
     ret
 
 pe_section:
-    strings.emit 'pe_section | 15068'
+    ;strings.emit 'pe_section | 15068'
     call close_pe_section
     push _eax _ebx
     call create_addressing_space
     mov ebp,ebx
     pop _ebx _eax
-    bts [format_flags],5
+    bts [format_flags],QUERY
     lea ecx,[ebx+28h]
     add edx,[edx+54h]
     sub edx,[stub_size]
     cmp ecx,edx
     jbe new_section
     lea ebx,[edx-28h]
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
     push _edi
     mov edi,ebx
     mov ecx,28h shr 4
@@ -15091,62 +15115,62 @@ pe_section:
     lods u16 [esi]
     cmp ax,'('
     jne invalid_argument
-    lea edx,[esi+4]
+    lea edx,[esi+TAIL]
     mov ecx,[esi]
-    lea esi, [esi+4+ecx+1]
-    cmp ecx,8
+    lea esi, [esi+TAIL+ecx+HEAD]
+    cmp ecx,RECTIFY
     ja name_too_long
     xor eax,eax
     mov [ebx],eax
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     push _esi _edi
     mov edi,ebx
     mov esi, edx
     rep movs u8 [edi],[esi]
     pop _edi _esi
-    and dword [ebx+24h],0
+    and dword [ebx+24h],NUL
     mov [ebx+14h],edi
     mov edx,[code_start]
     mov eax,edi
     xor ecx,ecx
     sub eax,[ebx+0Ch]
-    sbb ecx,0
-    sbb u8 [ds:ebp+8],0
-    mov u8 [ds:ebp+9],2
+    sbb ecx,NUL
+    sbb u8 [ds:ebp+RECTIFY],NUL
+    mov u8 [ds:ebp+9],TEXT
     mov [code_type],32
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jz pe_section_code_type_ok
-    mov u8 [ds:ebp+9],4
+    mov u8 [ds:ebp+9],TAIL
     mov [code_type],64
     pe_section_code_type_ok:
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz peplus_section_org
     sub eax,[edx+34h]
-    sbb ecx,0
-    sbb u8 [ds:ebp+8],0
-    bt      [resolver_flags],0
+    sbb ecx,NUL
+    sbb u8 [ds:ebp+RECTIFY],NUL
+    bt      [resolver_flags],NUL
     jc pe_section_org_ok
-    mov u8 [ds:ebp+9],0
+    mov u8 [ds:ebp+9],NUL
     jmp pe_section_org_ok
     ret
 
 peplus_section_org:
-    strings.emit 'peplus_section_org | 15133'
+    ;strings.emit 'peplus_section_org | 15133'
     sub eax,[edx+30h]
     sbb ecx,[edx+34h]
-    sbb u8 [ds:ebp+8],0
-    bt      [resolver_flags],0
+    sbb u8 [ds:ebp+RECTIFY],NUL
+    bt      [resolver_flags],NUL
     jc pe_section_org_ok
-    mov u8 [ds:ebp+9],0
+    mov u8 [ds:ebp+9],NUL
 
     pe_section_org_ok:
     mov [ds:ebp],eax
-    mov [ds:ebp+4],ecx
+    mov [ds:ebp+TAIL],ecx
     mov [ds:ebp+18h],edi
 
     get_section_flags:
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je set_directory
     cmp al,19h
     je section_flag
@@ -15155,21 +15179,21 @@ peplus_section_org:
     ret
 
 set_directory:
-    strings.emit 'set_directory | 15157'
+    ;strings.emit 'set_directory | 15157'
     movzx eax, u8 [esi]
     inc esi
     mov ecx,ebx
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz peplus_directory
-    xchg ecx,[edx+78h+eax*8]
-    mov dword [edx+78h+eax*8+4],-1
+    xchg ecx,[edx+78h+eax*RECTIFY]
+    mov dword [edx+78h+eax*RECTIFY+TAIL],-HEAD
     jmp pe_directory_set
     ret
 
 peplus_directory:
-    strings.emit 'peplus_directory | 15169'
-    xchg ecx,[edx+88h+eax*8]
-    mov dword [edx+88h+eax*8+4],-1
+    ;strings.emit 'peplus_directory | 15169'
+    xchg ecx,[edx+88h+eax*RECTIFY]
+    mov dword [edx+88h+eax*RECTIFY+TAIL],-HEAD
 
 pe_directory_set:
     or ecx,ecx
@@ -15181,14 +15205,14 @@ pe_directory_set:
     ret
 
 section_flag:
-    strings.emit 'section_flag | 15183'
+    ;strings.emit 'section_flag | 15183'
     lods u8 [esi]
-    cmp al,9
+    cmp al,HT
     je invalid_argument
     cmp al,11
     je invalid_argument
     mov cl,al
-    mov eax,1
+    mov eax,HEAD
     shl eax,cl
     test dword [ebx+24h],eax
     jnz setting_already_specified
@@ -15197,20 +15221,20 @@ section_flag:
     ret
 
 close_pe_section:
-    strings.emit 'close_pe_section | 15199'
+    ;strings.emit 'close_pe_section | 15199'
     mov ebx,[current_section]
     mov edx,[code_start]
     mov eax,edi
     sub eax,[ebx+14h]
     jnz finish_section
-    bt      [format_flags],5
+    bt      [format_flags],QUERY
     jc finish_section
     mov eax,[ebx+0Ch]
     ret
 
 finish_section:
-    strings.emit 'finish_section | 15211'
-    mov [ebx+8],eax
+    ;strings.emit 'finish_section | 15211'
+    mov [ebx+RECTIFY],eax
     cmp edi,[undefined_data_end]
     jne align_section
     cmp dword [edx+38h],1000h
@@ -15218,7 +15242,7 @@ finish_section:
     mov edi,[undefined_data_start]
 
     align_section:
-    and [undefined_data_end],0
+    and [undefined_data_end],NUL
     mov ebp,edi
     sub ebp,[ebx+14h]
     mov ecx,[edx+3Ch]
@@ -15235,31 +15259,31 @@ finish_section:
     sub eax,[stub_size]
     sub [ebx+14h],eax
     mov ecx,[ebx+10h]
-    test u8 [ebx+24h],20h
+    test u8 [ebx+24h],SPACE
     jz pe_code_sum_ok
     add [edx+1Ch],ecx
-    cmp dword [edx+2Ch],0
-    jne pe_code_sum_ok
+    cmp dword [edx+2Ch],NUL
+    jne  pe_code_sum_ok
     mov eax,[ebx+0Ch]
     mov [edx+2Ch],eax
 
     pe_code_sum_ok:
-    test u8 [ebx+24h],40h
+    test u8 [ebx+24h],AMP
     jz pe_data_sum_ok
     add [edx+20h],ecx
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz pe_data_sum_ok
-    cmp dword [edx+30h],0
-    jne pe_data_sum_ok
+    cmp dword [edx+30h],NUL
+    jne  pe_data_sum_ok
     mov eax,[ebx+0Ch]
     mov [edx+30h],eax
 
     pe_data_sum_ok:
-    mov eax,[ebx+8]
+    mov eax,[ebx+RECTIFY]
     or eax,eax
     jz udata_ok
-    cmp dword [ebx+10h],0
-    jne udata_ok
+    cmp dword [ebx+10h],NUL
+    jne  udata_ok
     or u8 [ebx+24h],80h
     add [edx+24h],ecx
 
@@ -15277,11 +15301,11 @@ finish_section:
     ret
 
 data_directive:
-    strings.emit 'data_directive | 15279'
-    cmp [output_format],3
+    ;strings.emit 'data_directive | 15279'
+    cmp [output_format],TXT
     jne illegal_instruction
     lods u8 [esi]
-    cmp al,1Ah
+    cmp al,SUB
     je predefined_data_type
     cmp al,'('
     jne invalid_argument
@@ -15292,7 +15316,7 @@ data_directive:
     ret
 
 predefined_data_type:
-    strings.emit 'predefined_data_type | 15294'
+    ;strings.emit 'predefined_data_type | 15294'
     movzx eax, u8 [esi]
     inc esi
 
@@ -15302,14 +15326,14 @@ predefined_data_type:
     sub ecx,[ebx+14h]
     add ecx,[ebx+0Ch]
     mov edx,[code_start]
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz peplus_data
-    xchg ecx,[edx+78h+eax*8]
+    xchg ecx,[edx+78h+eax*RECTIFY]
     jmp init_pe_data
     ret
 
 peplus_data:
-    strings.emit 'peplus_data | 15311'
+    ;strings.emit 'peplus_data | 15311'
     xchg ecx,[edx+88h+eax*8]
 
     init_pe_data:
@@ -15317,51 +15341,51 @@ peplus_data:
     jnz data_already_defined
     call allocate_structure_data
     mov u16 [ebx],data_directive-instruction_handler
-    mov [ebx+2],al
+    mov [ebx+TEXT],al
     mov _edx,u64[current_line]
-    mov [ebx+4],edx
+    mov [ebx+TAIL],edx
     call generate_pe_data
     jmp instruction_assembled
     ret
 
 end_data:
-    strings.emit 'end_data | 15327'
-    cmp [output_format],3
+    ;strings.emit 'end_data | 15327'
+    cmp [output_format],TXT
     jne illegal_instruction
     call find_structure_data
     jc unexpected_instruction
-    movzx eax, u8 [ebx+2]
+    movzx eax, u8 [ebx+TEXT]
     mov edx,[current_section]
     mov ecx,edi
     sub ecx,[edx+14h]
     add ecx,[edx+0Ch]
     mov edx,[code_start]
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz end_peplus_data
-    sub ecx,[edx+78h+eax*8]
-    mov [edx+78h+eax*8+4],ecx
+    sub ecx,[edx+78h+eax*RECTIFY]
+    mov [edx+78h+eax*RECTIFY+TAIL],ecx
     jmp remove_structure_data
     ret
 
 end_peplus_data:
-    strings.emit 'end_peplus_data | 15346'
-    sub ecx,[edx+88h+eax*8]
-    mov [edx+88h+eax*8+4],ecx
+    ;strings.emit 'end_peplus_data | 15346'
+    sub ecx,[edx+88h+eax*RECTIFY]
+    mov [edx+88h+eax*RECTIFY+TAIL],ecx
     jmp remove_structure_data
     ret
 
 pe_entry:
-    strings.emit 'pe_entry | 15354'
+    ;strings.emit 'pe_entry | 15354'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
     cmp u8 [esi],'.'
     je invalid_value
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz pe64_entry
     call get_dword_value
-    mov bl,2
-    bt      [resolver_flags],0
+    mov bl,TEXT
+    bt      [resolver_flags],NUL
     jc check_pe_entry_label_type
     xor bl,bl
 
@@ -15371,7 +15395,7 @@ pe_entry:
     call recoverable_invalid_address
     pe_entry_ok:
     cdq
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz pe64_entry_type_ok
     mov edx,[code_start]
     sub eax,[edx+34h]
@@ -15380,10 +15404,10 @@ pe_entry:
     ret
 
 pe64_entry:
-    strings.emit 'pe64_entry | 15382'
+    ;strings.emit 'pe64_entry | 15382'
     call get_qword_value
-    mov bl,4
-    bt      [resolver_flags],0
+    mov bl,TAIL
+    bt      [resolver_flags],NUL
     jc check_pe64_entry_label_type
     xor bl,bl
 
@@ -15405,13 +15429,13 @@ check_pe64_entry_label_type:
     ret
 
 pe_stack:
-    strings.emit 'pe_stack | 15407'
+    ;strings.emit 'pe_stack | 15407'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
     cmp u8 [esi],'.'
     je invalid_value
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz peplus_stack
     call get_count_value
     mov edx,[code_start]
@@ -15433,7 +15457,7 @@ pe_stack:
     ret
 
 default_stack_commit:
-    strings.emit 'default_stack_commit | 15435'
+    ;strings.emit 'default_stack_commit | 15435'
     mov dword [edx+64h],1000h
     mov eax,[edx+60h]
     cmp eax,1000h
@@ -15443,10 +15467,10 @@ default_stack_commit:
     ret
 
 peplus_stack:
-    strings.emit 'peplus_stack | 15445'
+    ;strings.emit 'peplus_stack | 15445'
     call get_qword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov ecx,[code_start]
     mov [ecx+60h],eax
     mov [ecx+64h],edx
@@ -15459,8 +15483,8 @@ peplus_stack:
     cmp u8 [esi],'.'
     je invalid_value
     call get_qword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov ecx,[code_start]
     mov [ecx+68h],eax
     mov [ecx+6Ch],edx
@@ -15473,10 +15497,10 @@ peplus_stack:
     ret
 
 default_peplus_stack_commit:
-    strings.emit 'default_peplus_stack_commit | 15475'
+    ;strings.emit 'default_peplus_stack_commit | 15475'
     mov dword [ecx+68h],1000h
-    cmp dword [ecx+64h],0
-    jne instruction_assembled
+    cmp dword [ecx+64h],NUL
+    jne  instruction_assembled
     mov eax,[ecx+60h]
     cmp eax,1000h
     ja instruction_assembled
@@ -15485,13 +15509,13 @@ default_peplus_stack_commit:
     ret
 
 pe_heap:
-    strings.emit 'pe_heap | 15487'
+    ;strings.emit 'pe_heap | 15487'
     lods u8 [esi]
     cmp al,'('
     jne invalid_argument
     cmp u8 [esi],'.'
     je invalid_value
-    test [format_flags],4
+    test [format_flags],TAIL
     jnz peplus_heap
     call get_count_value
     mov edx,[code_start]
@@ -15513,10 +15537,10 @@ pe_heap:
     ret
 
 peplus_heap:
-    strings.emit 'peplus_heap | 15515'
+    ;strings.emit 'peplus_heap | 15515'
     call get_qword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov ecx,[code_start]
     mov [ecx+70h],eax
     mov [ecx+74h],edx
@@ -15529,8 +15553,8 @@ peplus_heap:
     cmp u8 [esi],'.'
     je invalid_value
     call get_qword_value
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov ecx,[code_start]
     mov [ecx+78h],eax
     mov [ecx+7Ch],edx
@@ -15543,15 +15567,15 @@ peplus_heap:
     ret
 
 mark_pe_relocation:
-    strings.emit 'mark_pe_relocation | 15545'
+    ;strings.emit 'mark_pe_relocation | 15545'
     push _eax _ebx
-    test [format_flags],4
+    test [format_flags],TAIL
     jz check_standard_pe_relocation_type
-    cmp [value_type],4
+    cmp [value_type],TAIL
     je pe_relocation_type_ok
 
     check_standard_pe_relocation_type:
-    cmp [value_type],2
+    cmp [value_type],TEXT
     je pe_relocation_type_ok
     call recoverable_misuse
 
@@ -15562,44 +15586,44 @@ mark_pe_relocation:
     add eax,[ebx+0Ch]
     mov _ebx,u64[free_additional_memory]
     inc [number_of_relocations]
-    add ebx,5
+    add ebx,QUERY
     cmp ebx,[structures_buffer]
     jae out_of_memory
     mov u64[free_additional_memory],_ebx
     mov [ebx-5],eax
-    cmp [value_type],2
+    cmp [value_type],TEXT
     je fixup_32bit
-    mov u8 [ebx-1],0Ah
+    mov u8 [ebx-HEAD],LF
     jmp fixup_ok
     ret
 
 fixup_32bit:
-    strings.emit 'fixup_32bit | 15576'
-    mov u8 [ebx-1],3
+    ;strings.emit 'fixup_32bit | 15576'
+    mov u8 [ebx-HEAD],3
 
     fixup_ok:
     pop _ebx _eax
     ret
 
 generate_pe_data:
-    strings.emit 'generate_pe_data | 15584'
-    cmp al,2
+    ;strings.emit 'generate_pe_data | 15584'
+    cmp al,TEXT
     je make_pe_resource
-    cmp al,5
+    cmp al,QUERY
     je make_pe_fixups
     ret
 
 make_pe_fixups:
-    strings.emit 'make_pe_fixups | 15592'
+    ;strings.emit 'make_pe_fixups | 15592'
     mov edx,[code_start]
-    and u8 [edx+16h],not 1
-    or u8 [edx+5Eh],40h
-    bts [resolver_flags],0
+    and u8 [edx+16h],not HEAD
+    or u8 [edx+5Eh],AMP
+    bts [resolver_flags],NUL
     jc fixups_ready
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
 
     fixups_ready:
-    and [last_fixup_base],0
+    and [last_fixup_base],NUL
     call make_fixups
     xchg eax,[actual_fixups_size]
     sub eax,[actual_fixups_size]
@@ -15613,7 +15637,7 @@ make_pe_fixups:
     ret
 
 make_fixups:
-    strings.emit 'make_fixups | 15615'
+    ;strings.emit 'make_fixups | 15615'
     push _esi
     xor ecx,ecx
     xchg ecx,[number_of_relocations]
@@ -15635,7 +15659,7 @@ make_fixups:
     jz fixups_block
     xor ax,ax
     stos u16 [edi]
-    add dword [ebx],2
+    add dword [ebx],TEXT
 
     fixups_block:
     mov eax,edx
@@ -15644,14 +15668,14 @@ make_fixups:
     jae fixups_block
     stos dword [edi]
     mov ebx,edi
-    mov eax,8
+    mov eax,RECTIFY
     stos dword [edi]
     store_fixup:
-    add dword [ebx],2
-    mov ah,[esi+1]
-    and ah,0Fh
-    mov al,[esi+4]
-    shl al,4
+    add dword [ebx],TEXT
+    mov ah,[esi+HEAD]
+    and ah,SHIFT
+    mov al,[esi+TAIL]
+    shl al,TAIL
     or ah,al
     mov al,[esi]
     stos u16 [edi]
@@ -15666,7 +15690,7 @@ make_fixups:
     ret
 
 make_pe_resource:
-    strings.emit 'make_pe_resource | 15668'
+    ;strings.emit 'make_pe_resource | 15668'
     cmp u8 [esi],82h
     ;jne resource_done
     jne return_ok
@@ -15676,12 +15700,12 @@ make_pe_resource:
     jne invalid_argument
     lods dword [esi]
     mov edx,esi
-    lea esi, [esi+eax+1]
-    cmp [next_pass_needed],0
+    lea esi, [esi+eax+HEAD]
+    cmp [next_pass_needed],NUL
     je resource_from_file
-    cmp [current_pass],0
-    jne reserve_space_for_resource
-    and [resource_size],0
+    cmp [current_pass],NUL
+    jne  reserve_space_for_resource
+    and [resource_size],NUL
 
     reserve_space_for_resource:
     add edi,[resource_size]
@@ -15692,7 +15716,7 @@ make_pe_resource:
     ret
 
 resource_from_file:
-    strings.emit 'resource_from_file | 15694'
+    ;strings.emit 'resource_from_file | 15694'
     push _esi
     mov esi, edx
     call open_binary_file
@@ -15702,41 +15726,41 @@ resource_from_file:
     cmp eax,[structures_buffer]
     ja out_of_memory
     mov edx,esi
-    mov ecx,20h
+    mov ecx,SPACE
     call read
     jc invalid_file_format
     xor eax,eax
     cmp [esi],eax
     jne invalid_file_format
     mov ax,0FFFFh
-    cmp [esi+8],eax
+    cmp [esi+RECTIFY],eax
     jne invalid_file_format
     cmp [esi+12],eax
     jne invalid_file_format
-    mov eax,20h
-    cmp [esi+4],eax
+    mov eax,SPACE
+    cmp [esi+TAIL],eax
     jne invalid_file_format
 
     read_resource_headers:
     test eax,11b
     jz resource_file_alignment_ok
-    mov edx,4
+    mov edx,TAIL
     and eax,11b
     sub edx,eax
-    mov al,1
+    mov al,HEAD
     call lseek
     jc resource_headers_ok
 
     resource_file_alignment_ok:
     mov [esi],eax
     lea edx,[esi+12]
-    mov ecx,8
+    mov ecx,RECTIFY
     call read
     jc resource_headers_ok
     mov ecx,[esi+16]
     add [esi],ecx
     lea edx,[esi+20]
-    sub ecx,8
+    sub ecx,RECTIFY
     mov [esi+16],ecx
     lea eax,[edx+ecx]
     cmp eax,[structures_buffer]
@@ -15748,35 +15772,35 @@ resource_from_file:
     mov eax,[esi+16]
     lea ecx,[esi+20]
     lea esi, [ecx+eax]
-    add ecx,2
-    cmp u16 [ecx-2],0FFFFh
+    add ecx,TEXT
+    cmp u16 [ecx-TEXT],0FFFFh
     je resource_header_type_ok
 
     check_resource_header_type:
     cmp ecx,esi
     jae invalid_file_format
-    cmp u16 [ecx],0
+    cmp u16 [ecx],NUL
     je resource_header_type_ok
-    add ecx,2
+    add ecx,TEXT
     jmp check_resource_header_type
     ret
 
 resource_header_type_ok:
-    strings.emit 'resource_header_type_ok | 15764'
-    add ecx,2
+    ;strings.emit 'resource_header_type_ok | 15764'
+    add ecx,TEXT
     cmp u16 [ecx],0FFFFh
     je resource_header_name_ok
     check_resource_header_name:
     cmp ecx,esi
     jae invalid_file_format
-    cmp u16 [ecx],0
+    cmp u16 [ecx],NUL
     je resource_header_name_ok
-    add ecx,2
+    add ecx,TEXT
     jmp check_resource_header_name
     ret
 
 resource_header_name_ok:
-    strings.emit 'resource_header_name_ok | 15778'
+    ;strings.emit 'resource_header_name_ok | 15778'
     xor al,al
     call lseek
     jnc read_resource_headers
@@ -15802,7 +15826,7 @@ resource_header_name_ok:
     mov _esi,u64[free_additional_memory]
     xor edx,edx
     find_type_name:
-    cmp dword [esi],0
+    cmp dword [esi],NUL
     je type_name_ok
     add esi, 20
     cmp u16 [esi],0FFFFh
@@ -15816,7 +15840,7 @@ resource_header_name_ok:
     cmp ax,[ebx+ecx]
     ja check_this_type_name
     jb check_next_type_name
-    add ecx,2
+    add ecx,TEXT
     mov ax,[esi+ecx]
     or ax,[ebx+ecx]
     jnz compare_with_previous_type_name
@@ -15824,7 +15848,7 @@ resource_header_name_ok:
     ret
 
 check_this_type_name:
-    strings.emit 'check_this_type_name | 15826'
+    ;strings.emit 'check_this_type_name | 15826'
     or edx,edx
     jz type_name_found
     xor ecx,ecx
@@ -15834,7 +15858,7 @@ check_this_type_name:
     cmp ax,[edx+ecx]
     ja check_next_type_name
     jb type_name_found
-    add ecx,2
+    add ecx,TEXT
     mov ax,[esi+ecx]
     or ax,[edx+ecx]
     jnz compare_with_current_type_name
@@ -15842,19 +15866,19 @@ check_this_type_name:
     ret
 
 type_name_found:
-    strings.emit 'type_name_found | 15844'
+    ;strings.emit 'type_name_found | 15844'
     mov edx,esi
     same_type_name:
     mov [esi-16],edi
 
     check_next_type_name:
-    mov eax,[esi-4]
+    mov eax,[esi-TAIL]
     add esi, eax
     jmp find_type_name
     ret
 
 type_name_ok:
-    strings.emit 'type_name_ok | 15856'
+    ;strings.emit 'type_name_ok | 15856'
     or edx,edx
     jz type_name_directory_done
     mov ebx,edx
@@ -15862,7 +15886,7 @@ type_name_ok:
     make_type_name_entry:
     mov eax,[resource_data]
     inc u16 [eax+12]
-    lea eax,[edi+8]
+    lea eax,[edi+RECTIFY]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     mov eax,ebx
@@ -15873,19 +15897,19 @@ type_name_ok:
     ret
 
 type_name_directory_done:
-    strings.emit 'type_name_directory_done | 15875'
-    mov ebx,-1
+    ;strings.emit 'type_name_directory_done | 15875'
+    mov ebx,-HEAD
 
     make_type_id_directory:
     mov _esi,u64[free_additional_memory]
     mov edx,10000h
     find_type_id:
-    cmp dword [esi],0
+    cmp dword [esi],NUL
     je type_id_ok
     add esi, 20
     cmp u16 [esi],0FFFFh
     jne check_next_type_id
-    movzx eax, u16 [esi+2]
+    movzx eax, u16 [esi+TEXT]
     cmp eax,ebx
     jle check_next_type_id
     cmp eax,edx
@@ -15894,13 +15918,13 @@ type_name_directory_done:
     mov [esi-16],edi
 
     check_next_type_id:
-    mov eax,[esi-4]
+    mov eax,[esi-TAIL]
     add esi, eax
     jmp find_type_id
     ret
 
 type_id_ok:
-    strings.emit 'type_id_ok | 15902'
+    ;strings.emit 'type_id_ok | 15902'
     cmp edx,10000h
     je type_id_directory_done
     mov ebx,edx
@@ -15908,7 +15932,7 @@ type_id_ok:
     make_type_id_entry:
     mov eax,[resource_data]
     inc u16 [eax+14]
-    lea eax,[edi+8]
+    lea eax,[edi+RECTIFY]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     mov eax,ebx
@@ -15919,10 +15943,10 @@ type_id_ok:
     ret
 
 type_id_directory_done:
-    strings.emit 'type_id_directory_done | 15921'
+    ;strings.emit 'type_id_directory_done | 15921'
     mov esi, [resource_data]
     add esi, 10h
-    mov ecx,[esi-4]
+    mov ecx,[esi-TAIL]
     or cx,cx
     jz resource_directories_ok
 
@@ -15932,7 +15956,7 @@ type_id_directory_done:
     mov edx,edi
     sub edx,[resource_data]
     bts edx,31
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     lea eax,[edi+16]
     cmp eax,[tagged_blocks]
     jae out_of_memory
@@ -15951,10 +15975,10 @@ type_id_directory_done:
     xor edx,edx
 
     find_resource_name:
-    cmp dword [esi],0
+    cmp dword [esi],NUL
     je resource_name_ok
     push _esi
-    cmp [esi+4],ebp
+    cmp [esi+TAIL],ebp
     jne check_next_resource_name
     add esi, 20
     call skip_resource_name
@@ -15969,7 +15993,7 @@ type_id_directory_done:
     cmp ax,[ebx+ecx]
     ja check_this_resource_name
     jb check_next_resource_name
-    add ecx,2
+    add ecx,TEXT
     mov ax,[esi+ecx]
     or ax,[ebx+ecx]
     jnz compare_with_previous_resource_name
@@ -15977,21 +16001,21 @@ type_id_directory_done:
     ret
 
 skip_resource_name:
-    strings.emit 'skip_resource_name | 15979'
+    ;strings.emit 'skip_resource_name | 15979'
     cmp u16 [esi],0FFFFh
     jne skip_unicode_string
     add esi, 4
     ret
 
 skip_unicode_string:
-    strings.emit 'skip_unicode_string | 15986'
+    ;strings.emit 'skip_unicode_string | 15986'
     add esi, 2
-    cmp u16 [esi-2],0
-    jne skip_unicode_string
+    cmp u16 [esi-TEXT],NUL
+    jne  skip_unicode_string
     ret
 
 check_this_resource_name:
-    strings.emit 'check_this_resource_name | 15993'
+    ;strings.emit 'check_this_resource_name | 15993'
     or edx,edx
     jz resource_name_found
     xor ecx,ecx
@@ -16001,7 +16025,7 @@ check_this_resource_name:
     cmp ax,[edx+ecx]
     ja check_next_resource_name
     jb resource_name_found
-    add ecx,2
+    add ecx,TEXT
     mov ax,[esi+ecx]
     or ax,[edx+ecx]
     jnz compare_with_current_resource_name
@@ -16009,12 +16033,12 @@ check_this_resource_name:
     ret
 
 resource_name_found:
-    strings.emit 'resource_name_found | 16011'
+    ;strings.emit 'resource_name_found | 16011'
     mov edx,esi
 
     same_resource_name:
     mov _eax,[_esp]
-    mov [eax+8],edi
+    mov [eax+RECTIFY],edi
 
     check_next_resource_name:
     pop _esi
@@ -16024,7 +16048,7 @@ resource_name_found:
     ret
 
 resource_name_ok:
-    strings.emit 'resource_name_ok | 16026'
+    ;strings.emit 'resource_name_ok | 16026'
     or edx,edx
     jz resource_name_directory_done
     mov ebx,edx
@@ -16032,7 +16056,7 @@ resource_name_ok:
     make_resource_name_entry:
     mov _eax,[_esp]
     inc u16 [eax+12]
-    lea eax,[edi+8]
+    lea eax,[edi+RECTIFY]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     mov eax,ebx
@@ -16043,31 +16067,31 @@ resource_name_ok:
     ret
 
 resource_name_directory_done:
-    strings.emit 'resource_name_directory_done | 16045'
-    mov ebx,-1
+    ;strings.emit 'resource_name_directory_done | 16045'
+    mov ebx,-HEAD
 
     make_resource_id_directory:
     mov _esi,u64[free_additional_memory]
     mov edx,10000h
 
     find_resource_id:
-    cmp dword [esi],0
+    cmp dword [esi],NUL
     je resource_id_ok
     push _esi
-    cmp [esi+4],ebp
+    cmp [esi+TAIL],ebp
     jne check_next_resource_id
     add esi, 20
     call skip_resource_name
     cmp u16 [esi],0FFFFh
     jne check_next_resource_id
-    movzx eax, u16 [esi+2]
+    movzx eax, u16 [esi+TEXT]
     cmp eax,ebx
     jle check_next_resource_id
     cmp eax,edx
     jg check_next_resource_id
     mov edx,eax
     mov _eax,[_esp]
-    mov [_eax+8],edi
+    mov [_eax+RECTIFY],edi
 
     check_next_resource_id:
     pop _esi
@@ -16077,7 +16101,7 @@ resource_name_directory_done:
     ret
 
 resource_id_ok:
-    strings.emit 'resource_id_ok | 16079'
+    ;strings.emit 'resource_id_ok | 16079'
     cmp edx,10000h
     je resource_id_directory_done
     mov ebx,edx
@@ -16085,7 +16109,7 @@ resource_id_ok:
     make_resource_id_entry:
     mov _eax,[_esp]
     inc u16 [eax+14]
-    lea eax,[edi+8]
+    lea eax,[edi+RECTIFY]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     mov eax,ebx
@@ -16096,11 +16120,11 @@ resource_id_ok:
     ret
 
 resource_id_directory_done:
-    strings.emit 'resource_id_directory_done | 16099'
+    ;strings.emit 'resource_id_directory_done | 16099'
     pop _eax
     mov esi, ebp
     pop _ecx
-    add esi, 8
+    add esi, RECTIFY
     dec cx
     jnz make_resource_directories
 
@@ -16109,17 +16133,17 @@ resource_id_directory_done:
     jnz make_resource_directories
     mov esi, [resource_data]
     add esi, 10h
-    movzx eax, u16 [esi-4]
+    movzx eax, u16 [esi-TAIL]
     movzx edx, u16 [esi-2]
     add eax,edx
-    lea esi, [esi+eax*8]
+    lea esi, [esi+eax*RECTIFY]
     push _edi
 
     update_resource_directories:
     cmp _esi,[_esp]
     je resource_directories_updated
     add esi, 10h
-    mov ecx,[esi-4]
+    mov ecx,[esi-TAIL]
     or cx,cx
     jz language_directories_ok
 
@@ -16129,7 +16153,7 @@ resource_id_directory_done:
     mov edx,edi
     sub edx,[resource_data]
     bts edx,31
-    mov [esi+4],edx
+    mov [esi+TAIL],edx
     lea eax,[edi+16]
     cmp eax,[tagged_blocks]
     jae out_of_memory
@@ -16141,17 +16165,17 @@ resource_id_directory_done:
     stos dword [edi]
     stos dword [edi]
     mov ebp,esi
-    mov ebx,-1
+    mov ebx,-HEAD
 
     make_language_id_directory:
     mov _esi,u64[free_additional_memory]
     mov edx,10000h
 
     find_language_id:
-    cmp dword [esi],0
+    cmp dword [esi],NUL
     je language_id_ok
     push _esi
-    cmp [esi+8],ebp
+    cmp [esi+RECTIFY],ebp
     jne check_next_language_id
     add esi, 20
     mov eax,esi
@@ -16163,7 +16187,7 @@ resource_id_directory_done:
     add esi, eax
 
     get_language_id:
-    movzx eax, u16 [esi+6]
+    movzx eax, u16 [esi+RESULT]
     cmp eax,ebx
     jle check_next_language_id
     cmp eax,edx
@@ -16180,7 +16204,7 @@ resource_id_directory_done:
     ret
 
 language_id_ok:
-    strings.emit 'language_id_ok | 16182'
+    ;strings.emit 'language_id_ok | 16182'
     cmp edx,10000h
     je language_id_directory_done
     mov ebx,edx
@@ -16188,7 +16212,7 @@ language_id_ok:
     make_language_id_entry:
     mov _eax,[_esp]
     inc u16 [eax+14]
-    lea eax,[edi+8]
+    lea eax,[edi+RECTIFY]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     mov eax,ebx
@@ -16199,11 +16223,11 @@ language_id_ok:
     ret
 
 language_id_directory_done:
-    strings.emit 'language_id_ok | 16182'
+    ;strings.emit 'language_id_ok | 16182'
     pop _eax
     mov esi, ebp
     pop _ecx
-    add esi, 8
+    add esi, RECTIFY
     dec cx
     jnz make_language_directories
 
@@ -16214,16 +16238,16 @@ language_id_directory_done:
     ret
 
 resource_directories_updated:
-    strings.emit 'resource_directories_updated | 16216'
+    ;strings.emit 'resource_directories_updated | 16216'
     mov esi, [resource_data]
     push _edi
 
     make_name_strings:
     add esi, 10h
     movzx eax, u16 [esi-2]
-    movzx ecx, u16 [esi-4]
+    movzx ecx, u16 [esi-TAIL]
     add eax,ecx
-    lea eax,[esi+eax*8]
+    lea eax,[esi+eax*RECTIFY]
     push _eax
     or ecx,ecx
     jz string_entries_processed
@@ -16239,7 +16263,7 @@ resource_directories_updated:
     stos u16 [edi]
 
     copy_string_data:
-    lea eax,[edi+2]
+    lea eax,[edi+TEXT]
     cmp eax,[tagged_blocks]
     jae out_of_memory
     mov ax,[edx]
@@ -16247,13 +16271,13 @@ resource_directories_updated:
     jz string_data_copied
     stos u16 [edi]
     inc u16 [ebx]
-    add edx,2
+    add edx,TEXT
     jmp copy_string_data
     ret
 
 string_data_copied:
-    strings.emit 'string_data_copied | 16254'
-    add esi, 8
+    ;strings.emit 'string_data_copied | 16254'
+    add esi, RECTIFY
     pop _ecx
     loop process_string_entries
 
@@ -16274,16 +16298,16 @@ string_data_copied:
     mov ebp,edi
 
     update_language_directories:
-    add ebx,10h
-    movzx eax, u16 [ebx-2]
-    movzx ecx, u16 [ebx-4]
+    add ebx,DELINK
+    movzx eax, u16 [ebx-TEXT]
+    movzx ecx, u16 [ebx-TAIL]
     add ecx,eax
 
     make_data_records:
     push _ecx
     mov esi, edi
     sub esi, [resource_data]
-    xchg esi,[ebx+4]
+    xchg esi,[ebx+TAIL]
     lea eax,[edi+16]
     cmp eax,[tagged_blocks]
     jae out_of_memory
@@ -16295,7 +16319,7 @@ string_data_copied:
     stos dword [edi]
     stos dword [edi]
     pop _ecx
-    add ebx,8
+    add ebx,RECTIFY
     loop make_data_records
     cmp ebx,edx
     jb update_language_directories
@@ -16314,7 +16338,7 @@ string_data_copied:
     xor al,al
     call lseek
     mov edx,edi
-    mov ecx,[esi+4]
+    mov ecx,[esi+TAIL]
     add edi,ecx
     cmp edi,[tagged_blocks]
     ja out_of_memory
@@ -16323,7 +16347,7 @@ string_data_copied:
     sub eax,[resource_data]
     and eax,11b
     jz resource_data_alignment_ok
-    mov ecx,4
+    mov ecx,TAIL
     sub ecx,eax
     xor al,al
     rep stos u8 [edi]
@@ -16341,15 +16365,15 @@ string_data_copied:
     ret
 
 close_pe:
-    strings.emit 'close_pe | 16343'
+    ;strings.emit 'close_pe | 16343'
     call close_pe_section
     mov edx,[code_start]
     mov [edx+50h],eax
     call make_timestamp
     mov edx,[code_start]
-    mov [edx+8],eax
+    mov [edx+RECTIFY],eax
     mov eax,[number_of_sections]
-    mov [edx+6],ax
+    mov [edx+RESULT],ax
     imul eax,28h
     movzx ecx, u16 [edx+14h]
     lea eax,[eax+18h+ecx]
@@ -16361,46 +16385,46 @@ close_pe:
     and eax,ecx
     cmp eax,[edx+54h]
     je pe_sections_ok
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
 
     pe_sections_ok:
     xor ecx,ecx
     add edx,78h
-    test [format_flags],4
+    test [format_flags],TAIL
     jz process_directories
-    add edx,10h
+    add edx,DELINK
 
     process_directories:
-    mov eax,[edx+ecx*8]
+    mov eax,[edx+ecx*RECTIFY]
     or eax,eax
     jz directory_ok
-    cmp dword [edx+ecx*8+4],-1
+    cmp dword [edx+ecx*RECTIFY+TAIL],-HEAD
     jne directory_ok
 
     section_data:
-    mov ebx,[edx+ecx*8]
+    mov ebx,[edx+ecx*RECTIFY]
     mov eax,[ebx+0Ch]
-    mov [edx+ecx*8],eax
-    mov eax,[ebx+8]
-    mov [edx+ecx*8+4],eax
+    mov [edx+ecx*RECTIFY],eax
+    mov eax,[ebx+RECTIFY]
+    mov [edx+ecx*RECTIFY+TAIL],eax
 
     directory_ok:
     inc cl
-    cmp cl,10h
+    cmp cl,DELINK
     jb process_directories
-    cmp dword [edx+5*8],0
-    jne finish_pe_relocations
+    cmp dword [edx+5*8],NUL
+    jne  finish_pe_relocations
     mov eax,[number_of_relocations]
-    shl eax,2
+    shl eax,TEXT
     sub u64[free_additional_memory],_eax
-    btr [resolver_flags],0
+    btr [resolver_flags],NUL
     jnc pe_relocations_ok
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
     jmp pe_relocations_ok
     ret
 
 finish_pe_relocations:
-    strings.emit 'finish_pe_relocations | 16402'
+    ;strings.emit 'finish_pe_relocations | 16402'
     push _edi
     mov edi,[reserved_fixups]
     call make_fixups
@@ -16408,7 +16432,7 @@ finish_pe_relocations:
     add [actual_fixups_size],eax
     cmp eax,[reserved_fixups_size]
     je pe_relocations_ok
-    or [next_pass_needed],-1
+    or [next_pass_needed],-HEAD
 
     pe_relocations_ok:
     mov ebx,[code_start]
@@ -16416,7 +16440,7 @@ finish_pe_relocations:
     mov ecx,edi
     sub ecx,ebx
     mov ebp,ecx
-    shr ecx,1
+    shr ecx,HEAD
     xor eax,eax
     cdq
 
@@ -16426,7 +16450,7 @@ finish_pe_relocations:
     mov dx,ax
     shr eax,16
     add eax,edx
-    add ebx,2
+    add ebx,TEXT
     loop calculate_checksum
     add eax,ebp
     mov ebx,[code_start]
@@ -16434,22 +16458,22 @@ finish_pe_relocations:
     ret
 
 format_coff:
-    strings.emit 'format_coff | 16436'
+    ;strings.emit 'format_coff | 16436'
     mov _eax,u64[additional_memory]
     mov [symbols_stream],eax
     mov ebx,eax
-    add eax,20h
+    add eax,SPACE
     cmp eax,[structures_buffer]
     jae out_of_memory
     mov u64[free_additional_memory],_eax
     xor eax,eax
     mov [ebx],al
-    mov [ebx+4],eax
-    mov [ebx+8],edi
-    mov al,4
+    mov [ebx+TAIL],eax
+    mov [ebx+RECTIFY],edi
+    mov al,TAIL
     mov [ebx+10h],eax
     mov al,60h
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jnc flat_section_flags_ok
     or eax,0E0000000h
 
@@ -16461,17 +16485,17 @@ format_coff:
     mov edx,ebx
     call init_addressing_space
     mov [ebx+14h],edx
-    mov u8 [ebx+9],2
+    mov u8 [ebx+9],TEXT
     mov [code_type],32
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jz format_defined
-    mov u8 [ebx+9],4
+    mov u8 [ebx+9],TAIL
     mov [code_type],64
     jmp format_defined
     ret
 
 coff_section:
-    strings.emit 'coff_section | 16473'
+    ;strings.emit 'coff_section | 16473'
     call close_coff_section
     mov _ebx,u64[free_additional_memory]
     lea eax,[ebx+20h]
@@ -16482,26 +16506,26 @@ coff_section:
     inc [number_of_sections]
     xor eax,eax
     mov [ebx],al
-    mov [ebx+8],edi
+    mov [ebx+RECTIFY],edi
     mov [ebx+10h],eax
     mov [ebx+14h],eax
     mov edx,ebx
     call create_addressing_space
     xchg edx,ebx
     mov [edx+14h],ebx
-    mov u8 [edx+9],2
-    test [format_flags],8
+    mov u8 [edx+9],TEXT
+    test [format_flags],RECTIFY
     jz coff_labels_type_ok
-    mov u8 [edx+9],4
+    mov u8 [edx+9],TAIL
 
     coff_labels_type_ok:
     lods u16 [esi]
     cmp ax,'('
     jne invalid_argument
-    mov [ebx+4],esi
+    mov [ebx+TAIL],esi
     mov ecx,[esi]
-    lea esi, [esi+4+ecx+1]
-    cmp ecx,8
+    lea esi, [esi+TAIL+ecx+HEAD]
+    cmp ecx,RECTIFY
     ja name_too_long
 
     coff_section_flags:
@@ -16511,14 +16535,14 @@ coff_section:
     jne coff_section_settings_ok
     inc esi
     lods u8 [esi]
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jc coff_section_flag_ok
-    cmp al,7
+    cmp al,NOTIFY
     ja invalid_argument
 
     coff_section_flag_ok:
     mov cl,al
-    mov eax,1
+    mov eax,HEAD
     shl eax,cl
     test dword [ebx+14h],eax
     jnz setting_already_specified
@@ -16527,8 +16551,8 @@ coff_section:
     ret
 
 coff_section_alignment:
-    strings.emit 'coff_section_alignment | 16529'
-    bt      [format_flags],0
+    ;strings.emit 'coff_section_alignment | 16529'
+    bt      [format_flags],NUL
     jnc invalid_argument
     inc esi
     lods u8 [esi]
@@ -16558,21 +16582,21 @@ coff_section_alignment:
     ret
 
 coff_section_settings_ok:
-    strings.emit 'coff_section_settings_ok | 16560'
-    cmp dword [ebx+10h],0
-    jne instruction_assembled
-    mov dword [ebx+10h],4
-    bt      [format_flags],0
+    ;strings.emit 'coff_section_settings_ok | 16560'
+    cmp dword [ebx+10h],NUL
+    jne  instruction_assembled
+    mov dword [ebx+10h],TAIL
+    bt      [format_flags],NUL
     jnc instruction_assembled
     or dword [ebx+14h],300000h
     jmp instruction_assembled
     ret
 
 close_coff_section:
-    strings.emit 'close_coff_section | 16571'
+    ;strings.emit 'close_coff_section | 16571'
     mov ebx,[current_section]
     mov eax,edi
-    mov edx,[ebx+8]
+    mov edx,[ebx+RECTIFY]
     sub eax,edx
     mov [ebx+0Ch],eax
     xor eax,eax
@@ -16588,61 +16612,61 @@ close_coff_section:
     ret
 
 mark_coff_relocation:
-    strings.emit 'mark_coff_relocation | 16590'
-    cmp [value_type],3
+    ;strings.emit 'mark_coff_relocation | 16590'
+    cmp [value_type],TXT
     je coff_relocation_relative
     push _ebx _eax
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz coff_64bit_relocation
-    mov al,6
-    cmp [value_type],2
+    mov al,RESULT
+    cmp [value_type],TEXT
     je coff_relocation
-    cmp [value_type],5
+    cmp [value_type],QUERY
     jne invalid_use_of_symbol
     inc al
     jmp coff_relocation
     ret
 
 coff_64bit_relocation:
-    strings.emit 'coff_64bit_relocation | 16606'
-    mov al,1
-    cmp [value_type],4
+    ;strings.emit 'coff_64bit_relocation | 16606'
+    mov al,HEAD
+    cmp [value_type],TAIL
     je coff_relocation
-    mov al,2
-    cmp [value_type],2
+    mov al,TEXT
+    cmp [value_type],TEXT
     je coff_relocation
-    cmp [value_type],5
+    cmp [value_type],QUERY
     jne invalid_use_of_symbol
     inc al
     jmp coff_relocation
     ret
 
 coff_relocation_relative:
-    strings.emit 'coff_relocation_relative | 16620'
+    ;strings.emit 'coff_relocation_relative | 16620'
     push _ebx
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jnc relative_ok
     mov ebx,[current_section]
-    mov ebx,[ebx+8]
+    mov ebx,[ebx+RECTIFY]
     sub ebx,edi
     sub eax,ebx
-    add eax,4
+    add eax,TAIL
 
     relative_ok:
     mov ebx,[addressing_space]
     push _eax
     mov al,20
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz relative_coff_64bit_relocation
-    cmp u8 [ebx+9],2
+    cmp u8 [ebx+9],TEXT
     jne invalid_use_of_symbol
     jmp coff_relocation
     ret
 
 relative_coff_64bit_relocation:
-    strings.emit 'relative_coff_64bit_relocation | 16642'
-    mov al,4
-    cmp u8 [ebx+9],4
+    ;strings.emit 'relative_coff_64bit_relocation | 16642'
+    mov al,TAIL
+    cmp u8 [ebx+9],TAIL
     jne invalid_use_of_symbol
 
     coff_relocation:
@@ -16653,19 +16677,19 @@ relative_coff_64bit_relocation:
     mov u64[free_additional_memory],_ebx
     mov u8 [ebx-0Ch],al
     mov eax,[current_section]
-    mov eax,[eax+8]
+    mov eax,[eax+RECTIFY]
     neg eax
     add eax,edi
-    mov [ebx-0Ch+4],eax
+    mov [ebx-0Ch+TAIL],eax
     mov _eax,u64[symbol_identifier]
-    mov [ebx-0Ch+8],eax
+    mov [ebx-0Ch+RECTIFY],eax
     pop _eax _ebx
     ret
 
 close_coff:
-    strings.emit 'close_coff | 16642'
+    ;strings.emit 'close_coff | 16642'
     call close_coff_section
-    cmp [next_pass_needed],0
+    cmp [next_pass_needed],NUL
     ;je coff_closed
     je return_ok
     mov eax,[symbols_stream]
@@ -16673,7 +16697,7 @@ close_coff:
     ret
 
 coff_formatter:
-    strings.emit 'coff_formatter | 16675'
+    ;strings.emit 'coff_formatter | 16675'
     sub edi,[code_start]
     mov [code_size],edi
     call prepare_default_section
@@ -16682,19 +16706,19 @@ coff_formatter:
     mov ecx,28h shr 2
     imul ecx,[number_of_sections]
     add ecx,14h shr 2
-    lea eax,[edi+ecx*4]
+    lea eax,[edi+ecx*TAIL]
     cmp eax,[structures_buffer]
     jae out_of_memory
     xor eax,eax
     rep stos dword [edi]
     mov u16 [ebx],14Ch
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jz coff_magic_ok
     mov u16 [ebx],8664h
 
     coff_magic_ok:
     mov u16 [ebx+12h],104h
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jnc coff_flags_ok
     or u8 [ebx+12h],80h
 
@@ -16702,9 +16726,9 @@ coff_formatter:
     push _ebx
     call make_timestamp
     pop _ebx
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     mov eax,[number_of_sections]
-    mov [ebx+2],ax
+    mov [ebx+TEXT],ax
     mov esi, [symbols_stream]
     xor eax,eax
     xor ecx,ecx
@@ -16724,9 +16748,9 @@ coff_formatter:
     ret
 
 enumerate_section:
-    strings.emit 'enumerate_section | 16726'
+    ;strings.emit 'enumerate_section | 16726'
     mov edx,eax
-    shl edx,8
+    shl edx,RECTIFY
     mov [esi],edx
     inc eax
     inc ecx
@@ -16736,15 +16760,15 @@ enumerate_section:
     ret
 
 enumerate_public:
-    strings.emit 'enumerate_public | 16739'
+    ;strings.emit 'enumerate_public | 16739'
     mov edx,eax
-    shl edx,8
+    shl edx,RECTIFY
     mov dl,[esi]
     mov [esi],edx
-    mov edx,[esi+8]
+    mov edx,[esi+RECTIFY]
     add esi, 10h
     inc eax
-    cmp u8 [edx+11],0
+    cmp u8 [edx+11],NUL
     je enumerate_symbols
     mov edx,[edx+20]
     cmp u8 [edx],0C0h
@@ -16756,9 +16780,9 @@ enumerate_public:
     ret
 
 enumerate_extrn:
-    strings.emit 'enumerate_extrn | 16758'
+    ;strings.emit 'enumerate_extrn | 16758'
     mov edx,eax
-    shl edx,8
+    shl edx,RECTIFY
     mov dl,[esi]
     mov [esi],edx
     add esi, 0Ch
@@ -16767,22 +16791,22 @@ enumerate_extrn:
     ret
 
 prepare_default_section:
-    strings.emit 'enumerate_extrn | 16758'
+    ;strings.emit 'enumerate_extrn | 16758'
     mov ebx,[symbols_stream]
-    cmp dword [ebx+0Ch],0
-    jne default_section_ok
-    cmp [number_of_sections],0
+    cmp dword [ebx+0Ch],NUL
+    jne  default_section_ok
+    cmp [number_of_sections],NUL
     je default_section_ok
     mov edx,ebx
 
     find_references_to_default_section:
     cmp _ebx,u64[free_additional_memory]
     jne check_reference
-    add [symbols_stream],20h
+    add [symbols_stream],SPACE
     ret
 
 check_reference:
-    strings.emit 'check_reference | 16784'
+    ;strings.emit 'check_reference | 16784'
     mov al,[ebx]
     or al,al
     jz skip_other_section
@@ -16790,7 +16814,7 @@ check_reference:
     jae check_public_reference
     cmp al,80h
     jae next_reference
-    cmp edx,[ebx+8]
+    cmp edx,[ebx+RECTIFY]
     je default_section_ok
 
     next_reference:
@@ -16799,10 +16823,10 @@ check_reference:
     ret
 
 check_public_reference:
-    strings.emit 'check_public_reference | 16801'
-    mov eax,[ebx+8]
-    add ebx,10h
-    test u8 [eax+8],1
+    ;strings.emit 'check_public_reference | 16801'
+    mov eax,[ebx+RECTIFY]
+    add ebx,DELINK
+    test u8 [eax+RECTIFY],HEAD
     jz find_references_to_default_section
     mov cx,[current_pass]
     cmp cx,[eax+16]
@@ -16813,18 +16837,18 @@ check_public_reference:
     ret
 
 skip_other_section:
-    strings.emit 'skip_other_section | 16815'
-    add ebx,20h
+    ;strings.emit 'skip_other_section | 16815'
+    add ebx,SPACE
     jmp find_references_to_default_section
     ret
 
 default_section_ok:
-    strings.emit 'default_section_ok | 16821'
+    ;strings.emit 'default_section_ok | 16821'
     inc [number_of_sections]
     ret
 
 symbols_enumerated:
-    strings.emit 'symbols_enumerated | 16826'
+    ;strings.emit 'symbols_enumerated | 16826'
     mov [ebx+0Ch],eax
     mov ebp,edi
     sub ebp,ebx
@@ -16846,9 +16870,9 @@ symbols_enumerated:
     ret
 
 section_found:
-    strings.emit 'section_found | 16848'
+    ;strings.emit 'section_found | 16848'
     push _esi _edi
-    mov esi, [esi+4]
+    mov esi, [esi+TAIL]
     or esi,esi
     jz default_section
     mov ecx,[esi]
@@ -16858,7 +16882,7 @@ section_found:
     ret
 
 default_section:
-    strings.emit 'default_section | 16860'
+    ;strings.emit 'default_section | 16860'
     mov al,'.'
     stos u8 [edi]
     mov eax,'flat'
@@ -16872,7 +16896,7 @@ default_section:
     mov [edi+24h],eax
     test al,80h
     jnz section_ptr_ok
-    mov eax,[esi+8]
+    mov eax,[esi+RECTIFY]
     sub eax,[code_start]
     add eax,ebp
     mov [edi+14h],eax
@@ -16900,19 +16924,19 @@ default_section:
     ret
 
 add_relocation:
-    strings.emit 'add_relocation | 16902'
+    ;strings.emit 'add_relocation | 16902'
     lea eax,[ebx+0Ah]
     cmp eax,[tagged_blocks]
     ja out_of_memory
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     mov [ebx],eax
-    mov eax,[esi+8]
+    mov eax,[esi+RECTIFY]
     mov eax,[eax]
-    shr eax,8
-    mov [ebx+4],eax
+    shr eax,RECTIFY
+    mov [ebx+TAIL],eax
     movzx ax, u8 [esi]
-    mov [ebx+8],ax
-    add ebx,0Ah
+    mov [ebx+RECTIFY],ax
+    add ebx,LF
     inc ecx
 
     next_relocation:
@@ -16921,20 +16945,20 @@ add_relocation:
     ret
 
 section_relocations_done:
-    strings.emit 'section_relocations_done | 16923'
+    ;strings.emit 'section_relocations_done | 16923'
     cmp ecx,10000h
     jb section_relocations_count_16bit
-    bt      [format_flags],0
+    bt      [format_flags],NUL
     jnc format_limitations_exceeded
     mov u16 [edi+20h],0FFFFh
     or dword [edi+24h],1000000h
     mov [edi+18h],edx
     push _esi _edi
     push _ecx
-    lea esi, [ebx-1]
-    add ebx,0Ah
-    lea edi,[ebx-1]
-    imul ecx,0Ah
+    lea esi, [ebx-HEAD]
+    add ebx,LF
+    lea edi,[ebx-HEAD]
+    imul ecx,LF
     std
     rep movs u8 [edi],[esi]
     cld
@@ -16943,14 +16967,14 @@ section_relocations_done:
     inc ecx
     mov [esi],ecx
     xor eax,eax
-    mov [esi+4],eax
-    mov [esi+8],ax
+    mov [esi+TAIL],eax
+    mov [esi+RECTIFY],ax
     pop _edi _esi
     jmp section_relocations_ok
     ret
 
 section_relocations_count_16bit:
-    strings.emit 'section_relocations_count_16bit | 16952'
+    ;strings.emit 'section_relocations_count_16bit | 16952'
     mov [edi+20h],cx
     jecxz section_relocations_ok
     mov [edi+18h],edx
@@ -16962,17 +16986,17 @@ section_relocations_count_16bit:
     ret
 
 sections_finished:
-    strings.emit 'sections_finished | 16964'
+    ;strings.emit 'sections_finished | 16964'
     mov _edx,u64[free_additional_memory]
     mov ebx,[code_size]
     add ebp,ebx
-    mov [edx+8],ebp
+    mov [edx+RECTIFY],ebp
     add ebx,[code_start]
     mov edi,ebx
     mov ecx,[edx+0Ch]
     imul ecx,12h shr 1
     xor eax,eax
-    shr ecx,1
+    shr ecx,HEAD
     jnc zero_symbols_table
     stos u16 [edi]
 
@@ -16997,32 +17021,32 @@ sections_finished:
     ret
 
 add_section_symbol:
-    strings.emit 'add_section_symbol | 16999'
+    ;strings.emit 'add_section_symbol | 16999'
     call store_symbol_name
     movzx eax, u16 [esi+1Eh]
     mov [ebx+0Ch],ax
-    mov u8 [ebx+10h],3
+    mov u8 [ebx+10h],TXT
     add esi, 20h
     add ebx,12h
     jmp make_symbols_table
     ret
 
 add_extrn_symbol:
-    strings.emit 'add_extrn_symbol | 17010'
+    ;strings.emit 'add_extrn_symbol | 17010'
     call store_symbol_name
-    mov u8 [ebx+10h],2
+    mov u8 [ebx+10h],TEXT
     add esi, 0Ch
     add ebx,12h
     jmp make_symbols_table
     ret
 
 add_public_symbol:
-    strings.emit 'add_public_symbol | 17010'
+    ;strings.emit 'add_public_symbol | 17010'
     call store_symbol_name
     mov eax,[esi+0Ch]
     mov u64[current_line],_eax
-    mov eax,[esi+8]
-    test u8 [eax+8],1
+    mov eax,[esi+RECTIFY]
+    test u8 [eax+RECTIFY],HEAD
     jz undefined_coff_public
     mov cx,[current_pass]
     cmp cx,[eax+16]
@@ -17030,45 +17054,45 @@ add_public_symbol:
     mov cl,[eax+11]
     or cl,cl
     jz public_constant
-    test [format_flags],8
+    test [format_flags],RECTIFY
     jnz check_64bit_public_symbol
-    cmp cl,2
+    cmp cl,TEXT
     je public_symbol_type_ok
     jmp invalid_use_of_symbol
     ret
 
 undefined_coff_public:
-    strings.emit 'undefined_coff_public | 17040'
+    ;strings.emit 'undefined_coff_public | 17040'
     mov [error_info],eax
     jmp undefined_symbol
     ret
 
 check_64bit_public_symbol:
-    strings.emit 'check_64bit_public_symbol | 17046'
-    cmp cl,4
+    ;strings.emit 'check_64bit_public_symbol | 17046'
+    cmp cl,TAIL
     jne invalid_use_of_symbol
 
 public_symbol_type_ok:
     mov ecx,[eax+20]
     cmp u8 [ecx],80h
     je alias_symbol
-    cmp u8 [ecx],0
-    jne invalid_use_of_symbol
+    cmp u8 [ecx],NUL
+    jne  invalid_use_of_symbol
     mov cx,[ecx+1Eh]
     mov [ebx+0Ch],cx
 
     public_symbol_section_ok:
     movzx ecx, u8 [eax+9]
-    shr cl,1
-    and cl,1
+    shr cl,HEAD
+    and cl,HEAD
     neg ecx
-    cmp ecx,[eax+4]
+    cmp ecx,[eax+TAIL]
     jne value_out_of_range
     xor ecx,[eax]
     js value_out_of_range
     mov eax,[eax]
-    mov [ebx+8],eax
-    mov al,2
+    mov [ebx+RECTIFY],eax
+    mov al,TEXT
     cmp u8 [esi],0C0h
     je store_symbol_class
     inc al
@@ -17084,39 +17108,39 @@ public_symbol_type_ok:
     ret
 
 alias_symbol:
-    strings.emit 'alias_symbol | 17086'
-    bt      [format_flags],0
+    ;strings.emit 'alias_symbol | 17086'
+    bt      [format_flags],NUL
     jnc invalid_use_of_symbol
     mov ecx,[eax]
-    or ecx,[eax+4]
+    or ecx,[eax+TAIL]
     jnz invalid_use_of_symbol
     mov u8 [ebx+10h],69h
-    mov u8 [ebx+11h],1
+    mov u8 [ebx+11h],HEAD
     add ebx,12h
     mov ecx,[eax+20]
     mov ecx,[ecx]
-    shr ecx,8
+    shr ecx,RECTIFY
     mov [ebx],ecx
-    mov u8 [ebx+4],3
+    mov u8 [ebx+TAIL],TXT
     add esi, 10h
     add ebx,12h
     jmp make_symbols_table
     ret
 
 public_constant:
-    strings.emit 'public_constant | 17106'
+    ;strings.emit 'public_constant | 17106'
     mov u16 [ebx+0Ch],0FFFFh
     jmp public_symbol_section_ok
     ret
 
 symbols_table_ok:
-    strings.emit 'symbols_table_ok | 17112'
+    ;strings.emit 'symbols_table_ok | 17112'
     mov eax,edi
     sub eax,edx
     mov [edx],eax
     sub edi,[code_start]
     mov [code_size],edi
-    and [written_size],0
+    and [written_size],NUL
     mov edx,[output_file]
     call create
     jc write_failed
@@ -17129,14 +17153,14 @@ symbols_table_ok:
     ret
 
 store_symbol_name:
-    strings.emit 'symbols_table_ok | 17131'
+    ;strings.emit 'symbols_table_ok | 17131'
     push _esi
-    mov esi, [esi+4]
+    mov esi, [esi+TAIL]
     or esi,esi
     jz default_name
     lods dword [esi]
     mov ecx,eax
-    cmp ecx,8
+    cmp ecx,RECTIFY
     ja add_string
     push _edi
     mov edi,ebx
@@ -17145,24 +17169,24 @@ store_symbol_name:
     ret
 
 default_name:
-    strings.emit 'default_name | 17147'
+    ;strings.emit 'default_name | 17147'
     mov dword [ebx],'.fla'
-    mov dword [ebx+4],'t'
+    mov dword [ebx+TAIL],'t'
     pop _esi
     ret
 
 add_string:
-    strings.emit 'add_string | 17154'
+    ;strings.emit 'add_string | 17154'
     mov eax,edi
     sub eax,edx
-    mov [ebx+4],eax
+    mov [ebx+TAIL],eax
     inc ecx
     rep movs u8 [edi],[esi]
     pop _esi
     ret
 
 find_first_section:
-    strings.emit 'find_first_section | 17164'
+    ;strings.emit 'find_first_section | 17164'
     mov al,[esi]
     or al,al
     jz first_section_found
@@ -17176,7 +17200,7 @@ find_first_section:
     ret
 
 first_section_found:
-    strings.emit 'first_section_found | 17178'
+    ;strings.emit 'first_section_found | 17178'
     mov ebx,esi
     mov ebp,esi
     add esi, 20h
@@ -17193,7 +17217,7 @@ first_section_found:
     jae skip_public
     cmp al,80h
     jae skip_extrn
-    or u8 [ebx+14h],40h
+    or u8 [ebx+14h],AMP
 
     skip_extrn:
     add esi, 0Ch
@@ -17201,15 +17225,15 @@ first_section_found:
     ret
 
 skip_public:
-    strings.emit 'skip_public | 17203'
+    ;strings.emit 'skip_public | 17203'
     add esi, 10h
     jmp find_next_section
     ret
 
 make_section_symbol:
-    strings.emit 'make_section_symbol | 17209'
+    ;strings.emit 'make_section_symbol | 17209'
     mov eax,edi
-    xchg eax,[ebx+4]
+    xchg eax,[ebx+TAIL]
     stos dword [edi]
     xor eax,eax
     stos dword [edi]
@@ -17219,19 +17243,19 @@ make_section_symbol:
     ret
 
 store_section_index:
-    strings.emit 'store_section_index | 17221'
+    ;strings.emit 'store_section_index | 17221'
     inc ecx
     mov eax,ecx
-    shl eax,8
+    shl eax,RECTIFY
     mov [ebx],eax
     inc dx
     jz format_limitations_exceeded
     mov eax,edx
     shl eax,16
-    mov al,3
-    test u8 [ebx+14h],40h
+    mov al,TXT
+    test u8 [ebx+14h],AMP
     jz section_index_ok
-    or ah,-1
+    or ah,-HEAD
     inc dx
     jz format_limitations_exceeded
 
@@ -17240,7 +17264,7 @@ store_section_index:
     ret
 
 section_symbol_ok:
-    strings.emit 'section_symbol_ok | 17242'
+    ;strings.emit 'section_symbol_ok | 17242'
     mov ebx,esi
     add esi, 20h
     cmp _ebx,u64[free_additional_memory]
@@ -17263,19 +17287,19 @@ section_symbol_ok:
     ret
 
 skip_section:
-    strings.emit 'skip_section | 17265'
+    ;strings.emit 'skip_section | 17265'
     add esi, 20h
     jmp find_other_symbols
     ret
 
 make_public_symbol:
-    strings.emit 'make_public_symbol | 17271'
+    ;strings.emit 'make_public_symbol | 17271'
     mov eax,[esi+0Ch]
     mov u64[current_line],_eax
     cmp u8 [esi],0C0h
     jne invalid_argument
-    mov ebx,[esi+8]
-    test u8 [ebx+8],1
+    mov ebx,[esi+RECTIFY]
+    test u8 [ebx+RECTIFY],HEAD
     jz undefined_public
     mov ax,[current_pass]
     cmp ax,[ebx+16]
@@ -17284,32 +17308,32 @@ make_public_symbol:
     or dl,dl
     jz public_absolute
     mov eax,[ebx+20]
-    cmp u8 [eax],0
-    jne invalid_use_of_symbol
-    mov eax,[eax+4]
-    cmp dl,2
+    cmp u8 [eax],NUL
+    jne  invalid_use_of_symbol
+    mov eax,[eax+TAIL]
+    cmp dl,TEXT
     jne invalid_use_of_symbol
     mov dx,[eax+0Eh]
     jmp section_for_public_ok
     ret
 
 undefined_public:
-    strings.emit 'undefined_public | 17296'
+    ;strings.emit 'undefined_public | 17296'
     mov [error_info],ebx
     jmp undefined_symbol
     ret
 
 public_absolute:
-    strings.emit 'undefined_public | 17301'
+    ;strings.emit 'undefined_public | 17301'
     mov dx,0FFF1h
     section_for_public_ok:
-    mov eax,[esi+4]
+    mov eax,[esi+TAIL]
     stos dword [edi]
     movzx eax, u8 [ebx+9]
-    shr al,1
-    and al,1
+    shr al,HEAD
+    and al,HEAD
     neg eax
-    cmp eax,[ebx+4]
+    cmp eax,[ebx+TAIL]
     jne value_out_of_range
     xor eax,[ebx]
     js value_out_of_range
@@ -17320,14 +17344,14 @@ public_absolute:
     stos dword [edi]
     mov eax,edx
     shl eax,16
-    mov al,10h
+    mov al,DELINK
     ret
 
 public_symbol_ok:
-    strings.emit 'public_symbol_ok | 17326'
+    ;strings.emit 'public_symbol_ok | 17326'
     inc ecx
     mov eax,ecx
-    shl eax,8
+    shl eax,RECTIFY
     mov al,0C0h
     mov [esi],eax
     add esi, 10h
@@ -17335,23 +17359,23 @@ public_symbol_ok:
     ret
 
 make_extrn_symbol:
-    strings.emit 'make_extrn_symbol | 17337'
-    mov eax,[esi+4]
+    ;strings.emit 'make_extrn_symbol | 17337'
+    mov eax,[esi+TAIL]
     stos dword [edi]
     xor eax,eax
     stos dword [edi]
-    mov eax,[esi+8]
+    mov eax,[esi+RECTIFY]
     stos dword [edi]
-    mov eax,10h
+    mov eax,DELINK
     stos dword [edi]
     jmp extrn_symbol_ok
     ret
 
 extrn_symbol_ok:
-    strings.emit 'extrn_symbol_ok | 17350'
+    ;strings.emit 'extrn_symbol_ok | 17350'
     inc ecx
     mov eax,ecx
-    shl eax,8
+    shl eax,RECTIFY
     mov al,80h
     mov [esi],eax
     add esi, 0Ch
@@ -17359,7 +17383,7 @@ extrn_symbol_ok:
     ret
 
 simple_instruction_except64:
-    strings.emit 'simple_instruction_except64 | 17361'
+    ;strings.emit 'simple_instruction_except64 | 17361'
     cmp [code_type],64
     je illegal_instruction
 
@@ -17369,14 +17393,14 @@ simple_instruction_except64:
     ret
 
 simple_instruction_only64:
-    strings.emit 'simple_instruction_only64 | 17371'
+    ;strings.emit 'simple_instruction_only64 | 17371'
     cmp [code_type],64
     jne illegal_instruction
     jmp simple_instruction
     ret
 
 simple_instruction_16bit_except64:
-    strings.emit 'simple_instruction_16bit_except64 | 17378'
+    ;strings.emit 'simple_instruction_16bit_except64 | 17378'
     cmp [code_type],64
     je illegal_instruction
 
@@ -17388,7 +17412,7 @@ simple_instruction_16bit_except64:
     ret
 
 size_prefix:
-    strings.emit 'size_prefix | 17390'
+    ;strings.emit 'size_prefix | 17390'
     mov ah,al
     mov al,66h
     stos u16 [edi]
@@ -17396,7 +17420,7 @@ size_prefix:
     ret
 
 simple_instruction_32bit_except64:
-    strings.emit 'simple_instruction_32bit_except64 | 17398'
+    ;strings.emit 'simple_instruction_32bit_except64 | 17398'
     cmp [code_type],64
     je illegal_instruction
 
@@ -17408,7 +17432,7 @@ simple_instruction_32bit_except64:
     ret
 
 iret_instruction:
-    strings.emit 'iret_instruction | 17410'
+    ;strings.emit 'iret_instruction | 17410'
     cmp [code_type],64
     jne simple_instruction
 
@@ -17422,7 +17446,7 @@ iret_instruction:
     ret
 
 simple_extended_instruction_64bit:
-    strings.emit 'simple_extended_instruction_64bit | 17424'
+    ;strings.emit 'simple_extended_instruction_64bit | 17424'
     cmp [code_type],64
     jne illegal_instruction
     mov u8 [edi],48h
@@ -17430,43 +17454,43 @@ simple_extended_instruction_64bit:
 
     simple_extended_instruction:
     mov ah,al
-    mov al,0Fh
+    mov al,SHIFT
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 prefix_instruction:
-    strings.emit 'prefix_instruction | 17438'
+    ;strings.emit 'prefix_instruction | 17438'
     stos u8 [edi]
-    or [prefix_flags],1
+    or [prefix_flags],HEAD
     jmp continue_line
     ret
 
 segment_prefix:
-    strings.emit 'segment_prefix | 17445'
+    ;strings.emit 'segment_prefix | 17445'
     mov ah,al
-    shr ah,4
-    cmp ah,3
+    shr ah,TAIL
+    cmp ah,TXT
     jne illegal_instruction
     and al,1111b
     mov [segment_register],al
     call store_segment_prefix
-    or [prefix_flags],1
+    or [prefix_flags],HEAD
     jmp continue_line
     ret
 
 bnd_prefix_instruction:
-    strings.emit 'bnd_prefix_instruction | 17459'
+    ;strings.emit 'bnd_prefix_instruction | 17459'
     stos u8 [edi]
-    or [prefix_flags],1 + 10h
+    or [prefix_flags],HEAD + 10h
     jmp continue_line
     ret
 
 int_instruction:
-    strings.emit 'int_instruction | 17465'
+    ;strings.emit 'int_instruction | 17465'
     lods u8 [esi]
     call get_size_operator
-    cmp ah,1
+    cmp ah,HEAD
     ja invalid_operand_size
     cmp al,'('
     jne invalid_operand
@@ -17483,7 +17507,7 @@ int_instruction:
     ret
 
 aa_instruction:
-    strings.emit 'aa_instruction | 17485'
+    ;strings.emit 'aa_instruction | 17485'
     cmp [code_type],64
     je illegal_instruction
     push _eax
@@ -17493,14 +17517,14 @@ aa_instruction:
     inc esi
     xor al,al
     xchg al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     ja invalid_operand_size
     call get_byte_value
     mov bl,al
 
     aa_store:
-    cmp [operand_size],0
-    jne invalid_operand
+    cmp [operand_size],NUL
+    jne  invalid_operand
     pop _eax
     mov ah,bl
     stos u16 [edi]
@@ -17508,11 +17532,11 @@ aa_instruction:
     ret
 
 basic_instruction:
-    strings.emit 'basic_instruction | 17510'
+    ;strings.emit 'basic_instruction | 17510'
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je basic_reg
     cmp al,'['
     jne invalid_operand
@@ -17527,7 +17551,7 @@ basic_instruction:
     call get_size_operator
     cmp al,'('
     je basic_mem_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     basic_mem_reg:
@@ -17536,7 +17560,7 @@ basic_instruction:
     mov [postbyte_register],al
     pop _ecx _ebx _edx
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je instruction_ready
     call operand_autodetect
     inc [base_code]
@@ -17547,37 +17571,37 @@ basic_instruction:
     ret
 
 basic_mem_imm:
-    strings.emit 'basic_mem_imm | 17549'
+    ;strings.emit 'basic_mem_imm | 17549'
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     jb basic_mem_imm_nosize
     je basic_mem_imm_8bit
-    cmp al,2
+    cmp al,TEXT
     je basic_mem_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je basic_mem_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     basic_mem_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp basic_mem_imm_32bit_ok
     ret
 
 basic_mem_imm_nosize:
-    strings.emit 'basic_mem_imm_nosize | 17572'
+    ;strings.emit 'basic_mem_imm_nosize | 17572'
     call recoverable_unknown_size
 
     basic_mem_imm_8bit:
     call get_byte_value
     mov u8 [value],al
     mov al,[base_code]
-    shr al,3
+    shr al,TXT
     mov [postbyte_register],al
     pop _ecx _ebx _edx
     mov [base_code],80h
@@ -17586,18 +17610,18 @@ basic_mem_imm_nosize:
     ret
 
 basic_mem_imm_16bit:
-    strings.emit 'basic_mem_imm_16bit | 17588'
+    ;strings.emit 'basic_mem_imm_16bit | 17588'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
     mov al,[base_code]
-    shr al,3
+    shr al,TXT
     mov [postbyte_register],al
     pop _ecx _ebx _edx
-    cmp [value_type],0
-    jne basic_mem_imm_16bit_store
-    cmp [size_declared],0
-    jne basic_mem_imm_16bit_store
+    cmp [value_type],NUL
+    jne  basic_mem_imm_16bit_store
+    cmp [size_declared],NUL
+    jne  basic_mem_imm_16bit_store
     cmp u16 [value],80h
     jb basic_mem_simm_8bit
     cmp u16 [value],-80h
@@ -17610,27 +17634,27 @@ basic_mem_imm_16bit:
     ret
 
 basic_mem_simm_8bit:
-    strings.emit 'basic_mem_simm_8bit | 17612'
+    ;strings.emit 'basic_mem_simm_8bit | 17612'
     mov [base_code],83h
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
 basic_mem_imm_32bit:
-    strings.emit 'basic_mem_imm_32bit | 17619'
+    ;strings.emit 'basic_mem_imm_32bit | 17619'
     call operand_32bit
     call get_dword_value
 
 basic_mem_imm_32bit_ok:
     mov dword [value],eax
     mov al,[base_code]
-    shr al,3
+    shr al,TXT
     mov [postbyte_register],al
     pop _ecx _ebx _edx
-    cmp [value_type],0
-    jne basic_mem_imm_32bit_store
-    cmp [size_declared],0
-    jne basic_mem_imm_32bit_store
+    cmp [value_type],NUL
+    jne  basic_mem_imm_32bit_store
+    cmp [size_declared],NUL
+    jne  basic_mem_imm_32bit_store
     cmp dword [value],80h
     jb basic_mem_simm_8bit
     cmp dword [value],-80h
@@ -17643,20 +17667,20 @@ basic_mem_imm_32bit_ok:
     ret
 
 get_simm32:
-    strings.emit 'get_simm32 | 17645'
+    ;strings.emit 'get_simm32 | 17645'
     call get_qword_value
     mov ecx,edx
     cdq
     cmp ecx,edx
     jne value_out_of_range
-    cmp [value_type],4
+    cmp [value_type],TAIL
     ;jne get_simm32_ok
     jne return_ok
-    mov [value_type],2
+    mov [value_type],TEXT
     ret
 
 basic_reg:
-    strings.emit 'basic_reg | 17658'
+    ;strings.emit 'basic_reg | 17658'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -17665,7 +17689,7 @@ basic_reg:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je basic_reg_reg
     cmp al,'('
     je basic_reg_imm
@@ -17675,27 +17699,27 @@ basic_reg:
     basic_reg_mem:
     call get_address
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je basic_reg_mem_8bit
     call operand_autodetect
-    add [base_code],3
+    add [base_code],TXT
     jmp instruction_ready
     ret
 
 basic_reg_mem_8bit:
-    strings.emit 'basic_reg_mem_8bit | 17685'
-    add [base_code],2
+    ;strings.emit 'basic_reg_mem_8bit | 17685'
+    add [base_code],TEXT
     jmp instruction_ready
     ret
 
 basic_reg_reg:
-    strings.emit 'basic_reg_reg | 17691'
+    ;strings.emit 'basic_reg_reg | 17691'
     lods u8 [esi]
     call convert_register
     mov bl,[postbyte_register]
     mov [postbyte_register],al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je nomem_instruction_ready
     call operand_autodetect
     inc [base_code]
@@ -17706,33 +17730,33 @@ basic_reg_reg:
     ret
 
 basic_reg_imm:
-    strings.emit 'basic_reg_imm | 17708'
+    ;strings.emit 'basic_reg_imm | 17708'
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je basic_reg_imm_8bit
-    cmp al,2
+    cmp al,TEXT
     je basic_reg_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je basic_reg_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     basic_reg_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp basic_reg_imm_32bit_ok
     ret
 
 basic_reg_imm_8bit:
-    strings.emit 'basic_reg_imm_8bit | 17730'
+    ;strings.emit 'basic_reg_imm_8bit | 17730'
     call get_byte_value
     mov dl,al
     mov bl,[base_code]
-    shr bl,3
+    shr bl,TXT
     xchg bl,[postbyte_register]
     or bl,bl
     jz basic_al_imm
@@ -17744,9 +17768,9 @@ basic_reg_imm_8bit:
     ret
 
 basic_al_imm:
-    strings.emit 'basic_al_imm | 17746'
+    ;strings.emit 'basic_al_imm | 17746'
     mov al,[base_code]
-    add al,4
+    add al,TAIL
     stos u8 [edi]
     mov al,dl
     stos u8 [edi]
@@ -17754,17 +17778,17 @@ basic_al_imm:
     ret
 
 basic_reg_imm_16bit:
-    strings.emit 'basic_reg_imm_16bit | 17756'
+    ;strings.emit 'basic_reg_imm_16bit | 17756'
     call operand_16bit
     call get_word_value
     mov dx,ax
     mov bl,[base_code]
-    shr bl,3
+    shr bl,TXT
     xchg bl,[postbyte_register]
-    cmp [value_type],0
-    jne basic_reg_imm_16bit_store
-    cmp [size_declared],0
-    jne basic_reg_imm_16bit_store
+    cmp [value_type],NUL
+    jne  basic_reg_imm_16bit_store
+    cmp [size_declared],NUL
+    jne  basic_reg_imm_16bit_store
     cmp dx,80h
     jb basic_reg_simm_8bit
     cmp dx,-80h
@@ -17784,7 +17808,7 @@ basic_reg_imm_16bit:
     ret
 
 basic_reg_simm_8bit:
-    strings.emit 'basic_reg_simm_8bit | 17786'
+    ;strings.emit 'basic_reg_simm_8bit | 17786'
     mov [base_code],83h
     call store_nomem_instruction
     mov al,dl
@@ -17793,26 +17817,26 @@ basic_reg_simm_8bit:
     ret
 
 basic_ax_imm:
-    strings.emit 'basic_ax_imm | 17795'
-    add [base_code],5
+    ;strings.emit 'basic_ax_imm | 17795'
+    add [base_code],QUERY
     call store_classic_instruction_code
     jmp basic_store_imm_16bit
     ret
 
 basic_reg_imm_32bit:
-    strings.emit 'basic_reg_imm_32bit | 17802'
+    ;strings.emit 'basic_reg_imm_32bit | 17802'
     call operand_32bit
     call get_dword_value
 
     basic_reg_imm_32bit_ok:
     mov edx,eax
     mov bl,[base_code]
-    shr bl,3
+    shr bl,TXT
     xchg bl,[postbyte_register]
-    cmp [value_type],0
-    jne basic_reg_imm_32bit_store
-    cmp [size_declared],0
-    jne basic_reg_imm_32bit_store
+    cmp [value_type],NUL
+    jne  basic_reg_imm_32bit_store
+    cmp [size_declared],NUL
+    jne  basic_reg_imm_32bit_store
     cmp edx,80h
     jb basic_reg_simm_8bit
     cmp edx,-80h
@@ -17831,15 +17855,15 @@ basic_reg_imm_32bit:
     ret
 
 basic_eax_imm:
-    strings.emit 'basic_eax_imm | 17833'
-    add [base_code],5
+    ;strings.emit 'basic_eax_imm | 17833'
+    add [base_code],QUERY
     call store_classic_instruction_code
     jmp basic_store_imm_32bit
     ret
 
 recoverable_unknown_size:
-    strings.emit 'recoverable_unknown_size | 17833'
-    cmp [error_line],0
+    ;strings.emit 'recoverable_unknown_size | 17833'
+    cmp [error_line],NUL
     ;jne ignore_unknown_size
     jne return_ok
     push u64[current_line]
@@ -17848,12 +17872,12 @@ recoverable_unknown_size:
     ret
 
 single_operand_instruction:
-    strings.emit 'single_operand_instruction | 17850'
+    ;strings.emit 'single_operand_instruction | 17850'
     mov [base_code],0F6h
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je single_reg
     cmp al,'['
     jne invalid_operand
@@ -17861,7 +17885,7 @@ single_operand_instruction:
     single_mem:
     call get_address
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je single_mem_8bit
     jb single_mem_nosize
     call operand_autodetect
@@ -17870,7 +17894,7 @@ single_operand_instruction:
     ret
 
 single_mem_nosize:
-    strings.emit 'single_mem_nosize | 17872'
+    ;strings.emit 'single_mem_nosize | 17872'
     call recoverable_unknown_size
 
     single_mem_8bit:
@@ -17878,12 +17902,12 @@ single_mem_nosize:
     ret
 
 single_reg:
-    strings.emit 'single_reg | 17880'
+    ;strings.emit 'single_reg | 17880'
     lods u8 [esi]
     call convert_register
     mov bl,al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je single_reg_8bit
     call operand_autodetect
     inc [base_code]
@@ -17893,11 +17917,11 @@ single_reg:
     ret
 
 mov_instruction:
-    strings.emit 'mov_instruction | 17896'
+    ;strings.emit 'mov_instruction | 17896'
     mov [base_code],88h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je mov_reg
     cmp al,14h
     je mov_creg
@@ -17914,21 +17938,21 @@ mov_instruction:
     call get_size_operator
     cmp al,'('
     je mov_mem_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     mov_mem_reg:
     lods u8 [esi]
-    cmp al,30h
+    cmp al,'0'
     jb mov_mem_general_reg
-    cmp al,40h
+    cmp al,AMP
     jb mov_mem_sreg
 
     mov_mem_general_reg:
     call convert_register
     mov [postbyte_register],al
     pop _ecx _ebx _edx
-    cmp ah,1
+    cmp ah,HEAD
     je mov_mem_reg_8bit
     mov al,ah
     call operand_autodetect
@@ -17941,13 +17965,13 @@ mov_instruction:
     ret
 
 mov_mem_reg_8bit:
-    strings.emit 'mov_mem_reg_8bit | 17944'
+    ;strings.emit 'mov_mem_reg_8bit | 17944'
     or al,bl
     or al,bh
     jnz instruction_ready
 
     mov_mem_al:
-    test ch,22h
+    test ch,SYN
     jnz mov_mem_address16_al
     test ch,44h
     jnz mov_mem_address32_al
@@ -17974,7 +17998,7 @@ mov_mem_reg_8bit:
     ret
 
 mov_mem_address16_al:
-    strings.emit 'mov_mem_address16_al | 17977'
+    ;strings.emit 'mov_mem_address16_al | 17977'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A2h
@@ -17991,7 +18015,7 @@ mov_mem_address16_al:
     ret
 
 mov_mem_address64_al:
-    strings.emit 'mov_mem_address64_al | 17994'
+    ;strings.emit 'mov_mem_address64_al | 17994'
     call store_segment_prefix_if_necessary
     mov [base_code],0A2h
 
@@ -18002,8 +18026,8 @@ mov_mem_address64_al:
     ret
 
 mov_mem_ax:
-    strings.emit 'mov_mem_ax | 18004'
-    test ch,22h
+    ;strings.emit 'mov_mem_ax | 18004'
+    test ch,SYN
     jnz mov_mem_address16_ax
     test ch,44h
     jnz mov_mem_address32_ax
@@ -18026,7 +18050,7 @@ mov_mem_ax:
     ret
 
 mov_mem_address16_ax:
-    strings.emit 'mov_mem_address16_ax | 18029'
+    ;strings.emit 'mov_mem_address16_ax | 18029'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A3h
@@ -18034,21 +18058,21 @@ mov_mem_address16_ax:
     ret
 
 mov_mem_address64_ax:
-    strings.emit 'mov_mem_address64_ax | 18037'
+    ;strings.emit 'mov_mem_address64_ax | 18037'
     call store_segment_prefix_if_necessary
     mov [base_code],0A3h
     jmp store_mov_address64
     ret
 
 mov_mem_sreg:
-    strings.emit 'mov_mem_sreg | 18044'
+    ;strings.emit 'mov_mem_sreg | 18044'
     sub al,31h
     mov [postbyte_register],al
     pop _ecx _ebx _edx
     mov ah,[operand_size]
     or ah,ah
     jz mov_mem_sreg_store
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
 
     mov_mem_sreg_store:
@@ -18057,36 +18081,36 @@ mov_mem_sreg:
     ret
 
 mov_mem_imm:
-    strings.emit 'mov_mem_imm | 18060'
+    ;strings.emit 'mov_mem_imm | 18060'
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     jb mov_mem_imm_nosize
     je mov_mem_imm_8bit
-    cmp al,2
+    cmp al,TEXT
     je mov_mem_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je mov_mem_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     mov_mem_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp mov_mem_imm_32bit_store
     ret
 
 mov_mem_imm_nosize:
-    strings.emit 'mov_mem_imm_nosize | 18083'
+    ;strings.emit 'mov_mem_imm_nosize | 18083'
     call recoverable_unknown_size
 
     mov_mem_imm_8bit:
     call get_byte_value
     mov u8 [value],al
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0C6h
     pop _ecx _ebx _edx
     call store_instruction_with_imm8
@@ -18094,11 +18118,11 @@ mov_mem_imm_nosize:
     ret
 
 mov_mem_imm_16bit:
-    strings.emit 'mov_mem_imm_16bit | 18097'
+    ;strings.emit 'mov_mem_imm_16bit | 18097'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0C7h
     pop _ecx _ebx _edx
     call store_instruction_with_imm16
@@ -18106,13 +18130,13 @@ mov_mem_imm_16bit:
     ret
 
 mov_mem_imm_32bit:
-    strings.emit 'mov_mem_imm_32bit | 18109'
+    ;strings.emit 'mov_mem_imm_32bit | 18109'
     call operand_32bit
     call get_dword_value
 
     mov_mem_imm_32bit_store:
     mov dword [value],eax
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0C7h
     pop _ecx _ebx _edx
     call store_instruction_with_imm32
@@ -18120,10 +18144,10 @@ mov_mem_imm_32bit:
     ret
 
 mov_reg:
-    strings.emit 'mov_reg | 18123'
+    ;strings.emit 'mov_reg | 18123'
     lods u8 [esi]
     mov ah,al
-    sub ah,10h
+    sub ah,DELINK
     and ah,al
     test ah,0F0h
     jnz mov_sreg
@@ -18140,13 +18164,13 @@ mov_reg:
     je mov_reg_imm
     cmp al,14h
     je mov_reg_creg
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     mov_reg_reg:
     lods u8 [esi]
     mov ah,al
-    sub ah,10h
+    sub ah,DELINK
     and ah,al
     test ah,0F0h
     jnz mov_reg_sreg
@@ -18154,7 +18178,7 @@ mov_reg:
     mov bl,[postbyte_register]
     mov [postbyte_register],al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je mov_reg_reg_8bit
     call operand_autodetect
     inc [base_code]
@@ -18164,33 +18188,33 @@ mov_reg:
     ret
 
 mov_reg_sreg:
-    strings.emit 'mov_reg_sreg | 18167'
+    ;strings.emit 'mov_reg_sreg | 18167'
     mov bl,[postbyte_register]
     mov ah,al
     and al,1111b
     mov [postbyte_register],al
-    shr ah,4
-    cmp ah,3
+    shr ah,TAIL
+    cmp ah,TXT
     jne invalid_operand
     dec [postbyte_register]
-    cmp [operand_size],8
+    cmp [operand_size],RECTIFY
     je mov_reg_sreg64
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     je mov_reg_sreg32
-    cmp [operand_size],2
+    cmp [operand_size],TEXT
     jne invalid_operand_size
     call operand_16bit
     jmp mov_reg_sreg_store
     ret
 
 mov_reg_sreg64:
-    strings.emit 'mov_reg_sreg64 | 18187'
+    ;strings.emit 'mov_reg_sreg64 | 18187'
     call operand_64bit
     jmp mov_reg_sreg_store
     ret
 
 mov_reg_sreg32:
-    strings.emit 'mov_reg_sreg32 | 18193'
+    ;strings.emit 'mov_reg_sreg32 | 18193'
     call operand_32bit
     mov_reg_sreg_store:
     mov [base_code],8Ch
@@ -18198,68 +18222,68 @@ mov_reg_sreg32:
     ret
 
 mov_reg_creg:
-    strings.emit 'mov_reg_creg | 18201'
+    ;strings.emit 'mov_reg_creg | 18201'
     lods u8 [esi]
     mov bl,al
-    shr al,4
-    cmp al,4
+    shr al,TAIL
+    cmp al,TAIL
     ja invalid_operand
-    add al,20h
+    add al,SPACE
     mov [extended_code],al
     and bl,1111b
     xchg bl,[postbyte_register]
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     cmp [code_type],64
     je mov_reg_creg_64bit
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     jne invalid_operand_size
-    cmp [postbyte_register],8
+    cmp [postbyte_register],RECTIFY
     jb mov_reg_creg_store
-    cmp [extended_code],20h
+    cmp [extended_code],SPACE
     jne mov_reg_creg_store
     mov al,0F0h
     stos u8 [edi]
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
 
     mov_reg_creg_store:
     jmp nomem_instruction_ready
     ret
 
 mov_reg_creg_64bit:
-    strings.emit 'mov_reg_creg_64bit | 18229'
-    cmp [operand_size],8
+    ;strings.emit 'mov_reg_creg_64bit | 18229'
+    cmp [operand_size],RECTIFY
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
 mov_reg_mem:
-    strings.emit 'mov_reg_mem | 18236'
+    ;strings.emit 'mov_reg_mem | 18236'
     call get_address
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je mov_reg_mem_8bit
     call operand_autodetect
     mov al,[postbyte_register]
     or al,bl
     or al,bh
     jz mov_ax_mem
-    add [base_code],3
+    add [base_code],TXT
     jmp instruction_ready
     ret
 
 mov_reg_mem_8bit:
-    strings.emit 'mov_reg_mem_8bit | 18251'
+    ;strings.emit 'mov_reg_mem_8bit | 18251'
     mov al,[postbyte_register]
     or al,bl
     or al,bh
     jz mov_al_mem
-    add [base_code],2
+    add [base_code],TEXT
     jmp instruction_ready
     ret
 
 mov_al_mem:
-    strings.emit 'mov_al_mem | 18261'
-    test ch,22h
+    ;strings.emit 'mov_al_mem | 18261'
+    test ch,SYN
     jnz mov_al_mem_address16
     test ch,44h
     jnz mov_al_mem_address32
@@ -18282,7 +18306,7 @@ mov_al_mem:
     ret
 
 mov_al_mem_address16:
-    strings.emit 'mov_al_mem_address16 | 18285'
+    ;strings.emit 'mov_al_mem_address16 | 18285'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A0h
@@ -18290,15 +18314,15 @@ mov_al_mem_address16:
     ret
 
 mov_al_mem_address64:
-    strings.emit 'mov_al_mem_address64 | 18293'
+    ;strings.emit 'mov_al_mem_address64 | 18293'
     call store_segment_prefix_if_necessary
     mov [base_code],0A0h
     jmp store_mov_address64
     ret
 
 mov_ax_mem:
-    strings.emit 'mov_ax_mem | 18300'
-    test ch,22h
+    ;strings.emit 'mov_ax_mem | 18300'
+    test ch,SYN
     jnz mov_ax_mem_address16
     test ch,44h
     jnz mov_ax_mem_address32
@@ -18321,7 +18345,7 @@ mov_ax_mem:
     ret
 
 mov_ax_mem_address16:
-    strings.emit 'mov_ax_mem_address16 | 18324'
+    ;strings.emit 'mov_ax_mem_address16 | 18324'
     call store_segment_prefix_if_necessary
     call address_16bit_prefix
     mov [base_code],0A1h
@@ -18329,31 +18353,31 @@ mov_ax_mem_address16:
     ret
 
 mov_ax_mem_address64:
-    strings.emit 'mov_ax_mem_address64 | 18332'
+    ;strings.emit 'mov_ax_mem_address64 | 18332'
     call store_segment_prefix_if_necessary
     mov [base_code],0A1h
     jmp store_mov_address64
     ret
 
 mov_reg_imm:
-    strings.emit 'mov_reg_imm | 18339'
+    ;strings.emit 'mov_reg_imm | 18339'
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je mov_reg_imm_8bit
-    cmp al,2
+    cmp al,TEXT
     je mov_reg_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je mov_reg_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     mov_reg_imm_64bit:
     call operand_64bit
     call get_qword_value
     mov ecx,edx
-    cmp [size_declared],0
-    jne mov_reg_imm_64bit_store
-    cmp [value_type],4
+    cmp [size_declared],NUL
+    jne  mov_reg_imm_64bit_store
+    cmp [value_type],TAIL
     jae mov_reg_imm_64bit_store
     cdq
     cmp ecx,edx
@@ -18372,7 +18396,7 @@ mov_reg_imm:
     ret
 
 mov_reg_imm_8bit:
-    strings.emit 'mov_reg_imm_8bit | 18375'
+    ;strings.emit 'mov_reg_imm_8bit | 18375'
     call get_byte_value
     mov dl,al
     mov al,0B0h
@@ -18383,7 +18407,7 @@ mov_reg_imm_8bit:
     ret
 
 mov_reg_imm_16bit:
-    strings.emit 'mov_reg_imm_16bit | 18386'
+    ;strings.emit 'mov_reg_imm_16bit | 18386'
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -18396,7 +18420,7 @@ mov_reg_imm_16bit:
     ret
 
 mov_reg_imm_32bit:
-    strings.emit 'mov_reg_imm_32bit | 18399'
+    ;strings.emit 'mov_reg_imm_32bit | 18399'
     call operand_32bit
     call get_dword_value
     mov edx,eax
@@ -18411,7 +18435,7 @@ mov_reg_imm_32bit:
     ret
 
 store_mov_reg_imm_code:
-    strings.emit 'store_mov_reg_imm_code | 18414'
+    ;strings.emit 'store_mov_reg_imm_code | 18414'
     mov ah,[postbyte_register]
     test ah,1000b
     jz mov_reg_imm_prefix_ok
@@ -18425,24 +18449,24 @@ store_mov_reg_imm_code:
     ret
 
 mov_reg_64bit_imm_32bit:
-    strings.emit 'mov_reg_64bit_imm_32bit | 18428'
+    ;strings.emit 'mov_reg_64bit_imm_32bit | 18428'
     mov edx,eax
     mov bl,[postbyte_register]
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0C7h
     call store_nomem_instruction
     jmp mov_store_imm_32bit
     ret
 
 mov_sreg:
-    strings.emit 'mov_sreg | 18438'
+    ;strings.emit 'mov_sreg | 18438'
     mov ah,al
     and al,1111b
     mov [postbyte_register],al
-    shr ah,4
-    cmp ah,3
+    shr ah,TAIL
+    cmp ah,TXT
     jne invalid_operand
-    cmp al,2
+    cmp al,TEXT
     je illegal_instruction
     dec [postbyte_register]
     lods u8 [esi]
@@ -18452,7 +18476,7 @@ mov_sreg:
     call get_size_operator
     cmp al,'['
     je mov_sreg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     mov_sreg_reg:
@@ -18460,7 +18484,7 @@ mov_sreg:
     call convert_register
     or ah,ah
     jz mov_sreg_reg_size_ok
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
     mov bl,al
 
@@ -18470,12 +18494,12 @@ mov_sreg:
     ret
 
 mov_sreg_mem:
-    strings.emit 'mov_sreg_mem | 18473'
+    ;strings.emit 'mov_sreg_mem | 18473'
     call get_address
     mov al,[operand_size]
     or al,al
     jz mov_sreg_mem_size_ok
-    cmp al,2
+    cmp al,TEXT
     jne invalid_operand_size
 
     mov_sreg_mem_size_ok:
@@ -18484,17 +18508,17 @@ mov_sreg_mem:
     ret
 
 mov_creg:
-    strings.emit 'mov_creg | 18487'
+    ;strings.emit 'mov_creg | 18487'
     lods u8 [esi]
     mov ah,al
-    shr ah,4
-    cmp ah,4
+    shr ah,TAIL
+    cmp ah,TAIL
     ja invalid_operand
-    add ah,22h
+    add ah,SYN
     mov [extended_code],ah
     and al,1111b
     mov [postbyte_register],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -18502,33 +18526,33 @@ mov_creg:
     mov bl,al
     cmp [code_type],64
     je mov_creg_64bit
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
-    cmp [postbyte_register],8
+    cmp [postbyte_register],RECTIFY
     jb mov_creg_store
-    cmp [extended_code],22h
+    cmp [extended_code],SYN
     jne mov_creg_store
     mov al,0F0h
     stos u8 [edi]
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
 
     mov_creg_store:
     jmp nomem_instruction_ready
     ret
 
 mov_creg_64bit:
-    strings.emit 'mov_creg_64bit | 18520'
-    cmp ah,8
+    ;strings.emit 'mov_creg_64bit | 18520'
+    cmp ah,RECTIFY
     je mov_creg_store
     jmp invalid_operand_size
     ret
 
 test_instruction:
-    strings.emit 'test_instruction | 18527'
+    ;strings.emit 'test_instruction | 18527'
     mov [base_code],84h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je test_reg
     cmp al,'['
     jne invalid_operand
@@ -18543,7 +18567,7 @@ test_instruction:
     call get_size_operator
     cmp al,'('
     je test_mem_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     test_mem_reg:
@@ -18552,7 +18576,7 @@ test_instruction:
     mov [postbyte_register],al
     pop _ecx _ebx _edx
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je test_mem_reg_8bit
     call operand_autodetect
     inc [base_code]
@@ -18562,35 +18586,35 @@ test_instruction:
     ret
 
 test_mem_imm:
-    strings.emit 'test_mem_imm | 18565'
+    ;strings.emit 'test_mem_imm | 18565'
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     jb test_mem_imm_nosize
     je test_mem_imm_8bit
-    cmp al,2
+    cmp al,TEXT
     je test_mem_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je test_mem_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     test_mem_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp test_mem_imm_32bit_store
     ret
 
 test_mem_imm_nosize:
-    strings.emit 'test_mem_imm_nosize | 18588'
+    ;strings.emit 'test_mem_imm_nosize | 18588'
     call recoverable_unknown_size
     test_mem_imm_8bit:
     call get_byte_value
     mov u8 [value],al
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0F6h
     pop _ecx _ebx _edx
     call store_instruction_with_imm8
@@ -18598,11 +18622,11 @@ test_mem_imm_nosize:
     ret
 
 test_mem_imm_16bit:
-    strings.emit 'test_mem_imm_16bit | 18601'
+    ;strings.emit 'test_mem_imm_16bit | 18601'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0F7h
     pop _ecx _ebx _edx
     call store_instruction_with_imm16
@@ -18610,12 +18634,12 @@ test_mem_imm_16bit:
     ret
 
 test_mem_imm_32bit:
-    strings.emit 'test_mem_imm_32bit | 18613'
+    ;strings.emit 'test_mem_imm_32bit | 18613'
     call operand_32bit
     call get_dword_value
     test_mem_imm_32bit_store:
     mov dword [value],eax
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0F7h
     pop _ecx _ebx _edx
     call store_instruction_with_imm32
@@ -18623,7 +18647,7 @@ test_mem_imm_32bit:
     ret
 
 test_reg:
-    strings.emit 'test_reg | 18626'
+    ;strings.emit 'test_reg | 18626'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -18636,7 +18660,7 @@ test_reg:
     je test_reg_mem
     cmp al,'('
     je test_reg_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     test_reg_reg:
@@ -18645,7 +18669,7 @@ test_reg:
     mov bl,[postbyte_register]
     mov [postbyte_register],al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je test_reg_reg_8bit
     call operand_autodetect
     inc [base_code]
@@ -18655,33 +18679,33 @@ test_reg:
     ret
 
 test_reg_imm:
-    strings.emit 'test_reg_imm | 18658'
+    ;strings.emit 'test_reg_imm | 18658'
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je test_reg_imm_8bit
-    cmp al,2
+    cmp al,TEXT
     je test_reg_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je test_reg_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     test_reg_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp test_reg_imm_32bit_store
     ret
 
 test_reg_imm_8bit:
-    strings.emit 'test_reg_imm_8bit | 18680'
+    ;strings.emit 'test_reg_imm_8bit | 18680'
     call get_byte_value
     mov dl,al
     mov bl,[postbyte_register]
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0F6h
     or bl,bl
     jz test_al_imm
@@ -18692,7 +18716,7 @@ test_reg_imm_8bit:
     ret
 
 test_al_imm:
-    strings.emit 'test_al_imm | 18695'
+    ;strings.emit 'test_al_imm | 18695'
     mov [base_code],0A8h
     call store_classic_instruction_code
     mov al,dl
@@ -18701,12 +18725,12 @@ test_al_imm:
     ret
 
 test_reg_imm_16bit:
-    strings.emit 'test_reg_imm_16bit | 18704'
+    ;strings.emit 'test_reg_imm_16bit | 18704'
     call operand_16bit
     call get_word_value
     mov dx,ax
     mov bl,[postbyte_register]
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0F7h
     or bl,bl
     jz test_ax_imm
@@ -18718,7 +18742,7 @@ test_reg_imm_16bit:
     ret
 
 test_ax_imm:
-    strings.emit 'test_ax_imm | 18721'
+    ;strings.emit 'test_ax_imm | 18721'
     mov [base_code],0A9h
     call store_classic_instruction_code
     mov ax,dx
@@ -18727,14 +18751,14 @@ test_ax_imm:
     ret
 
 test_reg_imm_32bit:
-    strings.emit 'test_reg_imm_32bit | 18730'
+    ;strings.emit 'test_reg_imm_32bit | 18730'
     call operand_32bit
     call get_dword_value
 
     test_reg_imm_32bit_store:
     mov edx,eax
     mov bl,[postbyte_register]
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     mov [base_code],0F7h
     or bl,bl
     jz test_eax_imm
@@ -18746,7 +18770,7 @@ test_reg_imm_32bit:
     ret
 
 test_eax_imm:
-    strings.emit 'test_eax_imm | 18748'
+    ;strings.emit 'test_eax_imm | 18748'
     mov [base_code],0A9h
     call store_classic_instruction_code
     mov eax,edx
@@ -18755,10 +18779,10 @@ test_eax_imm:
     ret
 
 test_reg_mem:
-    strings.emit 'test_reg_mem | 18758'
+    ;strings.emit 'test_reg_mem | 18758'
     call get_address
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je test_reg_mem_8bit
     call operand_autodetect
     inc [base_code]
@@ -18768,11 +18792,11 @@ test_reg_mem:
     ret
 
 xchg_instruction:
-    strings.emit 'xchg_instruction | 18771'
+    ;strings.emit 'xchg_instruction | 18771'
     mov [base_code],86h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je xchg_reg
     cmp al,'['
     jne invalid_operand
@@ -18785,13 +18809,13 @@ xchg_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je test_mem_reg
     jmp invalid_operand
     ret
 
 xchg_reg:
-    strings.emit 'xchg_reg | 18794'
+    ;strings.emit 'xchg_reg | 18794'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -18802,7 +18826,7 @@ xchg_reg:
     call get_size_operator
     cmp al,'['
     je test_reg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     xchg_reg_reg:
@@ -18810,10 +18834,10 @@ xchg_reg:
     call convert_register
     mov bl,al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je xchg_reg_reg_8bit
     call operand_autodetect
-    cmp [postbyte_register],0
+    cmp [postbyte_register],NUL
     je xchg_ax_reg
     or bl,bl
     jnz xchg_reg_reg_store
@@ -18822,7 +18846,7 @@ xchg_reg:
     xchg_ax_reg:
     cmp [code_type],64
     jne xchg_ax_reg_ok
-    cmp ah,4
+    cmp ah,TAIL
     jne xchg_ax_reg_ok
     or bl,bl
     jz xchg_reg_reg_store
@@ -18841,7 +18865,7 @@ xchg_reg:
     ret
 
 xchg_reg_reg_store:
-    strings.emit 'xchg_reg_reg_store | 18844'
+    ;strings.emit 'xchg_reg_reg_store | 18844'
     inc [base_code]
 
     xchg_reg_reg_8bit:
@@ -18849,13 +18873,13 @@ xchg_reg_reg_store:
     ret
 
 push_instruction:
-    strings.emit 'push_instruction | 18852'
+    ;strings.emit 'push_instruction | 18852'
     mov [push_size],al
 
     push_next:
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je push_reg
     cmp al,'('
     je push_imm
@@ -18866,26 +18890,26 @@ push_instruction:
     call get_address
     mov al,[operand_size]
     mov ah,[push_size]
-    cmp al,2
+    cmp al,TEXT
     je push_mem_16bit
-    cmp al,4
+    cmp al,TAIL
     je push_mem_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je push_mem_64bit
     or al,al
     jnz invalid_operand_size
-    cmp ah,2
+    cmp ah,TEXT
     je push_mem_16bit
-    cmp ah,4
+    cmp ah,TAIL
     je push_mem_32bit
-    cmp ah,8
+    cmp ah,RECTIFY
     je push_mem_64bit
     call recoverable_unknown_size
     jmp push_mem_store
     ret
 
 push_mem_16bit:
-    strings.emit 'push_mem_16bit | 18887'
+    ;strings.emit 'push_mem_16bit | 18887'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -18893,7 +18917,7 @@ push_mem_16bit:
     ret
 
 push_mem_32bit:
-    strings.emit 'push_mem_32bit | 18896'
+    ;strings.emit 'push_mem_32bit | 18896'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18903,8 +18927,8 @@ push_mem_32bit:
     ret
 
 push_mem_64bit:
-    strings.emit 'push_mem_64bit | 18906'
-    test ah,not 8
+    ;strings.emit 'push_mem_64bit | 18906'
+    test ah,not RECTIFY
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
@@ -18917,10 +18941,10 @@ push_mem_64bit:
     ret
 
 push_reg:
-    strings.emit 'push_reg | 18920'
+    ;strings.emit 'push_reg | 18920'
     lods u8 [esi]
     mov ah,al
-    sub ah,10h
+    sub ah,DELINK
     and ah,al
     test ah,0F0h
     jnz push_sreg
@@ -18935,15 +18959,15 @@ push_reg:
     mov [base_code],al
     mov al,ah
     mov ah,[push_size]
-    cmp al,2
+    cmp al,TEXT
     je push_reg_16bit
-    cmp al,4
+    cmp al,TAIL
     je push_reg_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     push_reg_64bit:
-    test ah,not 8
+    test ah,not RECTIFY
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
@@ -18951,7 +18975,7 @@ push_reg:
     ret
 
 push_reg_32bit:
-    strings.emit 'push_reg_32bit | 18954'
+    ;strings.emit 'push_reg_32bit | 18954'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -18961,7 +18985,7 @@ push_reg_32bit:
     ret
 
 push_reg_16bit:
-    strings.emit 'push_reg_16bit | 18964'
+    ;strings.emit 'push_reg_16bit | 18964'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -18971,29 +18995,29 @@ push_reg_16bit:
     ret
 
 push_sreg:
-    strings.emit 'push_sreg | 18974'
+    ;strings.emit 'push_sreg | 18974'
     mov bl,al
     mov dl,[operand_size]
     mov dh,[push_size]
-    cmp dl,2
+    cmp dl,TEXT
     je push_sreg16
-    cmp dl,4
+    cmp dl,TAIL
     je push_sreg32
-    cmp dl,8
+    cmp dl,RECTIFY
     je push_sreg64
     or dl,dl
     jnz invalid_operand_size
-    cmp dh,2
+    cmp dh,TEXT
     je push_sreg16
-    cmp dh,4
+    cmp dh,TAIL
     je push_sreg32
-    cmp dh,8
+    cmp dh,RECTIFY
     je push_sreg64
     jmp push_sreg_store
     ret
 
 push_sreg16:
-    strings.emit 'push_sreg16 | 18996'
+    ;strings.emit 'push_sreg16 | 18996'
     test dh,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19001,7 +19025,7 @@ push_sreg16:
     ret
 
 push_sreg32:
-    strings.emit 'push_sreg32 | 19004'
+    ;strings.emit 'push_sreg32 | 19004'
     test dh,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19011,22 +19035,22 @@ push_sreg32:
     ret
 
 push_sreg64:
-    strings.emit 'push_sreg64 | 19014'
-    test dh,not 8
+    ;strings.emit 'push_sreg64 | 19014'
+    test dh,not RECTIFY
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
 
     push_sreg_store:
     mov al,bl
-    cmp al,40h
+    cmp al,AMP
     jae invalid_operand
     sub al,31h
     jc invalid_operand
-    cmp al,4
+    cmp al,TAIL
     jae push_sreg_386
-    shl al,3
-    add al,6
+    shl al,TXT
+    add al,RESULT
     mov [base_code],al
     cmp [code_type],64
     je illegal_instruction
@@ -19034,17 +19058,17 @@ push_sreg64:
     ret
 
 push_sreg_386:
-    strings.emit 'push_sreg_386 | 19037'
-    sub al,4
-    shl al,3
+    ;strings.emit 'push_sreg_386 | 19037'
+    sub al,TAIL
+    shl al,TXT
     add al,0A0h
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     jmp push_reg_store
     ret
 
 push_imm:
-    strings.emit 'push_imm | 19047'
+    ;strings.emit 'push_imm | 19047'
     mov al,[operand_size]
     mov ah,[push_size]
     or al,al
@@ -19055,17 +19079,17 @@ push_imm:
     jne invalid_operand_size
 
     push_imm_size_ok:
-    cmp al,2
+    cmp al,TEXT
     je push_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je push_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je push_imm_64bit
-    cmp ah,2
+    cmp ah,TEXT
     je push_imm_optimized_16bit
-    cmp ah,4
+    cmp ah,TAIL
     je push_imm_optimized_32bit
-    cmp ah,8
+    cmp ah,RECTIFY
     je push_imm_optimized_64bit
     or al,al
     jnz invalid_operand_size
@@ -19079,8 +19103,8 @@ push_imm:
     jne illegal_instruction
     call get_simm32
     mov edx,eax
-    cmp [value_type],0
-    jne push_imm_32bit_store
+    cmp [value_type],NUL
+    jne  push_imm_32bit_store
     cmp eax,-80h
     jl push_imm_32bit_store
     cmp eax,80h
@@ -19089,14 +19113,14 @@ push_imm:
     ret
 
 push_imm_optimized_32bit:
-    strings.emit 'push_imm_optimized_32bit | 19092'
+    ;strings.emit 'push_imm_optimized_32bit | 19092'
     cmp [code_type],64
     je illegal_instruction
     call get_dword_value
     mov edx,eax
     call operand_32bit
-    cmp [value_type],0
-    jne push_imm_32bit_store
+    cmp [value_type],NUL
+    jne  push_imm_32bit_store
     cmp eax,-80h
     jl push_imm_32bit_store
     cmp eax,80h
@@ -19105,12 +19129,12 @@ push_imm_optimized_32bit:
     ret
 
 push_imm_optimized_16bit:
-    strings.emit 'push_imm_optimized_16bit | 19108'
+    ;strings.emit 'push_imm_optimized_16bit | 19108'
     call get_word_value
     mov dx,ax
     call operand_16bit
-    cmp [value_type],0
-    jne push_imm_16bit_store
+    cmp [value_type],NUL
+    jne  push_imm_16bit_store
     cmp ax,-80h
     jl push_imm_16bit_store
     cmp ax,80h
@@ -19126,7 +19150,7 @@ push_imm_optimized_16bit:
     ret
 
 push_imm_16bit:
-    strings.emit 'push_imm_optimized_16bit | 19108'
+    ;strings.emit 'push_imm_optimized_16bit | 19108'
     call get_word_value
     mov dx,ax
     call operand_16bit
@@ -19141,7 +19165,7 @@ push_imm_16bit:
     ret
 
 push_imm_64bit:
-    strings.emit 'push_imm_64bit | 19144'
+    ;strings.emit 'push_imm_64bit | 19144'
     cmp [code_type],64
     jne illegal_instruction
     call get_simm32
@@ -19150,7 +19174,7 @@ push_imm_64bit:
     ret
 
 push_imm_32bit:
-    strings.emit 'push_imm_32bit | 19153'
+    ;strings.emit 'push_imm_32bit | 19153'
     cmp [code_type],64
     je illegal_instruction
     call get_dword_value
@@ -19167,22 +19191,22 @@ push_imm_32bit:
     push_done:
     lods u8 [esi]
     dec esi
-    cmp al,0Fh
+    cmp al,SHIFT
     je instruction_assembled
     or al,al
     jz instruction_assembled
-    and dword [operand_size],0
+    and dword [operand_size],NUL
     jmp push_next
     ret
 
 pop_instruction:
-    strings.emit 'pop_instruction | 19179'
+    ;strings.emit 'pop_instruction | 19179'
     mov [push_size],al
 
     pop_next:
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pop_reg
     cmp al,'['
     jne invalid_operand
@@ -19191,26 +19215,26 @@ pop_instruction:
     call get_address
     mov al,[operand_size]
     mov ah,[push_size]
-    cmp al,2
+    cmp al,TEXT
     je pop_mem_16bit
-    cmp al,4
+    cmp al,TAIL
     je pop_mem_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je pop_mem_64bit
     or al,al
     jnz invalid_operand_size
-    cmp ah,2
+    cmp ah,TEXT
     je pop_mem_16bit
-    cmp ah,4
+    cmp ah,TAIL
     je pop_mem_32bit
-    cmp ah,8
+    cmp ah,RECTIFY
     je pop_mem_64bit
     call recoverable_unknown_size
     jmp pop_mem_store
     ret
 
 pop_mem_16bit:
-    strings.emit 'pop_mem_16bit | 19213'
+    ;strings.emit 'pop_mem_16bit | 19213'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19218,7 +19242,7 @@ pop_mem_16bit:
     ret
 
 pop_mem_32bit:
-    strings.emit 'pop_mem_32bit | 19221'
+    ;strings.emit 'pop_mem_32bit | 19221'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19228,24 +19252,24 @@ pop_mem_32bit:
     ret
 
 pop_mem_64bit:
-    strings.emit 'pop_mem_64bit | 19230'
-    test ah,not 8
+    ;strings.emit 'pop_mem_64bit | 19230'
+    test ah,not RECTIFY
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
 
     pop_mem_store:
     mov [base_code],08Fh
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     call store_instruction
     jmp pop_done
     ret
 
 pop_reg:
-    strings.emit 'pop_reg | 19245'
+    ;strings.emit 'pop_reg | 19245'
     lods u8 [esi]
     mov ah,al
-    sub ah,10h
+    sub ah,DELINK
     and ah,al
     test ah,0F0h
     jnz pop_sreg
@@ -19260,18 +19284,18 @@ pop_reg:
     mov [base_code],al
     mov al,ah
     mov ah,[push_size]
-    cmp al,2
+    cmp al,TEXT
     je pop_reg_16bit
-    cmp al,4
+    cmp al,TAIL
     je pop_reg_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je pop_reg_64bit
     jmp invalid_operand_size
     ret
 
 pop_reg_64bit:
-    strings.emit 'pop_reg_64bit | 19273'
-    test ah,not 8
+    ;strings.emit 'pop_reg_64bit | 19273'
+    test ah,not RECTIFY
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
@@ -19279,7 +19303,7 @@ pop_reg_64bit:
     ret
 
 pop_reg_32bit:
-    strings.emit 'pop_reg_32bit | 19282'
+    ;strings.emit 'pop_reg_32bit | 19282'
     test ah,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19289,7 +19313,7 @@ pop_reg_32bit:
     ret
 
 pop_reg_16bit:
-    strings.emit 'pop_reg_16bit | 19292'
+    ;strings.emit 'pop_reg_16bit | 19292'
     test ah,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19300,40 +19324,40 @@ pop_reg_16bit:
     pop_done:
     lods u8 [esi]
     dec esi
-    cmp al,0Fh
+    cmp al,SHIFT
     je instruction_assembled
     or al,al
     jz instruction_assembled
-    and dword [operand_size],0
+    and dword [operand_size],NUL
     jmp pop_next
     ret
 
 pop_sreg:
-    strings.emit 'pop_sreg | 19312'
+    ;strings.emit 'pop_sreg | 19312'
     mov dl,[operand_size]
     mov dh,[push_size]
     cmp al,32h
     je pop_cs
     mov bl,al
-    cmp dl,2
+    cmp dl,TEXT
     je pop_sreg16
-    cmp dl,4
+    cmp dl,TAIL
     je pop_sreg32
-    cmp dl,8
+    cmp dl,RECTIFY
     je pop_sreg64
     or dl,dl
     jnz invalid_operand_size
-    cmp dh,2
+    cmp dh,TEXT
     je pop_sreg16
-    cmp dh,4
+    cmp dh,TAIL
     je pop_sreg32
-    cmp dh,8
+    cmp dh,RECTIFY
     je pop_sreg64
     jmp pop_sreg_store
     ret
 
 pop_sreg16:
-    strings.emit 'pop_sreg16 | 19336'
+    ;strings.emit 'pop_sreg16 | 19336'
     test dh,not 2
     jnz invalid_operand_size
     call operand_16bit
@@ -19341,7 +19365,7 @@ pop_sreg16:
     ret
 
 pop_sreg32:
-    strings.emit 'pop_sreg32 | 19344'
+    ;strings.emit 'pop_sreg32 | 19344'
     test dh,not 4
     jnz invalid_operand_size
     cmp [code_type],64
@@ -19351,22 +19375,22 @@ pop_sreg32:
     ret
 
 pop_sreg64:
-    strings.emit 'pop_sreg64 | 19354'
-    test dh,not 8
+    ;strings.emit 'pop_sreg64 | 19354'
+    test dh,not RECTIFY
     jnz invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
 
     pop_sreg_store:
     mov al,bl
-    cmp al,40h
+    cmp al,AMP
     jae invalid_operand
     sub al,31h
     jc invalid_operand
-    cmp al,4
+    cmp al,TAIL
     jae pop_sreg_386
-    shl al,3
-    add al,7
+    shl al,TXT
+    add al,NOTIFY
     mov [base_code],al
     cmp [code_type],64
     je illegal_instruction
@@ -19374,14 +19398,14 @@ pop_sreg64:
     ret
 
 pop_cs:
-    strings.emit 'pop_cs | 19377'
+    ;strings.emit 'pop_cs | 19377'
     cmp [code_type],16
     jne illegal_instruction
-    cmp dl,2
+    cmp dl,TEXT
     je pop_cs_store
     or dl,dl
     jnz invalid_operand_size
-    cmp dh,2
+    cmp dh,TEXT
     je pop_cs_store
     or dh,dh
     jnz illegal_instruction
@@ -19389,27 +19413,27 @@ pop_cs:
     pop_cs_store:
     test dh,not 2
     jnz invalid_operand_size
-    mov al,0Fh
+    mov al,SHIFT
     stos u8 [edi]
     jmp pop_done
     ret
 
 pop_sreg_386:
-    strings.emit 'pop_sreg_386 | 19397'
-    sub al,4
-    shl al,3
+    ;strings.emit 'pop_sreg_386 | 19397'
+    sub al,TAIL
+    shl al,TXT
     add al,0A1h
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     jmp pop_reg_store
     ret
 
 inc_instruction:
-    strings.emit 'inc_instruction | 19407'
+    ;strings.emit 'inc_instruction | 19407'
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je inc_reg
     cmp al,'['
     je inc_mem
@@ -19418,7 +19442,7 @@ inc_instruction:
     inc_mem:
     call get_address
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je inc_mem_8bit
     jb inc_mem_nosize
     call operand_autodetect
@@ -19429,7 +19453,7 @@ inc_instruction:
     ret
 
 inc_mem_nosize:
-    strings.emit 'inc_mem_nosize | 19432'
+    ;strings.emit 'inc_mem_nosize | 19432'
     call recoverable_unknown_size
 
     inc_mem_8bit:
@@ -19440,7 +19464,7 @@ inc_mem_nosize:
     ret
 
 inc_reg:
-    strings.emit 'inc_reg | 19443'
+    ;strings.emit 'inc_reg | 19443'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -19448,22 +19472,22 @@ inc_reg:
     xchg al,[base_code]
     mov [postbyte_register],al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je inc_reg_8bit
     call operand_autodetect
     cmp [code_type],64
     je inc_reg_long_form
     mov al,[postbyte_register]
-    shl al,3
+    shl al,TXT
     add al,bl
-    add al,40h
+    add al,AMP
     mov [base_code],al
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
 inc_reg_long_form:
-    strings.emit 'inc_reg_long_form | 19465'
+    ;strings.emit 'inc_reg_long_form | 19465'
     inc [base_code]
 
     inc_reg_8bit:
@@ -19471,43 +19495,43 @@ inc_reg_long_form:
     ret
 
 set_instruction:
-    strings.emit 'set_instruction | 19473'
-    mov [base_code],0Fh
+    ;strings.emit 'set_instruction | 19473'
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je set_reg
     cmp al,'['
     jne invalid_operand
 
     set_mem:
     call get_address
-    cmp [operand_size],1
+    cmp [operand_size],HEAD
     ja invalid_operand_size
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     jmp instruction_ready
     ret
 
 set_reg:
-    strings.emit 'set_reg | 19493'
+    ;strings.emit 'set_reg | 19493'
     lods u8 [esi]
     call convert_register
-    cmp ah,1
+    cmp ah,HEAD
     jne invalid_operand_size
     mov bl,al
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     jmp nomem_instruction_ready
     ret
 
 arpl_instruction:
-    strings.emit 'arpl_instruction | 19504'
+    ;strings.emit 'arpl_instruction | 19504'
     cmp [code_type],64
     je illegal_instruction
     mov [base_code],63h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je arpl_reg
     cmp al,'['
     jne invalid_operand
@@ -19517,16 +19541,16 @@ arpl_instruction:
     jne invalid_operand
     call take_register
     mov [postbyte_register],al
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
     jmp instruction_ready
     ret
 
 arpl_reg:
-    strings.emit 'arpl_reg | 19525'
+    ;strings.emit 'arpl_reg | 19525'
     lods u8 [esi]
     call convert_register
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
     mov bl,al
     lods u8 [esi]
@@ -19538,7 +19562,7 @@ arpl_reg:
     ret
 
 bound_instruction:
-    strings.emit 'bound_instruction | 19541'
+    ;strings.emit 'bound_instruction | 19541'
     cmp [code_type],64
     je illegal_instruction
     call take_register
@@ -19552,9 +19576,9 @@ bound_instruction:
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je bound_store
-    cmp al,4
+    cmp al,TAIL
     jne invalid_operand_size
 
     bound_store:
@@ -19564,10 +19588,10 @@ bound_instruction:
     ret
 
 enter_instruction:
-    strings.emit 'enter_instruction | 19567'
+    ;strings.emit 'enter_instruction | 19567'
     lods u8 [esi]
     call get_size_operator
-    cmp ah,2
+    cmp ah,TEXT
     je enter_imm16_size_ok
     or ah,ah
     jnz invalid_operand_size
@@ -19576,22 +19600,22 @@ enter_instruction:
     cmp al,'('
     jne invalid_operand
     call get_word_value
-    cmp [next_pass_needed],0
-    jne enter_imm16_ok
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [next_pass_needed],NUL
+    jne  enter_imm16_ok
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     test eax,eax
     js value_out_of_range
 
     enter_imm16_ok:
     push _eax
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp ah,1
+    cmp ah,HEAD
     je enter_imm8_size_ok
     or ah,ah
     jnz invalid_operand_size
@@ -19600,8 +19624,8 @@ enter_instruction:
     cmp al,'('
     jne invalid_operand
     call get_byte_value
-    cmp [next_pass_needed],0
-    jne enter_imm8_ok
+    cmp [next_pass_needed],NUL
+    jne  enter_imm8_ok
     test eax,eax
     js value_out_of_range
 
@@ -19618,14 +19642,14 @@ enter_instruction:
     ret
 
 ret_instruction_only64:
-    strings.emit 'ret_instruction_only64 | 19621'
+    ;strings.emit 'ret_instruction_only64 | 19621'
     cmp [code_type],64
     jne illegal_instruction
     jmp ret_instruction
     ret
 
 ret_instruction_32bit_except64:
-    strings.emit 'ret_instruction_32bit_except64 | 19628'
+    ;strings.emit 'ret_instruction_32bit_except64 | 19628'
     cmp [code_type],64
     je illegal_instruction
 
@@ -19635,13 +19659,13 @@ ret_instruction_32bit_except64:
     ret
 
 ret_instruction_16bit:
-    strings.emit 'ret_instruction_16bit | 19637'
+    ;strings.emit 'ret_instruction_16bit | 19637'
     call operand_16bit
     jmp ret_instruction
     ret
 
 ret_instruction_64bit:
-    strings.emit 'ret_instruction_64bit | 19644'
+    ;strings.emit 'ret_instruction_64bit | 19644'
     call operand_64bit
 
     ret_instruction:
@@ -19653,32 +19677,32 @@ ret_instruction_64bit:
     dec esi
     or al,al
     jz simple_ret
-    cmp al,0Fh
+    cmp al,SHIFT
     je simple_ret
     lods u8 [esi]
     call get_size_operator
     or ah,ah
     jz ret_imm
-    cmp ah,2
+    cmp ah,TEXT
     je ret_imm
     jmp invalid_operand_size
     ret
 
 ret_imm:
-    strings.emit 'ret_imm | 19667'
+    ;strings.emit 'ret_imm | 19667'
     cmp al,'('
     jne invalid_operand
     call get_word_value
-    cmp [next_pass_needed],0
-    jne ret_imm_ok
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [next_pass_needed],NUL
+    jne  ret_imm_ok
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     test eax,eax
     js value_out_of_range
 
     ret_imm_ok:
-    cmp [size_declared],0
-    jne ret_imm_store
+    cmp [size_declared],NUL
+    jne  ret_imm_store
     or ax,ax
     jz simple_ret
 
@@ -19691,14 +19715,14 @@ ret_imm:
     ret
 
 simple_ret:
-    strings.emit 'simple_ret | 19694'
+    ;strings.emit 'simple_ret | 19694'
     inc [base_code]
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
 retf_instruction:
-    strings.emit 'retf_instruction | 19701'
+    ;strings.emit 'retf_instruction | 19701'
     cmp [code_type],64
     jne ret_common
 
@@ -19708,19 +19732,19 @@ retf_instruction_64bit:
     ret
 
 retf_instruction_32bit:
-    strings.emit 'retf_instruction_32bit | 19711'
+    ;strings.emit 'retf_instruction_32bit | 19711'
     call operand_32bit
     jmp ret_common
     ret
 
 retf_instruction_16bit:
-    strings.emit 'retf_instruction_16bit | 19717'
+    ;strings.emit 'retf_instruction_16bit | 19717'
     call operand_16bit
     jmp ret_common
     ret
 
 lea_instruction:
-    strings.emit 'lea_instruction | 19722'
+    ;strings.emit 'lea_instruction | 19722'
     mov [base_code],8Dh
     call take_register
     mov [postbyte_register],al
@@ -19734,7 +19758,7 @@ lea_instruction:
     call get_size_operator
     cmp al,'['
     jne invalid_operand
-    or [operand_flags],1
+    or [operand_flags],HEAD
     call get_address
     pop _eax
     mov [operand_size],al
@@ -19743,25 +19767,25 @@ lea_instruction:
     ret
 
 ls_instruction:
-    strings.emit 'ls_instruction | 19746'
+    ;strings.emit 'ls_instruction | 19746'
     or al,al
     jz les_instruction
-    cmp al,3
+    cmp al,TXT
     jz lds_instruction
     add al,0B0h
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     jmp ls_code_ok
     ret
 
 les_instruction:
-    strings.emit 'les_instruction | 19758'
+    ;strings.emit 'les_instruction | 19758'
     mov [base_code],0C4h
     jmp ls_short_code
     ret
 
 lds_instruction:
-    strings.emit 'lds_instruction | 19764'
+    ;strings.emit 'lds_instruction | 19764'
     mov [base_code],0C5h
 
     ls_short_code:
@@ -19774,16 +19798,16 @@ lds_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    add [operand_size],2
+    add [operand_size],TEXT
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,4
+    cmp al,TAIL
     je ls_16bit
-    cmp al,6
+    cmp al,RESULT
     je ls_32bit
     cmp al,10
     je ls_64bit
@@ -19791,29 +19815,29 @@ lds_instruction:
     ret
 
 ls_16bit:
-    strings.emit 'ls_16bit | 19794'
+    ;strings.emit 'ls_16bit | 19794'
     call operand_16bit
     jmp instruction_ready
     ret
 
 ls_32bit:
-    strings.emit 'ls_32bit | 19800'
+    ;strings.emit 'ls_32bit | 19800'
     call operand_32bit
     jmp instruction_ready
     ret
 
 ls_64bit:
-    strings.emit 'ls_64bit | 19806'
+    ;strings.emit 'ls_64bit | 19806'
     call operand_64bit
     jmp instruction_ready
     ret
 
 sh_instruction:
-    strings.emit 'sh_instruction | 19812'
+    ;strings.emit 'sh_instruction | 19812'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je sh_reg
     cmp al,'['
     jne invalid_operand
@@ -19823,7 +19847,7 @@ sh_instruction:
     push _edx _ebx _ecx
     mov al,[operand_size]
     push _eax
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -19831,7 +19855,7 @@ sh_instruction:
     call get_size_operator
     cmp al,'('
     je sh_mem_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     sh_mem_reg:
@@ -19839,7 +19863,7 @@ sh_instruction:
     cmp al,11h
     jne invalid_operand
     pop _eax _ecx _ebx _edx
-    cmp al,1
+    cmp al,HEAD
     je sh_mem_cl_8bit
     jb sh_mem_cl_nosize
     call operand_autodetect
@@ -19848,7 +19872,7 @@ sh_instruction:
     ret
 
 sh_mem_cl_nosize:
-    strings.emit 'sh_mem_cl_nosize | 19851'
+    ;strings.emit 'sh_mem_cl_nosize | 19851'
     call recoverable_unknown_size
 
     sh_mem_cl_8bit:
@@ -19857,22 +19881,22 @@ sh_mem_cl_nosize:
     ret
 
 sh_mem_imm:
-    strings.emit 'sh_mem_imm | 19860'
+    ;strings.emit 'sh_mem_imm | 19860'
     mov al,[operand_size]
     or al,al
     jz sh_mem_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     sh_mem_imm_size_ok:
     call get_byte_value
     mov u8 [value],al
     pop _eax _ecx _ebx _edx
-    cmp al,1
+    cmp al,HEAD
     je sh_mem_imm_8bit
     jb sh_mem_imm_nosize
     call operand_autodetect
-    cmp u8 [value],1
+    cmp u8 [value],HEAD
     je sh_mem_1
     mov [base_code],0C1h
     call store_instruction_with_imm8
@@ -19880,17 +19904,17 @@ sh_mem_imm:
     ret
 
 sh_mem_1:
-    strings.emit 'sh_mem_1 | 19883'
+    ;strings.emit 'sh_mem_1 | 19883'
     mov [base_code],0D1h
     jmp instruction_ready
     ret
 
 sh_mem_imm_nosize:
-    strings.emit 'sh_mem_imm_nosize | 19889'
+    ;strings.emit 'sh_mem_imm_nosize | 19889'
     call recoverable_unknown_size
 
     sh_mem_imm_8bit:
-    cmp u8 [value],1
+    cmp u8 [value],HEAD
     je sh_mem_1_8bit
     mov [base_code],0C0h
     call store_instruction_with_imm8
@@ -19898,17 +19922,17 @@ sh_mem_imm_nosize:
     ret
 
 sh_mem_1_8bit:
-    strings.emit 'sh_mem_imm_nosize | 19901'
+    ;strings.emit 'sh_mem_imm_nosize | 19901'
     mov [base_code],0D0h
     jmp instruction_ready
     ret
 
 sh_reg:
-    strings.emit 'sh_reg | 19907'
+    ;strings.emit 'sh_reg | 19907'
     lods u8 [esi]
     call convert_register
     mov bx,ax
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -19916,7 +19940,7 @@ sh_reg:
     call get_size_operator
     cmp al,'('
     je sh_reg_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     sh_reg_reg:
@@ -19924,7 +19948,7 @@ sh_reg:
     cmp al,11h
     jne invalid_operand
     mov al,bh
-    cmp al,1
+    cmp al,HEAD
     je sh_reg_cl_8bit
     call operand_autodetect
     mov [base_code],0D3h
@@ -19932,17 +19956,17 @@ sh_reg:
     ret
 
 sh_reg_cl_8bit:
-    strings.emit 'sh_reg_cl_8bit | 19935'
+    ;strings.emit 'sh_reg_cl_8bit | 19935'
     mov [base_code],0D2h
     jmp nomem_instruction_ready
     ret
 
 sh_reg_imm:
-    strings.emit 'sh_reg_imm | 19941'
+    ;strings.emit 'sh_reg_imm | 19941'
     mov al,[operand_size]
     or al,al
     jz sh_reg_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     sh_reg_imm_size_ok:
@@ -19951,10 +19975,10 @@ sh_reg_imm:
     mov dl,al
     pop _ebx
     mov al,bh
-    cmp al,1
+    cmp al,HEAD
     je sh_reg_imm_8bit
     call operand_autodetect
-    cmp dl,1
+    cmp dl,HEAD
     je sh_reg_1
     mov [base_code],0C1h
     call store_nomem_instruction
@@ -19964,14 +19988,14 @@ sh_reg_imm:
     ret
 
 sh_reg_1:
-    strings.emit 'sh_reg_1 | 19966'
+    ;strings.emit 'sh_reg_1 | 19966'
     mov [base_code],0D1h
     jmp nomem_instruction_ready
     ret
 
 sh_reg_imm_8bit:
-    strings.emit 'sh_reg_imm_8bit | 19973'
-    cmp dl,1
+    ;strings.emit 'sh_reg_imm_8bit | 19973'
+    cmp dl,HEAD
     je sh_reg_1_8bit
     mov [base_code],0C0h
     call store_nomem_instruction
@@ -19981,18 +20005,18 @@ sh_reg_imm_8bit:
     ret
 
 sh_reg_1_8bit:
-    strings.emit 'sh_reg_1_8bit | 19984'
+    ;strings.emit 'sh_reg_1_8bit | 19984'
     mov [base_code],0D0h
     jmp nomem_instruction_ready
     ret
 
 shd_instruction:
-    strings.emit 'shd_instruction | 19990'
-    mov [base_code],0Fh
+    ;strings.emit 'shd_instruction | 19990'
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je shd_reg
     cmp al,'['
     jne invalid_operand
@@ -20008,13 +20032,13 @@ shd_instruction:
     cmp al,','
     jne invalid_operand
     mov al,ah
-    mov [operand_size],0
-    push _eax
+    mov [operand_size],NUL
+    push  _eax
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     je shd_mem_reg_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     cmp al,11h
@@ -20026,11 +20050,11 @@ shd_instruction:
     ret
 
 shd_mem_reg_imm:
-    strings.emit 'shd_mem_reg_imm | 20029'
+    ;strings.emit 'shd_mem_reg_imm | 20029'
     mov al,[operand_size]
     or al,al
     jz shd_mem_reg_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     shd_mem_reg_imm_size_ok:
@@ -20043,7 +20067,7 @@ shd_mem_reg_imm:
     ret
 
 shd_reg:
-    strings.emit 'shd_mem_reg_imm | 20046'
+    ;strings.emit 'shd_mem_reg_imm | 20046'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -20058,12 +20082,12 @@ shd_reg:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     je shd_reg_reg_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     cmp al,11h
@@ -20075,11 +20099,11 @@ shd_reg:
     ret
 
 shd_reg_reg_imm:
-    strings.emit 'shd_reg_reg_imm | 20078'
+    ;strings.emit 'shd_reg_reg_imm | 20078'
     mov al,[operand_size]
     or al,al
     jz shd_reg_reg_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     shd_reg_reg_imm_size_ok:
@@ -20094,8 +20118,8 @@ shd_reg_reg_imm:
     ret
 
 movx_instruction:
-    strings.emit 'movx_instruction | 20097'
-    mov [base_code],0Fh
+    ;strings.emit 'movx_instruction | 20097'
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_register
     mov [postbyte_register],al
@@ -20104,10 +20128,10 @@ movx_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movx_reg
     cmp al,'['
     jne invalid_operand
@@ -20118,9 +20142,9 @@ movx_instruction:
     jz movx_unknown_size
     cmp ah,al
     jae invalid_operand_size
-    cmp ah,1
+    cmp ah,HEAD
     je movx_mem_store
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
     inc [extended_code]
 
@@ -20130,61 +20154,61 @@ movx_instruction:
     ret
 
 movx_unknown_size:
-    strings.emit 'movx_unknown_size | 20133'
+    ;strings.emit 'movx_unknown_size | 20133'
     call recoverable_unknown_size
     jmp movx_mem_store
     ret
 
 movx_reg:
-    strings.emit 'movx_reg | 20139'
+    ;strings.emit 'movx_reg | 20139'
     lods u8 [esi]
     call convert_register
     pop _ebx
     xchg bl,al
     cmp ah,al
     jae invalid_operand_size
-    cmp ah,1
+    cmp ah,HEAD
     je movx_reg_8bit
-    cmp ah,2
+    cmp ah,TEXT
     je movx_reg_16bit
     jmp invalid_operand_size
     ret
 
 movx_reg_8bit:
-    strings.emit 'movx_reg_8bit | 20154'
+    ;strings.emit 'movx_reg_8bit | 20154'
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
 movx_reg_16bit:
-    strings.emit 'movx_reg_16bit | 20160'
+    ;strings.emit 'movx_reg_16bit | 20160'
     call operand_autodetect
     inc [extended_code]
     jmp nomem_instruction_ready
     ret
 
 movsxd_instruction:
-    strings.emit 'movsxd_instruction | 20167'
+    ;strings.emit 'movsxd_instruction | 20167'
     mov [base_code],al
     call take_register
     mov [postbyte_register],al
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movsxd_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     je movsxd_mem_store
-    cmp [operand_size],0
-    jne invalid_operand_size
+    cmp [operand_size],NUL
+    jne  invalid_operand_size
 
     movsxd_mem_store:
     call operand_64bit
@@ -20192,10 +20216,10 @@ movsxd_instruction:
     ret
 
 movsxd_reg:
-    strings.emit 'movsxd_reg | 20195'
+    ;strings.emit 'movsxd_reg | 20195'
     lods u8 [esi]
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     mov bl,al
     call operand_64bit
@@ -20203,15 +20227,15 @@ movsxd_reg:
     ret
 
 bt_instruction:
-    strings.emit 'bt_instruction | 20205'
+    ;strings.emit 'bt_instruction | 20205'
     mov [postbyte_register],al
-    shl al,3
+    shl al,TXT
     add al,83h
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je bt_reg
     cmp al,'['
     jne invalid_operand
@@ -20224,7 +20248,7 @@ bt_instruction:
     je bt_mem_imm
     cmp u8 [esi],11h
     jne bt_mem_reg
-    cmp u8 [esi+2],'('
+    cmp u8 [esi+TEXT],'('
     je bt_mem_imm
 
     bt_mem_reg:
@@ -20237,7 +20261,7 @@ bt_instruction:
     ret
 
 bt_mem_imm:
-    strings.emit 'bt_mem_imm | 20240'
+    ;strings.emit 'bt_mem_imm | 20240'
     xor al,al
     xchg al,[operand_size]
     push _eax
@@ -20248,7 +20272,7 @@ bt_mem_imm:
     mov al,[operand_size]
     or al,al
     jz bt_mem_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     bt_mem_imm_size_ok:
@@ -20267,13 +20291,13 @@ bt_mem_imm:
     ret
 
 bt_mem_imm_nosize:
-    strings.emit 'bt_mem_imm_nosize | 20270'
+    ;strings.emit 'bt_mem_imm_nosize | 20270'
     call recoverable_unknown_size
     jmp bt_mem_imm_store
     ret
 
 bt_reg:
-    strings.emit 'bt_reg | 20276'
+    ;strings.emit 'bt_reg | 20276'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20284,7 +20308,7 @@ bt_reg:
     je bt_reg_imm
     cmp u8 [esi],11h
     jne bt_reg_reg
-    cmp u8 [esi+2],'('
+    cmp u8 [esi+TEXT],'('
     je bt_reg_imm
 
     bt_reg_reg:
@@ -20296,7 +20320,7 @@ bt_reg:
     ret
 
 bt_reg_imm:
-    strings.emit 'bt_reg_imm | 20299'
+    ;strings.emit 'bt_reg_imm | 20299'
     xor al,al
     xchg al,[operand_size]
     push _eax _ebx
@@ -20307,7 +20331,7 @@ bt_reg_imm:
     mov al,[operand_size]
     or al,al
     jz bt_reg_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     bt_reg_imm_size_ok:
@@ -20324,9 +20348,9 @@ bt_reg_imm:
     ret
 
 bs_instruction:
-    strings.emit 'bs_instruction | 20327'
+    ;strings.emit 'bs_instruction | 20327'
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     call get_reg_mem
     jc bs_reg_reg
     mov al,[operand_size]
@@ -20335,14 +20359,14 @@ bs_instruction:
     ret
 
 bs_reg_reg:
-    strings.emit 'bs_reg_reg | 20338'
+    ;strings.emit 'bs_reg_reg | 20338'
     mov al,ah
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
 get_reg_mem:
-    strings.emit 'get_reg_mem | 20344'
+    ;strings.emit 'get_reg_mem | 20344'
     call take_register
     mov [postbyte_register],al
     lods u8 [esi]
@@ -20350,7 +20374,7 @@ get_reg_mem:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je get_reg_reg
     cmp al,'['
     jne invalid_argument
@@ -20359,7 +20383,7 @@ get_reg_mem:
     ret
 
 get_reg_reg:
-    strings.emit 'get_reg_reg | 20362'
+    ;strings.emit 'get_reg_reg | 20362'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20367,12 +20391,12 @@ get_reg_reg:
     ret
 
 imul_instruction:
-    strings.emit 'imul_instruction | 20370'
+    ;strings.emit 'imul_instruction | 20370'
     mov [base_code],0F6h
-    mov [postbyte_register],5
+    mov [postbyte_register],QUERY
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je imul_reg
     cmp al,'['
     jne invalid_operand
@@ -20380,7 +20404,7 @@ imul_instruction:
     imul_mem:
     call get_address
     mov al,[operand_size]
-    cmp al,1
+    cmp al,HEAD
     je imul_mem_8bit
     jb imul_mem_nosize
     call operand_autodetect
@@ -20389,7 +20413,7 @@ imul_instruction:
     ret
 
 imul_mem_nosize:
-    strings.emit 'imul_mem_nosize | 20392'
+    ;strings.emit 'imul_mem_nosize | 20392'
     call recoverable_unknown_size
 
     imul_mem_8bit:
@@ -20397,14 +20421,14 @@ imul_mem_nosize:
     ret
 
 imul_reg:
-    strings.emit 'imul_reg | 20400'
+    ;strings.emit 'imul_reg | 20400'
     lods u8 [esi]
     call convert_register
     cmp u8 [esi],','
     je imul_reg_
     mov bl,al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je imul_reg_8bit
     call operand_autodetect
     inc [base_code]
@@ -20414,20 +20438,20 @@ imul_reg:
     ret
 
 imul_reg_:
-    strings.emit 'imul_reg_ | 20417'
+    ;strings.emit 'imul_reg_ | 20417'
     mov [postbyte_register],al
     inc esi
     cmp u8 [esi],'('
     je imul_reg_imm
     cmp u8 [esi],11h
     jne imul_reg_noimm
-    cmp u8 [esi+2],'('
+    cmp u8 [esi+TEXT],'('
     je imul_reg_imm
 
     imul_reg_noimm:
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je imul_reg_reg
     cmp al,'['
     jne invalid_operand
@@ -20440,45 +20464,45 @@ imul_reg_:
     mov al,[operand_size]
     call operand_autodetect
     pop _ecx _ebx _edx
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],0AFh
     jmp instruction_ready
     ret
 
 imul_reg_mem_imm:
-    strings.emit 'imul_reg_mem_imm | 20449'
+    ;strings.emit 'imul_reg_mem_imm | 20449'
     inc esi
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     jne invalid_operand
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je imul_reg_mem_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je imul_reg_mem_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     imul_reg_mem_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp imul_reg_mem_imm_32bit_ok
     ret
 
 imul_reg_mem_imm_16bit:
-    strings.emit 'imul_reg_mem_imm_16bit | 20474'
+    ;strings.emit 'imul_reg_mem_imm_16bit | 20474'
     call operand_16bit
     call get_word_value
     mov u16 [value],ax
-    cmp [value_type],0
-    jne imul_reg_mem_imm_16bit_store
-    cmp [size_declared],0
-    jne imul_reg_mem_imm_16bit_store
+    cmp [value_type],NUL
+    jne  imul_reg_mem_imm_16bit_store
+    cmp [size_declared],NUL
+    jne  imul_reg_mem_imm_16bit_store
     cmp ax,-80h
     jl imul_reg_mem_imm_16bit_store
     cmp ax,80h
@@ -20492,16 +20516,16 @@ imul_reg_mem_imm_16bit:
     ret
 
 imul_reg_mem_imm_32bit:
-    strings.emit 'imul_reg_mem_imm_32bit | 20495'
+    ;strings.emit 'imul_reg_mem_imm_32bit | 20495'
     call operand_32bit
     call get_dword_value
 
     imul_reg_mem_imm_32bit_ok:
     mov dword [value],eax
-    cmp [value_type],0
-    jne imul_reg_mem_imm_32bit_store
-    cmp [size_declared],0
-    jne imul_reg_mem_imm_32bit_store
+    cmp [value_type],NUL
+    jne  imul_reg_mem_imm_32bit_store
+    cmp [size_declared],NUL
+    jne  imul_reg_mem_imm_32bit_store
     cmp eax,-80h
     jl imul_reg_mem_imm_32bit_store
     cmp eax,80h
@@ -20515,7 +20539,7 @@ imul_reg_mem_imm_32bit:
     ret
 
 imul_reg_mem_imm_8bit_store:
-    strings.emit 'imul_reg_mem_imm_8bit_store | 20518'
+    ;strings.emit 'imul_reg_mem_imm_8bit_store | 20518'
     pop _ecx _ebx _edx
     mov [base_code],6Bh
     call store_instruction_with_imm8
@@ -20523,14 +20547,14 @@ imul_reg_mem_imm_8bit_store:
     ret
 
 imul_reg_imm:
-    strings.emit 'imul_reg_imm | 20526'
+    ;strings.emit 'imul_reg_imm | 20526'
     mov bl,[postbyte_register]
     dec esi
     jmp imul_reg_reg_imm
     ret
 
 imul_reg_reg:
-    strings.emit 'imul_reg_reg | 20533'
+    ;strings.emit 'imul_reg_reg | 20533'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -20538,48 +20562,48 @@ imul_reg_reg:
     je imul_reg_reg_imm
     mov al,ah
     call operand_autodetect
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],0AFh
     jmp nomem_instruction_ready
     ret
 
 imul_reg_reg_imm:
-    strings.emit 'imul_reg_reg_imm | 20547'
+    ;strings.emit 'imul_reg_reg_imm | 20547'
     inc esi
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     jne invalid_operand
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je imul_reg_reg_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je imul_reg_reg_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     imul_reg_reg_imm_64bit:
-    cmp [size_declared],0
-    jne long_immediate_not_encodable
+    cmp [size_declared],NUL
+    jne  long_immediate_not_encodable
     call operand_64bit
     push _ebx
     call get_simm32
-    cmp [value_type],4
+    cmp [value_type],TAIL
     jae long_immediate_not_encodable
     jmp imul_reg_reg_imm_32bit_ok
     ret
 
 imul_reg_reg_imm_16bit:
-    strings.emit 'imul_reg_reg_imm_16bit | 20573'
+    ;strings.emit 'imul_reg_reg_imm_16bit | 20573'
     call operand_16bit
     push _ebx
     call get_word_value
     pop _ebx
     mov dx,ax
-    cmp [value_type],0
-    jne imul_reg_reg_imm_16bit_store
-    cmp [size_declared],0
-    jne imul_reg_reg_imm_16bit_store
+    cmp [value_type],NUL
+    jne  imul_reg_reg_imm_16bit_store
+    cmp [size_declared],NUL
+    jne  imul_reg_reg_imm_16bit_store
     cmp ax,-80h
     jl imul_reg_reg_imm_16bit_store
     cmp ax,80h
@@ -20595,7 +20619,7 @@ imul_reg_reg_imm_16bit:
     ret
 
 imul_reg_reg_imm_32bit:
-    strings.emit 'imul_reg_reg_imm_32bit | 20598'
+    ;strings.emit 'imul_reg_reg_imm_32bit | 20598'
     call operand_32bit
     push _ebx
     call get_dword_value
@@ -20603,10 +20627,10 @@ imul_reg_reg_imm_32bit:
     imul_reg_reg_imm_32bit_ok:
     pop _ebx
     mov edx,eax
-    cmp [value_type],0
-    jne imul_reg_reg_imm_32bit_store
-    cmp [size_declared],0
-    jne imul_reg_reg_imm_32bit_store
+    cmp [value_type],NUL
+    jne  imul_reg_reg_imm_32bit_store
+    cmp [size_declared],NUL
+    jne  imul_reg_reg_imm_32bit_store
     cmp eax,-80h
     jl imul_reg_reg_imm_32bit_store
     cmp eax,80h
@@ -20622,7 +20646,7 @@ imul_reg_reg_imm_32bit:
     ret
 
 imul_reg_reg_imm_8bit_store:
-    strings.emit 'imul_reg_reg_imm_8bit_store | 20625'
+    ;strings.emit 'imul_reg_reg_imm_8bit_store | 20625'
     mov [base_code],6Bh
     call store_nomem_instruction
     mov al,dl
@@ -20631,7 +20655,7 @@ imul_reg_reg_imm_8bit_store:
     ret
 
 in_instruction:
-    strings.emit 'in_instruction | 20633'
+    ;strings.emit 'in_instruction | 20633'
     call take_register
     or al,al
     jnz invalid_operand
@@ -20640,27 +20664,27 @@ in_instruction:
     jne invalid_operand
     mov al,ah
     push _eax
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     je in_imm
-    cmp al,10h
+    cmp al,DELINK
     je in_reg
     jmp invalid_operand
     ret
 
 in_reg:
-    strings.emit 'in_reg | 20654'
+    ;strings.emit 'in_reg | 20654'
     lods u8 [esi]
-    cmp al,22h
+    cmp al,SYN
     jne invalid_operand
     pop _eax
-    cmp al,1
+    cmp al,HEAD
     je in_al_dx
-    cmp al,2
+    cmp al,TEXT
     je in_ax_dx
-    cmp al,4
+    cmp al,TAIL
     jne invalid_operand_size
 
     in_ax_dx:
@@ -20671,29 +20695,29 @@ in_reg:
     ret
 
 in_al_dx:
-    strings.emit 'in_al_dx | 20674'
+    ;strings.emit 'in_al_dx | 20674'
     mov al,0ECh
     stos u8 [edi]
     jmp instruction_assembled
     ret
 
 in_imm:
-    strings.emit 'in_imm | 20681'
+    ;strings.emit 'in_imm | 20681'
     mov al,[operand_size]
     or al,al
     jz in_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     in_imm_size_ok:
     call get_byte_value
     mov dl,al
     pop _eax
-    cmp al,1
+    cmp al,HEAD
     je in_al_imm
-    cmp al,2
+    cmp al,TEXT
     je in_ax_imm
-    cmp al,4
+    cmp al,TAIL
     jne invalid_operand_size
 
     in_ax_imm:
@@ -20706,7 +20730,7 @@ in_imm:
     ret
 
 in_al_imm:
-    strings.emit 'in_al_imm | 20709'
+    ;strings.emit 'in_al_imm | 20709'
     mov al,0E4h
     stos u8 [edi]
     mov al,dl
@@ -20715,29 +20739,29 @@ in_al_imm:
     ret
 
 out_instruction:
-    strings.emit 'out_instruction | 20718'
+    ;strings.emit 'out_instruction | 20718'
     lods u8 [esi]
     call get_size_operator
     cmp al,'('
     je out_imm
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
-    cmp al,22h
+    cmp al,SYN
     jne invalid_operand
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     call take_register
     or al,al
     jnz invalid_operand
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je out_dx_al
-    cmp al,2
+    cmp al,TEXT
     je out_dx_ax
-    cmp al,4
+    cmp al,TAIL
     jne invalid_operand_size
 
     out_dx_ax:
@@ -20748,18 +20772,18 @@ out_instruction:
     ret
 
 out_dx_al:
-    strings.emit 'out_dx_al | 20750'
+    ;strings.emit 'out_dx_al | 20750'
     mov al,0EEh
     stos u8 [edi]
     jmp instruction_assembled
     ret
 
 out_imm:
-    strings.emit 'out_imm | 20757'
+    ;strings.emit 'out_imm | 20757'
     mov al,[operand_size]
     or al,al
     jz out_imm_size_ok
-    cmp al,1
+    cmp al,HEAD
     jne invalid_operand_size
 
     out_imm_size_ok:
@@ -20768,16 +20792,16 @@ out_imm:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     call take_register
     or al,al
     jnz invalid_operand
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je out_imm_al
-    cmp al,2
+    cmp al,TEXT
     je out_imm_ax
-    cmp al,4
+    cmp al,TAIL
     jne invalid_operand_size
 
     out_imm_ax:
@@ -20790,7 +20814,7 @@ out_imm:
     ret
 
 out_imm_al:
-    strings.emit 'out_imm_al | 20792'
+    ;strings.emit 'out_imm_al | 20792'
     mov al,0E6h
     stos u8 [edi]
     mov al,dl
@@ -20799,7 +20823,7 @@ out_imm_al:
     ret
 
 call_instruction:
-    strings.emit 'call_instruction | 20802'
+    ;strings.emit 'call_instruction | 20802'
     mov [postbyte_register],10b
     mov [base_code],0E8h
     mov [extended_code],9Ah
@@ -20807,7 +20831,7 @@ call_instruction:
     ret
 
 jmp_instruction:
-    strings.emit 'jmp_instruction | 20810'
+    ;strings.emit 'jmp_instruction | 20810'
     mov [postbyte_register],100b
     mov [base_code],0E9h
     mov [extended_code],0EAh
@@ -20815,11 +20839,11 @@ jmp_instruction:
     process_jmp:
     lods u8 [esi]
     call get_jump_operator
-    test [prefix_flags],10h
+    test [prefix_flags],DELINK
     jz jmp_type_ok
     test [jump_type],not 2
     jnz illegal_instruction
-    mov [jump_type],2
+    mov [jump_type],TEXT
     and [prefix_flags],not 10h
 
     jmp_type_ok:
@@ -20827,26 +20851,26 @@ jmp_instruction:
     cmp al,'('
     je jmp_imm
     mov [base_code],0FFh
-    cmp al,10h
+    cmp al,DELINK
     je jmp_reg
     cmp al,'['
     jne invalid_operand
 
     jmp_mem:
-    cmp [jump_type],1
+    cmp [jump_type],HEAD
     je illegal_instruction
     call get_address
     mov edx,eax
     mov al,[operand_size]
     or al,al
     jz jmp_mem_size_not_specified
-    cmp al,2
+    cmp al,TEXT
     je jmp_mem_16bit
-    cmp al,4
+    cmp al,TAIL
     je jmp_mem_32bit
-    cmp al,6
+    cmp al,RESULT
     je jmp_mem_48bit
-    cmp al,8
+    cmp al,RECTIFY
     je jmp_mem_64bit
     cmp al,10
     je jmp_mem_80bit
@@ -20854,10 +20878,10 @@ jmp_instruction:
     ret
 
 jmp_mem_size_not_specified:
-    strings.emit 'jmp_mem_size_not_specified | 20857'
-    cmp [jump_type],3
+    ;strings.emit 'jmp_mem_size_not_specified | 20857'
+    cmp [jump_type],TXT
     je jmp_mem_far
-    cmp [jump_type],2
+    cmp [jump_type],TEXT
     je jmp_mem_near
     call recoverable_unknown_size
 
@@ -20868,7 +20892,7 @@ jmp_mem_size_not_specified:
     je jmp_mem_near_32bit
 
     jmp_mem_64bit:
-    cmp [jump_type],3
+    cmp [jump_type],TXT
     je invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
@@ -20876,36 +20900,36 @@ jmp_mem_size_not_specified:
     ret
 
 jmp_mem_far:
-    strings.emit 'jmp_mem_far | 20878'
+    ;strings.emit 'jmp_mem_far | 20878'
     cmp [code_type],16
     je jmp_mem_far_32bit
     jmp_mem_48bit:
     call operand_32bit
 
     jmp_mem_far_store:
-    cmp [jump_type],2
+    cmp [jump_type],TEXT
     je invalid_operand_size
     inc [postbyte_register]
     jmp instruction_ready
     ret
 
 jmp_mem_80bit:
-    strings.emit 'jmp_mem_80bit | 20893'
+    ;strings.emit 'jmp_mem_80bit | 20893'
     call operand_64bit
     jmp jmp_mem_far_store
     ret
 
 jmp_mem_far_32bit:
-    strings.emit 'jmp_mem_far_32bit | 20899'
+    ;strings.emit 'jmp_mem_far_32bit | 20899'
     call operand_16bit
     jmp jmp_mem_far_store
     ret
 
 jmp_mem_32bit:
-    strings.emit 'jmp_mem_32bit | 20904'
-    cmp [jump_type],3
+    ;strings.emit 'jmp_mem_32bit | 20904'
+    cmp [jump_type],TXT
     je jmp_mem_far_32bit
-    cmp [jump_type],2
+    cmp [jump_type],TEXT
     je jmp_mem_near_32bit
     cmp [code_type],16
     je jmp_mem_far_32bit
@@ -20918,26 +20942,26 @@ jmp_mem_32bit:
     ret
 
 jmp_mem_16bit:
-    strings.emit 'jmp_mem_16bit | 20921'
-    cmp [jump_type],3
+    ;strings.emit 'jmp_mem_16bit | 20921'
+    cmp [jump_type],TXT
     je invalid_operand_size
     call operand_16bit
     jmp instruction_ready
     ret
 
 jmp_reg:
-    strings.emit 'jmp_reg | 20928'
-    test [jump_type],1
+    ;strings.emit 'jmp_reg | 20928'
+    test [jump_type],HEAD
     jnz invalid_operand
     lods u8 [esi]
     call convert_register
     mov bl,al
     mov al,ah
-    cmp al,2
+    cmp al,TEXT
     je jmp_reg_16bit
-    cmp al,4
+    cmp al,TAIL
     je jmp_reg_32bit
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     jmp_reg_64bit:
@@ -20947,7 +20971,7 @@ jmp_reg:
     ret
 
 jmp_reg_32bit:
-    strings.emit 'jmp_reg_32bit | 20949'
+    ;strings.emit 'jmp_reg_32bit | 20949'
     cmp [code_type],64
     je illegal_instruction
     call operand_32bit
@@ -20955,13 +20979,13 @@ jmp_reg_32bit:
     ret
 
 jmp_reg_16bit:
-    strings.emit 'jmp_reg_16bit | 20958'
+    ;strings.emit 'jmp_reg_16bit | 20958'
     call operand_16bit
     jmp nomem_instruction_ready
     ret
 
 jmp_imm:
-    strings.emit 'jmp_imm | 20963'
+    ;strings.emit 'jmp_imm | 20963'
     cmp u8 [esi],'.'
     je invalid_value
     mov ebx,esi
@@ -20970,16 +20994,16 @@ jmp_imm:
     xchg esi,ebx
     cmp u8 [ebx],':'
     je jmp_far
-    cmp [jump_type],3
+    cmp [jump_type],TXT
     je invalid_operand
 
     jmp_near:
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je jmp_imm_16bit
-    cmp al,4
+    cmp al,TAIL
     je jmp_imm_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je jmp_imm_64bit
     or al,al
     jnz invalid_operand_size
@@ -21004,7 +21028,7 @@ jmp_imm:
 
     jmp_imm_32bit_store:
     mov edx,eax
-    sub edx,3
+    sub edx,TXT
     jno jmp_imm_32bit_ok
     cmp [code_type],64
     je jump_out_of_range
@@ -21019,7 +21043,7 @@ jmp_imm:
     ret
 
 jmp_imm_64bit:
-    strings.emit 'jmp_imm_64bit | 20921'
+    ;strings.emit 'jmp_imm_64bit | 20921'
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21039,7 +21063,7 @@ jmp_imm_64bit:
     ret
 
 jmp_imm_16bit:
-    strings.emit 'jmp_imm_16bit | 20942'
+    ;strings.emit 'jmp_imm_16bit | 20942'
     call get_address_word_value
     cmp [code_type],16
     je jmp_imm_16bit_prefix_ok
@@ -21052,8 +21076,8 @@ jmp_imm_16bit:
     cdq
     call check_for_short_jump
     jc jmp_short
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov edx,eax
     dec edx
     mov al,[base_code]
@@ -21064,23 +21088,23 @@ jmp_imm_16bit:
     ret
 
 calculate_jump_offset:
-    strings.emit 'calculate_jump_offset | 21067'
-    add edi,2
+    ;strings.emit 'calculate_jump_offset | 21067'
+    add edi,TEXT
     mov ebp,[addressing_space]
     call calculate_relative_offset
-    sub edi,2
+    sub edi,TEXT
     ret
 
 check_for_short_jump:
-    strings.emit 'check_for_short_jump | 21075'
-    cmp [jump_type],1
+    ;strings.emit 'check_for_short_jump | 21075'
+    cmp [jump_type],HEAD
     je forced_short
     ;ja no_short_jump
     ja drop_then_return
     cmp [base_code],0E8h
     ;je no_short_jump
     je drop_then_return
-    cmp [value_type],0
+    cmp [value_type],NUL
     ;jne no_short_jump
     jne drop_then_return
     cmp eax,80h
@@ -21093,13 +21117,13 @@ check_for_short_jump:
     ret
 
 forced_short:
-    strings.emit 'forced_short | 21095'
+    ;strings.emit 'forced_short | 21095'
     cmp [base_code],0E8h
     je illegal_instruction
-    cmp [next_pass_needed],0
-    jne jmp_short_value_type_ok
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [next_pass_needed],NUL
+    jne  jmp_short_value_type_ok
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
 
     jmp_short_value_type_ok:
     cmp eax,-80h
@@ -21111,9 +21135,9 @@ forced_short:
     ret
 
 jump_out_of_range:
-    strings.emit 'jump_out_of_range | 21114'
-    cmp [error_line],0
-    jne instruction_assembled
+    ;strings.emit 'jump_out_of_range | 21114'
+    cmp [error_line],NUL
+    jne  instruction_assembled
     mov _eax,u64[current_line]
     mov u64[error_line],_eax
     mov [error],relative_jump_out_of_range
@@ -21121,8 +21145,8 @@ jump_out_of_range:
     ret
 
 jmp_far:
-    strings.emit 'jmp_far | 21123'
-    cmp [jump_type],2
+    ;strings.emit 'jmp_far | 21123'
+    cmp [jump_type],TEXT
     je invalid_operand
     cmp [code_type],64
     je illegal_instruction
@@ -21139,9 +21163,9 @@ jmp_far:
     cmp u8 [esi],'.'
     je invalid_value
     mov al,[operand_size]
-    cmp al,4
+    cmp al,TAIL
     je jmp_far_16bit
-    cmp al,6
+    cmp al,RESULT
     je jmp_far_32bit
     or al,al
     jnz invalid_operand_size
@@ -21166,7 +21190,7 @@ jmp_far:
     ret
 
 jmp_far_32bit:
-    strings.emit 'jmp_far_32bit | 21169'
+    ;strings.emit 'jmp_far_32bit | 21169'
     call get_dword_value
     mov ebx,eax
     call operand_32bit
@@ -21178,12 +21202,12 @@ jmp_far_32bit:
     ret
 
 conditional_jump:
-    strings.emit 'conditional_jump | 21180'
+    ;strings.emit 'conditional_jump | 21180'
     mov [base_code],al
     and [prefix_flags],not 10h
     lods u8 [esi]
     call get_jump_operator
-    cmp [jump_type],3
+    cmp [jump_type],TXT
     je invalid_operand
     call get_size_operator
     cmp al,'('
@@ -21191,11 +21215,11 @@ conditional_jump:
     cmp u8 [esi],'.'
     je invalid_value
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je conditional_jump_16bit
-    cmp al,4
+    cmp al,TAIL
     je conditional_jump_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je conditional_jump_64bit
     or al,al
     jnz invalid_operand_size
@@ -21220,15 +21244,15 @@ conditional_jump:
 
     conditional_jump_32bit_store:
     mov edx,eax
-    sub edx,4
+    sub edx,TAIL
     jno conditional_jump_32bit_range_ok
     cmp [code_type],64
     je jump_out_of_range
 
     conditional_jump_32bit_range_ok:
     mov ah,[base_code]
-    add ah,10h
-    mov al,0Fh
+    add ah,DELINK
+    mov al,SHIFT
     stos u16 [edi]
     mov eax,edx
     call mark_relocation
@@ -21237,7 +21261,7 @@ conditional_jump:
     ret
 
 conditional_jump_64bit:
-    strings.emit 'conditional_jump_64bit | 21239'
+    ;strings.emit 'conditional_jump_64bit | 21239'
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21257,7 +21281,7 @@ conditional_jump_64bit:
     ret
 
 conditional_jump_16bit:
-    strings.emit 'conditional_jump_16bit | 21259'
+    ;strings.emit 'conditional_jump_16bit | 21259'
     call get_address_word_value
     cmp [code_type],16
     je conditional_jump_16bit_prefix_ok
@@ -21270,13 +21294,13 @@ conditional_jump_16bit:
     cdq
     call check_for_short_jump
     jc conditional_jump_short
-    cmp [value_type],0
-    jne invalid_use_of_symbol
+    cmp [value_type],NUL
+    jne  invalid_use_of_symbol
     mov edx,eax
-    sub dx,2
+    sub dx,TEXT
     mov ah,[base_code]
-    add ah,10h
-    mov al,0Fh
+    add ah,DELINK
+    mov al,SHIFT
     stos u16 [edi]
     mov eax,edx
     stos u16 [edi]
@@ -21284,7 +21308,7 @@ conditional_jump_16bit:
     ret
 
 loop_instruction_16bit:
-    strings.emit 'loop_instruction_16bit | 21286'
+    ;strings.emit 'loop_instruction_16bit | 21286'
     cmp [code_type],64
     je illegal_instruction
     cmp [code_type],16
@@ -21294,7 +21318,7 @@ loop_instruction_16bit:
     ret
 
 loop_instruction_32bit:
-    strings.emit 'loop_instruction_32bit | 21296'
+    ;strings.emit 'loop_instruction_32bit | 21296'
     cmp [code_type],32
     je loop_instruction
     mov [operand_prefix],67h
@@ -21302,7 +21326,7 @@ loop_instruction_32bit:
     ret
 
 loop_instruction_64bit:
-    strings.emit 'loop_instruction_64bit | 21304'
+    ;strings.emit 'loop_instruction_64bit | 21304'
     cmp [code_type],64
     jne illegal_instruction
 
@@ -21310,7 +21334,7 @@ loop_instruction_64bit:
     mov [base_code],al
     lods u8 [esi]
     call get_jump_operator
-    cmp [jump_type],1
+    cmp [jump_type],HEAD
     ja invalid_operand
     call get_size_operator
     cmp al,'('
@@ -21318,11 +21342,11 @@ loop_instruction_64bit:
     cmp u8 [esi],'.'
     je invalid_value
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je loop_jump_16bit
-    cmp al,4
+    cmp al,TAIL
     je loop_jump_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je loop_jump_64bit
     or al,al
     jnz invalid_operand_size
@@ -21353,8 +21377,8 @@ loop_instruction_64bit:
     ret
 
 loop_counter_size:
-    strings.emit 'loop_counter_size | 21355'
-    cmp [operand_prefix],0
+    ;strings.emit 'loop_counter_size | 21355'
+    cmp [operand_prefix],NUL
     ;je loop_counter_size_ok
     je return_ok
     push _eax
@@ -21364,7 +21388,7 @@ loop_counter_size:
     ret
 
 loop_jump_64bit:
-    strings.emit 'loop_counter_size | 21367'
+    ;strings.emit 'loop_counter_size | 21367'
     cmp [code_type],64
     jne invalid_operand_size
     call get_address_qword_value
@@ -21378,7 +21402,7 @@ loop_jump_64bit:
     ret
 
 loop_jump_16bit:
-    strings.emit 'loop_jump_16bit | 21380'
+    ;strings.emit 'loop_jump_16bit | 21380'
     call get_address_word_value
     cmp [code_type],16
     je loop_jump_16bit_prefix_ok
@@ -21394,7 +21418,7 @@ loop_jump_16bit:
     ret
 
 movs_instruction:
-    strings.emit 'movs_instruction | 21396'
+    ;strings.emit 'movs_instruction | 21396'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21404,7 +21428,7 @@ movs_instruction:
     jnz invalid_address
     or bl,ch
     jnz invalid_address
-    cmp [segment_register],1
+    cmp [segment_register],HEAD
     ja invalid_address
     push _ebx
     lods u8 [esi]
@@ -21422,19 +21446,19 @@ movs_instruction:
     jnz invalid_address
     mov al,dh
     mov ah,bh
-    shr al,4
-    shr ah,4
+    shr al,TAIL
+    shr ah,TAIL
     cmp al,ah
     jne address_sizes_do_not_agree
     and bh,111b
     and dh,111b
-    cmp bh,6
+    cmp bh,RESULT
     jne invalid_address
-    cmp dh,7
+    cmp dh,NOTIFY
     jne invalid_address
-    cmp al,2
+    cmp al,TEXT
     je movs_address_16bit
-    cmp al,4
+    cmp al,TAIL
     je movs_address_32bit
     cmp [code_type],64
     jne invalid_address_size
@@ -21442,13 +21466,13 @@ movs_instruction:
     ret
 
 movs_address_32bit:
-    strings.emit 'movs_address_32bit | 21444'
+    ;strings.emit 'movs_address_32bit | 21444'
     call address_32bit_prefix
     jmp movs_store
     ret
 
 movs_address_16bit:
-    strings.emit 'movs_address_16bit | 21450'
+    ;strings.emit 'movs_address_16bit | 21450'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21459,14 +21483,14 @@ movs_address_16bit:
 
     movs_check_size:
     mov bl,[operand_size]
-    cmp bl,1
+    cmp bl,HEAD
     je simple_instruction
     inc al
-    cmp bl,2
+    cmp bl,TEXT
     je simple_instruction_16bit
-    cmp bl,4
+    cmp bl,TAIL
     je simple_instruction_32bit
-    cmp bl,8
+    cmp bl,RECTIFY
     je simple_instruction_64bit
     or bl,bl
     jnz invalid_operand_size
@@ -21475,7 +21499,7 @@ movs_address_16bit:
     ret
 
 lods_instruction:
-    strings.emit 'lods_instruction | 21477'
+    ;strings.emit 'lods_instruction | 21477'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21497,13 +21521,13 @@ lods_instruction:
     ret
 
 lods_address_32bit:
-    strings.emit 'lods_address_32bit | 21499'
+    ;strings.emit 'lods_address_32bit | 21499'
     call address_32bit_prefix
     jmp lods_store
     ret
 
 lods_address_16bit:
-    strings.emit 'lods_address_16bit | 21505'
+    ;strings.emit 'lods_address_16bit | 21505'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21516,7 +21540,7 @@ lods_address_16bit:
     ret
 
 stos_instruction:
-    strings.emit 'stos_instruction | 21518'
+    ;strings.emit 'stos_instruction | 21518'
     mov [base_code],al
     lods u8 [esi]
     call get_size_operator
@@ -21527,7 +21551,7 @@ stos_instruction:
     jnz invalid_address
     or bl,ch
     jnz invalid_address
-    cmp bh,27h
+    cmp bh,QUOTE
     je stos_address_16bit
     cmp bh,47h
     je stos_address_32bit
@@ -21539,26 +21563,26 @@ stos_instruction:
     ret
 
 stos_address_32bit:
-    strings.emit 'stos_address_32bit | 21541'
+    ;strings.emit 'stos_address_32bit | 21541'
     call address_32bit_prefix
     jmp stos_store
     ret
 
 stos_address_16bit:
-    strings.emit 'stos_address_16bit | 21547'
+    ;strings.emit 'stos_address_16bit | 21547'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
 
     stos_store:
-    cmp [segment_register],1
+    cmp [segment_register],HEAD
     ja invalid_address
     mov al,[base_code]
     jmp movs_check_size
     ret
 
 cmps_instruction:
-    strings.emit 'cmps_instruction | 21560'
+    ;strings.emit 'cmps_instruction | 21560'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21583,24 +21607,24 @@ cmps_instruction:
     or bl,ch
     jnz invalid_address
     pop _edx _eax
-    cmp [segment_register],1
+    cmp [segment_register],HEAD
     ja invalid_address
     mov [segment_register],al
     mov al,dh
     mov ah,bh
-    shr al,4
-    shr ah,4
+    shr al,TAIL
+    shr ah,TAIL
     cmp al,ah
     jne address_sizes_do_not_agree
     and bh,111b
     and dh,111b
-    cmp bh,7
+    cmp bh,NOTIFY
     jne invalid_address
-    cmp dh,6
+    cmp dh,RESULT
     jne invalid_address
-    cmp al,2
+    cmp al,TEXT
     je cmps_address_16bit
-    cmp al,4
+    cmp al,TAIL
     je cmps_address_32bit
     cmp [code_type],64
     jne invalid_address_size
@@ -21608,13 +21632,13 @@ cmps_instruction:
     ret
 
 cmps_address_32bit:
-    strings.emit 'cmps_address_32bit | 21610'
+    ;strings.emit 'cmps_address_32bit | 21610'
     call address_32bit_prefix
     jmp cmps_store
     ret
 
 cmps_address_16bit:
-    strings.emit 'cmps_address_16bit | 21616'
+    ;strings.emit 'cmps_address_16bit | 21616'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21627,7 +21651,7 @@ cmps_address_16bit:
     ret
 
 ins_instruction:
-    strings.emit 'ins_instruction | 21629'
+    ;strings.emit 'ins_instruction | 21629'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21637,7 +21661,7 @@ ins_instruction:
     jnz invalid_address
     or bl,ch
     jnz invalid_address
-    cmp bh,27h
+    cmp bh,QUOTE
     je ins_address_16bit
     cmp bh,47h
     je ins_address_32bit
@@ -21649,44 +21673,44 @@ ins_instruction:
     ret
 
 ins_address_32bit:
-    strings.emit 'ins_address_32bit | 21651'
+    ;strings.emit 'ins_address_32bit | 21651'
     call address_32bit_prefix
     jmp ins_store
     ret
 
 ins_address_16bit:
-    strings.emit 'ins_address_16bit | 21657'
+    ;strings.emit 'ins_address_16bit | 21657'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
 
     ins_store:
-    cmp [segment_register],1
+    cmp [segment_register],HEAD
     ja invalid_address
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
-    cmp al,22h
+    cmp al,SYN
     jne invalid_operand
     mov al,6Ch
 
     ins_check_size:
-    cmp [operand_size],8
+    cmp [operand_size],RECTIFY
     jne movs_check_size
     jmp invalid_operand_size
     ret
 
 outs_instruction:
-    strings.emit 'outs_instruction | 21683'
+    ;strings.emit 'outs_instruction | 21683'
     lods u8 [esi]
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
-    cmp al,22h
+    cmp al,SYN
     jne invalid_operand
     lods u8 [esi]
     cmp al,','
@@ -21712,13 +21736,13 @@ outs_instruction:
     ret
 
 outs_address_32bit:
-    strings.emit 'outs_address_32bit | 21714'
+    ;strings.emit 'outs_address_32bit | 21714'
     call address_32bit_prefix
     jmp outs_store
     ret
 
 outs_address_16bit:
-    strings.emit 'outs_address_16bit | 21720'
+    ;strings.emit 'outs_address_16bit | 21720'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21731,7 +21755,7 @@ outs_address_16bit:
     ret
 
 xlat_instruction:
-    strings.emit 'xlat_instruction | 21733'
+    ;strings.emit 'xlat_instruction | 21733'
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21753,13 +21777,13 @@ xlat_instruction:
     ret
 
 xlat_address_32bit:
-    strings.emit 'xlat_address_32bit | 21755'
+    ;strings.emit 'xlat_address_32bit | 21755'
     call address_32bit_prefix
     jmp xlat_store
     ret
 
 xlat_address_16bit:
-    strings.emit 'xlat_address_16bit | 21761'
+    ;strings.emit 'xlat_address_16bit | 21761'
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
@@ -21767,22 +21791,22 @@ xlat_address_16bit:
     xlat_store:
     call store_segment_prefix_if_necessary
     mov al,0D7h
-    cmp [operand_size],1
+    cmp [operand_size],HEAD
     jbe simple_instruction
     jmp invalid_operand_size
     ret
 
 pm_word_instruction:
-    strings.emit 'pm_word_instruction | 21775'
+    ;strings.emit 'pm_word_instruction | 21775'
     mov ah,al
-    shr ah,4
+    shr ah,TAIL
     and al,111b
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],ah
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pm_reg
 
     pm_mem:
@@ -21790,7 +21814,7 @@ pm_word_instruction:
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je pm_mem_store
     or al,al
     jnz invalid_operand_size
@@ -21800,26 +21824,26 @@ pm_word_instruction:
     ret
 
 pm_reg:
-    strings.emit 'pm_reg | 21802'
+    ;strings.emit 'pm_reg | 21802'
     lods u8 [esi]
     call convert_register
     mov bl,al
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
 pm_store_word_instruction:
-    strings.emit 'pm_store_word_instruction | 21812'
+    ;strings.emit 'pm_store_word_instruction | 21812'
     mov ah,al
-    shr ah,4
+    shr ah,TAIL
     and al,111b
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],ah
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne pm_mem
     lods u8 [esi]
     call convert_register
@@ -21830,9 +21854,9 @@ pm_store_word_instruction:
     ret
 
 lgdt_instruction:
-    strings.emit 'lgdt_instruction | 21832'
-    mov [base_code],0Fh
-    mov [extended_code],1
+    ;strings.emit 'lgdt_instruction | 21832'
+    mov [base_code],SHIFT
+    mov [extended_code],HEAD
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -21840,7 +21864,7 @@ lgdt_instruction:
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,6
+    cmp al,RESULT
     je lgdt_mem_48bit
     cmp al,10
     je lgdt_mem_80bit
@@ -21850,17 +21874,17 @@ lgdt_instruction:
     ret
 
 lgdt_mem_80bit:
-    strings.emit 'lgdt_mem_80bit | 21852'
+    ;strings.emit 'lgdt_mem_80bit | 21852'
     cmp [code_type],64
     jne illegal_instruction
     jmp lgdt_mem_store
     ret
 
 lgdt_mem_48bit:
-    strings.emit 'lgdt_mem_48bit | 21859'
+    ;strings.emit 'lgdt_mem_48bit | 21859'
     cmp [code_type],64
     je illegal_instruction
-    cmp [postbyte_register],2
+    cmp [postbyte_register],TEXT
     jb lgdt_mem_store
     call operand_32bit
 
@@ -21869,9 +21893,9 @@ lgdt_mem_48bit:
     ret
 
 lar_instruction:
-    strings.emit 'lar_instruction | 21871'
+    ;strings.emit 'lar_instruction | 21871'
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     call take_register
     mov [postbyte_register],al
     lods u8 [esi]
@@ -21882,7 +21906,7 @@ lar_instruction:
     call operand_autodetect
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je lar_reg_reg
     cmp al,'['
     jne invalid_operand
@@ -21890,7 +21914,7 @@ lar_instruction:
     mov al,[operand_size]
     or al,al
     jz lar_reg_mem
-    cmp al,2
+    cmp al,TEXT
     jne invalid_operand_size
 
     lar_reg_mem:
@@ -21898,20 +21922,20 @@ lar_instruction:
     ret
 
 lar_reg_reg:
-    strings.emit 'lar_reg_reg | 21900'
+    ;strings.emit 'lar_reg_reg | 21900'
     lods u8 [esi]
     call convert_register
-    cmp ah,2
+    cmp ah,TEXT
     jne invalid_operand_size
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
 invlpg_instruction:
-    strings.emit 'invlpg_instruction | 21910'
-    mov [base_code],0Fh
-    mov [extended_code],1
-    mov [postbyte_register],7
+    ;strings.emit 'invlpg_instruction | 21910'
+    mov [base_code],SHIFT
+    mov [extended_code],HEAD
+    mov [postbyte_register],NOTIFY
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -21921,26 +21945,26 @@ invlpg_instruction:
     ret
 
 swapgs_instruction:
-    strings.emit 'swapgs_instruction | 21923'
+    ;strings.emit 'swapgs_instruction | 21923'
     cmp [code_type],64
     jne illegal_instruction
 
     simple_instruction_0f_01:
     mov ah,al
-    mov al,0Fh
+    mov al,SHIFT
     stos u8 [edi]
-    mov al,1
+    mov al,HEAD
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 basic_486_instruction:
-    strings.emit 'basic_486_instruction | 21937'
-    mov [base_code],0Fh
+    ;strings.emit 'basic_486_instruction | 21937'
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je basic_486_reg
     cmp al,'['
     jne invalid_operand
@@ -21953,7 +21977,7 @@ basic_486_instruction:
     mov [postbyte_register],al
     pop _ecx _ebx _edx
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je basic_486_mem_reg_8bit
     call operand_autodetect
     inc [extended_code]
@@ -21963,7 +21987,7 @@ basic_486_instruction:
     ret
 
 basic_486_reg:
-    strings.emit 'basic_486_reg | 21965'
+    ;strings.emit 'basic_486_reg | 21965'
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -21974,7 +21998,7 @@ basic_486_reg:
     mov bl,[postbyte_register]
     mov [postbyte_register],al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je basic_486_reg_reg_8bit
     call operand_autodetect
     inc [extended_code]
@@ -21984,7 +22008,7 @@ basic_486_reg:
     ret
 
 bswap_instruction:
-    strings.emit 'bswap_instruction | 21986'
+    ;strings.emit 'bswap_instruction | 21986'
     call take_register
     test al,1000b
     jz bswap_reg_code_ok
@@ -21994,10 +22018,10 @@ bswap_instruction:
     bswap_reg_code_ok:
     add al,0C8h
     mov [extended_code],al
-    mov [base_code],0Fh
-    cmp ah,8
+    mov [base_code],SHIFT
+    cmp ah,RECTIFY
     je bswap_reg64
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     call operand_32bit
     call store_classic_instruction_code
@@ -22005,15 +22029,15 @@ bswap_instruction:
     ret
 
 bswap_reg64:
-    strings.emit 'bswap_reg64 | 22007'
+    ;strings.emit 'bswap_reg64 | 22007'
     call operand_64bit
     call store_classic_instruction_code
     jmp instruction_assembled
     ret
 
 cmpxchgx_instruction:
-    strings.emit 'cmpxchgx_instruction | 22014'
-    mov [base_code],0Fh
+    ;strings.emit 'cmpxchgx_instruction | 22014'
+    mov [base_code],SHIFT
     mov [extended_code],0C7h
     mov [postbyte_register],al
     lods u8 [esi]
@@ -22021,7 +22045,7 @@ cmpxchgx_instruction:
     cmp al,'['
     jne invalid_operand
     call get_address
-    mov ah,1
+    mov ah,HEAD
     xchg [postbyte_register],ah
     mov al,[operand_size]
     or al,al
@@ -22039,9 +22063,9 @@ cmpxchgx_instruction:
     ret
 
 nop_instruction:
-    strings.emit 'nop_instruction | 22041'
+    ;strings.emit 'nop_instruction | 22041'
     mov ah,[esi]
-    cmp ah,10h
+    cmp ah,DELINK
     je extended_nop
     cmp ah,11h
     je extended_nop
@@ -22052,13 +22076,13 @@ nop_instruction:
     ret
 
 extended_nop:
-    strings.emit 'extended_nop | 22054'
-    mov [base_code],0Fh
+    ;strings.emit 'extended_nop | 22054'
+    mov [base_code],SHIFT
     mov [extended_code],1Fh
-    mov [postbyte_register],0
+    mov [postbyte_register],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je extended_nop_reg
     cmp al,'['
     jne invalid_operand
@@ -22073,7 +22097,7 @@ extended_nop:
     ret
 
 extended_nop_reg:
-    strings.emit 'extended_nop_reg | 22075'
+    ;strings.emit 'extended_nop_reg | 22075'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -22083,32 +22107,32 @@ extended_nop_reg:
     ret
 
 basic_fpu_instruction:
-    strings.emit 'basic_fpu_instruction | 22085'
+    ;strings.emit 'basic_fpu_instruction | 22085'
     mov [postbyte_register],al
     mov [base_code],0D8h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je basic_fpu_streg
     cmp al,'['
     je basic_fpu_mem
     dec esi
     mov ah,[postbyte_register]
-    cmp ah,2
+    cmp ah,TEXT
     jb invalid_operand
-    cmp ah,3
+    cmp ah,TXT
     ja invalid_operand
-    mov bl,1
+    mov bl,HEAD
     jmp nomem_instruction_ready
     ret
 
 basic_fpu_mem:
-    strings.emit 'basic_fpu_mem | 22105'
+    ;strings.emit 'basic_fpu_mem | 22105'
     call get_address
     mov al,[operand_size]
-    cmp al,4
+    cmp al,TAIL
     je basic_fpu_mem_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je basic_fpu_mem_64bit
     or al,al
     jnz invalid_operand_size
@@ -22119,26 +22143,26 @@ basic_fpu_mem:
     ret
 
 basic_fpu_mem_64bit:
-    strings.emit 'basic_fpu_mem_64bit | 22122'
+    ;strings.emit 'basic_fpu_mem_64bit | 22122'
     mov [base_code],0DCh
     jmp instruction_ready
     ret
 
 basic_fpu_streg:
-    strings.emit 'basic_fpu_streg | 22127'
+    ;strings.emit 'basic_fpu_streg | 22127'
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
     mov ah,[postbyte_register]
-    cmp ah,2
+    cmp ah,TEXT
     je basic_fpu_single_streg
-    cmp ah,3
+    cmp ah,TXT
     je basic_fpu_single_streg
     or al,al
     jz basic_fpu_st0
     test ah,110b
     jz basic_fpu_streg_st0
-    xor [postbyte_register],1
+    xor [postbyte_register],HEAD
 
     basic_fpu_streg_st0:
     lods u8 [esi]
@@ -22146,7 +22170,7 @@ basic_fpu_streg:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_fpu_register
@@ -22157,13 +22181,13 @@ basic_fpu_streg:
     ret
 
 basic_fpu_st0:
-    strings.emit 'basic_fpu_st0 | 22159'
+    ;strings.emit 'basic_fpu_st0 | 22159'
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_fpu_register
@@ -22175,7 +22199,7 @@ basic_fpu_st0:
     ret
 
 simple_fpu_instruction:
-    strings.emit 'simple_fpu_instruction | 22177'
+    ;strings.emit 'simple_fpu_instruction | 22177'
     mov ah,al
     or ah,11000000b
     mov al,0D9h
@@ -22184,7 +22208,7 @@ simple_fpu_instruction:
     ret
 
 fi_instruction:
-    strings.emit 'fi_instruction | 22186'
+    ;strings.emit 'fi_instruction | 22186'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22192,9 +22216,9 @@ fi_instruction:
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je fi_mem_16bit
-    cmp al,4
+    cmp al,TAIL
     je fi_mem_32bit
     or al,al
     jnz invalid_operand_size
@@ -22206,25 +22230,25 @@ fi_instruction:
     ret
 
 fi_mem_16bit:
-    strings.emit 'fi_mem_16bit | 22208'
+    ;strings.emit 'fi_mem_16bit | 22208'
     mov [base_code],0DEh
     jmp instruction_ready
     ret
 
 fld_instruction:
-    strings.emit 'fld_instruction | 22214'
+    ;strings.emit 'fld_instruction | 22214'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je fld_streg
     cmp al,'['
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,4
+    cmp al,TAIL
     je fld_mem_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je fld_mem_64bit
     cmp al,10
     je fld_mem_80bit
@@ -22238,48 +22262,48 @@ fld_instruction:
     ret
 
 fld_mem_64bit:
-    strings.emit 'fld_mem_64bit | 22240'
+    ;strings.emit 'fld_mem_64bit | 22240'
     mov [base_code],0DDh
     jmp instruction_ready
     ret
 
 fld_mem_80bit:
-    strings.emit 'fld_mem_80bit | 22246'
+    ;strings.emit 'fld_mem_80bit | 22246'
     mov al,[postbyte_register]
-    cmp al,0
+    cmp al,NUL
     je fld_mem_80bit_store
     dec [postbyte_register]
-    cmp al,3
+    cmp al,TXT
     je fld_mem_80bit_store
     jmp invalid_operand_size
     ret
 
 fld_mem_80bit_store:
-    strings.emit 'fld_mem_80bit_store | 22257'
-    add [postbyte_register],5
+    ;strings.emit 'fld_mem_80bit_store | 22257'
+    add [postbyte_register],QUERY
     mov [base_code],0DBh
     jmp instruction_ready
     ret
 
 fld_streg:
-    strings.emit 'fld_streg | 22264'
+    ;strings.emit 'fld_streg | 22264'
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
-    cmp [postbyte_register],2
+    cmp [postbyte_register],TEXT
     jae fst_streg
     mov [base_code],0D9h
     jmp nomem_instruction_ready
     ret
 
 fst_streg:
-    strings.emit 'fst_streg | 22275'
+    ;strings.emit 'fst_streg | 22275'
     mov [base_code],0DDh
     jmp nomem_instruction_ready
     ret
 
 fild_instruction:
-    strings.emit 'fild_instruction | 22281'
+    ;strings.emit 'fild_instruction | 22281'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22287,11 +22311,11 @@ fild_instruction:
     jne invalid_operand
     call get_address
     mov al,[operand_size]
-    cmp al,2
+    cmp al,TEXT
     je fild_mem_16bit
-    cmp al,4
+    cmp al,TAIL
     je fild_mem_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je fild_mem_64bit
     or al,al
     jnz invalid_operand_size
@@ -22303,38 +22327,38 @@ fild_instruction:
     ret
 
 fild_mem_16bit:
-    strings.emit 'fild_mem_16bit | 22305'
+    ;strings.emit 'fild_mem_16bit | 22305'
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
 fild_mem_64bit:
-    strings.emit 'fild_mem_64bit | 22311'
+    ;strings.emit 'fild_mem_64bit | 22311'
     mov al,[postbyte_register]
-    cmp al,1
+    cmp al,HEAD
     je fisttp_64bit_store
     jb fild_mem_64bit_store
     dec [postbyte_register]
-    cmp al,3
+    cmp al,TXT
     je fild_mem_64bit_store
     jmp invalid_operand_size
     ret
 
 fild_mem_64bit_store:
-    strings.emit 'fild_mem_64bit_store | 22323'
-    add [postbyte_register],5
+    ;strings.emit 'fild_mem_64bit_store | 22323'
+    add [postbyte_register],QUERY
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
 fisttp_64bit_store:
-    strings.emit 'fisttp_64bit_store | 22330'
+    ;strings.emit 'fisttp_64bit_store | 22330'
     mov [base_code],0DDh
     jmp instruction_ready
     ret
 
 fbld_instruction:
-    strings.emit 'fbld_instruction | 22336'
+    ;strings.emit 'fbld_instruction | 22336'
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -22350,27 +22374,27 @@ fbld_instruction:
     ret
 
 fbld_mem_80bit:
-    strings.emit 'fbld_mem_80bit | 22352'
+    ;strings.emit 'fbld_mem_80bit | 22352'
     mov [base_code],0DFh
     jmp instruction_ready
     ret
 
 faddp_instruction:
-    strings.emit 'faddp_instruction | 22358'
+    ;strings.emit 'faddp_instruction | 22358'
     mov [postbyte_register],al
     mov [base_code],0DEh
     mov edx,esi
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je faddp_streg
     mov esi, edx
-    mov bl,1
+    mov bl,HEAD
     jmp nomem_instruction_ready
     ret
 
 faddp_streg:
-    strings.emit 'faddp_streg | 22372'
+    ;strings.emit 'faddp_streg | 22372'
     lods u8 [esi]
     call convert_fpu_register
     mov bl,al
@@ -22379,7 +22403,7 @@ faddp_streg:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_fpu_register
@@ -22389,45 +22413,45 @@ faddp_streg:
     ret
 
 fcompp_instruction:
-    strings.emit 'fcompp_instruction | 22391'
+    ;strings.emit 'fcompp_instruction | 22391'
     mov ax,0D9DEh
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 fucompp_instruction:
-    strings.emit 'fucompp_instruction | 22398'
+    ;strings.emit 'fucompp_instruction | 22398'
     mov ax,0E9DAh
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 fxch_instruction:
-    strings.emit 'fxch_instruction | 22405'
+    ;strings.emit 'fxch_instruction | 22405'
     mov dx,01D9h
     jmp fpu_single_operand
     ret
 
 ffreep_instruction:
-    strings.emit 'ffreep_instruction | 22411'
+    ;strings.emit 'ffreep_instruction | 22411'
     mov dx,00DFh
     jmp fpu_single_operand
     ret
 
 ffree_instruction:
-    strings.emit 'ffree_instruction | 22417'
+    ;strings.emit 'ffree_instruction | 22417'
     mov dl,0DDh
     mov dh,al
     fpu_single_operand:
     mov ebx,esi
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je fpu_streg
     or dh,dh
     jz invalid_operand
     mov esi, ebx
-    shl dh,3
+    shl dh,TXT
     or dh,11000001b
     mov ax,dx
     stos u16 [edi]
@@ -22435,10 +22459,10 @@ ffree_instruction:
     ret
 
 fpu_streg:
-    strings.emit 'fpu_streg | 22437'
+    ;strings.emit 'fpu_streg | 22437'
     lods u8 [esi]
     call convert_fpu_register
-    shl dh,3
+    shl dh,TXT
     or dh,al
     or dh,11000000b
     mov ax,dx
@@ -22447,7 +22471,7 @@ fpu_streg:
     ret
 
 fstenv_instruction:
-    strings.emit 'fstenv_instruction | 22449'
+    ;strings.emit 'fstenv_instruction | 22449'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22457,7 +22481,7 @@ fstenv_instruction:
     ret
 
 fstenv_instruction_16bit:
-    strings.emit 'fstenv_instruction_16bit | 22459'
+    ;strings.emit 'fstenv_instruction_16bit | 22459'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22467,7 +22491,7 @@ fstenv_instruction_16bit:
     ret
 
 fstenv_instruction_32bit:
-    strings.emit 'fstenv_instruction_32bit | 22469'
+    ;strings.emit 'fstenv_instruction_32bit | 22469'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22477,7 +22501,7 @@ fstenv_instruction_32bit:
     ret
 
 fsave_instruction_32bit:
-    strings.emit 'fsave_instruction_32bit | 22479'
+    ;strings.emit 'fsave_instruction_32bit | 22479'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22487,7 +22511,7 @@ fsave_instruction_32bit:
     ret
 
 fsave_instruction_16bit:
-    strings.emit 'fsave_instruction_16bit | 22489'
+    ;strings.emit 'fsave_instruction_16bit | 22489'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22497,7 +22521,7 @@ fsave_instruction_16bit:
     ret
 
 fsave_instruction:
-    strings.emit 'fsave_instruction | 22499'
+    ;strings.emit 'fsave_instruction | 22499'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22511,13 +22535,13 @@ fsave_instruction:
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
-    jne invalid_operand_size
+    cmp [operand_size],NUL
+    jne  invalid_operand_size
     jmp instruction_ready
     ret
 
 fstcw_instruction:
-    strings.emit 'fstcw_instruction | 22519'
+    ;strings.emit 'fstcw_instruction | 22519'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22532,27 +22556,27 @@ fstcw_instruction:
     mov al,[operand_size]
     or al,al
     jz fldcw_mem_16bit
-    cmp al,2
+    cmp al,TEXT
     je fldcw_mem_16bit
     jmp invalid_operand_size
     ret
 
 fldcw_mem_16bit:
-    strings.emit 'fldcw_mem_16bit | 22540'
+    ;strings.emit 'fldcw_mem_16bit | 22540'
     jmp instruction_ready
     ret
 
 fstsw_instruction:
-    strings.emit 'fstsw_instruction | 22545'
+    ;strings.emit 'fstsw_instruction | 22545'
     mov al,9Bh
     stos u8 [edi]
 
     fnstsw_instruction:
     mov [base_code],0DDh
-    mov [postbyte_register],7
+    mov [postbyte_register],NOTIFY
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je fstsw_reg
     cmp al,'['
     jne invalid_operand
@@ -22560,18 +22584,18 @@ fstsw_instruction:
     mov al,[operand_size]
     or al,al
     jz fstsw_mem_16bit
-    cmp al,2
+    cmp al,TEXT
     je fstsw_mem_16bit
     jmp invalid_operand_size
     ret
 
 fstsw_mem_16bit:
-    strings.emit 'fstsw_mem_16bit | 22569'
+    ;strings.emit 'fstsw_mem_16bit | 22569'
     jmp instruction_ready
     ret
 
 fstsw_reg:
-    strings.emit 'fstsw_reg | 22573'
+    ;strings.emit 'fstsw_reg | 22573'
     lods u8 [esi]
     call convert_register
     cmp ax,0200h
@@ -22582,7 +22606,7 @@ fstsw_reg:
     ret
 
 finit_instruction:
-    strings.emit 'finit_instruction | 22585'
+    ;strings.emit 'finit_instruction | 22585'
     mov u8 [edi],9Bh
     inc edi
 
@@ -22594,26 +22618,26 @@ finit_instruction:
     ret
 
 fcmov_instruction:
-    strings.emit 'fcmov_instruction | 22597'
+    ;strings.emit 'fcmov_instruction | 22597'
     mov dh,0DAh
     jmp fcomi_streg
     ret
 
 fcomi_instruction:
-    strings.emit 'fcomi_instruction | 22603'
+    ;strings.emit 'fcomi_instruction | 22603'
     mov dh,0DBh
     jmp fcomi_streg
     ret
 
 fcomip_instruction:
-    strings.emit 'fcomip_instruction | 22609'
+    ;strings.emit 'fcomip_instruction | 22609'
     mov dh,0DFh
 
     fcomi_streg:
     mov dl,al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_fpu_register
@@ -22627,13 +22651,13 @@ fcomip_instruction:
     ret
 
 fcomi_st0_streg:
-    strings.emit 'fcomi_st0_streg | 22630'
+    ;strings.emit 'fcomi_st0_streg | 22630'
     or ah,ah
     jnz invalid_operand
     inc esi
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_fpu_register
@@ -22645,14 +22669,14 @@ fcomi_st0_streg:
     ret
 
 basic_mmx_instruction:
-    strings.emit 'basic_mmx_instruction | 22647'
-    mov [base_code],0Fh
+    ;strings.emit 'basic_mmx_instruction | 22647'
+    mov [base_code],SHIFT
     mov [extended_code],al
 
     mmx_instruction:
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -22663,7 +22687,7 @@ basic_mmx_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je mmx_mmreg_mmreg
     cmp al,'['
     jne invalid_operand
@@ -22674,7 +22698,7 @@ basic_mmx_instruction:
     ret
 
 mmx_mmreg_mmreg:
-    strings.emit 'mmx_mmreg_mmreg | 22677'
+    ;strings.emit 'mmx_mmreg_mmreg | 22677'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -22682,12 +22706,12 @@ mmx_mmreg_mmreg:
     ret
 
 mmx_bit_shift_instruction:
-    strings.emit 'mmx_bit_shift_instruction | 22685'
-    mov [base_code],0Fh
+    ;strings.emit 'mmx_bit_shift_instruction | 22685'
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -22696,10 +22720,10 @@ mmx_bit_shift_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je mmx_mmreg_mmreg
     cmp al,'('
     je mmx_ps_mmreg_imm8
@@ -22709,19 +22733,19 @@ mmx_bit_shift_instruction:
     ret
 
 mmx_ps_mmreg_imm8:
-    strings.emit 'mmx_ps_mmreg_imm8 | 22711'
+    ;strings.emit 'mmx_ps_mmreg_imm8 | 22711'
     call get_byte_value
     mov u8 [value],al
-    test [operand_size],not 1
+    test [operand_size],not HEAD
     jnz invalid_value
     mov bl,[extended_code]
     mov al,bl
-    shr bl,4
+    shr bl,TAIL
     and al,1111b
     add al,70h
     mov [extended_code],al
     sub bl,0Ch
-    shl bl,1
+    shl bl,HEAD
     xchg bl,[postbyte_register]
     call store_nomem_instruction
     mov al, u8 [value]
@@ -22730,26 +22754,26 @@ mmx_ps_mmreg_imm8:
     ret
 
 pmovmskb_instruction:
-    strings.emit 'pmovmskb_instruction | 22733'
-    mov [base_code],0Fh
+    ;strings.emit 'pmovmskb_instruction | 22733'
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_register
-    cmp ah,4
+    cmp ah,TAIL
     je pmovmskb_reg_size_ok
     cmp [code_type],64
     jne invalid_operand_size
-    cmp ah,8
+    cmp ah,RECTIFY
     jnz invalid_operand_size
 
     pmovmskb_reg_size_ok:
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -22761,7 +22785,7 @@ pmovmskb_instruction:
     ret
 
 mmx_imm8:
-    strings.emit 'mmx_imm8 | 22764'
+    ;strings.emit 'mmx_imm8 | 22764'
     push _ebx _ecx _edx
     xor cl,cl
     xchg cl,[operand_size]
@@ -22770,7 +22794,7 @@ mmx_imm8:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    test ah,not 1
+    test ah,not HEAD
     jnz invalid_operand_size
     mov [operand_size],cl
     cmp al,'('
@@ -22783,21 +22807,21 @@ mmx_imm8:
     ret
 
 mmx_nomem_imm8:
-    strings.emit 'mmx_nomem_imm8 | 22785'
+    ;strings.emit 'mmx_nomem_imm8 | 22785'
     call store_nomem_instruction
     call append_imm8
     jmp instruction_assembled
     ret
 
 append_imm8:
-    strings.emit 'append_imm8 | 22793'
-    mov [operand_size],0
+    ;strings.emit 'append_imm8 | 22793'
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    test ah,not 1
+    test ah,not HEAD
     jnz invalid_operand_size
     cmp al,'('
     jne invalid_operand
@@ -22806,63 +22830,63 @@ append_imm8:
     ret
 
 pinsrw_instruction:
-    strings.emit 'pinsrw_instruction | 22808'
+    ;strings.emit 'pinsrw_instruction | 22808'
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
     call make_mmx_prefix
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pinsrw_mmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je mmx_imm8
-    cmp [operand_size],2
+    cmp [operand_size],TEXT
     jne invalid_operand_size
     jmp mmx_imm8
     ret
 
 pinsrw_mmreg_reg:
-    strings.emit 'pinsrw_mmreg_reg | 22838'
+    ;strings.emit 'pinsrw_mmreg_reg | 22838'
     lods u8 [esi]
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     mov bl,al
     jmp mmx_nomem_imm8
     ret
 
 pshufw_instruction:
-    strings.emit 'pshufw_instruction | 22848'
-    mov [mmx_size],8
+    ;strings.emit 'pshufw_instruction | 22848'
+    mov [mmx_size],RECTIFY
     mov [opcode_prefix],al
     jmp pshuf_instruction
     ret
 
 pshufd_instruction:
-    strings.emit 'pshufd_instruction | 22855'
+    ;strings.emit 'pshufd_instruction | 22855'
     mov [mmx_size],16
     mov [opcode_prefix],al
 
     pshuf_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],70h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -22874,7 +22898,7 @@ pshufd_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pshuf_mmreg_mmreg
     cmp al,'['
     jne invalid_operand
@@ -22883,7 +22907,7 @@ pshufd_instruction:
     ret
 
 pshuf_mmreg_mmreg:
-    strings.emit 'pshuf_mmreg_mmreg | 22885'
+    ;strings.emit 'pshuf_mmreg_mmreg | 22885'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -22891,12 +22915,12 @@ pshuf_mmreg_mmreg:
     ret
 
 movd_instruction:
-    strings.emit 'movd_instruction | 22893'
-    mov [base_code],0Fh
+    ;strings.emit 'movd_instruction | 22893'
+    mov [base_code],SHIFT
     mov [extended_code],7Eh
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movd_reg
     cmp al,'['
     jne invalid_operand
@@ -22908,12 +22932,12 @@ movd_instruction:
     ret
 
 movd_reg:
-    strings.emit 'movd_reg | 22910'
+    ;strings.emit 'movd_reg | 22910'
     lods u8 [esi]
     cmp al,0B0h
     jae movd_mmreg
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     mov bl,al
     call get_mmx_source_register
@@ -22921,18 +22945,18 @@ movd_reg:
     ret
 
 movd_mmreg:
-    strings.emit 'movd_mmreg | 22923'
+    ;strings.emit 'movd_mmreg | 22923'
     mov [extended_code],6Eh
     call convert_mmx_register
     mov [postbyte_register],al
     call make_mmx_prefix
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movd_mmreg_reg
     cmp al,'['
     jne invalid_operand
@@ -22943,24 +22967,24 @@ movd_mmreg:
     ret
 
 movd_mmreg_reg:
-    strings.emit 'movd_mmreg_reg | 22945'
+    ;strings.emit 'movd_mmreg_reg | 22945'
     lods u8 [esi]
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
 get_mmx_source_register:
-    strings.emit 'get_mmx_source_register | 22955'
-    mov [operand_size],0
+    ;strings.emit 'get_mmx_source_register | 22955'
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -22974,20 +22998,20 @@ get_mmx_source_register:
     ret
 
 movq_instruction:
-    strings.emit 'movq_instruction | 22976'
-    mov [base_code],0Fh
+    ;strings.emit 'movq_instruction | 22976'
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movq_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    test [operand_size],not 8
+    test [operand_size],not RECTIFY
     jnz invalid_operand_size
     call get_mmx_source_register
     mov al,7Fh
-    cmp ah,8
+    cmp ah,RECTIFY
     je movq_mem_ready
     mov al,0D6h
 
@@ -22997,12 +23021,12 @@ movq_instruction:
     ret
 
 movq_reg:
-    strings.emit 'movq_reg | 22999'
+    ;strings.emit 'movq_reg | 22999'
     lods u8 [esi]
     cmp al,0B0h
     jae movq_mmreg
     call convert_register
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     mov bl,al
     mov [extended_code],7Eh
@@ -23012,7 +23036,7 @@ movq_reg:
     ret
 
 movq_mmreg:
-    strings.emit 'movq_mmreg | 23015'
+    ;strings.emit 'movq_mmreg | 23015'
     call convert_mmx_register
     mov [postbyte_register],al
     mov [extended_code],6Fh
@@ -23026,30 +23050,30 @@ movq_mmreg:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movq_mmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    test [operand_size],not 8
+    test [operand_size],not RECTIFY
     jnz invalid_operand_size
     jmp instruction_ready
     ret
 
 movq_mmreg_reg:
-    strings.emit 'movq_mmreg_reg | 23042'
+    ;strings.emit 'movq_mmreg_reg | 23042'
     lods u8 [esi]
     cmp al,0B0h
     jae movq_mmreg_mmreg
-    mov [operand_size],0
+    mov [operand_size],NUL
     call convert_register
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     mov [extended_code],6Eh
-    mov [opcode_prefix],0
+    mov [opcode_prefix],NUL
     mov bl,al
     cmp [mmx_size],16
     jne movq_mmreg_reg_store
@@ -23061,7 +23085,7 @@ movq_mmreg_reg:
     ret
 
 movq_mmreg_mmreg:
-    strings.emit 'movq_mmreg_mmreg | 23063'
+    ;strings.emit 'movq_mmreg_mmreg | 23063'
     call convert_mmx_register
     cmp ah,[mmx_size]
     jne invalid_operand_size
@@ -23070,13 +23094,13 @@ movq_mmreg_mmreg:
     ret
 
 movdq_instruction:
-    strings.emit 'movdq_instruction | 23071'
+    ;strings.emit 'movdq_instruction | 23071'
     mov [opcode_prefix],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],6Fh
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movdq_mmreg
     cmp al,'['
     jne invalid_operand
@@ -23086,7 +23110,7 @@ movdq_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23096,7 +23120,7 @@ movdq_instruction:
     ret
 
 movdq_mmreg:
-    strings.emit 'movdq_mmreg | 23098'
+    ;strings.emit 'movdq_mmreg | 23098'
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
@@ -23105,7 +23129,7 @@ movdq_mmreg:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je movdq_mmreg_mmreg
     cmp al,'['
     jne invalid_operand
@@ -23114,7 +23138,7 @@ movdq_mmreg:
     ret
 
 movdq_mmreg_mmreg:
-    strings.emit 'movdq_mmreg_mmreg | 23116'
+    ;strings.emit 'movdq_mmreg_mmreg | 23116'
     lods u8 [esi]
     call convert_xmm_register
     mov bl,al
@@ -23122,10 +23146,10 @@ movdq_mmreg_mmreg:
     ret
 
 lddqu_instruction:
-    strings.emit 'lddqu_instruction | 23124'
+    ;strings.emit 'lddqu_instruction | 23124'
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23141,55 +23165,55 @@ lddqu_instruction:
     pop _eax
     mov [postbyte_register],al
     mov [opcode_prefix],0F2h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],0F0h
     jmp instruction_ready
     ret
 
 movdq2q_instruction:
-    strings.emit 'movdq2q_instruction | 23149'
+    ;strings.emit 'movdq2q_instruction | 23149'
     mov [opcode_prefix],0F2h
-    mov [mmx_size],8
+    mov [mmx_size],RECTIFY
     jmp movq2dq_
     ret
 
 movq2dq_instruction:
-    strings.emit 'movq2dq_instruction | 23156'
+    ;strings.emit 'movq2dq_instruction | 23156'
     mov [opcode_prefix],0F3h
     mov [mmx_size],16
 
     movq2dq_:
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
     cmp ah,[mmx_size]
     jne invalid_operand_size
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
-    xor [mmx_size],8+16
+    xor [mmx_size],RECTIFY+16
     cmp ah,[mmx_size]
     jne invalid_operand_size
     mov bl,al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],0D6h
     jmp nomem_instruction_ready
     ret
 
 sse_ps_instruction_imm8:
-    strings.emit 'sse_ps_instruction_imm8 | 23190'
-    mov [immediate_size],1
+    ;strings.emit 'sse_ps_instruction_imm8 | 23190'
+    mov [immediate_size],HEAD
 
     sse_ps_instruction:
     mov [mmx_size],16
@@ -23197,8 +23221,8 @@ sse_ps_instruction_imm8:
     ret
 
 sse_pd_instruction_imm8:
-    strings.emit 'sse_pd_instruction_imm8 | 23199'
-    mov [immediate_size],1
+    ;strings.emit 'sse_pd_instruction_imm8 | 23199'
+    mov [immediate_size],HEAD
 
     sse_pd_instruction:
     mov [mmx_size],16
@@ -23207,21 +23231,21 @@ sse_pd_instruction_imm8:
     ret
 
 sse_ss_instruction:
-    strings.emit 'sse_ss_instruction | 23209'
-    mov [mmx_size],4
+    ;strings.emit 'sse_ss_instruction | 23209'
+    mov [mmx_size],TAIL
     mov [opcode_prefix],0F3h
     jmp sse_instruction
     ret
 
 sse_sd_instruction:
-    strings.emit 'sse_sd_instruction | 23216'
-    mov [mmx_size],8
+    ;strings.emit 'sse_sd_instruction | 23216'
+    mov [mmx_size],RECTIFY
     mov [opcode_prefix],0F2h
     jmp sse_instruction
     ret
 
 cmp_pd_instruction:
-    strings.emit 'cmp_pd_instruction | 23223'
+    ;strings.emit 'cmp_pd_instruction | 23223'
     mov [opcode_prefix],66h
 
     cmp_ps_instruction:
@@ -23232,24 +23256,24 @@ cmp_pd_instruction:
     ret
 
 cmp_ss_instruction:
-    strings.emit 'cmp_ss_instruction | 23234'
-    mov [mmx_size],4
+    ;strings.emit 'cmp_ss_instruction | 23234'
+    mov [mmx_size],TAIL
     mov [opcode_prefix],0F3h
     jmp cmp_sx_instruction
     ret
 
 cmpsd_instruction:
-    strings.emit 'cmpsd_instruction | 23241'
+    ;strings.emit 'cmpsd_instruction | 23241'
     mov al,0A7h
     mov ah,[esi]
     or ah,ah
     jz simple_instruction_32bit
-    cmp ah,0Fh
+    cmp ah,SHIFT
     je simple_instruction_32bit
-    mov al,-1
+    mov al,-HEAD
 
     cmp_sd_instruction:
-    mov [mmx_size],8
+    mov [mmx_size],RECTIFY
     mov [opcode_prefix],0F2h
     cmp_sx_instruction:
     mov u8 [value],al
@@ -23258,45 +23282,45 @@ cmpsd_instruction:
     ret
 
 comiss_instruction:
-    strings.emit 'comiss_instruction | 23260'
-    mov [mmx_size],4
+    ;strings.emit 'comiss_instruction | 23260'
+    mov [mmx_size],TAIL
     jmp sse_instruction
     ret
 
 comisd_instruction:
-    strings.emit 'comisd_instruction | 23266'
-    mov [mmx_size],8
+    ;strings.emit 'comisd_instruction | 23266'
+    mov [mmx_size],RECTIFY
     mov [opcode_prefix],66h
     jmp sse_instruction
     ret
 
 cvtdq2pd_instruction:
-    strings.emit 'comisd_instruction | 23274'
+    ;strings.emit 'comisd_instruction | 23274'
     mov [opcode_prefix],0F3h
 
     cvtps2pd_instruction:
-    mov [mmx_size],8
+    mov [mmx_size],RECTIFY
     jmp sse_instruction
     ret
 
 cvtpd2dq_instruction:
-    strings.emit 'cvtpd2dq_instruction | 23282'
+    ;strings.emit 'cvtpd2dq_instruction | 23282'
     mov [mmx_size],16
     mov [opcode_prefix],0F2h
     jmp sse_instruction
     ret
 
 movshdup_instruction:
-    strings.emit 'movshdup_instruction | 23289'
+    ;strings.emit 'movshdup_instruction | 23289'
     mov [mmx_size],16
     mov [opcode_prefix],0F3h
 
     sse_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     sse_xmmreg:
     lods u8 [esi]
@@ -23304,20 +23328,20 @@ movshdup_instruction:
 
     sse_reg:
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je sse_xmmreg_xmmreg
 
     sse_reg_mem:
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je sse_mem_size_ok
     mov al,[mmx_size]
     cmp [operand_size],al
@@ -23330,27 +23354,27 @@ movshdup_instruction:
     je sse_cmp_mem_ok
     cmp ax,443Ah
     je sse_cmp_mem_ok
-    cmp [immediate_size],1
+    cmp [immediate_size],HEAD
     je mmx_imm8
-    cmp [immediate_size],-1
+    cmp [immediate_size],-HEAD
     jne sse_ok
     call take_additional_xmm0
-    mov [immediate_size],0
+    mov [immediate_size],NUL
 
     sse_ok:
     jmp instruction_ready
     ret
 
 sse_cmp_mem_ok:
-    strings.emit 'sse_cmp_mem_ok | 23344'
-    cmp u8 [value],-1
+    ;strings.emit 'sse_cmp_mem_ok | 23344'
+    cmp u8 [value],-HEAD
     je mmx_imm8
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
 sse_xmmreg_xmmreg:
-    strings.emit 'sse_xmmreg_xmmreg | 23353'
+    ;strings.emit 'sse_xmmreg_xmmreg | 23353'
     cmp [operand_prefix],66h
     jne sse_xmmreg_xmmreg_ok
     cmp [extended_code],12h
@@ -23368,20 +23392,20 @@ sse_xmmreg_xmmreg:
     je sse_cmp_nomem_ok
     cmp ax,443Ah
     je sse_cmp_nomem_ok
-    cmp [immediate_size],1
+    cmp [immediate_size],HEAD
     je mmx_nomem_imm8
-    cmp [immediate_size],-1
+    cmp [immediate_size],-HEAD
     jne sse_nomem_ok
     call take_additional_xmm0
-    mov [immediate_size],0
+    mov [immediate_size],NUL
 
     sse_nomem_ok:
     jmp nomem_instruction_ready
     ret
 
 sse_cmp_nomem_ok:
-    strings.emit 'sse_cmp_nomem_ok | 23382'
-    cmp u8 [value],-1
+    ;strings.emit 'sse_cmp_nomem_ok | 23382'
+    cmp u8 [value],-HEAD
     je mmx_nomem_imm8
     call store_nomem_instruction
     mov al, u8 [value]
@@ -23390,13 +23414,13 @@ sse_cmp_nomem_ok:
     ret
 
 take_additional_xmm0:
-    strings.emit 'sse_cmp_nomem_ok | 23392'
+    ;strings.emit 'sse_cmp_nomem_ok | 23392'
     cmp u8 [esi],','
     ;jne additional_xmm0_ok
     jne return_ok
     inc esi
     lods u8 [esi]
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23405,14 +23429,14 @@ take_additional_xmm0:
     ret
 
 pslldq_instruction:
-    strings.emit 'pslldq_instruction | 23407'
+    ;strings.emit 'pslldq_instruction | 23407'
     mov [postbyte_register],al
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],73h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23421,45 +23445,45 @@ pslldq_instruction:
     ret
 
 movpd_instruction:
-    strings.emit 'movpd_instruction | 23423'
+    ;strings.emit 'movpd_instruction | 23423'
     mov [opcode_prefix],66h
 
     movps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     mov [mmx_size],16
     jmp sse_mov_instruction
     ret
 
 movss_instruction:
-    strings.emit 'movss_instruction | 23434'
-    mov [mmx_size],4
+    ;strings.emit 'movss_instruction | 23434'
+    mov [mmx_size],TAIL
     mov [opcode_prefix],0F3h
     jmp sse_movs
     ret
 
 movsd_instruction:
-    strings.emit 'movsd_instruction | 23441'
+    ;strings.emit 'movsd_instruction | 23441'
     mov al,0A5h
     mov ah,[esi]
     or ah,ah
     jz simple_instruction_32bit
-    cmp ah,0Fh
+    cmp ah,SHIFT
     je simple_instruction_32bit
-    mov [mmx_size],8
+    mov [mmx_size],RECTIFY
     mov [opcode_prefix],0F2h
 
     sse_movs:
-    mov [base_code],0Fh
-    mov [extended_code],10h
+    mov [base_code],SHIFT
+    mov [extended_code],DELINK
     jmp sse_mov_instruction
     ret
 
 sse_mov_instruction:
-    strings.emit 'sse_mov_instruction | 23458'
+    ;strings.emit 'sse_mov_instruction | 23458'
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je sse_xmmreg
 
     sse_mem:
@@ -23467,12 +23491,12 @@ sse_mov_instruction:
     jne invalid_operand
     inc [extended_code]
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je sse_mem_xmmreg
     mov al,[mmx_size]
     cmp [operand_size],al
     jne invalid_operand_size
-    mov [operand_size],0
+    mov [operand_size],NUL
 
     sse_mem_xmmreg:
     lods u8 [esi]
@@ -23480,7 +23504,7 @@ sse_mov_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23489,21 +23513,21 @@ sse_mov_instruction:
     ret
 
 movlpd_instruction:
-    strings.emit 'movlpd_instruction | 23491'
+    ;strings.emit 'movlpd_instruction | 23491'
     mov [opcode_prefix],66h
 
     movlps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    mov [mmx_size],8
+    mov [mmx_size],RECTIFY
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne sse_mem
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -23513,13 +23537,13 @@ movlpd_instruction:
     ret
 
 movhlps_instruction:
-    strings.emit 'movhlps_instruction | 23515'
-    mov [base_code],0Fh
+    ;strings.emit 'movhlps_instruction | 23515'
+    mov [base_code],SHIFT
     mov [extended_code],al
-    mov [mmx_size],0
+    mov [mmx_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23529,28 +23553,28 @@ movhlps_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je sse_xmmreg_xmmreg_ok
     jmp invalid_operand
     ret
 
 maskmovq_instruction:
-    strings.emit 'maskmovq_instruction | 23537'
-    mov cl,8
+    ;strings.emit 'maskmovq_instruction | 23537'
+    mov cl,RECTIFY
     jmp maskmov_instruction
     ret
 
 maskmovdqu_instruction:
-    strings.emit 'maskmovdqu_instruction | 23543'
+    ;strings.emit 'maskmovdqu_instruction | 23543'
     mov cl,16
     mov [opcode_prefix],66h
 
     maskmov_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],0F7h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -23562,7 +23586,7 @@ maskmovdqu_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -23571,113 +23595,113 @@ maskmovdqu_instruction:
     ret
 
 movmskpd_instruction:
-    strings.emit 'movmskpd_instruction | 23573'
+    ;strings.emit 'movmskpd_instruction | 23573'
     mov [opcode_prefix],66h
     movmskps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],50h
     call take_register
     mov [postbyte_register],al
-    cmp ah,4
+    cmp ah,TAIL
     je movmskps_reg_ok
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     cmp [code_type],64
     jne invalid_operand
 
     movmskps_reg_ok:
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je sse_xmmreg_xmmreg_ok
     jmp invalid_operand
     ret
 
 cvtpi2pd_instruction:
-    strings.emit 'cvtpi2pd_instruction | 23600'
+    ;strings.emit 'cvtpi2pd_instruction | 23600'
     mov [opcode_prefix],66h
 
     cvtpi2ps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je cvtpi_xmmreg_xmmreg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je cvtpi_size_ok
-    cmp [operand_size],8
+    cmp [operand_size],RECTIFY
     jne invalid_operand_size
     cvtpi_size_ok:
     jmp instruction_ready
     ret
 
 cvtpi_xmmreg_xmmreg:
-    strings.emit 'cvtpi_xmmreg_xmmreg | 23634'
+    ;strings.emit 'cvtpi_xmmreg_xmmreg | 23634'
     lods u8 [esi]
     call convert_mmx_register
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     mov bl,al
     jmp nomem_instruction_ready
     ret
 
 cvtsi2ss_instruction:
-    strings.emit 'cvtsi2ss_instruction | 23643'
+    ;strings.emit 'cvtsi2ss_instruction | 23643'
     mov [opcode_prefix],0F3h
     jmp cvtsi_instruction
     ret
 
 cvtsi2sd_instruction:
-    strings.emit 'cvtsi2sd_instruction | 23649'
+    ;strings.emit 'cvtsi2sd_instruction | 23649'
     mov [opcode_prefix],0F2h
 
     cvtsi_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
 
     cvtsi_xmmreg:
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je cvtsi_xmmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je cvtsi_size_ok
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     je cvtsi_size_ok
-    cmp [operand_size],8
+    cmp [operand_size],RECTIFY
     jne invalid_operand_size
     call operand_64bit
 
@@ -23686,12 +23710,12 @@ cvtsi2sd_instruction:
     ret
 
 cvtsi_xmmreg_reg:
-    strings.emit 'cvtsi_xmmreg_reg | 23688'
+    ;strings.emit 'cvtsi_xmmreg_reg | 23688'
     lods u8 [esi]
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     je cvtsi_xmmreg_reg_store
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     call operand_64bit
 
@@ -23701,72 +23725,72 @@ cvtsi_xmmreg_reg:
     ret
 
 cvtps2pi_instruction:
-    strings.emit 'cvtps2pi_instruction | 23703'
-    mov [mmx_size],8
+    ;strings.emit 'cvtps2pi_instruction | 23703'
+    mov [mmx_size],RECTIFY
     jmp cvtpd_instruction
     ret
 
 cvtpd2pi_instruction:
-    strings.emit 'cvtpd2pi_instruction | 23709'
+    ;strings.emit 'cvtpd2pi_instruction | 23709'
     mov [opcode_prefix],66h
     mov [mmx_size],16
 
     cvtpd_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
-    mov [operand_size],0
+    mov [operand_size],NUL
     jmp sse_reg
     ret
 
 cvtss2si_instruction:
-    strings.emit 'cvtss2si_instruction | 23729'
+    ;strings.emit 'cvtss2si_instruction | 23729'
     mov [opcode_prefix],0F3h
-    mov [mmx_size],4
+    mov [mmx_size],TAIL
     jmp cvt2si_instruction
     ret
 
 cvtsd2si_instruction:
-    strings.emit 'cvtsd2si_instruction | 23736'
+    ;strings.emit 'cvtsd2si_instruction | 23736'
     mov [opcode_prefix],0F2h
     mov [mmx_size],8
 
     cvt2si_instruction:
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     call take_register
-    mov [operand_size],0
-    cmp ah,4
+    mov [operand_size],NUL
+    cmp  ah,TAIL
     je sse_reg
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     call operand_64bit
     jmp sse_reg
     ret
 
 ssse3_instruction:
-    strings.emit 'ssse3_instruction | 23754'
-    mov [base_code],0Fh
+    ;strings.emit 'ssse3_instruction | 23754'
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],al
     jmp mmx_instruction
     ret
 
 palignr_instruction:
-    strings.emit 'palignr_instruction | 23762'
-    mov [base_code],0Fh
+    ;strings.emit 'palignr_instruction | 23762'
+    mov [base_code],SHIFT
     mov [extended_code],3Ah
-    mov [supplemental_code],0Fh
+    mov [supplemental_code],SHIFT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -23777,7 +23801,7 @@ palignr_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je palignr_mmreg_mmreg
     cmp al,'['
     jne invalid_operand
@@ -23786,7 +23810,7 @@ palignr_instruction:
     ret
 
 palignr_mmreg_mmreg:
-    strings.emit 'palignr_mmreg_mmreg | 23788'
+    ;strings.emit 'palignr_mmreg_mmreg | 23788'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -23794,17 +23818,17 @@ palignr_mmreg_mmreg:
     ret
 
 amd3dnow_instruction:
-    strings.emit 'amd3dnow_instruction | 23796'
-    mov [base_code],0Fh
-    mov [extended_code],0Fh
+    ;strings.emit 'amd3dnow_instruction | 23796'
+    mov [base_code],SHIFT
+    mov [extended_code],SHIFT
     mov u8 [value],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     mov [postbyte_register],al
     lods u8 [esi]
@@ -23812,7 +23836,7 @@ amd3dnow_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je amd3dnow_mmreg_mmreg
     cmp al,'['
     jne invalid_operand
@@ -23822,10 +23846,10 @@ amd3dnow_instruction:
     ret
 
 amd3dnow_mmreg_mmreg:
-    strings.emit 'amd3dnow_mmreg_mmreg | 23824'
+    ;strings.emit 'amd3dnow_mmreg_mmreg | 23824'
     lods u8 [esi]
     call convert_mmx_register
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     mov bl,al
     call store_nomem_instruction
@@ -23835,14 +23859,14 @@ amd3dnow_mmreg_mmreg:
     ret
 
 sse4_instruction_38_xmm0:
-    strings.emit 'sse4_instruction_38_xmm0 | 23838'
-    mov [immediate_size],-1
+    ;strings.emit 'sse4_instruction_38_xmm0 | 23838'
+    mov [immediate_size],-HEAD
     jmp sse4_instruction_38
     ret
 
 sse4_instruction_66_38_xmm0:
-    strings.emit 'sse4_instruction_66_38_xmm0 | 23843'
-    mov [immediate_size],-1
+    ;strings.emit 'sse4_instruction_66_38_xmm0 | 23843'
+    mov [immediate_size],-HEAD
 
     sse4_instruction_66_38:
     mov [opcode_prefix],66h
@@ -23855,22 +23879,22 @@ sse4_instruction_66_38_xmm0:
     ret
 
 sse4_ss_instruction_66_3a_imm8:
-    strings.emit 'sse4_ss_instruction_66_3a_imm8 | 23857'
-    mov [immediate_size],1
-    mov cl,4
+    ;strings.emit 'sse4_ss_instruction_66_3a_imm8 | 23857'
+    mov [immediate_size],HEAD
+    mov cl,TAIL
     jmp sse4_instruction_66_3a_setup
     ret
 
 sse4_sd_instruction_66_3a_imm8:
-    strings.emit 'sse4_sd_instruction_66_3a_imm8 | 23864'
-    mov [immediate_size],1
-    mov cl,8
+    ;strings.emit 'sse4_sd_instruction_66_3a_imm8 | 23864'
+    mov [immediate_size],HEAD
+    mov cl,RECTIFY
     jmp sse4_instruction_66_3a_setup
     ret
 
 sse4_instruction_66_3a_imm8:
-    strings.emit 'sse4_instruction_66_3a_imm8 | 23871'
-    mov [immediate_size],1
+    ;strings.emit 'sse4_instruction_66_3a_imm8 | 23871'
+    mov [immediate_size],HEAD
     mov cl,16
 
     sse4_instruction_66_3a_setup:
@@ -23884,14 +23908,14 @@ sse4_instruction_66_3a_imm8:
     ret
 
 sse4_instruction_3a_imm8:
-    strings.emit 'sse4_instruction_3a_imm8 | 23886'
-    mov [immediate_size],1
+    ;strings.emit 'sse4_instruction_3a_imm8 | 23886'
+    mov [immediate_size],HEAD
     mov cl,16
     jmp sse4_instruction_3a_setup
     ret
 
 pclmulqdq_instruction:
-    strings.emit 'pclmulqdq_instruction | 23894'
+    ;strings.emit 'pclmulqdq_instruction | 23894'
     mov u8 [value],al
     mov al,44h
     mov cl,16
@@ -23899,29 +23923,29 @@ pclmulqdq_instruction:
     ret
 
 extractps_instruction:
-    strings.emit 'extractps_instruction | 23902'
+    ;strings.emit 'extractps_instruction | 23902'
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je extractps_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     je extractps_size_ok
-    cmp [operand_size],0
-    jne invalid_operand_size
+    cmp [operand_size],NUL
+    jne  invalid_operand_size
 
     extractps_size_ok:
     push _edx _ebx _ecx
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -23931,26 +23955,26 @@ extractps_instruction:
     ret
 
 extractps_reg:
-    strings.emit 'extractps_reg | 23934'
+    ;strings.emit 'extractps_reg | 23934'
     lods u8 [esi]
     call convert_register
     push _eax
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
     pop _ebx
     mov al,bh
-    cmp al,4
+    cmp al,TAIL
     je mmx_nomem_imm8
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
     cmp [code_type],64
     jne illegal_instruction
@@ -23958,45 +23982,45 @@ extractps_reg:
     ret
 
 setup_66_0f_3a:
-    strings.emit 'setup_66_0f_3a | 23960'
+    ;strings.emit 'setup_66_0f_3a | 23960'
     mov [extended_code],3Ah
     mov [supplemental_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [opcode_prefix],66h
     ret
 
 insertps_instruction:
-    strings.emit 'insertps_instruction | 23968'
+    ;strings.emit 'insertps_instruction | 23968'
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je insertps_xmmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     je insertps_size_ok
-    cmp [operand_size],0
-    jne invalid_operand_size
+    cmp [operand_size],NUL
+    jne  invalid_operand_size
 
     insertps_size_ok:
     jmp mmx_imm8
     ret
 
 insertps_xmmreg_reg:
-    strings.emit 'insertps_xmmreg_reg | 23998'
+    ;strings.emit 'insertps_xmmreg_reg | 23998'
     lods u8 [esi]
     call convert_mmx_register
     mov bl,al
@@ -24004,32 +24028,32 @@ insertps_xmmreg_reg:
     ret
 
 pextrq_instruction:
-    strings.emit 'pextrq_instruction | 24006'
-    mov [mmx_size],8
+    ;strings.emit 'pextrq_instruction | 24006'
+    mov [mmx_size],RECTIFY
     jmp pextr_instruction
     ret
 
 pextrd_instruction:
-    strings.emit 'pextrd_instruction | 24012'
-    mov [mmx_size],4
+    ;strings.emit 'pextrd_instruction | 24012'
+    mov [mmx_size],TAIL
     jmp pextr_instruction
     ret
 
 pextrw_instruction:
-    strings.emit 'pextrw_instruction | 24018'
-    mov [mmx_size],2
+    ;strings.emit 'pextrw_instruction | 24018'
+    mov [mmx_size],TEXT
     jmp pextr_instruction
     ret
 
 pextrb_instruction:
-    strings.emit 'pextrb_instruction | 24024'
-    mov [mmx_size],1
+    ;strings.emit 'pextrb_instruction | 24024'
+    mov [mmx_size],HEAD
 
     pextr_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pextr_reg
     cmp al,'['
     jne invalid_operand
@@ -24037,23 +24061,23 @@ pextrb_instruction:
     mov al,[mmx_size]
     cmp al,[operand_size]
     je pextr_size_ok
-    cmp [operand_size],0
-    jne invalid_operand_size
+    cmp [operand_size],NUL
+    jne  invalid_operand_size
 
     pextr_size_ok:
-    cmp al,8
+    cmp al,RECTIFY
     jne pextr_prefix_ok
     call operand_64bit
 
     pextr_prefix_ok:
     push _edx _ebx _ecx
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -24063,16 +24087,16 @@ pextrb_instruction:
     ret
 
 pextr_reg:
-    strings.emit 'pextr_reg | 24065'
+    ;strings.emit 'pextr_reg | 24065'
     lods u8 [esi]
     call convert_register
-    cmp [mmx_size],4
+    cmp [mmx_size],TAIL
     ja pextrq_reg
-    cmp ah,4
+    cmp ah,TAIL
     je pextr_reg_size_ok
     cmp [code_type],64
     jne pextr_invalid_size
-    cmp ah,8
+    cmp ah,RECTIFY
     je pextr_reg_size_ok
 
     pextr_invalid_size:
@@ -24080,20 +24104,20 @@ pextr_reg:
     ret
 
 pextrq_reg:
-    strings.emit 'pextrq_reg | 24082'
-    cmp ah,8
+    ;strings.emit 'pextrq_reg | 24082'
+    cmp ah,RECTIFY
     jne pextr_invalid_size
     call operand_64bit
 
     pextr_reg_size_ok:
-    mov [operand_size],0
-    push _eax
+    mov [operand_size],NUL
+    push  _eax
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -24101,16 +24125,16 @@ pextrq_reg:
     pop _eax
     mov [postbyte_register],al
     mov al,ah
-    cmp [mmx_size],2
+    cmp [mmx_size],TEXT
     jne pextr_reg_store
-    mov [opcode_prefix],0
+    mov [opcode_prefix],NUL
     mov [extended_code],0C5h
     call make_mmx_prefix
     jmp mmx_nomem_imm8
     ret
 
 pextr_reg_store:
-    strings.emit 'pextr_reg_store | 24112'
+    ;strings.emit 'pextr_reg_store | 24112'
     cmp bh,16
     jne invalid_operand_size
     xchg bl,[postbyte_register]
@@ -24118,45 +24142,45 @@ pextr_reg_store:
     ret
 
 pinsrb_instruction:
-    strings.emit 'pinsrb_instruction | 24120'
-    mov [mmx_size],1
+    ;strings.emit 'pinsrb_instruction | 24120'
+    mov [mmx_size],HEAD
     jmp pinsr_instruction
     ret
 
 pinsrd_instruction:
-    strings.emit 'pinsrd_instruction | 24126'
-    mov [mmx_size],4
+    ;strings.emit 'pinsrd_instruction | 24126'
+    mov [mmx_size],TAIL
     jmp pinsr_instruction
     ret
 
 pinsrq_instruction:
-    strings.emit 'pinsrq_instruction | 24132'
-    mov [mmx_size],8
+    ;strings.emit 'pinsrq_instruction | 24132'
+    mov [mmx_size],RECTIFY
     call operand_64bit
 
     pinsr_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
 
     pinsr_xmmreg:
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pinsr_xmmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je mmx_imm8
     mov al,[mmx_size]
     cmp al,[operand_size]
@@ -24165,63 +24189,63 @@ pinsrq_instruction:
     ret
 
 pinsr_xmmreg_reg:
-    strings.emit 'pinsr_xmmreg_reg | 24167'
+    ;strings.emit 'pinsr_xmmreg_reg | 24167'
     lods u8 [esi]
     call convert_register
     mov bl,al
-    cmp [mmx_size],8
+    cmp [mmx_size],RECTIFY
     je pinsrq_xmmreg_reg
-    cmp ah,4
+    cmp ah,TAIL
     je mmx_nomem_imm8
     jmp invalid_operand_size
     ret
 
 pinsrq_xmmreg_reg:
-    strings.emit 'pinsrq_xmmreg_reg | 24179'
-    cmp ah,8
+    ;strings.emit 'pinsrq_xmmreg_reg | 24179'
+    cmp ah,RECTIFY
     je mmx_nomem_imm8
     jmp invalid_operand_size
     ret
 
 pmovsxbw_instruction:
-    strings.emit 'pmovsxbw_instruction | 24186'
-    mov [mmx_size],8
+    ;strings.emit 'pmovsxbw_instruction | 24186'
+    mov [mmx_size],RECTIFY
     jmp pmovsx_instruction
     ret
 
 pmovsxbd_instruction:
-    strings.emit 'pmovsxbd_instruction | 24192'
-    mov [mmx_size],4
+    ;strings.emit 'pmovsxbd_instruction | 24192'
+    mov [mmx_size],TAIL
     jmp pmovsx_instruction
     ret
 
 pmovsxbq_instruction:
-    strings.emit 'pmovsxbq_instruction | 24198'
-    mov [mmx_size],2
+    ;strings.emit 'pmovsxbq_instruction | 24198'
+    mov [mmx_size],TEXT
     jmp pmovsx_instruction
     ret
 
 pmovsxwd_instruction:
-    strings.emit 'pmovsxwd_instruction | 24205'
-    mov [mmx_size],8
+    ;strings.emit 'pmovsxwd_instruction | 24205'
+    mov [mmx_size],RECTIFY
     jmp pmovsx_instruction
     ret
 
 pmovsxwq_instruction:
-    strings.emit 'pmovsxwq_instruction | 24205'
-    mov [mmx_size],4
+    ;strings.emit 'pmovsxwq_instruction | 24205'
+    mov [mmx_size],TAIL
     jmp pmovsx_instruction
     ret
 
 pmovsxdq_instruction:
-    strings.emit 'pmovsxwq_instruction | 24216'
+    ;strings.emit 'pmovsxwq_instruction | 24216'
     mov [mmx_size],8
 
     pmovsx_instruction:
     call setup_66_0f_38
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -24229,15 +24253,15 @@ pmovsxdq_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je pmovsx_xmmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    cmp [operand_size],0
+    cmp [operand_size],NUL
     je instruction_ready
     mov al,[mmx_size]
     cmp al,[operand_size]
@@ -24246,7 +24270,7 @@ pmovsxdq_instruction:
     ret
 
 pmovsx_xmmreg_reg:
-    strings.emit 'pmovsx_xmmreg_reg | 24248'
+    ;strings.emit 'pmovsx_xmmreg_reg | 24248'
     lods u8 [esi]
     call convert_xmm_register
     mov bl,al
@@ -24254,15 +24278,15 @@ pmovsx_xmmreg_reg:
     ret
 
 setup_66_0f_38:
-    strings.emit 'setup_66_0f_38 | 24256'
+    ;strings.emit 'setup_66_0f_38 | 24256'
     mov [extended_code],38h
     mov [supplemental_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [opcode_prefix],66h
     ret
 
 xsaves_instruction_64bit:
-    strings.emit 'xsaves_instruction_64bit | 24264'
+    ;strings.emit 'xsaves_instruction_64bit | 24264'
     call operand_64bit
 
     xsaves_instruction:
@@ -24271,7 +24295,7 @@ xsaves_instruction_64bit:
     ret
 
 fxsave_instruction_64bit:
-    strings.emit 'fxsave_instruction_64bit | 24273'
+    ;strings.emit 'fxsave_instruction_64bit | 24273'
     call operand_64bit
 
     fxsave_instruction:
@@ -24279,7 +24303,7 @@ fxsave_instruction_64bit:
     xor cl,cl
 
     xsave_common:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],ah
     mov [postbyte_register],al
     mov [mmx_size],cl
@@ -24299,25 +24323,25 @@ fxsave_instruction_64bit:
     ret
 
 clflush_instruction:
-    strings.emit 'clflush_instruction | 24301'
+    ;strings.emit 'clflush_instruction | 24301'
     mov ah,0AEh
-    mov cl,1
+    mov cl,HEAD
     jmp xsave_common
     ret
 
 stmxcsr_instruction:
-    strings.emit 'stmxcsr_instruction | 24308'
+    ;strings.emit 'stmxcsr_instruction | 24308'
     mov ah,0AEh
-    mov cl,4
+    mov cl,TAIL
     jmp xsave_common
     ret
 
 prefetch_instruction:
-    strings.emit 'prefetch_instruction | 24315'
+    ;strings.emit 'prefetch_instruction | 24315'
     mov [extended_code],18h
 
     prefetch_mem_8bit:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
@@ -24325,30 +24349,30 @@ prefetch_instruction:
     jne invalid_operand
     or ah,ah
     jz prefetch_size_ok
-    cmp ah,1
+    cmp ah,HEAD
     jne invalid_operand_size
 
 prefetch_size_ok:
-    strings.emit 'prefetch_size_ok | 24331'
+    ;strings.emit 'prefetch_size_ok | 24331'
     call get_address
     jmp instruction_ready
     ret
 
 amd_prefetch_instruction:
-    strings.emit 'amd_prefetch_instruction | 24337'
-    mov [extended_code],0Dh
+    ;strings.emit 'amd_prefetch_instruction | 24337'
+    mov [extended_code],CR
     jmp prefetch_mem_8bit
     ret
 
 clflushopt_instruction:
-    strings.emit 'clflushopt_instruction | 24343'
+    ;strings.emit 'clflushopt_instruction | 24343'
     mov [extended_code],0AEh
     mov [opcode_prefix],66h
     jmp prefetch_mem_8bit
     ret
 
 pcommit_instruction:
-    strings.emit 'pcommit_instruction | 24350'
+    ;strings.emit 'pcommit_instruction | 24350'
     mov u8 [edi],66h
     inc edi
 
@@ -24362,20 +24386,20 @@ pcommit_instruction:
     ret
 
 pause_instruction:
-    strings.emit 'pause_instruction | 24364'
+    ;strings.emit 'pause_instruction | 24364'
     mov ax,90F3h
     stos u16 [edi]
     jmp instruction_assembled
     ret
 
 movntq_instruction:
-    strings.emit 'movntq_instruction | 24371'
-    mov [mmx_size],8
+    ;strings.emit 'movntq_instruction | 24371'
+    mov [mmx_size],RECTIFY
     jmp movnt_instruction
     ret
 
 movntpd_instruction:
-    strings.emit 'movntpd_instruction | 24377'
+    ;strings.emit 'movntpd_instruction | 24377'
     mov [opcode_prefix],66h
 
     movntps_instruction:
@@ -24383,7 +24407,7 @@ movntpd_instruction:
 
     movnt_instruction:
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -24394,7 +24418,7 @@ movntpd_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_mmx_register
@@ -24405,20 +24429,20 @@ movntpd_instruction:
     ret
 
 movntsd_instruction:
-    strings.emit 'movntsd_instruction | 24407'
+    ;strings.emit 'movntsd_instruction | 24407'
     mov [opcode_prefix],0F2h
-    mov [mmx_size],8
+    mov [mmx_size],RECTIFY
     jmp movnts_instruction
     ret
 
 movntss_instruction:
-    strings.emit 'movntss_instruction | 24414'
+    ;strings.emit 'movntss_instruction | 24414'
     mov [opcode_prefix],0F3h
-    mov [mmx_size],4
+    mov [mmx_size],TAIL
 
     movnts_instruction:
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -24434,10 +24458,10 @@ movntss_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -24446,8 +24470,8 @@ movntss_instruction:
     ret
 
 movnti_instruction:
-    strings.emit 'movnti_instruction | 24448'
-    mov [base_code],0Fh
+    ;strings.emit 'movnti_instruction | 24448'
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
@@ -24458,9 +24482,9 @@ movnti_instruction:
     cmp al,','
     jne invalid_operand
     call take_register
-    cmp ah,4
+    cmp ah,TAIL
     je movnti_store
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     call operand_64bit
 
@@ -24470,11 +24494,11 @@ movnti_instruction:
     ret
 
 monitor_instruction:
-    strings.emit 'monitor_instruction | 24472'
+    ;strings.emit 'monitor_instruction | 24472'
     mov [postbyte_register],al
-    cmp u8 [esi],0
+    cmp u8 [esi],NUL
     je monitor_instruction_store
-    cmp u8 [esi],0Fh
+    cmp u8 [esi],SHIFT
     je monitor_instruction_store
     call take_register
     cmp ax,0400h
@@ -24503,11 +24527,11 @@ monitor_instruction:
     ret
 
 movntdqa_instruction:
-    strings.emit 'movntdqa_instruction | 24505'
+    ;strings.emit 'movntdqa_instruction | 24505'
     call setup_66_0f_38
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -24524,26 +24548,26 @@ movntdqa_instruction:
     ret
 
 extrq_instruction:
-    strings.emit 'extrq_instruction | 24526'
+    ;strings.emit 'extrq_instruction | 24526'
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],78h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je extrq_xmmreg_xmmreg
-    test ah,not 1
+    test ah,not HEAD
     jnz invalid_operand_size
     cmp al,'('
     jne invalid_operand
@@ -24557,7 +24581,7 @@ extrq_instruction:
     ret
 
 extrq_xmmreg_xmmreg:
-    strings.emit 'extrq_xmmreg_xmmreg | 24559'
+    ;strings.emit 'extrq_xmmreg_xmmreg | 24559'
     inc [extended_code]
     lods u8 [esi]
     call convert_xmm_register
@@ -24566,24 +24590,24 @@ extrq_xmmreg_xmmreg:
     ret
 
 insertq_instruction:
-    strings.emit 'insertq_instruction | 24568'
+    ;strings.emit 'insertq_instruction | 24568'
     mov [opcode_prefix],0F2h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],78h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -24595,7 +24619,7 @@ insertq_instruction:
     ret
 
 insertq_with_imm:
-    strings.emit 'insertq_with_imm | 24597'
+    ;strings.emit 'insertq_with_imm | 24597'
     call store_nomem_instruction
     call append_imm8
     call append_imm8
@@ -24603,16 +24627,16 @@ insertq_with_imm:
     ret
 
 crc32_instruction:
-    strings.emit 'crc32_instruction | 24605'
+    ;strings.emit 'crc32_instruction | 24605'
     mov [opcode_prefix],0F2h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],0F0h
     call take_register
     mov [postbyte_register],al
-    cmp ah,4
+    cmp ah,TAIL
     je crc32_reg_size_ok
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand
     cmp [code_type],64
     jne illegal_instruction
@@ -24621,10 +24645,10 @@ crc32_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je crc32_reg_reg
     cmp al,'['
     jne invalid_operand
@@ -24632,7 +24656,7 @@ crc32_instruction:
     mov al,[operand_size]
     test al,al
     jz crc32_unknown_size
-    cmp al,1
+    cmp al,HEAD
     je crc32_reg_mem_store
     inc [supplemental_code]
     call operand_autodetect
@@ -24642,18 +24666,18 @@ crc32_instruction:
     ret
 
 crc32_unknown_size:
-    strings.emit 'crc32_unknown_size | 24644'
+    ;strings.emit 'crc32_unknown_size | 24644'
     call recoverable_unknown_size
     jmp crc32_reg_mem_store
     ret
 
 crc32_reg_reg:
-    strings.emit 'crc32_reg_reg | 24650'
+    ;strings.emit 'crc32_reg_reg | 24650'
     lods u8 [esi]
     call convert_register
     mov bl,al
     mov al,ah
-    cmp al,1
+    cmp al,HEAD
     je crc32_reg_reg_store
     inc [supplemental_code]
     call operand_autodetect
@@ -24663,21 +24687,21 @@ crc32_reg_reg:
     ret
 
 popcnt_instruction:
-    strings.emit 'popcnt_instruction | 24665'
+    ;strings.emit 'popcnt_instruction | 24665'
     mov [opcode_prefix],0F3h
     jmp bs_instruction
     ret
 
 movbe_instruction:
-    strings.emit 'movbe_instruction | 24671'
+    ;strings.emit 'movbe_instruction | 24671'
     mov [supplemental_code],al
     mov [extended_code],38h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
     je movbe_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
@@ -24696,7 +24720,7 @@ movbe_instruction:
     ret
 
 movbe_mem:
-    strings.emit 'movbe_mem | 24698'
+    ;strings.emit 'movbe_mem | 24698'
     inc [supplemental_code]
     call get_address
     push _edx _ebx _ecx
@@ -24712,60 +24736,60 @@ movbe_mem:
     ret
 
 adx_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],0F6h
     mov [operand_prefix],al
     call get_reg_mem
     jc adx_reg_reg
     mov al,[operand_size]
-    cmp al,4
+    cmp al,TAIL
     je instruction_ready
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
     call operand_64bit
     jmp instruction_ready
     ret
 
 adx_reg_reg:
-    strings.emit 'adx_reg_reg | 24730'
-    cmp ah,4
+    ;strings.emit 'adx_reg_reg | 24730'
+    cmp ah,TAIL
     je nomem_instruction_ready
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     call operand_64bit
     jmp nomem_instruction_ready
     ret
 
 rdpid_instruction:
-    strings.emit 'rdpid_instruction | 24740'
+    ;strings.emit 'rdpid_instruction | 24740'
     mov [postbyte_register],al
     mov [extended_code],0C7h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [opcode_prefix],0F3h
     call take_register
     cmp [code_type],64
     je rdpid_64bit
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
 rdpid_64bit:
-    strings.emit 'rdpid_64bit | 24754'
-    cmp ah,8
+    ;strings.emit 'rdpid_64bit | 24754'
+    cmp ah,RECTIFY
     jne invalid_operand_size
     jmp nomem_instruction_ready
     ret
 
 vmclear_instruction:
-    strings.emit 'vmclear_instruction | 24761'
+    ;strings.emit 'vmclear_instruction | 24761'
     mov [opcode_prefix],66h
     jmp vmx_instruction
     ret
 
 vmxon_instruction:
-    strings.emit 'vmxon_instruction | 24767'
+    ;strings.emit 'vmxon_instruction | 24767'
     mov [opcode_prefix],0F3h
 
     vmx_instruction:
@@ -24779,20 +24803,20 @@ vmxon_instruction:
     mov al,[operand_size]
     or al,al
     jz vmx_size_ok
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
 
     vmx_size_ok:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     jmp instruction_ready
     ret
 
 vmread_instruction:
-    strings.emit 'vmread_instruction | 24790'
+    ;strings.emit 'vmread_instruction | 24790'
     mov [extended_code],78h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je vmread_nomem
     cmp al,'['
     jne invalid_operand
@@ -24807,7 +24831,7 @@ vmread_instruction:
     ret
 
 vmread_nomem:
-    strings.emit 'vmread_nomem | 24809'
+    ;strings.emit 'vmread_nomem | 24809'
     lods u8 [esi]
     call convert_register
     push _eax
@@ -24819,26 +24843,26 @@ vmread_nomem:
     mov [postbyte_register],al
     call vmread_check_size
     pop _ebx
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     jmp nomem_instruction_ready
     ret
 
 vmread_check_size:
-    strings.emit 'vmread_check_size | 24826'
+    ;strings.emit 'vmread_check_size | 24826'
     cmp [code_type],64
     je vmread_long
-    cmp [operand_size],4
+    cmp [operand_size],TAIL
     jne invalid_operand_size
     ret
 
 vmread_long:
-    strings.emit 'vmread_long | 24834'
-    cmp [operand_size],8
+    ;strings.emit 'vmread_long | 24834'
+    cmp [operand_size],RECTIFY
     jne invalid_operand_size
     ret
 
 vmwrite_instruction:
-    strings.emit 'vmwrite_instruction | 24840'
+    ;strings.emit 'vmwrite_instruction | 24840'
     mov [extended_code],79h
     call take_register
     mov [postbyte_register],al
@@ -24847,7 +24871,7 @@ vmwrite_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je vmwrite_nomem
     cmp al,'['
     jne invalid_operand
@@ -24857,21 +24881,21 @@ vmwrite_instruction:
     ret
 
 vmwrite_nomem:
-    strings.emit 'vmwrite_nomem | 24859'
+    ;strings.emit 'vmwrite_nomem | 24859'
     lods u8 [esi]
     call convert_register
     mov bl,al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     jmp nomem_instruction_ready
     ret
 
 vmx_inv_instruction:
-    strings.emit 'vmx_inv_instruction | 24868'
+    ;strings.emit 'vmx_inv_instruction | 24868'
     call setup_66_0f_38
     call take_register
     mov [postbyte_register],al
     call vmread_check_size
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -24889,18 +24913,18 @@ vmx_inv_instruction:
     ret
 
 simple_svm_instruction:
-    strings.emit 'simple_svm_instruction | 24891'
+    ;strings.emit 'simple_svm_instruction | 24891'
     push _eax
-    mov [base_code],0Fh
-    mov [extended_code],1
+    mov [base_code],SHIFT
+    mov [extended_code],HEAD
     call take_register
     or al,al
     jnz invalid_operand
 
     simple_svm_detect_size:
-    cmp ah,2
+    cmp ah,TEXT
     je simple_svm_16bit
-    cmp ah,4
+    cmp ah,TAIL
     je simple_svm_32bit
     cmp [code_type],64
     jne invalid_operand_size
@@ -24908,7 +24932,7 @@ simple_svm_instruction:
     ret
 
 simple_svm_16bit:
-    strings.emit 'simple_svm_16bit | 24911'
+    ;strings.emit 'simple_svm_16bit | 24911'
     cmp [code_type],16
     je simple_svm_store
     cmp [code_type],64
@@ -24917,7 +24941,7 @@ simple_svm_16bit:
     ret
 
 simple_svm_32bit:
-    strings.emit 'simple_svm_32bit | 24919'
+    ;strings.emit 'simple_svm_32bit | 24919'
     cmp [code_type],32
     je simple_svm_store
     prefixed_svm_store:
@@ -24932,7 +24956,7 @@ simple_svm_32bit:
     ret
 
 skinit_instruction:
-    strings.emit 'skinit_instruction | 24934'
+    ;strings.emit 'skinit_instruction | 24934'
     call take_register
     cmp ax,0400h
     jne invalid_operand
@@ -24941,35 +24965,35 @@ skinit_instruction:
     ret
 
 clzero_instruction:
-    strings.emit 'clzero_instruction | 24943'
+    ;strings.emit 'clzero_instruction | 24943'
     call take_register
     or al,al
     jnz invalid_operand
     mov al,0FCh
     cmp [code_type],64
     je clzero_64bit
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand
     jmp simple_instruction_0f_01
     ret
 
 clzero_64bit:
-    strings.emit 'clzero_64bit | 24956'
-    cmp ah,8
+    ;strings.emit 'clzero_64bit | 24956'
+    cmp ah,RECTIFY
     jne invalid_operand
     jmp simple_instruction_0f_01
     ret
 
 invlpga_instruction:
-    strings.emit 'invlpga_instruction | 24963'
+    ;strings.emit 'invlpga_instruction | 24963'
     push _eax
-    mov [base_code],0Fh
-    mov [extended_code],1
+    mov [base_code],SHIFT
+    mov [extended_code],HEAD
     call take_register
     or al,al
     jnz invalid_operand
     mov bl,ah
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -24981,8 +25005,8 @@ invlpga_instruction:
     ret
 
 rdrand_instruction:
-    strings.emit 'rdrand_instruction | 24983'
-    mov [base_code],0Fh
+    ;strings.emit 'rdrand_instruction | 24983'
+    mov [base_code],SHIFT
     mov [extended_code],0C7h
     mov [postbyte_register],al
     call take_register
@@ -24993,27 +25017,27 @@ rdrand_instruction:
     ret
 
 rdfsbase_instruction:
-    strings.emit 'rdfsbase_instruction | 24995'
+    ;strings.emit 'rdfsbase_instruction | 24995'
     cmp [code_type],64
     jne illegal_instruction
     mov [opcode_prefix],0F3h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],0AEh
     mov [postbyte_register],al
     call take_register
     mov bl,al
     mov al,ah
-    cmp ah,2
+    cmp ah,TEXT
     je invalid_operand_size
     call operand_autodetect
     jmp nomem_instruction_ready
     ret
 
 xabort_instruction:
-    strings.emit 'xabort_instruction | 25012'
+    ;strings.emit 'xabort_instruction | 25012'
     lods u8 [esi]
     call get_size_operator
-    cmp ah,1
+    cmp ah,HEAD
     ja invalid_operand_size
     cmp al,'('
     jne invalid_operand
@@ -25027,7 +25051,7 @@ xabort_instruction:
     ret
 
 xbegin_instruction:
-    strings.emit 'xbegin_instruction | 25030'
+    ;strings.emit 'xbegin_instruction | 25030'
     lods u8 [esi]
     cmp al,'('
     jne invalid_operand
@@ -25039,10 +25063,10 @@ xbegin_instruction:
 
     xbegin_16bit:
     call get_address_word_value
-    add edi,4
+    add edi,TAIL
     mov ebp,[addressing_space]
     call calculate_relative_offset
-    sub edi,4
+    sub edi,TAIL
     shl eax,16
     mov ax,0F8C7h
     stos dword [edi]
@@ -25050,20 +25074,20 @@ xbegin_instruction:
     ret
 
 xbegin_32bit:
-    strings.emit 'xbegin_32bit | 25053'
+    ;strings.emit 'xbegin_32bit | 25053'
     call get_address_dword_value
     jmp xbegin_address_ok
     ret
 
 xbegin_64bit:
-    strings.emit 'xbegin_64bit | 25058'
+    ;strings.emit 'xbegin_64bit | 25058'
     call get_address_qword_value
 
     xbegin_address_ok:
-    add edi,5
+    add edi,QUERY
     mov ebp,[addressing_space]
     call calculate_relative_offset
-    sub edi,5
+    sub edi,QUERY
     mov edx,eax
     cwde
     cmp eax,edx
@@ -25078,8 +25102,8 @@ xbegin_64bit:
     ret
 
 xbegin_rel32:
-    strings.emit 'xbegin_rel32 | 25080'
-    sub edx,1
+    ;strings.emit 'xbegin_rel32 | 25080'
+    sub edx,HEAD
     jno xbegin_rel32_ok
     cmp [code_type],64
     je jump_out_of_range
@@ -25093,18 +25117,18 @@ xbegin_rel32:
     ret
 
 bndcl_instruction:
-    strings.emit 'bndcl_instruction | 25096'
+    ;strings.emit 'bndcl_instruction | 25096'
     mov ah,0F3h
     jmp bndc_instruction
     ret
 
 bndcu_instruction:
-    strings.emit 'bndcu_instruction | 25101'
+    ;strings.emit 'bndcu_instruction | 25101'
     mov ah,0F2h
 
     bndc_instruction:
     mov [opcode_prefix],ah
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_bnd_register
     mov [postbyte_register],al
@@ -25117,7 +25141,7 @@ bndcu_instruction:
     call get_size_operator
     cmp al,'['
     je bndc_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
@@ -25126,18 +25150,18 @@ bndcu_instruction:
     ret
 
 bndc_mem:
-    strings.emit 'bndc_mem | 25128'
+    ;strings.emit 'bndc_mem | 25128'
     call get_address_of_required_size
     jmp instruction_ready
     ret
 
 bndmov_instruction:
-    strings.emit 'bndmov_instruction | 25134'
+    ;strings.emit 'bndmov_instruction | 25134'
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     call get_bnd_size
-    shl al,1
+    shl al,HEAD
     mov [operand_size],al
     lods u8 [esi]
     cmp al,14h
@@ -25173,7 +25197,7 @@ bndmov_reg:
     ret
 
 bndmov_reg_reg:
-    strings.emit 'bndmov_reg_reg | 25175'
+    ;strings.emit 'bndmov_reg_reg | 25175'
     lods u8 [esi]
     call convert_bnd_register
     mov bl,al
@@ -25181,7 +25205,7 @@ bndmov_reg_reg:
     ret
 
 take_bnd_register:
-    strings.emit 'take_bnd_register | 25183'
+    ;strings.emit 'take_bnd_register | 25183'
     lods u8 [esi]
     cmp al,14h
     jne invalid_operand
@@ -25189,16 +25213,16 @@ take_bnd_register:
 
     convert_bnd_register:
     mov ah,al
-    shr ah,4
-    cmp ah,6
+    shr ah,TAIL
+    cmp ah,RESULT
     jne invalid_operand
     and al,1111b
     ret
 
 bndmk_instruction:
-    strings.emit 'bndmk_instruction | 25198'
+    ;strings.emit 'bndmk_instruction | 25198'
     mov [opcode_prefix],0F3h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_bnd_register
     mov [postbyte_register],al
@@ -25212,7 +25236,7 @@ bndmk_instruction:
     call get_bnd_size
     call get_address_prefixes
     call get_address_component
-    cmp u8 [esi-1],']'
+    cmp u8 [esi-HEAD],']'
     je bndmk_ready
     lods u8 [esi]
     cmp al,','
@@ -25246,26 +25270,26 @@ bndmk_instruction:
     bndmk_ready:
     or bx,bx
     jz instruction_ready
-    cmp [address_size_declared],0
-    jne instruction_ready
+    cmp [address_size_declared],NUL
+    jne  instruction_ready
     and ch,not 0Fh
     jmp instruction_ready
     ret
 
 get_bnd_size:
-    strings.emit 'get_bnd_size | 25255'
-    mov al,4
+    ;strings.emit 'get_bnd_size | 25255'
+    mov al,TAIL
     cmp [code_type],64
     jne bnd_size_ok
-    add al,4
+    add al,TAIL
 
     bnd_size_ok:
     mov [address_size],al
     ret
 
 get_address_component:
-    strings.emit 'get_address_component | 25266'
-    mov [free_address_range],0
+    ;strings.emit 'get_address_component | 25266'
+    mov [free_address_range],NUL
     call calculate_address
     mov [address_high],edx
     mov edx,eax
@@ -25274,14 +25298,14 @@ get_address_component:
     jz return_ok
     mov al,bl
     or al,bh
-    shr al,4
+    shr al,TAIL
     cmp al,[address_size]
     jne invalid_address
     ret
 
 bndldx_instruction:
-    strings.emit 'bndldx_instruction | 25282'
-    mov [base_code],0Fh
+    ;strings.emit 'bndldx_instruction | 25282'
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_bnd_register
     mov [postbyte_register],al
@@ -25293,8 +25317,8 @@ bndldx_instruction:
     ret
 
 bndstx_instruction:
-    strings.emit 'bndstx_instruction | 25295'
-    mov [base_code],0Fh
+    ;strings.emit 'bndstx_instruction | 25295'
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_bnd_mib
     lods u8 [esi]
@@ -25306,14 +25330,14 @@ bndstx_instruction:
     ret
 
 take_bnd_mib:
-    strings.emit 'take_bnd_mib | 25308'
+    ;strings.emit 'take_bnd_mib | 25308'
     lods u8 [esi]
     cmp al,'['
     jne invalid_operand
     call get_bnd_size
     call get_address_prefixes
     call get_address_component
-    cmp u8 [esi-1],']'
+    cmp u8 [esi-HEAD],']'
     ;je bnd_mib_ok
     je return_ok
     lods u8 [esi]
@@ -25339,7 +25363,7 @@ take_bnd_mib:
     jz mib_place_index
     or bh,bh
     jnz invalid_address
-    cmp cl,1
+    cmp cl,HEAD
     jne invalid_address
     mov bh,bl
 
@@ -25353,49 +25377,49 @@ take_bnd_mib:
     ret
 
 take_register:
-    strings.emit 'take_register | 25355'
+    ;strings.emit 'take_register | 25355'
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
 
     convert_register:
     mov ah,al
-    shr ah,4
-    and al,0Fh
-    cmp ah,8
+    shr ah,TAIL
+    and al,SHIFT
+    cmp ah,RECTIFY
     je match_register_size
-    cmp ah,4
+    cmp ah,TAIL
     ja invalid_operand
-    cmp ah,1
+    cmp ah,HEAD
     ja match_register_size
-    cmp al,4
+    cmp al,TAIL
     jb match_register_size
     or ah,ah
     jz high_byte_register
-    or [rex_prefix],40h
+    or [rex_prefix],AMP
 
     match_register_size:
     cmp ah,[operand_size]
     ;je register_size_ok
     je return_ok
-    cmp [operand_size],0
-    jne operand_sizes_do_not_match
+    cmp [operand_size],NUL
+    jne  operand_sizes_do_not_match
     mov [operand_size],ah
     ret
 
 high_byte_register:
-    strings.emit 'high_byte_register | 25388'
-    mov ah,1
-    or [rex_prefix],10h
+    ;strings.emit 'high_byte_register | 25388'
+    mov ah,HEAD
+    or [rex_prefix],DELINK
     jmp match_register_size
     ret
 
 convert_fpu_register:
-    strings.emit 'convert_fpu_register | 25395'
+    ;strings.emit 'convert_fpu_register | 25395'
     mov ah,al
-    shr ah,4
+    shr ah,TAIL
     and al,111b
     cmp ah,10
     jne invalid_operand
@@ -25403,24 +25427,24 @@ convert_fpu_register:
     ret
 
 convert_mmx_register:
-    strings.emit 'convert_mmx_register | 25405'
+    ;strings.emit 'convert_mmx_register | 25405'
     mov ah,al
-    shr ah,4
+    shr ah,TAIL
     cmp ah,0Ch
     je xmm_register
     ja invalid_operand
     and al,111b
     cmp ah,0Bh
     jne invalid_operand
-    mov ah,8
+    mov ah,RECTIFY
     jmp match_register_size
     ret
 
 xmm_register:
-    strings.emit 'xmm_register | 25419'
-    and al,0Fh
+    ;strings.emit 'xmm_register | 25419'
+    and al,SHIFT
     mov ah,16
-    cmp al,8
+    cmp al,RECTIFY
     jb match_register_size
     cmp [code_type],64
     jne invalid_operand
@@ -25428,43 +25452,43 @@ xmm_register:
     ret
 
 convert_xmm_register:
-    strings.emit 'convert_xmm_register | 25430'
+    ;strings.emit 'convert_xmm_register | 25430'
     mov ah,al
-    shr ah,4
+    shr ah,TAIL
     cmp ah,0Ch
     je xmm_register
     jmp invalid_operand
     ret
 
 get_size_operator:
-    strings.emit 'get_size_operator | 25439'
+    ;strings.emit 'get_size_operator | 25439'
     xor ah,ah
     cmp al,11h
     jne no_size_operator
-    mov [size_declared],1
+    mov [size_declared],HEAD
     lods u16 [esi]
     xchg al,ah
-    or [operand_flags],1
+    or [operand_flags],HEAD
     cmp ah,[operand_size]
     ;je size_operator_ok
     je return_ok
-    cmp [operand_size],0
-    jne operand_sizes_do_not_match
+    cmp [operand_size],NUL
+    jne  operand_sizes_do_not_match
     mov [operand_size],ah
     ret
 
 no_size_operator:
-    strings.emit 'no_size_operator | 25456'
-    mov [size_declared],0
-    cmp al,'['
+    ;strings.emit 'no_size_operator | 25456'
+    mov [size_declared],NUL
+    cmp  al,'['
     ;jne size_operator_ok
     jne return_ok
-    and [operand_flags],not 1
+    and [operand_flags],not HEAD
     ret
 
 get_jump_operator:
-    mov [jump_type],0
-    cmp al,12h
+    mov [jump_type],NUL
+    cmp  al,12h
     ;jne jump_operator_ok
     jne return_ok
     lods u16 [esi]
@@ -25473,18 +25497,18 @@ get_jump_operator:
     ret
 
 get_address:
-    strings.emit 'get_address | 25475'
-    and [address_size],0
+    ;strings.emit 'get_address | 25475'
+    and [address_size],NUL
 
     get_address_of_required_size:
     call get_address_prefixes
-    and [free_address_range],0
+    and [free_address_range],NUL
     call calculate_address
-    cmp u8 [esi-1],']'
+    cmp u8 [esi-HEAD],']'
     jne invalid_address
     mov [address_high],edx
     mov edx,eax
-    cmp [address_size_declared],0
+    cmp [address_size_declared],NUL
     ;jne address_ok
     jne return_ok
     or bx,bx
@@ -25517,11 +25541,11 @@ get_address:
     ret
 
 get_address_prefixes:
-    strings.emit 'get_address_prefixes | 25519'
-    and [segment_register],0
-    and [address_size_declared],0
+    ;strings.emit 'get_address_prefixes | 25519'
+    and [segment_register],NUL
+    and [address_size_declared],NUL
     mov al,[code_type]
-    shr al,3
+    shr al,TXT
     mov [value_size],al
     mov al,[esi]
     and al,11110000b
@@ -25539,19 +25563,19 @@ get_address_prefixes:
     jne return_ok
     lods u8 [esi]
     sub al,70h
-    cmp al,2
+    cmp al,TEXT
     jb invalid_address_size
-    cmp al,8
+    cmp al,RECTIFY
     ja invalid_address_size
     mov [value_size],al
-    or [address_size_declared],1
+    or [address_size_declared],HEAD
     or [address_size],al
     cmp al,[address_size]
     jne invalid_address_size
     ret
 
 operand_16bit:
-    strings.emit 'operand_16bit | 25553'
+    ;strings.emit 'operand_16bit | 25553'
     cmp [code_type],16
     ;je size_prefix_ok
     je return_ok
@@ -25559,7 +25583,7 @@ operand_16bit:
     ret
 
 operand_32bit:
-    strings.emit 'operand_32bit | 25561'
+    ;strings.emit 'operand_32bit | 25561'
     cmp [code_type],16
     ;jne size_prefix_ok
     jne return_ok
@@ -25567,35 +25591,35 @@ operand_32bit:
     ret
 
 operand_64bit:
-    strings.emit 'operand_64bit | 25569'
+    ;strings.emit 'operand_64bit | 25569'
     cmp [code_type],64
     jne illegal_instruction
     or [rex_prefix],48h
     ret
 
 operand_autodetect:
-    strings.emit 'operand_autodetect | 25575'
-    cmp al,2
+    ;strings.emit 'operand_autodetect | 25575'
+    cmp al,TEXT
     je operand_16bit
-    cmp al,4
+    cmp al,TAIL
     je operand_32bit
-    cmp al,8
+    cmp al,RECTIFY
     je operand_64bit
     jmp invalid_operand_size
     ret
 
 store_segment_prefix_if_necessary:
-    strings.emit 'store_segment_prefix_if_necessary | 25587'
+    ;strings.emit 'store_segment_prefix_if_necessary | 25587'
     mov al,[segment_register]
     or al,al
     ;jz segment_prefix_ok
     jz return_ok
-    cmp al,4
+    cmp al,TAIL
     ja segment_prefix_386
     cmp [code_type],64
     ;je segment_prefix_ok
     je return_ok
-    cmp al,3
+    cmp al,TXT
     je ss_prefix
     jb segment_prefix_86
     cmp bl,25h
@@ -25609,7 +25633,7 @@ store_segment_prefix_if_necessary:
     ret
 
 ss_prefix:
-    strings.emit 'ss_prefix | 25611'
+    ;strings.emit 'ss_prefix | 25611'
     cmp bl,25h
     ;je segment_prefix_ok
     je return_ok
@@ -25626,31 +25650,31 @@ ss_prefix:
     ret
 
 store_segment_prefix:
-    strings.emit 'store_segment_prefix | 25628'
+    ;strings.emit 'store_segment_prefix | 25628'
     mov al,[segment_register]
     or al,al
     ;jz segment_prefix_ok
     jz return_ok
-    cmp al,5
+    cmp al,QUERY
     jae segment_prefix_386
 
     segment_prefix_86:
     dec al
-    shl al,3
+    shl al,TXT
     add al,26h
     stos u8 [edi]
     ret
 
 segment_prefix_386:
-    strings.emit 'segment_prefix_386 | 25644'
+    ;strings.emit 'segment_prefix_386 | 25644'
     add al,64h-5
     stos u8 [edi]
     ret
 
 store_instruction_code:
-    strings.emit 'store_instruction_code | 25650'
-    cmp [vex_required],0
-    jne store_vex_instruction_code
+    ;strings.emit 'store_instruction_code | 25650'
+    cmp [vex_required],NUL
+    jne  store_vex_instruction_code
 
     store_classic_instruction_code:
     mov al,[operand_prefix]
@@ -25666,7 +25690,7 @@ store_instruction_code:
 
     opcode_prefix_ok:
     mov al,[rex_prefix]
-    test al,40h
+    test al,AMP
     jz rex_prefix_ok
     cmp [code_type],64
     jne invalid_operand
@@ -25677,7 +25701,7 @@ store_instruction_code:
     rex_prefix_ok:
     mov al,[base_code]
     stos u8 [edi]
-    cmp al,0Fh
+    cmp al,SHIFT
     ;jne instruction_code_ok
     jne return_ok
 
@@ -25691,16 +25715,16 @@ store_instruction_code:
     ret
 
 store_supplemental_code:
-    strings.emit 'store_supplemental_code | 25693'
+    ;strings.emit 'store_supplemental_code | 25693'
     mov al,[supplemental_code]
     stos u8 [edi]
     ret
 
 store_nomem_instruction:
-    strings.emit 'store_nomem_instruction | 25699'
+    ;strings.emit 'store_nomem_instruction | 25699'
     test [postbyte_register],10000b
     jz nomem_reg_high_code_ok
-    or [vex_required],10h
+    or [vex_required],DELINK
     and [postbyte_register],1111b
     nomem_reg_high_code_ok:
     test [postbyte_register],1000b
@@ -25712,7 +25736,7 @@ store_nomem_instruction:
     test bl,10000b
     jz nomem_rm_high_code_ok
     or [rex_prefix],42h
-    or [vex_required],8
+    or [vex_required],RECTIFY
     and bl,1111b
 
     nomem_rm_high_code_ok:
@@ -25722,22 +25746,22 @@ store_nomem_instruction:
     and bl,111b
 
     nomem_rm_code_ok:
-    and [displacement_compression],0
+    and [displacement_compression],NUL
     call store_instruction_code
     mov al,[postbyte_register]
-    shl al,3
+    shl al,TXT
     or al,bl
     or al,11000000b
     stos u8 [edi]
     ret
 
 store_instruction:
-    strings.emit 'store_instruction | 25734'
+    ;strings.emit 'store_instruction | 25734'
     mov u64[current_offset],_edi
-    and [displacement_compression],0
+    and [displacement_compression],NUL
     test [postbyte_register],10000b
     jz reg_high_code_ok
-    or [vex_required],10h
+    or [vex_required],DELINK
     and [postbyte_register],1111b
 
     reg_high_code_ok:
@@ -25753,8 +25777,8 @@ store_instruction:
     bt edx,31
     sbb eax,[address_high]
     jz address_value_ok
-    cmp [address_high],0
-    jne address_value_out_of_range
+    cmp [address_high],NUL
+    jne  address_value_out_of_range
     test ch,44h
     jnz address_value_ok
     test bx,8080h
@@ -25765,7 +25789,7 @@ store_instruction:
 
     address_value_ok:
     call store_segment_prefix_if_necessary
-    test [vex_required],4
+    test [vex_required],TAIL
     jnz address_vsib
     or bx,bx
     jz address_immediate
@@ -25780,14 +25804,14 @@ store_instruction:
     and al,11110000b
     cmp al,80h
     je postbyte_64bit
-    cmp al,40h
+    cmp al,AMP
     je postbyte_32bit
-    cmp al,20h
+    cmp al,SPACE
     jne invalid_address
     cmp [code_type],64
     je invalid_address_size
     call address_16bit_prefix
-    test ch,22h
+    test ch,SYN
     setz [displacement_compression]
     call store_instruction_code
     cmp bl,bh
@@ -25818,47 +25842,47 @@ store_instruction:
     ret
 
 address_bx_di:
-    strings.emit 'address_bx_di | 25820'
-    mov al,1
+    ;strings.emit 'address_bx_di | 25820'
+    mov al,HEAD
     jmp postbyte_16bit
     ret
 
 address_bp_si:
-    strings.emit 'address_bp_si | 25827'
+    ;strings.emit 'address_bp_si | 25827'
     mov al,10b
     jmp postbyte_16bit
     ret
 
 address_bp_di:
-    strings.emit 'address_bp_di | 25833'
+    ;strings.emit 'address_bp_di | 25833'
     mov al,11b
     jmp postbyte_16bit
     ret
 
 address_si:
-    strings.emit 'address_si | 25838'
+    ;strings.emit 'address_si | 25838'
     mov al,100b
     jmp postbyte_16bit
     ret
 
 address_di:
-    strings.emit 'address_di | 25844'
+    ;strings.emit 'address_di | 25844'
     mov al,101b
     jmp postbyte_16bit
     ret
 
 address_bx:
-    strings.emit 'address_bx | 25850'
+    ;strings.emit 'address_bx | 25850'
     mov al,111b
     jmp postbyte_16bit
     ret
 
 address_bp:
-    strings.emit 'address_bp | 25856'
+    ;strings.emit 'address_bp | 25856'
     mov al,110b
 
     postbyte_16bit:
-    test ch,22h
+    test ch,SYN
     jnz address_16bit_value
     or ch,ch
     jnz address_sizes_do_not_agree
@@ -25868,7 +25892,7 @@ address_bp:
     jl value_out_of_range
     or dx,dx
     jz address
-    cmp [displacement_compression],2
+    cmp [displacement_compression],TEXT
     ja address_8bit_value
     je address_16bit_value
     cmp dx,80h
@@ -25879,7 +25903,7 @@ address_bp:
     address_16bit_value:
     or al,10000000b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     mov eax,edx
@@ -25887,10 +25911,10 @@ address_bp:
     ret
 
 address_8bit_value:
-    strings.emit 'address_8bit_value | 25889'
+    ;strings.emit 'address_8bit_value | 25889'
     or al,01000000b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     mov al,dl
@@ -25898,35 +25922,35 @@ address_8bit_value:
     ret
 
 address:
-    strings.emit 'address | 25900'
+    ;strings.emit 'address | 25900'
     cmp al,110b
     je address_8bit_value
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     ret
 
 address_vsib:
-    strings.emit 'address_vsib | 25910'
+    ;strings.emit 'address_vsib | 25910'
     mov al,bl
-    shr al,4
-    test al,1
+    shr al,TAIL
+    test al,HEAD
     jz vsib_high_code_ok
     or [vex_register],10000b
-    or [vex_required],8
-    xor al,1
+    or [vex_required],RECTIFY
+    xor al,HEAD
 
     vsib_high_code_ok:
-    cmp al,6
+    cmp al,RESULT
     je vsib_index_ok
     cmp al,0Ch
     jb invalid_address
 
     vsib_index_ok:
     mov al,bh
-    shr al,4
-    cmp al,4
+    shr al,TAIL
+    cmp al,TAIL
     je postbyte_32bit
     cmp [code_type],64
     je address_prefix_ok
@@ -25939,7 +25963,7 @@ address_vsib:
     ret
 
 postbyte_64bit:
-    strings.emit 'postbyte_64bit | 25942'
+    ;strings.emit 'postbyte_64bit | 25942'
     cmp [code_type],64
     jne invalid_address_size
 
@@ -25967,31 +25991,31 @@ postbyte_64bit:
     base_and_index:
     mov al,100b
     xor ah,ah
-    cmp cl,1
+    cmp cl,HEAD
     je scale_ok
-    cmp cl,2
+    cmp cl,TEXT
     je scale_1
-    cmp cl,4
+    cmp cl,TAIL
     je scale_2
     or ah,11000000b
     jmp scale_ok
     ret
 
 scale_2:
-    strings.emit 'scale_2 | 25980'
+    ;strings.emit 'scale_2 | 25980'
     or ah,10000000b
     jmp scale_ok
     ret
 
 scale_1:
-    strings.emit 'scale_1 | 25986'
+    ;strings.emit 'scale_1 | 25986'
     or ah,01000000b
 
     scale_ok:
     or bh,bh
     jz only_index_register
     and bl,111b
-    shl bl,3
+    shl bl,TXT
     or ah,bl
     and bh,111b
     or ah,bh
@@ -26001,13 +26025,13 @@ scale_1:
     jnz sib_address_32bit_value
     or ch,ch
     jnz address_sizes_do_not_agree
-    cmp bh,5
+    cmp bh,QUERY
     je address_value
     or edx,edx
     jz sib_address
 
     address_value:
-    cmp [displacement_compression],2
+    cmp [displacement_compression],TEXT
     ja sib_address_8bit_value
     je sib_address_32bit_value
     cmp edx,80h
@@ -26018,17 +26042,17 @@ scale_1:
     sib_address_32bit_value:
     or al,10000000b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u16 [edi]
     jmp store_address_32bit_value
     ret
 
 sib_address_8bit_value:
-    strings.emit 'sib_address_8bit_value | 26027'
+    ;strings.emit 'sib_address_8bit_value | 26027'
     or al,01000000b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u16 [edi]
     mov al,dl
@@ -26036,45 +26060,45 @@ sib_address_8bit_value:
     ret
 
 sib_address:
-    strings.emit 'sib_address | 26038'
+    ;strings.emit 'sib_address | 26038'
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u16 [edi]
     ret
 
 only_index_register:
-    strings.emit 'only_index_register | 26046'
+    ;strings.emit 'only_index_register | 26046'
     or ah,101b
     and bl,111b
-    shl bl,3
+    shl bl,TXT
     or ah,bl
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u16 [edi]
     test ch,44h or 88h
     jnz store_address_32bit_value
     or ch,ch
     jnz invalid_address_size
-    cmp [displacement_compression],2
+    cmp [displacement_compression],TEXT
     jbe store_address_32bit_value
     mov edx,[uncompressed_displacement]
     jmp store_address_32bit_value
     ret
 
 zero_index_register:
-    strings.emit 'zero_index_register | 26066'
-    mov bl,4
-    mov cl,1
+    ;strings.emit 'zero_index_register | 26066'
+    mov bl,TAIL
+    mov cl,HEAD
     jmp base_and_index
     ret
 
 only_base_register:
-    strings.emit 'zonly_base_register | 26073'
+    ;strings.emit 'zonly_base_register | 26073'
     mov al,bh
     and al,111b
-    cmp al,4
+    cmp al,TAIL
     je zero_index_register
     test ch,44h or 88h
     jnz simple_address_32bit_value
@@ -26082,7 +26106,7 @@ only_base_register:
     jnz address_sizes_do_not_agree
     or edx,edx
     jz simple_address
-    cmp [displacement_compression],2
+    cmp [displacement_compression],TEXT
     ja simple_address_8bit_value
     je simple_address_32bit_value
     cmp edx,80h
@@ -26093,17 +26117,17 @@ only_base_register:
     simple_address_32bit_value:
     or al,10000000b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     jmp store_address_32bit_value
     ret
 
 simple_address_8bit_value:
-    strings.emit 'simple_address_8bit_value | 26102'
+    ;strings.emit 'simple_address_8bit_value | 26102'
     or al,01000000b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     mov al,dl
@@ -26111,22 +26135,22 @@ simple_address_8bit_value:
     ret
 
 simple_address:
-    strings.emit 'simple_address | 26113'
-    cmp al,5
+    ;strings.emit 'simple_address | 26113'
+    cmp al,QUERY
     je simple_address_8bit_value
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     ret
 
 address_immediate:
-    strings.emit 'address_immediate | 26123'
+    ;strings.emit 'address_immediate | 26123'
     cmp [code_type],64
     je address_immediate_sib
     test ch,44h or 88h
     jnz address_immediate_32bit
-    test ch,22h
+    test ch,SYN
     jnz address_immediate_16bit
     or ch,ch
     jnz invalid_address_size
@@ -26140,7 +26164,7 @@ address_immediate:
     store_immediate_address:
     mov al,101b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
 
@@ -26149,9 +26173,9 @@ address_immediate:
     jz address_32bit_relocation_ok
     mov eax,ecx
     shr eax,16
-    cmp al,4
+    cmp al,TAIL
     jne address_32bit_relocation
-    mov al,2
+    mov al,TEXT
 
     address_32bit_relocation:
     xchg [value_type],al
@@ -26167,7 +26191,7 @@ address_immediate:
     ret
 
 store_address_64bit_value:
-    strings.emit 'store_address_64bit_value | 26169'
+    ;strings.emit 'store_address_64bit_value | 26169'
     test ch,0F0h
     jz address_64bit_relocation_ok
     mov eax,ecx
@@ -26187,14 +26211,14 @@ store_address_64bit_value:
     ret
 
 address_immediate_sib:
-    strings.emit 'address_immediate_sib | 26189'
+    ;strings.emit 'address_immediate_sib | 26189'
     test ch,44h
     jnz address_immediate_sib_32bit
     test ch,not 88h
     jnz invalid_address_size
     test edx,80000000h
     jz address_immediate_sib_store
-    cmp [address_high],0
+    cmp [address_high],NUL
     je address_immediate_sib_nosignextend
 
     address_immediate_sib_store:
@@ -26202,14 +26226,14 @@ address_immediate_sib:
     mov al,100b
     mov ah,100101b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u16 [edi]
     jmp store_address_32bit_value
     ret
 
 address_immediate_sib_32bit:
-    strings.emit 'address_immediate_sib_32bit | 26211'
+    ;strings.emit 'address_immediate_sib_32bit | 26211'
     test ecx,0FF0000h
     jnz address_immediate_sib_nosignextend
     test edx,80000000h
@@ -26221,7 +26245,7 @@ address_immediate_sib_32bit:
     ret
 
 address_eip_based:
-    strings.emit 'address_eip_based | 26223'
+    ;strings.emit 'address_eip_based | 26223'
     mov al,67h
     stos u8 [edi]
 
@@ -26233,12 +26257,12 @@ address_eip_based:
     ret
 
 address_relative:
-    strings.emit 'address_relative | 26235'
+    ;strings.emit 'address_relative | 26235'
     call store_instruction_code
     movzx eax,[immediate_size]
     add eax,edi
     sub _eax,u64[current_offset]
-    add eax,5
+    add eax,QUERY
     sub edx,eax
     jno     @f
     call recoverable_overflow
@@ -26246,7 +26270,7 @@ address_relative:
     @@:
     mov al,101b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     shr ecx,16
@@ -26261,7 +26285,7 @@ address_relative:
     ret
 
 addressing_16bit:
-    strings.emit 'addressing_16bit | 26263'
+    ;strings.emit 'addressing_16bit | 26263'
     cmp edx,10000h
     jge address_immediate_32bit
     cmp edx,-8000h
@@ -26273,7 +26297,7 @@ addressing_16bit:
     call store_instruction_code
     mov al,110b
     mov cl,[postbyte_register]
-    shl cl,3
+    shl cl,TXT
     or al,cl
     stos u8 [edi]
     mov eax,edx
@@ -26285,7 +26309,7 @@ addressing_16bit:
     ret
 
 address_16bit_prefix:
-    strings.emit 'address_16bit_prefix | 26287'
+    ;strings.emit 'address_16bit_prefix | 26287'
     cmp [code_type],16
     ;je instruction_prefix_ok
     je return_ok
@@ -26294,7 +26318,7 @@ address_16bit_prefix:
     ret
 
 address_32bit_prefix:
-    strings.emit 'address_32bit_prefix | 26296'
+    ;strings.emit 'address_32bit_prefix | 26296'
     cmp [code_type],32
     ;je instruction_prefix_ok
     je return_ok
@@ -26303,16 +26327,16 @@ address_32bit_prefix:
     ret
 
 store_instruction_with_imm8:
-    strings.emit 'store_instruction_with_imm8 | 26305'
-    mov [immediate_size],1
+    ;strings.emit 'store_instruction_with_imm8 | 26305'
+    mov [immediate_size],HEAD
     call store_instruction
     mov al, u8 [value]
     stos u8 [edi]
     ret
 
 store_instruction_with_imm16:
-    strings.emit 'store_instruction_with_imm16 | 26313'
-    mov [immediate_size],2
+    ;strings.emit 'store_instruction_with_imm16 | 26313'
+    mov [immediate_size],TEXT
     call store_instruction
     mov ax, u16 [value]
     call mark_relocation
@@ -26320,8 +26344,8 @@ store_instruction_with_imm16:
     ret
 
 store_instruction_with_imm32:
-    strings.emit 'store_instruction_with_imm32 | 26322'
-    mov [immediate_size],4
+    ;strings.emit 'store_instruction_with_imm32 | 26322'
+    mov [immediate_size],TAIL
     call store_instruction
     mov eax,dword [value]
     call mark_relocation
@@ -26329,33 +26353,33 @@ store_instruction_with_imm32:
     ret
 
 avx_single_source_pd_instruction_er_evex:
-    strings.emit 'avx_single_source_pd_instruction_er_evex | 26331'
+    ;strings.emit 'avx_single_source_pd_instruction_er_evex | 26331'
     or [vex_required],8
 
     avx_single_source_pd_instruction_er:
-    or [operand_flags],2+4+8
+    or [operand_flags],2+TAIL+RECTIFY
     jmp avx_pd_instruction
     ret
 
 avx_single_source_pd_instruction_sae_evex:
-    strings.emit 'avx_single_source_pd_instruction_sae_evex | 26340'
-    or [vex_required],8
-    or [operand_flags],2+4
+    ;strings.emit 'avx_single_source_pd_instruction_sae_evex | 26340'
+    or [vex_required],RECTIFY
+    or [operand_flags],2+TAIL
     jmp avx_pd_instruction
     ret
 
 avx_pd_instruction_imm8:
-    strings.emit 'avx_pd_instruction_imm8 | 26347'
-    mov [immediate_size],1
+    ;strings.emit 'avx_pd_instruction_imm8 | 26347'
+    mov [immediate_size],HEAD
     jmp avx_pd_instruction
     ret
 
 avx_pd_instruction_er:
-    strings.emit 'avx_pd_instruction_er | 26353'
+    ;strings.emit 'avx_pd_instruction_er | 26353'
     or [operand_flags],8
 
     avx_pd_instruction_sae:
-    or [operand_flags],4
+    or [operand_flags],TAIL
 
     avx_pd_instruction:
     mov [opcode_prefix],66h
@@ -26365,60 +26389,59 @@ avx_pd_instruction_er:
     ret
 
 avx_pd_instruction_38_evex:
-    strings.emit 'avx_pd_instruction_38_evex | 26367'
-    or [vex_required],8
+    ;strings.emit 'avx_pd_instruction_38_evex | 26367'
+    or [vex_required],RECTIFY
     mov [supplemental_code],al
     mov al,38h
     jmp avx_pd_instruction
     ret
 
 avx_cvtps2dq_instruction:
-    strings.emit 'avx_cvtps2dq_instruction | 26375'
+    ;strings.emit 'avx_cvtps2dq_instruction | 26375'
     mov [opcode_prefix],66h
     jmp avx_single_source_ps_instruction_er
     ret
 
 avx_cvtudq2ps_instruction:
-    strings.emit 'avx_cvtudq2ps_instruction | 26381'
+    ;strings.emit 'avx_cvtudq2ps_instruction | 26381'
     mov [opcode_prefix],0F2h
 
     avx_single_source_ps_instruction_er_evex:
     or [vex_required],8
 
     avx_single_source_ps_instruction_er:
-    or [operand_flags],2+4+8
+    or [operand_flags],2+TAIL+RECTIFY
     jmp avx_ps_instruction
     ret
 
 avx_single_source_ps_instruction_noevex:
-    strings.emit 'avx_single_source_ps_instruction_noevex | 26393'
-    or [operand_flags],2
-    or [vex_required],2
+    ;strings.emit 'avx_single_source_ps_instruction_noevex | 26393'
+    or [operand_flags],TEXT
+    or [vex_required],TEXT
     jmp avx_ps_instruction
     ret
 
 avx_ps_instruction_imm8:
-    strings.emit 'avx_ps_instruction_imm8 | 26400'
-    mov [immediate_size],1
+    ;strings.emit 'avx_ps_instruction_imm8 | 26400'
+    mov [immediate_size],HEAD
     jmp avx_ps_instruction
     ret
 
 avx_ps_instruction_er:
-    strings.emit 'avx_ps_instruction_er | 26406'
+    ;strings.emit 'avx_ps_instruction_er | 26406'
     or [operand_flags],8
 
     avx_ps_instruction_sae:
-    or [operand_flags],4
-
+    or [operand_flags],TAIL
 avx_ps_instruction:
-    strings.emit 'avx_ps_instruction | 26413'
+    ;strings.emit 'avx_ps_instruction | 26413'
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
 avx_ps_instruction_66_38_evex:
-    strings.emit 'avx_ps_instruction_66_38_evex | 26419'
-    or [vex_required],8
+    ;strings.emit 'avx_ps_instruction_66_38_evex | 26419'
+    or [vex_required],RECTIFY
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,38h
@@ -26426,41 +26449,41 @@ avx_ps_instruction_66_38_evex:
     ret
 
 avx_sd_instruction_er:
-    strings.emit 'avx_sd_instruction_er | 26428'
+    ;strings.emit 'avx_sd_instruction_er | 26428'
     or [operand_flags],8
 
     avx_sd_instruction_sae:
-    or [operand_flags],4
+    or [operand_flags],TAIL
 
     avx_sd_instruction:
     mov [opcode_prefix],0F2h
     or [rex_prefix],80h
-    mov cl,8
+    mov cl,RECTIFY
     jmp avx_instruction
     ret
 
 avx_ss_instruction_er:
-    strings.emit 'avx_ss_instruction_er | 26442'
+    ;strings.emit 'avx_ss_instruction_er | 26442'
     or [operand_flags],8
 
     avx_ss_instruction_sae:
-    or [operand_flags],4
+    or [operand_flags],TAIL
 
     avx_ss_instruction:
     mov [opcode_prefix],0F3h
-    mov cl,4
+    mov cl,TAIL
     jmp avx_instruction
     ret
 
 avx_ss_instruction_noevex:
-    strings.emit 'avx_ss_instruction_noevex | 26455'
-    or [vex_required],2
+    ;strings.emit 'avx_ss_instruction_noevex | 26455'
+    or [vex_required],TEXT
     jmp avx_ss_instruction
     ret
 
 avx_single_source_q_instruction_38_evex:
-    strings.emit 'avx_single_source_q_instruction_38_evex | 26461'
-    or [operand_flags],2
+    ;strings.emit 'avx_single_source_q_instruction_38_evex | 26461'
+    or [operand_flags],TEXT
 
     avx_q_instruction_38_evex:
     or [vex_required],8
@@ -26472,18 +26495,18 @@ avx_single_source_q_instruction_38_evex:
     ret
 
 avx_q_instruction_38_w1_evex:
-    strings.emit 'avx_q_instruction_38_w1_evex | 26474'
+    ;strings.emit 'avx_q_instruction_38_w1_evex | 26474'
     or [vex_required],8
 
     avx_q_instruction_38_w1:
-    or [rex_prefix],8
+    or [rex_prefix],RECTIFY
     jmp avx_q_instruction_38
     ret
 
 avx_q_instruction_3a_imm8_evex:
-    strings.emit 'avx_q_instruction_3a_imm8_evex | 26483'
-    mov [immediate_size],1
-    or [vex_required],8
+    ;strings.emit 'avx_q_instruction_3a_imm8_evex | 26483'
+    mov [immediate_size],HEAD
+    or [vex_required],RECTIFY
     mov [supplemental_code],al
     mov al,3Ah
     jmp avx_q_instruction
@@ -26494,21 +26517,21 @@ avx_q_instruction_evex:
 
     avx_q_instruction:
     or [rex_prefix],80h
-    mov ch,8
+    mov ch,RECTIFY
     jmp avx_pi_instruction
     ret
 
 avx_single_source_d_instruction_38_evex:
-    strings.emit 'avx_single_source_d_instruction_38_evex | 26501'
+    ;strings.emit 'avx_single_source_d_instruction_38_evex | 26501'
     or [vex_required],8
 
     avx_single_source_d_instruction_38:
-    or [operand_flags],2
+    or [operand_flags],TEXT
     jmp avx_d_instruction_38
     ret
 
 avx_d_instruction_38_evex:
-    strings.emit 'avx_d_instruction_38_evex | 26510'
+    ;strings.emit 'avx_d_instruction_38_evex | 26510'
     or [vex_required],8
 
     avx_d_instruction_38:
@@ -26518,33 +26541,33 @@ avx_d_instruction_38_evex:
     ret
 
 avx_d_instruction_3a_imm8_evex:
-    strings.emit 'avx_d_instruction_3a_imm8_evex | 26520'
-    mov [immediate_size],1
-    or [vex_required],8
+    ;strings.emit 'avx_d_instruction_3a_imm8_evex | 26520'
+    mov [immediate_size],HEAD
+    or [vex_required],RECTIFY
     mov [supplemental_code],al
     mov al,3Ah
     jmp avx_d_instruction
     ret
 
 avx_single_source_d_instruction_imm8:
-    strings.emit 'avx_single_source_d_instruction_imm8 | 26529'
-    or [operand_flags],2
-    mov [immediate_size],1
+    ;strings.emit 'avx_single_source_d_instruction_imm8 | 26529'
+    or [operand_flags],TEXT
+    mov [immediate_size],HEAD
     jmp avx_d_instruction
     ret
 
 avx_d_instruction_evex:
-    strings.emit 'avx_d_instruction_evex | 26536'
+    ;strings.emit 'avx_d_instruction_evex | 26536'
     or [vex_required],8
 
     avx_d_instruction:
-    mov ch,4
+    mov ch,TAIL
     jmp avx_pi_instruction
     ret
 
 avx_single_source_bw_instruction_38:
-    strings.emit 'avx_single_source_bw_instruction_38 | 26545'
-    or [operand_flags],2
+    ;strings.emit 'avx_single_source_bw_instruction_38 | 26545'
+    or [operand_flags],TEXT
 
     avx_bw_instruction_38:
     mov [supplemental_code],al
@@ -26560,45 +26583,45 @@ avx_single_source_bw_instruction_38:
     ret
 
 avx_bw_instruction_38_w1_evex:
-    strings.emit 'avx_bw_instruction_38_w1_evex | 26562'
+    ;strings.emit 'avx_bw_instruction_38_w1_evex | 26562'
     or [rex_prefix],8
 
     avx_bw_instruction_38_evex:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     jmp avx_bw_instruction_38
     ret
 
 avx_pd_instruction_noevex:
-    strings.emit 'avx_pd_instruction_noevex | 26571'
+    ;strings.emit 'avx_pd_instruction_noevex | 26571'
     xor cl,cl
-    or [vex_required],2
+    or [vex_required],TEXT
     mov [opcode_prefix],66h
     jmp avx_instruction
     ret
 
 avx_ps_instruction_noevex:
-    strings.emit 'avx_ps_instruction_noevex | 26579'
-    or [vex_required],2
+    ;strings.emit 'avx_ps_instruction_noevex | 26579'
+    or [vex_required],TEXT
     mov [opcode_prefix],0F2h
     xor cl,cl
     jmp avx_instruction
     ret
 
 avx_instruction:
-    strings.emit 'avx_instruction | 26587'
+    ;strings.emit 'avx_instruction | 26587'
     xor ch,ch
 
     avx_instruction_with_broadcast:
     mov [mmx_size],cl
     mov [broadcast_size],ch
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
 
     avx_xop_common:
-    or [vex_required],1
+    or [vex_required],HEAD
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
 
     avx_reg:
@@ -26608,7 +26631,7 @@ avx_instruction:
     call take_avx512_mask
 
     avx_vex_reg:
-    test [operand_flags],2
+    test [operand_flags],TEXT
     jnz avx_vex_reg_ok
     lods u8 [esi]
     cmp al,','
@@ -26638,16 +26661,16 @@ avx_instruction:
     call take_avx_rm
     jc avx_regs_reg
     mov al,[immediate_size]
-    cmp al,1
+    cmp al,HEAD
     je mmx_imm8
     jb instruction_ready
-    cmp al,-4
+    cmp al,-TAIL
     je sse_cmp_mem_ok
     cmp u8 [esi],','
     jne invalid_operand
     inc esi
     call take_avx_register
-    shl al,4
+    shl al,TAIL
     jc invalid_operand
     or u8 [value],al
     test al,80h
@@ -26662,20 +26685,20 @@ avx_instruction:
     ret
 
 avx_regs_reg:
-    strings.emit 'avx_regs_reg | 26664'
+    ;strings.emit 'avx_regs_reg | 26664'
     mov bl,al
     call take_avx512_rounding
     mov al,[immediate_size]
-    cmp al,1
+    cmp al,HEAD
     je mmx_nomem_imm8
     jb nomem_instruction_ready
-    cmp al,-4
+    cmp al,-TAIL
     je sse_cmp_nomem_ok
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     mov al,bl
-    shl al,4
+    shl al,TAIL
     jc invalid_operand
     or u8 [value],al
     test al,80h
@@ -26686,16 +26709,16 @@ avx_regs_reg:
     avx_regs_reg_:
     call take_avx_rm
     jc avx_regs_reg_reg
-    cmp [immediate_size],-2
+    cmp [immediate_size],-TEXT
     jg invalid_operand
-    or [rex_prefix],8
+    or [rex_prefix],RECTIFY
     call take_imm4_if_needed
     call store_instruction_with_imm8
     jmp instruction_assembled
     ret
 
 avx_regs_reg_reg:
-    shl al,4
+    shl al,TAIL
     jc invalid_operand
     and u8 [value],1111b
     or u8 [value],al
@@ -26707,14 +26730,14 @@ avx_regs_reg_reg:
     ret
 
 take_avx_rm:
-    strings.emit 'take_avx_rm | 26709'
+    ;strings.emit 'take_avx_rm | 26709'
     xor cl,cl
     xchg cl,[operand_size]
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
     je take_avx_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     mov [operand_size],cl
     lods u8 [esi]
@@ -26735,7 +26758,7 @@ take_avx_rm:
     ret
 
 take_avx_mem:
-    strings.emit 'take_avx_mem | 26737'
+    ;strings.emit 'take_avx_mem | 26737'
     push _ecx
     call get_address
     cmp u8 [esi],'{'
@@ -26745,8 +26768,8 @@ take_avx_mem:
     cmp al,1Fh
     jne invalid_operand
     mov al,[esi]
-    shr al,4
-    cmp al,1
+    shr al,TAIL
+    cmp al,HEAD
     jne invalid_operand
     mov al,[mmx_size]
     or al,al
@@ -26768,7 +26791,7 @@ take_avx_mem:
     ret
 
 avx_mem_broadcast_check:
-    strings.emit 'avx_mem_broadcast_check | 26770'
+    ;strings.emit 'avx_mem_broadcast_check | 26770'
     bsf eax,eax
     xchg al,[broadcast_size]
     mov [mmx_size],al
@@ -26782,7 +26805,7 @@ avx_mem_broadcast_check:
     jne invalid_operand_size
 
     avx_mem_broadcast_ok:
-    or [vex_required],40h
+    or [vex_required],AMP
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
@@ -26792,8 +26815,8 @@ avx_mem_broadcast_check:
     or al,al
     jz avx_mem_size_deciding
     xchg al,[operand_size]
-    cmp [mmx_size],0
-    jne avx_mem_size_enforced
+    cmp [mmx_size],NUL
+    jne  avx_mem_size_enforced
     or al,al
     ;jz avx_mem_size_ok
     jz drop_then_return
@@ -26806,10 +26829,10 @@ avx_mem_broadcast_check:
     ;ret
 
 avx_mem_size_deciding:
-    strings.emit 'avx_mem_size_deciding | 26808'
+    ;strings.emit 'avx_mem_size_deciding | 26808'
     mov al,[operand_size]
-    cmp [mmx_size],0
-    jne avx_mem_size_enforced
+    cmp [mmx_size],NUL
+    jne  avx_mem_size_enforced
     cmp al,16
     ;je avx_mem_size_ok
     je drop_then_return
@@ -26834,7 +26857,7 @@ avx_mem_size_deciding:
     ret
 
 take_imm4_if_needed:
-    strings.emit 'take_imm4_if_needed | 26836'
+    ;strings.emit 'take_imm4_if_needed | 26836'
     cmp [immediate_size],-3
     ;jne imm4_ok
     jne return_ok
@@ -26853,11 +26876,11 @@ take_imm4_if_needed:
     ret
 
 take_avx512_mask:
-    strings.emit 'take_avx512_mask | 26856'
+    ;strings.emit 'take_avx512_mask | 26856'
     cmp u8 [esi],'{'
     ;jne avx512_masking_ok
     jne near_ok
-    test [operand_flags],10h
+    test [operand_flags],DELINK
     jnz invalid_operand
     inc esi
     lods u8 [esi]
@@ -26865,21 +26888,21 @@ take_avx512_mask:
     jne invalid_operand
     lods u8 [esi]
     mov ah,al
-    shr ah,4
-    cmp ah,5
+    shr ah,TAIL
+    cmp ah,QUERY
     jne invalid_operand
     or al,al
     jz invalid_operand
     and al,111b
     mov [mask_register],al
-    or [vex_required],20h
+    or [vex_required],SPACE
     lods u8 [esi]
     cmp al,'}'
     jne invalid_operand
     cmp u8 [esi],'{'
     ;jne avx512_masking_ok
     jne near_ok
-    test [operand_flags],20h
+    test [operand_flags],SPACE
     jnz invalid_operand
     inc esi
     lods u8 [esi]
@@ -26895,12 +26918,12 @@ take_avx512_mask:
     retn
 
 take_avx512_rounding:
-    strings.emit 'take_avx512_rounding | 26897'
-    test [operand_flags],4+8
+    ;strings.emit 'take_avx512_rounding | 26897'
+    test [operand_flags],TAIL+RECTIFY
     ;jz avx512_rounding_done
     jz near_ok
-    cmp [mmx_size],0
-    jne avx512_rounding_allowed
+    cmp [mmx_size],NUL
+    jne  avx512_rounding_allowed
     cmp [operand_size],64
     ;jne avx512_rounding_done
     jne near_ok
@@ -26909,21 +26932,21 @@ take_avx512_rounding:
     cmp u8 [esi],','
     ;jne avx512_rounding_done
     jne near_ok
-    cmp u8 [esi+1],'{'
+    cmp u8 [esi+HEAD],'{'
     ;jne avx512_rounding_done
     jne near_ok
     add esi, 2
-    mov [rounding_mode],0
-    or [vex_required],40h+80h
-    test [operand_flags],8
+    mov [rounding_mode],NUL
+    or [vex_required],AMP+80h
+    test [operand_flags],RECTIFY
     jz take_sae
     lods u8 [esi]
     cmp al,1Fh
     jne invalid_operand
     lods u8 [esi]
     mov ah,al
-    shr ah,4
-    cmp ah,2
+    shr ah,TAIL
+    cmp ah,TEXT
     jne invalid_operand
     and al,11b
     mov [rounding_mode],al
@@ -26936,7 +26959,7 @@ take_avx512_rounding:
     cmp al,1Fh
     jne invalid_operand
     lods u8 [esi]
-    cmp al,30h
+    cmp al,'0'
     jne invalid_operand
     lods u8 [esi]
     cmp al,'}'
@@ -26944,23 +26967,23 @@ take_avx512_rounding:
     retn
 
 avx_movdqu_instruction:
-    strings.emit 'avx_movdqu_instruction | 26946'
+    ;strings.emit 'avx_movdqu_instruction | 26946'
     mov ah,0F3h
     jmp avx_movdq_instruction
     ret
 
 avx_movdqa_instruction:
-    strings.emit 'avx_movdqa_instruction | 26952'
+    ;strings.emit 'avx_movdqa_instruction | 26952'
     mov ah,66h
 
     avx_movdq_instruction:
     mov [opcode_prefix],ah
-    or [vex_required],2
+    or [vex_required],TEXT
     jmp avx_movps_instruction
     ret
 
 avx512_movdqu16_instruction:
-    strings.emit 'avx512_movdqu16_instruction | 26963'
+    ;strings.emit 'avx512_movdqu16_instruction | 26963'
     or [rex_prefix],8
 
     avx512_movdqu8_instruction:
@@ -26969,7 +26992,7 @@ avx512_movdqu16_instruction:
     ret
 
 avx512_movdqu64_instruction:
-    strings.emit 'avx512_movdqu64_instruction | 26970'
+    ;strings.emit 'avx512_movdqu64_instruction | 26970'
     or [rex_prefix],8
 
     avx512_movdqu32_instruction:
@@ -26978,7 +27001,7 @@ avx512_movdqu64_instruction:
     ret
 
 avx512_movdqa64_instruction:
-    strings.emit 'avx512_movdqa64_instruction | 26980'
+    ;strings.emit 'avx512_movdqa64_instruction | 26980'
     or [rex_prefix],8
 
     avx512_movdqa32_instruction:
@@ -26986,29 +27009,29 @@ avx512_movdqa64_instruction:
 
     avx_movdq_instruction_evex:
     mov [opcode_prefix],ah
-    or [vex_required],8
+    or [vex_required],RECTIFY
     jmp avx_movps_instruction
     ret
 
 avx_movpd_instruction:
-    strings.emit 'avx_movpd_instruction | 26993'
+    ;strings.emit 'avx_movpd_instruction | 26993'
     mov [opcode_prefix],66h
     or [rex_prefix],80h
 
     avx_movps_instruction:
-    or [operand_flags],2
-    mov [base_code],0Fh
+    or [operand_flags],TEXT
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     xor al,al
     mov [mmx_size],al
     mov [broadcast_size],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_reg
     inc [extended_code]
-    test [extended_code],1
+    test [extended_code],HEAD
     jnz avx_mem
     add [extended_code],-1+10h
 
@@ -27016,7 +27039,7 @@ avx_movpd_instruction:
     cmp al,'['
     jne invalid_operand
     call get_address
-    or [operand_flags],20h
+    or [operand_flags],SPACE
     call take_avx512_mask
     lods u8 [esi]
     cmp al,','
@@ -27027,34 +27050,34 @@ avx_movpd_instruction:
     ret
 
 avx_movntpd_instruction:
-    strings.emit 'avx_movntpd_instruction | 27029'
+    ;strings.emit 'avx_movntpd_instruction | 27029'
     or [rex_prefix],80h
 
     avx_movntdq_instruction:
     mov [opcode_prefix],66h
 
     avx_movntps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
-    or [operand_flags],10h
-    mov [mmx_size],0
+    or [vex_required],HEAD
+    or [operand_flags],DELINK
+    mov [mmx_size],NUL
     lods u8 [esi]
     call get_size_operator
     jmp avx_mem
     ret
 
 avx_compress_q_instruction:
-    strings.emit 'avx_compress_q_instruction | 27047'
+    ;strings.emit 'avx_compress_q_instruction | 27047'
     or [rex_prefix],8
 
     avx_compress_d_instruction:
-    or [vex_required],8
-    mov [mmx_size],0
+    or [vex_required],RECTIFY
+    mov [mmx_size],NUL
     call setup_66_0f_38
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne avx_mem
     lods u8 [esi]
     call convert_avx_register
@@ -27069,16 +27092,16 @@ avx_compress_q_instruction:
     ret
 
 avx_lddqu_instruction:
-    strings.emit 'avx_lddqu_instruction | 27071'
+    ;strings.emit 'avx_lddqu_instruction | 27071'
     mov ah,0F2h
-    or [vex_required],2
+    or [vex_required],TEXT
 
     avx_load_instruction:
     mov [opcode_prefix],ah
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    mov [mmx_size],0
-    or [vex_required],1
+    mov [mmx_size],NUL
+    or [vex_required],HEAD
     call take_avx_register
     mov [postbyte_register],al
     lods u8 [esi]
@@ -27093,7 +27116,7 @@ avx_lddqu_instruction:
     ret
 
 avx_movntdqa_instruction:
-    strings.emit 'avx_movntdqa_instruction | 27095'
+    ;strings.emit 'avx_movntdqa_instruction | 27095'
     mov [supplemental_code],al
     mov al,38h
     mov ah,66h
@@ -27101,24 +27124,24 @@ avx_movntdqa_instruction:
     ret
 
 avx_movq_instruction:
-    strings.emit 'avx_movq_instruction | 27104'
-    or [rex_prefix],8
-    mov [mmx_size],8
+    ;strings.emit 'avx_movq_instruction | 27104'
+    or [rex_prefix],RECTIFY
+    mov [mmx_size],RECTIFY
     jmp avx_mov_instruction
     ret
 
 avx_movd_instruction:
-    strings.emit 'avx_movd_instruction | 27110'
-    mov [mmx_size],4
+    ;strings.emit 'avx_movd_instruction | 27110'
+    mov [mmx_size],TAIL
 
     avx_mov_instruction:
-    or [vex_required],1
+    or [vex_required],HEAD
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],7Eh
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_movd_reg
     cmp al,'['
     jne invalid_operand
@@ -27132,37 +27155,37 @@ avx_movd_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
     cmp ah,16
     jne invalid_operand_size
     mov [postbyte_register],al
-    cmp [mmx_size],8
+    cmp [mmx_size],RECTIFY
     jne instruction_ready
-    and [rex_prefix],not 8
+    and [rex_prefix],not RECTIFY
     or [rex_prefix],80h
     mov [extended_code],0D6h
     jmp instruction_ready
     ret
 
 avx_movd_reg:
-    strings.emit 'avx_movd_reg | 27150'
+    ;strings.emit 'avx_movd_reg | 27150'
     lods u8 [esi]
     cmp al,0C0h
     jae avx_movd_xmmreg
     call convert_register
     cmp ah,[mmx_size]
     jne invalid_operand_size
-    mov [operand_size],0
+    mov [operand_size],NUL
     mov bl,al
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
@@ -27171,7 +27194,7 @@ avx_movd_reg:
     mov [postbyte_register],al
 
     avx_movd_reg_ready:
-    test [rex_prefix],8
+    test [rex_prefix],RECTIFY
     jz nomem_instruction_ready
     cmp [code_type],64
     jne illegal_instruction
@@ -27179,25 +27202,25 @@ avx_movd_reg:
     ret
 
 avx_movd_xmmreg:
-    strings.emit 'avx_movd_xmmreg | 27181'
-    sub [extended_code],10h
+    ;strings.emit 'avx_movd_xmmreg | 27181'
+    sub [extended_code],DELINK
     call convert_avx_register
     cmp ah,16
     jne invalid_operand_size
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_movd_xmmreg_reg
     cmp al,'['
     jne invalid_operand
     call get_address
     mov al,[mmx_size]
-    cmp al,8
+    cmp al,RECTIFY
     jne avx_movd_xmmreg_mem_ready
     call avx_movq_xmmreg_xmmreg_opcode
 
@@ -27209,7 +27232,7 @@ avx_movd_xmmreg:
     ret
 
 avx_movd_xmmreg_reg:
-    strings.emit 'avx_movd_xmmreg_reg | 27211'
+    ;strings.emit 'avx_movd_xmmreg_reg | 27211'
     lods u8 [esi]
     cmp al,0C0h
     jae avx_movq_xmmreg_xmmreg
@@ -27221,8 +27244,8 @@ avx_movd_xmmreg_reg:
     ret
 
 avx_movq_xmmreg_xmmreg:
-    strings.emit 'avx_movq_xmmreg_xmmreg | 27224'
-    cmp [mmx_size],8
+    ;strings.emit 'avx_movq_xmmreg_xmmreg | 27224'
+    cmp [mmx_size],RECTIFY
     jne invalid_operand
     call avx_movq_xmmreg_xmmreg_opcode
     call convert_avx_register
@@ -27233,18 +27256,18 @@ avx_movq_xmmreg_xmmreg:
     ret
 
 avx_movq_xmmreg_xmmreg_opcode:
-    strings.emit 'avx_movq_xmmreg_xmmreg_opcode | 27236'
-    and [rex_prefix],not 8
+    ;strings.emit 'avx_movq_xmmreg_xmmreg_opcode | 27236'
+    and [rex_prefix],not RECTIFY
     or [rex_prefix],80h
-    add [extended_code],10h
+    add [extended_code],DELINK
     mov [opcode_prefix],0F3h
     ret
 
 avx_movddup_instruction:
-    strings.emit 'avx_movddup_instruction | 27243'
-    or [vex_required],1
+    ;strings.emit 'avx_movddup_instruction | 27243'
+    or [vex_required],HEAD
     mov [opcode_prefix],0F2h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     or [rex_prefix],80h
     xor al,al
@@ -27252,7 +27275,7 @@ avx_movddup_instruction:
     mov [broadcast_size],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
@@ -27267,19 +27290,19 @@ avx_movddup_instruction:
     ret
 
 avx_movlpd_instruction:
-    strings.emit 'avx_movlpd_instruction | 27269'
+    ;strings.emit 'avx_movlpd_instruction | 27269'
     mov [opcode_prefix],66h
     or [rex_prefix],80h
 
     avx_movlps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    mov [mmx_size],8
-    mov [broadcast_size],0
-    or [vex_required],1
+    mov [mmx_size],RECTIFY
+    mov [broadcast_size],NUL
+    or [vex_required],HEAD
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne avx_movlps_mem
     lods u8 [esi]
     call convert_avx_register
@@ -27291,7 +27314,7 @@ avx_movlpd_instruction:
     mov [vex_register],al
     cmp [operand_size],16
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -27301,7 +27324,7 @@ avx_movlpd_instruction:
     ret
 
 avx_movlps_mem:
-    strings.emit 'avx_movlps_mem | 27304'
+    ;strings.emit 'avx_movlps_mem | 27304'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -27312,7 +27335,7 @@ avx_movlps_mem:
     jz avx_movlps_mem_size_ok
     cmp al,[mmx_size]
     jne invalid_operand_size
-    mov [operand_size],0
+    mov [operand_size],NUL
 
     avx_movlps_mem_size_ok:
     lods u8 [esi]
@@ -27327,10 +27350,10 @@ avx_movlps_mem:
     ret
 
 avx_movhlps_instruction:
-    strings.emit 'avx_movhlps_instruction | 27330'
-    mov [base_code],0Fh
+    ;strings.emit 'avx_movhlps_instruction | 27330'
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     call take_avx_register
     cmp ah,16
     jne invalid_operand
@@ -27349,27 +27372,27 @@ avx_movhlps_instruction:
     ret
 
 avx_movsd_instruction:
-    strings.emit 'avx_movsd_instruction | 27352'
+    ;strings.emit 'avx_movsd_instruction | 27352'
     mov al,0F2h
-    mov cl,8
+    mov cl,RECTIFY
     or [rex_prefix],80h
     jmp avx_movs_instruction
     ret
 
 avx_movss_instruction:
-    strings.emit 'avx_movss_instruction | 27360'
+    ;strings.emit 'avx_movss_instruction | 27360'
     mov al,0F3h
-    mov cl,4
+    mov cl,TAIL
 
     avx_movs_instruction:
     mov [opcode_prefix],al
     mov [mmx_size],cl
-    or [vex_required],1
-    mov [base_code],0Fh
-    mov [extended_code],10h
+    or [vex_required],HEAD
+    mov [base_code],SHIFT
+    mov [extended_code],DELINK
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne avx_movs_mem
     lods u8 [esi]
     call convert_avx_register
@@ -27384,7 +27407,7 @@ avx_movss_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne avx_movs_reg_mem
     mov [operand_size],cl
     lods u8 [esi]
@@ -27395,7 +27418,7 @@ avx_movss_instruction:
     jne invalid_operand
     call take_avx_register
     mov bl,al
-    cmp bl,8
+    cmp bl,RECTIFY
     jb nomem_instruction_ready
     inc [extended_code]
     xchg bl,[postbyte_register]
@@ -27403,7 +27426,7 @@ avx_movss_instruction:
     ret
 
 avx_movs_reg_mem:
-    strings.emit 'avx_movs_reg_mem | 27405'
+    ;strings.emit 'avx_movs_reg_mem | 27405'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -27418,61 +27441,61 @@ avx_movs_reg_mem:
     ret
 
 avx_movs_mem:
-    strings.emit 'avx_movs_mem | 27420'
+    ;strings.emit 'avx_movs_mem | 27420'
     cmp al,'['
     jne invalid_operand
     call get_address
-    or [operand_flags],20h
+    or [operand_flags],SPACE
     call take_avx512_mask
     jmp avx_movlps_mem_
     ret
 
 avx_comiss_instruction:
-    strings.emit 'avx_comiss_instruction | 27430'
-    or [operand_flags],2+4+10h
-    mov cl,4
+    ;strings.emit 'avx_comiss_instruction | 27430'
+    or [operand_flags],2+TAIL+10h
+    mov cl,TAIL
     jmp avx_instruction
     ret
 
 avx_comisd_instruction:
-    strings.emit 'avx_comisd_instruction | 27437'
-    or [operand_flags],2+4+10h
+    ;strings.emit 'avx_comisd_instruction | 27437'
+    or [operand_flags],2+TAIL+10h
     mov [opcode_prefix],66h
     or [rex_prefix],80h
-    mov cl,8
+    mov cl,RECTIFY
     jmp avx_instruction
     ret
 
 avx_movshdup_instruction:
-    or [operand_flags],2
+    or [operand_flags],TEXT
     mov [opcode_prefix],0F3h
     xor cl,cl
     jmp avx_instruction
     ret
 
 avx_cvtqq2pd_instruction:
-    strings.emit 'avx_cvtqq2pd_instruction | 27454'
+    ;strings.emit 'avx_cvtqq2pd_instruction | 27454'
     mov [opcode_prefix],0F3h
-    or [vex_required],8
-    or [operand_flags],2+4+8
-    or [rex_prefix],8
+    or [vex_required],RECTIFY
+    or [operand_flags],2+TAIL+RECTIFY
+    or [rex_prefix],RECTIFY
     mov cx,0800h
     jmp avx_instruction_with_broadcast
     ret
 
 avx_pshuf_w_instruction:
-    strings.emit 'avx_pshuf_w_instruction | 27463'
+    ;strings.emit 'avx_pshuf_w_instruction | 27463'
     mov [opcode_prefix],al
-    or [operand_flags],2
-    mov [immediate_size],1
+    or [operand_flags],TEXT
+    mov [immediate_size],HEAD
     mov al,70h
     xor cl,cl
     jmp avx_instruction
     ret
 
 avx_single_source_128bit_instruction_38_noevex:
-    strings.emit 'avx_single_source_128bit_instruction_38_noevex | 27473'
-    or [operand_flags],2
+    ;strings.emit 'avx_single_source_128bit_instruction_38_noevex | 27473'
+    or [operand_flags],TEXT
 
     avx_128bit_instruction_38_noevex:
     mov cl,16
@@ -27480,16 +27503,16 @@ avx_single_source_128bit_instruction_38_noevex:
     ret
 
 avx_single_source_instruction_38_noevex:
-    strings.emit 'avx_single_source_instruction_38_noevex | 27482'
-    or [operand_flags],2
+    ;strings.emit 'avx_single_source_instruction_38_noevex | 27482'
+    or [operand_flags],TEXT
     jmp avx_pi_instruction_38_noevex
     ret
 
 avx_pi_instruction_38_noevex:
-    strings.emit 'avx_pi_instruction_38_noevex | 27488'
+    ;strings.emit 'avx_pi_instruction_38_noevex | 27488'
     xor cl,cl
     avx_instruction_38_noevex:
-    or [vex_required],2
+    or [vex_required],TEXT
 
     avx_instruction_38:
     mov [opcode_prefix],66h
@@ -27499,20 +27522,20 @@ avx_pi_instruction_38_noevex:
     ret
 
 avx_ss_instruction_3a_imm8_noevex:
-    strings.emit 'avx_ss_instruction_3a_imm8_noevex | 27501'
-    mov cl,4
+    ;strings.emit 'avx_ss_instruction_3a_imm8_noevex | 27501'
+    mov cl,TAIL
     jmp avx_instruction_3a_imm8_noevex
     ret
 
 avx_sd_instruction_3a_imm8_noevex:
-    strings.emit 'avx_sd_instruction_3a_imm8_noevex | 27508'
-    mov cl,8
+    ;strings.emit 'avx_sd_instruction_3a_imm8_noevex | 27508'
+    mov cl,RECTIFY
     jmp avx_instruction_3a_imm8_noevex
     ret
 
 avx_single_source_128bit_instruction_3a_imm8_noevex:
-    strings.emit 'avx_single_source_128bit_instruction_3a_imm8_noevex | 27513'
-    or [operand_flags],2
+    ;strings.emit 'avx_single_source_128bit_instruction_3a_imm8_noevex | 27513'
+    or [operand_flags],TEXT
 
     avx_128bit_instruction_3a_imm8_noevex:
     mov cl,16
@@ -27520,25 +27543,25 @@ avx_single_source_128bit_instruction_3a_imm8_noevex:
     ret
 
 avx_triple_source_instruction_3a_noevex:
-    strings.emit 'avx_triple_source_instruction_3a_noevex | 27523'
+    ;strings.emit 'avx_triple_source_instruction_3a_noevex | 27523'
     xor cl,cl
-    mov [immediate_size],-1
-    mov u8 [value],0
+    mov [immediate_size],-HEAD
+    mov u8 [value],NUL
     jmp avx_instruction_3a_noevex
     ret
 
 avx_single_source_instruction_3a_imm8_noevex:
-    strings.emit 'avx_single_source_instruction_3a_imm8_noevex | 27530'
-    or [operand_flags],2
+    ;strings.emit 'avx_single_source_instruction_3a_imm8_noevex | 27530'
+    or [operand_flags],TEXT
 
     avx_pi_instruction_3a_imm8_noevex:
     xor cl,cl
 
     avx_instruction_3a_imm8_noevex:
-    mov [immediate_size],1
+    mov [immediate_size],HEAD
 
     avx_instruction_3a_noevex:
-    or [vex_required],2
+    or [vex_required],TEXT
 
     avx_instruction_3a:
     mov [opcode_prefix],66h
@@ -27548,35 +27571,35 @@ avx_single_source_instruction_3a_imm8_noevex:
     ret
 
 avx_pi_instruction_3a_imm8:
-    strings.emit 'avx_pi_instruction_3a_imm8 | 27550'
+    ;strings.emit 'avx_pi_instruction_3a_imm8 | 27550'
     xor cl,cl
-    mov [immediate_size],1
+    mov [immediate_size],HEAD
     jmp avx_instruction_3a
     ret
 
 avx_pclmulqdq_instruction:
-    strings.emit 'avx_pclmulqdq_instruction | 27558'
+    ;strings.emit 'avx_pclmulqdq_instruction | 27558'
     mov u8 [value],al
-    mov [immediate_size],-4
-    or [vex_required],2
+    mov [immediate_size],-TAIL
+    or [vex_required],TEXT
     mov cl,16
     mov al,44h
     jmp avx_instruction_3a
     ret
 
 avx512_single_source_pd_instruction_sae_imm8:
-    strings.emit 'avx512_single_source_pd_instruction_sae_imm8 | 27568'
-    or [operand_flags],2
+    ;strings.emit 'avx512_single_source_pd_instruction_sae_imm8 | 27568'
+    or [operand_flags],TEXT
 
     avx512_pd_instruction_sae_imm8:
-    or [rex_prefix],8
+    or [rex_prefix],RECTIFY
     mov cx,0800h
     jmp avx512_instruction_sae_imm8
     ret
 
 avx512_single_source_ps_instruction_sae_imm8:
-    strings.emit 'avx512_single_source_ps_instruction_sae_imm8 | 27577'
-    or [operand_flags],2
+    ;strings.emit 'avx512_single_source_ps_instruction_sae_imm8 | 27577'
+    or [operand_flags],TEXT
 
     avx512_ps_instruction_sae_imm8:
     mov cx,0400h
@@ -27584,59 +27607,59 @@ avx512_single_source_ps_instruction_sae_imm8:
     ret
 
 avx512_sd_instruction_sae_imm8:
-    strings.emit 'avx512_sd_instruction_sae_imm8 | 27586'
-    or [rex_prefix],8
+    ;strings.emit 'avx512_sd_instruction_sae_imm8 | 27586'
+    or [rex_prefix],RECTIFY
     mov cx,0008h
     jmp avx512_instruction_sae_imm8
     ret
 
 avx512_ss_instruction_sae_imm8:
-    strings.emit 'avx512_ss_instruction_sae_imm8 | 27593'
+    ;strings.emit 'avx512_ss_instruction_sae_imm8 | 27593'
     mov cx,0004h
 
     avx512_instruction_sae_imm8:
-    or [operand_flags],4
+    or [operand_flags],TAIL
 
     avx512_instruction_imm8:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov [opcode_prefix],66h
-    mov [immediate_size],1
+    mov [immediate_size],HEAD
     mov [supplemental_code],al
     mov al,3Ah
     jmp avx_instruction_with_broadcast
     ret
 
 avx512_pd_instruction_er:
-    strings.emit 'avx512_pd_instruction_er | 27610'
-    or [operand_flags],4+8
+    ;strings.emit 'avx512_pd_instruction_er | 27610'
+    or [operand_flags],TAIL+RECTIFY
     jmp avx512_pd_instruction
     ret
 
 avx512_single_source_pd_instruction_sae:
-    strings.emit 'avx512_single_source_pd_instruction_sae | 27615'
-    or [operand_flags],4
+    ;strings.emit 'avx512_single_source_pd_instruction_sae | 27615'
+    or [operand_flags],TAIL
 
     avx512_single_source_pd_instruction:
-    or [operand_flags],2
+    or [operand_flags],TEXT
 
     avx512_pd_instruction:
-    or [rex_prefix],8
+    or [rex_prefix],RECTIFY
     mov cx,0800h
     jmp avx512_instruction
     ret
 
 avx512_ps_instruction_er:
-    strings.emit 'avx512_ps_instruction_er | 27628'
-    or [operand_flags],4+8
+    ;strings.emit 'avx512_ps_instruction_er | 27628'
+    or [operand_flags],TAIL+RECTIFY
     jmp avx512_ps_instruction
     ret
 
 avx512_single_source_ps_instruction_sae:
-    strings.emit 'avx512_single_source_ps_instruction_sae | 27635'
-    or [operand_flags],4
+    ;strings.emit 'avx512_single_source_ps_instruction_sae | 27635'
+    or [operand_flags],TAIL
 
     avx512_single_source_ps_instruction:
-    or [operand_flags],2
+    or [operand_flags],TEXT
 
     avx512_ps_instruction:
     mov cx,0400h
@@ -27644,11 +27667,11 @@ avx512_single_source_ps_instruction_sae:
     ret
 
 avx512_sd_instruction_er:
-    strings.emit 'avx512_sd_instruction_er | 27646'
+    ;strings.emit 'avx512_sd_instruction_er | 27646'
     or [operand_flags],8
 
     avx512_sd_instruction_sae:
-    or [operand_flags],4
+    or [operand_flags],TAIL
 
     avx512_sd_instruction:
     or [rex_prefix],8
@@ -27658,17 +27681,17 @@ avx512_sd_instruction_er:
     ret
 
 avx512_ss_instruction_er:
-    strings.emit 'avx512_ss_instruction_er | 27660'
+    ;strings.emit 'avx512_ss_instruction_er | 27660'
     or [operand_flags],8
 
     avx512_ss_instruction_sae:
-    or [operand_flags],4
+    or [operand_flags],TAIL
 
     avx512_ss_instruction:
     mov cx,0004h
 
     avx512_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,38h
@@ -27676,46 +27699,46 @@ avx512_ss_instruction_er:
     ret
 
 avx512_exp2pd_instruction:
-    strings.emit 'avx512_exp2pd_instruction | 27678'
-    or [rex_prefix],8
-    or [operand_flags],2+4
+    ;strings.emit 'avx512_exp2pd_instruction | 27678'
+    or [rex_prefix],RECTIFY
+    or [operand_flags],2+TAIL
     mov cx,0840h
     jmp avx512_instruction
     ret
 
 avx512_exp2ps_instruction:
-    strings.emit 'avx512_exp2ps_instruction | 27687'
-    or [operand_flags],2+4
+    ;strings.emit 'avx512_exp2ps_instruction | 27687'
+    or [operand_flags],2+TAIL
     mov cx,0440h
     jmp avx512_instruction
     ret
 
 fma_instruction_pd:
-    strings.emit 'fma_instruction_pd | 27693'
-    or [rex_prefix],8
+    ;strings.emit 'fma_instruction_pd | 27693'
+    or [rex_prefix],RECTIFY
     mov cx,0800h
     jmp fma_instruction
     ret
 
 fma_instruction_ps:
-    strings.emit 'fma_instruction_ps | 27701'
+    ;strings.emit 'fma_instruction_ps | 27701'
     mov cx,0400h
     jmp fma_instruction
     ret
 
 fma_instruction_sd:
-    strings.emit 'fma_instruction_sd | 27707'
-    or [rex_prefix],8
+    ;strings.emit 'fma_instruction_sd | 27707'
+    or [rex_prefix],RECTIFY
     mov cx,0008h
     jmp fma_instruction
     ret
 
 fma_instruction_ss:
-    strings.emit 'fma_instruction_ss | 27713'
+    ;strings.emit 'fma_instruction_ss | 27713'
     mov cx,0004h
 
     fma_instruction:
-    or [operand_flags],4+8
+    or [operand_flags],TAIL+RECTIFY
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,38h
@@ -27723,29 +27746,29 @@ fma_instruction_ss:
     ret
 
 fma4_instruction_p:
-    strings.emit 'fma4_instruction_p | 27725'
+    ;strings.emit 'fma4_instruction_p | 27725'
     xor cl,cl
     jmp fma4_instruction
     ret
 
 fma4_instruction_sd:
-    strings.emit 'fma4_instruction_sd | 27731'
-    mov cl,8
+    ;strings.emit 'fma4_instruction_sd | 27731'
+    mov cl,RECTIFY
     jmp fma4_instruction
     ret
 
 fma4_instruction_ss:
-    strings.emit 'fma4_instruction_ss | 27737'
-    mov cl,4
+    ;strings.emit 'fma4_instruction_ss | 27737'
+    mov cl,TAIL
 
     fma4_instruction:
-    mov [immediate_size],-2
-    mov u8 [value],0
+    mov [immediate_size],-TEXT
+    mov u8 [value],NUL
     jmp avx_instruction_3a_noevex
     ret
 
 avx_cmp_pd_instruction:
-    strings.emit 'avx_cmp_pd_instruction | 27747'
+    ;strings.emit 'avx_cmp_pd_instruction | 27747'
     mov [opcode_prefix],66h
     or [rex_prefix],80h
     mov cx,0800h
@@ -27753,13 +27776,13 @@ avx_cmp_pd_instruction:
     ret
 
 avx_cmp_ps_instruction:
-    strings.emit 'avx_cmp_ps_instruction | 27755'
+    ;strings.emit 'avx_cmp_ps_instruction | 27755'
     mov cx,0400h
     jmp avx_cmp_instruction
     ret
 
 avx_cmp_sd_instruction:
-    strings.emit 'avx_cmp_sd_instruction | 27761'
+    ;strings.emit 'avx_cmp_sd_instruction | 27761'
     mov [opcode_prefix],0F2h
     or [rex_prefix],80h
     mov cx,0008h
@@ -27767,71 +27790,71 @@ avx_cmp_sd_instruction:
     ret
 
 avx_cmp_ss_instruction:
-    strings.emit 'avx_cmp_ss_instruction | 27769'
+    ;strings.emit 'avx_cmp_ss_instruction | 27769'
     mov [opcode_prefix],0F3h
     mov cx,0004h
 
     avx_cmp_instruction:
     mov u8 [value],al
-    mov [immediate_size],-4
-    or [operand_flags],4+20h
+    mov [immediate_size],-TAIL
+    or [operand_flags],TAIL+20h
     mov al,0C2h
     jmp avx_cmp_common
     ret
 
 avx_cmpeqq_instruction:
-    strings.emit 'avx_cmpeqq_instruction | 27782'
+    ;strings.emit 'avx_cmpeqq_instruction | 27782'
     or [rex_prefix],80h
-    mov ch,8
+    mov ch,RECTIFY
     mov [supplemental_code],al
     mov al,38h
     jmp avx_cmp_pi_instruction
     ret
 
 avx_cmpeqd_instruction:
-    strings.emit 'avx_cmpeqd_instruction | 27791'
-    mov ch,4
+    ;strings.emit 'avx_cmpeqd_instruction | 27791'
+    mov ch,TAIL
     jmp avx_cmp_pi_instruction
     ret
 
 avx_cmpeqb_instruction:
-    strings.emit 'avx_cmpeqb_instruction | 27797'
+    ;strings.emit 'avx_cmpeqb_instruction | 27797'
     xor ch,ch
     jmp avx_cmp_pi_instruction
     ret
 
 avx512_cmp_uq_instruction:
-    strings.emit 'avx512_cmp_uq_instruction | 27803'
-    or [rex_prefix],8
-    mov ch,8
+    ;strings.emit 'avx512_cmp_uq_instruction | 27803'
+    or [rex_prefix],RECTIFY
+    mov ch,RECTIFY
     mov ah,1Eh
     jmp avx_cmp_pi_instruction_evex
     ret
 
 avx512_cmp_ud_instruction:
-    strings.emit 'avx512_cmp_ud_instruction | 27811'
-    mov ch,4
+    ;strings.emit 'avx512_cmp_ud_instruction | 27811'
+    mov ch,TAIL
     mov ah,1Eh
     jmp avx_cmp_pi_instruction_evex
     ret
 
 avx512_cmp_q_instruction:
-    strings.emit 'avx512_cmp_q_instruction | 27818'
-    or [rex_prefix],8
-    mov ch,8
+    ;strings.emit 'avx512_cmp_q_instruction | 27818'
+    or [rex_prefix],RECTIFY
+    mov ch,RECTIFY
     mov ah,1Fh
     jmp avx_cmp_pi_instruction_evex
     ret
 
 avx512_cmp_d_instruction:
-    strings.emit 'avx512_cmp_d_instruction | 27826'
-    mov ch,4
+    ;strings.emit 'avx512_cmp_d_instruction | 27826'
+    mov ch,TAIL
     mov ah,1Fh
     jmp avx_cmp_pi_instruction_evex
     ret
 
 avx512_cmp_uw_instruction:
-    strings.emit 'avx512_cmp_uw_instruction | 27833'
+    ;strings.emit 'avx512_cmp_uw_instruction | 27833'
     or [rex_prefix],8
 
     avx512_cmp_ub_instruction:
@@ -27841,7 +27864,7 @@ avx512_cmp_uw_instruction:
     ret
 
 avx512_cmp_w_instruction:
-    strings.emit 'avx512_cmp_w_instruction | 27843'
+    ;strings.emit 'avx512_cmp_w_instruction | 27843'
     or [rex_prefix],8
 
     avx512_cmp_b_instruction:
@@ -27850,35 +27873,35 @@ avx512_cmp_w_instruction:
 
     avx_cmp_pi_instruction_evex:
     mov u8 [value],al
-    mov [immediate_size],-4
+    mov [immediate_size],-TAIL
     mov [supplemental_code],ah
     mov al,3Ah
     or [vex_required],8
 
     avx_cmp_pi_instruction:
     xor cl,cl
-    or [operand_flags],20h
+    or [operand_flags],SPACE
     mov [opcode_prefix],66h
     avx_cmp_common:
     mov [mmx_size],cl
     mov [broadcast_size],ch
     mov [extended_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     lods u8 [esi]
     call get_size_operator
     cmp al,14h
     je avx_maskreg
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
-    or [vex_required],2
+    or [vex_required],TEXT
     jmp avx_reg
     ret
 
 avx_maskreg:
-    strings.emit 'avx_maskreg | 27877'
-    cmp [operand_size],0
-    jne invalid_operand_size
-    or [vex_required],8
+    ;strings.emit 'avx_maskreg | 27877'
+    cmp [operand_size],NUL
+    jne  invalid_operand_size
+    or [vex_required],RECTIFY
     lods u8 [esi]
     call convert_mask_register
     mov [postbyte_register],al
@@ -27887,35 +27910,35 @@ avx_maskreg:
     ret
 
 avx512_fpclasspd_instruction:
-    strings.emit 'avx512_fpclasspd_instruction | 27889'
-    or [rex_prefix],8
+    ;strings.emit 'avx512_fpclasspd_instruction | 27889'
+    or [rex_prefix],RECTIFY
     mov cx,0800h
     jmp avx_fpclass_instruction
     ret
 
 avx512_fpclassps_instruction:
-    strings.emit 'avx512_fpclassps_instruction | 27896'
+    ;strings.emit 'avx512_fpclassps_instruction | 27896'
     mov cx,0400h
     jmp avx_fpclass_instruction
     ret
 
 avx512_fpclasssd_instruction:
-    strings.emit 'avx512_fpclasssd_instruction | 27903'
-    or [rex_prefix],8
+    ;strings.emit 'avx512_fpclasssd_instruction | 27903'
+    or [rex_prefix],RECTIFY
     mov cx,0008h
     jmp avx_fpclass_instruction
     ret
 
 avx512_fpclassss_instruction:
-    strings.emit 'avx512_fpclassss_instruction | 27910'
+    ;strings.emit 'avx512_fpclassss_instruction | 27910'
     mov cx,0004h
 
     avx_fpclass_instruction:
     mov [broadcast_size],ch
     mov [mmx_size],cl
-    or [operand_flags],2
+    or [operand_flags],TEXT
     call setup_66_0f_3a
-    mov [immediate_size],1
+    mov [immediate_size],HEAD
     lods u8 [esi]
     cmp al,14h
     je avx_maskreg
@@ -27923,20 +27946,20 @@ avx512_fpclassss_instruction:
     ret
 
 avx512_ptestnmd_instruction:
-    strings.emit 'avx512_ptestnmd_instruction | 27925'
-    mov ch,4
+    ;strings.emit 'avx512_ptestnmd_instruction | 27925'
+    mov ch,TAIL
     jmp avx512_ptestnm_instruction
     ret
 
 avx512_ptestnmq_instruction:
-    strings.emit 'avx512_ptestnmq_instruction | 27931'
-    or [rex_prefix],8
-    mov ch,8
+    ;strings.emit 'avx512_ptestnmq_instruction | 27931'
+    or [rex_prefix],RECTIFY
+    mov ch,RECTIFY
     jmp avx512_ptestnm_instruction
     ret
 
 avx512_ptestnmw_instruction:
-    strings.emit 'avx512_ptestnmw_instruction | 27938'
+    ;strings.emit 'avx512_ptestnmw_instruction | 27938'
     or [rex_prefix],8
 
     avx512_ptestnmb_instruction:
@@ -27948,20 +27971,20 @@ avx512_ptestnmw_instruction:
     ret
 
 avx512_ptestmd_instruction:
-    strings.emit 'avx512_ptestmd_instruction | 27950'
-    mov ch,4
+    ;strings.emit 'avx512_ptestmd_instruction | 27950'
+    mov ch,TAIL
     jmp avx512_ptestm_instruction
     ret
 
 avx512_ptestmq_instruction:
-    strings.emit 'avx512_ptestmq_instruction | 27956'
-    or [rex_prefix],8
-    mov ch,8
+    ;strings.emit 'avx512_ptestmq_instruction | 27956'
+    or [rex_prefix],RECTIFY
+    mov ch,RECTIFY
     jmp avx512_ptestm_instruction
     ret
 
 avx512_ptestmw_instruction:
-    strings.emit 'avx512_ptestmw_instruction | 27963'
+    ;strings.emit 'avx512_ptestmw_instruction | 27963'
     or [rex_prefix],8
 
     avx512_ptestmb_instruction:
@@ -27975,17 +27998,17 @@ avx512_ptestmw_instruction:
     mov [opcode_prefix],ah
     mov [supplemental_code],al
     mov al,38h
-    or [vex_required],8
+    or [vex_required],RECTIFY
     jmp avx_cmp_common
     ret
 
 mask_shift_instruction_q:
-    strings.emit 'mask_shift_instruction_q | 27982'
+    ;strings.emit 'mask_shift_instruction_q | 27982'
     or [rex_prefix],8
 
     mask_shift_instruction_d:
-    or [operand_flags],2
-    or [immediate_size],1
+    or [operand_flags],TEXT
+    or [immediate_size],HEAD
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,3Ah
@@ -27993,31 +28016,31 @@ mask_shift_instruction_q:
     ret
 
 mask_instruction_single_source_b:
-    strings.emit 'mask_instruction_single_source_b | 27995'
+    ;strings.emit 'mask_instruction_single_source_b | 27995'
     mov [opcode_prefix],66h
     jmp mask_instruction_single_source_w
     ret
 
 mask_instruction_single_source_d:
-    strings.emit 'mask_instruction_single_source_d | 28001'
+    ;strings.emit 'mask_instruction_single_source_d | 28001'
     mov [opcode_prefix],66h
 
     mask_instruction_single_source_q:
     or [rex_prefix],8
 
     mask_instruction_single_source_w:
-    or [operand_flags],2
+    or [operand_flags],TEXT
     jmp mask_instruction
     ret
 
 mask_instruction_b:
-    strings.emit 'mask_instruction_b | 28013'
+    ;strings.emit 'mask_instruction_b | 28013'
     mov [opcode_prefix],66h
     jmp mask_instruction_w
     ret
 
 mask_instruction_d:
-    strings.emit 'mask_instruction_b | 28019'
+    ;strings.emit 'mask_instruction_b | 28019'
     mov [opcode_prefix],66h
 
     mask_instruction_q:
@@ -28027,12 +28050,12 @@ mask_instruction_d:
     mov [operand_size],32
 
     mask_instruction:
-    or [vex_required],1
-    mov [base_code],0Fh
+    or [vex_required],HEAD
+    mov [base_code],SHIFT
     mov [extended_code],al
     call take_mask_register
     mov [postbyte_register],al
-    test [operand_flags],2
+    test [operand_flags],TEXT
     jnz mask_instruction_nds_ok
     lods u8 [esi]
     cmp al,','
@@ -28046,13 +28069,13 @@ mask_instruction_d:
     jne invalid_operand
     call take_mask_register
     mov bl,al
-    cmp [immediate_size],0
-    jne mmx_nomem_imm8
+    cmp [immediate_size],NUL
+    jne  mmx_nomem_imm8
     jmp nomem_instruction_ready
     ret
 
 take_mask_register:
-    strings.emit 'take_mask_register | 28054'
+    ;strings.emit 'take_mask_register | 28054'
     lods u8 [esi]
     cmp al,14h
     jne invalid_operand
@@ -28060,22 +28083,22 @@ take_mask_register:
 
 convert_mask_register:
     mov ah,al
-    shr ah,4
-    cmp ah,5
+    shr ah,TAIL
+    cmp ah,QUERY
     jne invalid_operand
     and al,1111b
     ret
 
 kmov_instruction:
-    strings.emit 'kmov_instruction | 28069'
+    ;strings.emit 'kmov_instruction | 28069'
     mov [mmx_size],al
-    or [vex_required],1
-    mov [base_code],0Fh
+    or [vex_required],HEAD
+    mov [base_code],SHIFT
     mov [extended_code],90h
     lods u8 [esi]
     cmp al,14h
     je kmov_maskreg
-    cmp al,10h
+    cmp al,DELINK
     je kmov_reg
     call get_size_operator
     inc [extended_code]
@@ -28102,8 +28125,8 @@ kmov_instruction:
     ret
 
 setup_kmov_prefix:
-    strings.emit 'setup_kmov_prefix | 28104'
-    cmp ah,4
+    ;strings.emit 'setup_kmov_prefix | 28104'
+    cmp ah,TAIL
     jb kmov_w_ok
     or [rex_prefix],8
 
@@ -28115,7 +28138,7 @@ setup_kmov_prefix:
     ret
 
 kmov_maskreg:
-    strings.emit 'kmov_maskreg | 28118'
+    ;strings.emit 'kmov_maskreg | 28118'
     lods u8 [esi]
     call convert_mask_register
     mov [postbyte_register],al
@@ -28125,7 +28148,7 @@ kmov_maskreg:
     lods u8 [esi]
     cmp al,14h
     je kmov_maskreg_maskreg
-    cmp al,10h
+    cmp al,DELINK
     je kmov_maskreg_reg
     call get_size_operator
     cmp al,'['
@@ -28135,7 +28158,7 @@ kmov_maskreg:
     ret
 
 kmov_maskreg_maskreg:
-    strings.emit 'kmov_maskreg_maskreg | 28137'
+    ;strings.emit 'kmov_maskreg_maskreg | 28137'
     lods u8 [esi]
     call convert_mask_register
     mov bl,al
@@ -28145,15 +28168,15 @@ kmov_maskreg_maskreg:
     ret
 
 kmov_maskreg_reg:
-    strings.emit 'kmov_maskreg_reg | 28147'
-    add [extended_code],2
+    ;strings.emit 'kmov_maskreg_reg | 28147'
+    add [extended_code],TEXT
     lods u8 [esi]
     call convert_register
 
     kmov_with_reg:
     mov bl,al
     mov al,[mmx_size]
-    mov ah,4
+    mov ah,TAIL
     cmp al,ah
     jbe kmov_reg_size_check
     mov ah,al
@@ -28161,9 +28184,9 @@ kmov_maskreg_reg:
     kmov_reg_size_check:
     cmp ah,[operand_size]
     jne invalid_operand_size
-    cmp al,8
+    cmp al,RECTIFY
     je kmov_f2_w1
-    cmp al,2
+    cmp al,TEXT
     ja kmov_f2
     je nomem_instruction_ready
     mov [opcode_prefix],66h
@@ -28171,8 +28194,8 @@ kmov_maskreg_reg:
     ret
 
 kmov_f2_w1:
-    strings.emit 'kmov_f2_w1 | 28173'
-    or [rex_prefix],8
+    ;strings.emit 'kmov_f2_w1 | 28173'
+    or [rex_prefix],RECTIFY
     cmp [code_type],64
     jne illegal_instruction
 
@@ -28182,8 +28205,8 @@ kmov_f2_w1:
     ret
 
 kmov_reg:
-    strings.emit 'kmov_reg | 28184'
-    add [extended_code],3
+    ;strings.emit 'kmov_reg | 28184'
+    add [extended_code],TXT
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
@@ -28195,11 +28218,11 @@ kmov_reg:
     ret
 
 avx512_pmov_m2_instruction_w1:
-    strings.emit 'avx512_pmov_m2_instruction_w1 | 28197'
+    ;strings.emit 'avx512_pmov_m2_instruction_w1 | 28197'
     or [rex_prefix],8
 
     avx512_pmov_m2_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     call setup_f3_0f_38
     call take_avx_register
     mov [postbyte_register],al
@@ -28212,11 +28235,11 @@ avx512_pmov_m2_instruction_w1:
     ret
 
 avx512_pmov_2m_instruction_w1:
-    strings.emit 'avx512_pmov_2m_instruction_w1 | 28214'
+    ;strings.emit 'avx512_pmov_2m_instruction_w1 | 28214'
     or [rex_prefix],8
 
     avx512_pmov_2m_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     call setup_f3_0f_38
     call take_mask_register
     mov [postbyte_register],al
@@ -28229,61 +28252,61 @@ avx512_pmov_2m_instruction_w1:
     ret
 
 setup_f3_0f_38:
-    strings.emit 'setup_f3_0f_38 | 28231'
+    ;strings.emit 'setup_f3_0f_38 | 28231'
     mov [extended_code],38h
     mov [supplemental_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [opcode_prefix],0F3h
     ret
 
 vzeroall_instruction:
-    strings.emit 'vzeroall_instruction | 28239'
+    ;strings.emit 'vzeroall_instruction | 28239'
     mov [operand_size],32
 
     vzeroupper_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    and [displacement_compression],0
+    and [displacement_compression],NUL
     call store_vex_instruction_code
     jmp instruction_assembled
     ret
 
 vldmxcsr_instruction:
-    strings.emit 'vldmxcsr_instruction | 28251'
-    or [vex_required],2
+    ;strings.emit 'vldmxcsr_instruction | 28251'
+    or [vex_required],TEXT
     jmp fxsave_instruction
     ret
 
 avx_perm2f128_instruction:
-    strings.emit 'avx_perm2f128_instruction | 28257'
-    or [vex_required],2
+    ;strings.emit 'avx_perm2f128_instruction | 28257'
+    or [vex_required],TEXT
     xor ch,ch
 
     avx_instruction_imm8_without_128bit:
-    mov [immediate_size],1
+    mov [immediate_size],HEAD
     mov ah,3Ah
     jmp avx_instruction_without_128bit
     ret
 
 avx512_shuf_q_instruction:
-    strings.emit 'avx512_shuf_q_instruction | 28268'
-    or [rex_prefix],8
-    or [vex_required],8
-    mov ch,8
+    ;strings.emit 'avx512_shuf_q_instruction | 28268'
+    or [rex_prefix],RECTIFY
+    or [vex_required],RECTIFY
+    mov ch,RECTIFY
     jmp avx_instruction_imm8_without_128bit
     ret
 
 avx512_shuf_d_instruction:
-    strings.emit 'avx512_shuf_d_instruction | 28276'
-    or [vex_required],8
-    mov ch,4
+    ;strings.emit 'avx512_shuf_d_instruction | 28276'
+    or [vex_required],RECTIFY
+    mov ch,TAIL
     jmp avx_instruction_imm8_without_128bit
     ret
 
 avx_permd_instruction:
-    strings.emit 'avx_permd_instruction | 28283'
+    ;strings.emit 'avx_permd_instruction | 28283'
     mov ah,38h
-    mov ch,4
+    mov ch,TAIL
 
     avx_instruction_without_128bit:
     xor cl,cl
@@ -28297,41 +28320,41 @@ avx_permd_instruction:
     ret
 
 setup_avx_66_supplemental:
-    strings.emit 'setup_avx_66_supplemental | 28299'
+    ;strings.emit 'setup_avx_66_supplemental | 28299'
     mov [opcode_prefix],66h
     mov [broadcast_size],ch
     mov [mmx_size],cl
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],ah
     mov [supplemental_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     ret
 
 avx_permq_instruction:
-    strings.emit 'avx_permq_instruction | 28310'
-    or [rex_prefix],8
-    mov ch,8
+    ;strings.emit 'avx_permq_instruction | 28310'
+    or [rex_prefix],RECTIFY
+    mov ch,RECTIFY
     jmp avx_permil_instruction
     ret
 
 avx_permilpd_instruction:
-    strings.emit 'avx_permilpd_instruction | 28318'
+    ;strings.emit 'avx_permilpd_instruction | 28318'
     or [rex_prefix],80h
-    mov ch,8
+    mov ch,RECTIFY
     jmp avx_permil_instruction
     ret
 
 avx_permilps_instruction:
-    strings.emit 'avx_permilps_instruction | 28324'
-    mov ch,4
+    ;strings.emit 'avx_permilps_instruction | 28324'
+    mov ch,TAIL
 
     avx_permil_instruction:
-    or [operand_flags],2
+    or [operand_flags],TEXT
     xor cl,cl
     mov ah,3Ah
     call setup_avx_66_supplemental
     call take_avx_register
-    cmp [supplemental_code],4
+    cmp [supplemental_code],TAIL
     jae avx_permil_size_ok
     cmp ah,32
     jb invalid_operand_size
@@ -28347,7 +28370,7 @@ avx_permilps_instruction:
     mov bl,al
     cmp u8 [esi],','
     jne invalid_operand
-    mov al,[esi+1]
+    mov al,[esi+HEAD]
     cmp al,11h
     jne avx_permil_rm_or_imm8
     mov al,[esi+3]
@@ -28359,16 +28382,16 @@ avx_permilps_instruction:
     inc esi
     mov [extended_code],38h
     mov al,[supplemental_code]
-    cmp al,4
+    cmp al,TAIL
     jb avx_permq_rm
-    add [supplemental_code],8
+    add [supplemental_code],RECTIFY
     jmp avx_regs_rm
     ret
 
 avx_permq_rm:
-    strings.emit 'avx_permq_rm | 28368'
-    or [vex_required],8
-    shl al,5
+    ;strings.emit 'avx_permq_rm | 28368'
+    or [vex_required],RECTIFY
+    shl al,QUERY
     neg al
     add al,36h
     mov [supplemental_code],al
@@ -28376,29 +28399,29 @@ avx_permq_rm:
     ret
 
 vpermil_2pd_instruction:
-    strings.emit 'vpermil_2pd_instruction | 28378'
-    mov [immediate_size],-2
+    ;strings.emit 'vpermil_2pd_instruction | 28378'
+    mov [immediate_size],-TEXT
     mov u8 [value],al
     mov al,49h
     jmp vpermil2_instruction_setup
     ret
 
 vpermil_2ps_instruction:
-    strings.emit 'vpermil_2ps_instruction | 28386'
-    mov [immediate_size],-2
+    ;strings.emit 'vpermil_2ps_instruction | 28386'
+    mov [immediate_size],-TEXT
     mov u8 [value],al
     mov al,48h
     jmp vpermil2_instruction_setup
     ret
 
 vpermil2_instruction:
-    strings.emit 'vpermil2_instruction | 28395'
+    ;strings.emit 'vpermil2_instruction | 28395'
     mov [immediate_size],-3
-    mov u8 [value],0
+    mov u8 [value],NUL
 
     vpermil2_instruction_setup:
-    or [vex_required],2
-    mov [base_code],0Fh
+    or [vex_required],TEXT
+    mov [base_code],SHIFT
     mov [supplemental_code],al
     mov al,3Ah
     xor cl,cl
@@ -28406,32 +28429,32 @@ vpermil2_instruction:
     ret
 
 avx_shift_q_instruction_evex:
-    strings.emit 'avx_shift_q_instruction_evex | 28408'
+    ;strings.emit 'avx_shift_q_instruction_evex | 28408'
     or [vex_required],8
 
     avx_shift_q_instruction:
     or [rex_prefix],80h
-    mov cl,8
+    mov cl,RECTIFY
     jmp avx_shift_instruction
     ret
 
 avx_shift_d_instruction:
-    strings.emit 'avx_shift_d_instruction | 28418'
-    mov cl,4
+    ;strings.emit 'avx_shift_d_instruction | 28418'
+    mov cl,TAIL
     jmp avx_shift_instruction
     ret
 
 avx_shift_bw_instruction:
-    strings.emit 'avx_shift_bw_instruction | 28424'
+    ;strings.emit 'avx_shift_bw_instruction | 28424'
     xor cl,cl
 
     avx_shift_instruction:
     mov [broadcast_size],cl
-    mov [mmx_size],0
+    mov [mmx_size],NUL
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     call take_avx_register
     mov [postbyte_register],al
     call take_avx512_mask
@@ -28445,7 +28468,7 @@ avx_shift_bw_instruction:
     cmp al,'['
     je avx_shift_reg_mem
     mov [operand_size],cl
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
@@ -28458,13 +28481,13 @@ avx_shift_bw_instruction:
     xchg cl,[operand_size]
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_shift_reg_reg_reg
     pop _esi
     cmp al,'['
     je avx_shift_reg_reg_mem
     xchg cl,[operand_size]
-    test cl,not 1
+    test cl,not HEAD
     jnz invalid_operand_size
     dec esi
     call convert_avx_shift_opcode
@@ -28473,21 +28496,21 @@ avx_shift_bw_instruction:
     ret
 
 convert_avx_shift_opcode:
-    strings.emit 'convert_avx_shift_opcode | 28475'
+    ;strings.emit 'convert_avx_shift_opcode | 28475'
     mov al,[extended_code]
     mov ah,al
     and ah,1111b
     add ah,70h
     mov [extended_code],ah
-    shr al,4
+    shr al,TAIL
     sub al,0Ch
-    shl al,1
+    shl al,HEAD
     xchg al,[postbyte_register]
     xchg al,[vex_register]
     ret
 
 avx_shift_reg_reg_reg:
-    strings.emit 'avx_shift_reg_reg_reg | 28489'
+    ;strings.emit 'avx_shift_reg_reg_reg | 28489'
     pop _eax
     lods u8 [esi]
     call convert_xmm_register
@@ -28497,7 +28520,7 @@ avx_shift_reg_reg_reg:
     ret
 
 avx_shift_reg_reg_mem:
-    strings.emit 'avx_shift_reg_reg_mem | 28499'
+    ;strings.emit 'avx_shift_reg_reg_mem | 28499'
     mov [mmx_size],16
     push _ecx
     lods u8 [esi]
@@ -28513,21 +28536,21 @@ avx_shift_reg_reg_mem:
     ret
 
 avx_shift_reg_mem:
-    strings.emit 'avx_shift_reg_mem | 28515'
-    or [vex_required],8
+    ;strings.emit 'avx_shift_reg_mem | 28515'
+    or [vex_required],RECTIFY
     call take_avx_mem
     call convert_avx_shift_opcode
     jmp mmx_imm8
     ret
 
 avx_shift_dq_instruction:
-    strings.emit 'avx_shift_dq_instruction | 28523'
+    ;strings.emit 'avx_shift_dq_instruction | 28523'
     mov [postbyte_register],al
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],73h
-    or [vex_required],1
-    mov [mmx_size],0
+    or [vex_required],HEAD
+    mov [mmx_size],NUL
     call take_avx_register
     mov [vex_register],al
     lods u8 [esi]
@@ -28537,7 +28560,7 @@ avx_shift_dq_instruction:
     call get_size_operator
     cmp al,'['
     je avx_shift_dq_reg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
@@ -28546,31 +28569,31 @@ avx_shift_dq_instruction:
     ret
 
 avx_shift_dq_reg_mem:
-    strings.emit 'avx_shift_dq_reg_mem | 28548'
-    or [vex_required],8
+    ;strings.emit 'avx_shift_dq_reg_mem | 28548'
+    or [vex_required],RECTIFY
     call get_address
     jmp mmx_imm8
     ret
 
 avx512_rotate_q_instruction:
-    mov cl,8
+    mov cl,RECTIFY
     or [rex_prefix],cl
     jmp avx512_rotate_instruction
     ret
 
 avx512_rotate_d_instruction:
-    strings.emit 'avx512_rotate_d_instruction | 28561'
-    mov cl,4
+    ;strings.emit 'avx512_rotate_d_instruction | 28561'
+    mov cl,TAIL
 
     avx512_rotate_instruction:
     mov [broadcast_size],cl
     mov [postbyte_register],al
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],72h
-    or [vex_required],8
-    mov [mmx_size],0
-    mov [immediate_size],1
+    or [vex_required],RECTIFY
+    mov [mmx_size],NUL
+    mov [immediate_size],HEAD
     call take_avx_register
     mov [vex_register],al
     call take_avx512_mask
@@ -28578,24 +28601,24 @@ avx512_rotate_d_instruction:
     ret
 
 avx_pmovsxbq_instruction:
-    strings.emit 'avx_pmovsxbq_instruction | 28580'
-    mov cl,2
+    ;strings.emit 'avx_pmovsxbq_instruction | 28580'
+    mov cl,TEXT
     jmp avx_pmovsx_instruction
     ret
 
 avx_pmovsxbd_instruction:
-    strings.emit 'avx_pmovsxbd_instruction | 28586'
-    mov cl,4
+    ;strings.emit 'avx_pmovsxbd_instruction | 28586'
+    mov cl,TAIL
     jmp avx_pmovsx_instruction
     ret
 
 avx_pmovsxbw_instruction:
-    strings.emit 'avx_pmovsxbw_instruction | 28592'
+    ;strings.emit 'avx_pmovsxbw_instruction | 28592'
     mov cl,8
 
     avx_pmovsx_instruction:
     mov [mmx_size],cl
-    or [vex_required],1
+    or [vex_required],HEAD
     call setup_66_0f_38
     call take_avx_register
     mov [postbyte_register],al
@@ -28606,12 +28629,12 @@ avx_pmovsxbw_instruction:
     xor al,al
     xchg al,[operand_size]
     bsf ecx,eax
-    sub cl,4
+    sub cl,TAIL
     shl [mmx_size],cl
     push _eax
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_pmovsx_reg_reg
     cmp al,'['
     jne invalid_operand
@@ -28626,7 +28649,7 @@ avx_pmovsxbw_instruction:
     ret
 
 avx_pmovsx_reg_reg:
-    strings.emit 'avx_pmovsx_reg_reg | 28629'
+    ;strings.emit 'avx_pmovsx_reg_reg | 28629'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28643,36 +28666,36 @@ avx_pmovsx_reg_reg:
     ret
 
 avx512_pmovqb_instruction:
-    strings.emit 'avx512_pmovqb_instruction | 28645'
-    mov cl,2
+    ;strings.emit 'avx512_pmovqb_instruction | 28645'
+    mov cl,TEXT
     jmp avx512_pmov_instruction
     ret
 
 avx512_pmovdb_instruction:
-    strings.emit 'avx512_pmovdb_instruction | 28652'
-    mov cl,4
+    ;strings.emit 'avx512_pmovdb_instruction | 28652'
+    mov cl,TAIL
     jmp avx512_pmov_instruction
     ret
 
 avx512_pmovwb_instruction:
-    strings.emit 'avx512_pmovwb_instruction | 28657'
+    ;strings.emit 'avx512_pmovwb_instruction | 28657'
     mov cl,8
 
     avx512_pmov_instruction:
     mov [mmx_size],cl
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov [extended_code],38h
     mov [supplemental_code],al
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [opcode_prefix],0F3h
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx512_pmov_reg
     cmp al,'['
     jne invalid_operand
     call get_address
-    or [operand_flags],20h
+    or [operand_flags],SPACE
     call avx512_pmov_common
     or al,al
     jz instruction_ready
@@ -28682,7 +28705,7 @@ avx512_pmovwb_instruction:
     ret
 
 avx512_pmov_common:
-    strings.emit 'avx512_pmov_common | 28684'
+    ;strings.emit 'avx512_pmov_common | 28684'
     call take_avx512_mask
     xor al,al
     xchg al,[operand_size]
@@ -28695,14 +28718,14 @@ avx512_pmov_common:
     mov al,ah
     mov ah,cl
     bsf ecx,eax
-    sub cl,4
+    sub cl,TAIL
     shl [mmx_size],cl
     mov cl,ah
     pop _eax
     ret
 
 avx512_pmov_reg:
-    strings.emit 'avx512_pmov_reg | 28704'
+    ;strings.emit 'avx512_pmov_reg | 28704'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -28716,100 +28739,100 @@ avx512_pmov_reg:
     ret
 
 avx_broadcast_128_instruction_noevex:
-    strings.emit 'avx_broadcast_128_instruction_noevex | 28718'
-    or [vex_required],2
-    mov cl,10h
+    ;strings.emit 'avx_broadcast_128_instruction_noevex | 28718'
+    or [vex_required],TEXT
+    mov cl,DELINK
     jmp avx_broadcast_instruction
     ret
 
 avx512_broadcast_32x2_instruction:
-    strings.emit 'avx512_broadcast_32x2_instruction | 28725'
+    ;strings.emit 'avx512_broadcast_32x2_instruction | 28725'
     mov cl,08h
     jmp avx_broadcast_instruction_evex
     ret
 
 avx512_broadcast_32x4_instruction:
-    strings.emit 'avx512_broadcast_32x4_instruction | 28731'
-    mov cl,10h
+    ;strings.emit 'avx512_broadcast_32x4_instruction | 28731'
+    mov cl,DELINK
     jmp avx_broadcast_instruction_evex
     ret
 
 avx512_broadcast_32x8_instruction:
-    strings.emit 'avx512_broadcast_32x8_instruction | 28737'
-    mov cl,20h
+    ;strings.emit 'avx512_broadcast_32x8_instruction | 28737'
+    mov cl,SPACE
     jmp avx_broadcast_instruction_evex
     ret
 
 avx512_broadcast_64x2_instruction:
-    strings.emit 'avx512_broadcast_64x2_instruction | 28743'
-    mov cl,10h
+    ;strings.emit 'avx512_broadcast_64x2_instruction | 28743'
+    mov cl,DELINK
     jmp avx_broadcast_instruction_w1_evex
     ret
 
 avx512_broadcast_64x4_instruction:
-    strings.emit 'avx512_broadcast_64x4_instruction | 28749'
-    mov cl,20h
+    ;strings.emit 'avx512_broadcast_64x4_instruction | 28749'
+    mov cl,SPACE
 
     avx_broadcast_instruction_w1_evex:
     or [rex_prefix],8
 
     avx_broadcast_instruction_evex:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     jmp avx_broadcast_instruction
     ret
 
 avx_broadcastss_instruction:
-    strings.emit 'avx_broadcastss_instruction | 28762'
-    mov cl,4
+    ;strings.emit 'avx_broadcastss_instruction | 28762'
+    mov cl,TAIL
     jmp avx_broadcast_instruction
     ret
 
 avx_broadcastsd_instruction:
-    strings.emit 'avx_broadcastsd_instruction | 28767'
+    ;strings.emit 'avx_broadcastsd_instruction | 28767'
     or [rex_prefix],80h
-    mov cl,8
+    mov cl,RECTIFY
     jmp avx_broadcast_instruction
     ret
 
 avx_pbroadcastb_instruction:
-    strings.emit 'avx_pbroadcastb_instruction | 28774'
-    mov cl,1
+    ;strings.emit 'avx_pbroadcastb_instruction | 28774'
+    mov cl,HEAD
     jmp avx_broadcast_pi_instruction
     ret
 
 avx_pbroadcastw_instruction:
-    strings.emit 'avx_pbroadcastw_instruction | 28780'
-    mov cl,2
+    ;strings.emit 'avx_pbroadcastw_instruction | 28780'
+    mov cl,TEXT
     jmp avx_broadcast_pi_instruction
     ret
 
 avx_pbroadcastd_instruction:
-    strings.emit 'avx_pbroadcastd_instruction | 28786'
-    mov cl,4
+    ;strings.emit 'avx_pbroadcastd_instruction | 28786'
+    mov cl,TAIL
     jmp avx_broadcast_pi_instruction
     ret
 
 avx_pbroadcastq_instruction:
-    strings.emit 'avx_pbroadcastq_instruction | 28792'
-    mov cl,8
+    ;strings.emit 'avx_pbroadcastq_instruction | 28792'
+    mov cl,RECTIFY
     or [rex_prefix],80h
 
     avx_broadcast_pi_instruction:
-    or [operand_flags],40h
+    or [operand_flags],AMP
     avx_broadcast_instruction:
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,38h
     mov [mmx_size],cl
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     call take_avx_register
     cmp ah,[mmx_size]
     je invalid_operand_size
-    test [operand_flags],40h
+    test [operand_flags],AMP
     jnz avx_broadcast_destination_size_ok
-    cmp [mmx_size],4
+    cmp [mmx_size],TAIL
     je avx_broadcast_destination_size_ok
     cmp [supplemental_code],59h
     je avx_broadcast_destination_size_ok
@@ -28826,7 +28849,7 @@ avx_pbroadcastq_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_broadcast_reg_reg
     cmp al,'['
     jne invalid_operand
@@ -28846,9 +28869,9 @@ avx_pbroadcastq_instruction:
     ret
 
 avx_broadcast_reg_reg:
-    strings.emit 'avx_broadcast_reg_reg | 28848'
+    ;strings.emit 'avx_broadcast_reg_reg | 28848'
     lods u8 [esi]
-    test [operand_flags],40h
+    test [operand_flags],AMP
     jz avx_broadcast_reg_avx_reg
     cmp al,60h
     jb avx_broadcast_reg_general_reg
@@ -28872,13 +28895,13 @@ avx_broadcast_reg_reg:
     pop _eax
     xchg ah,[operand_size]
     mov [postbyte_register],al
-    test [vex_required],2
+    test [vex_required],TEXT
     jnz invalid_operand
     jmp nomem_instruction_ready
     ret
 
 avx_broadcast_reg_general_reg:
-    strings.emit 'avx_broadcast_reg_general_reg | 28880'
+    ;strings.emit 'avx_broadcast_reg_general_reg | 28880'
     call convert_register
     mov bl,al
     mov al,[mmx_size]
@@ -28887,21 +28910,21 @@ avx_broadcast_reg_general_reg:
     cmp al,ah
     je avx_broadcast_reg_general_reg_size_ok
     ja invalid_operand_size
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
 
     avx_broadcast_reg_general_reg_size_ok:
-    cmp al,4
+    cmp al,TAIL
     jb avx_broadcast_reg_general_reg_ready
-    cmp al,8
-    mov al,3
+    cmp al,RECTIFY
+    mov al,TXT
     jne avx_broadcast_reg_general_reg_ready
     or [rex_prefix],8
 
     avx_broadcast_reg_general_reg_ready:
     add al,7Ah-1
     mov [supplemental_code],al
-    or [vex_required],8
+    or [vex_required],RECTIFY
     pop _eax
     xchg ah,[operand_size]
     mov [postbyte_register],al
@@ -28909,28 +28932,28 @@ avx_broadcast_reg_general_reg:
     ret
 
 avx512_extract_64x4_instruction:
-    strings.emit 'avx512_extract_64x4_instruction | 28911'
+    ;strings.emit 'avx512_extract_64x4_instruction | 28911'
     or [rex_prefix],8
 
     avx512_extract_32x8_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov cl,32
     jmp avx_extractf_instruction
     ret
 
 avx512_extract_64x2_instruction:
-    strings.emit 'avx512_extract_64x2_instruction | 28921'
+    ;strings.emit 'avx512_extract_64x2_instruction | 28921'
     or [rex_prefix],8
 
     avx512_extract_32x4_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov cl,16
     jmp avx_extractf_instruction
     ret
 
 avx_extractf128_instruction:
-    strings.emit 'avx_extractf128_instruction | 28931'
-    or [vex_required],2
+    ;strings.emit 'avx_extractf128_instruction | 28931'
+    or [vex_required],TEXT
     mov cl,16
 
     avx_extractf_instruction:
@@ -28938,7 +28961,7 @@ avx_extractf128_instruction:
     call setup_66_0f_3a
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_extractf_reg
     cmp al,'['
     jne invalid_operand
@@ -28963,14 +28986,14 @@ avx_extractf128_instruction:
     ret
 
 avx_extractf_reg:
-    strings.emit 'avx_extractf_reg | 28965'
+    ;strings.emit 'avx_extractf_reg | 28965'
     lods u8 [esi]
     call convert_avx_register
     cmp ah,[mmx_size]
     jne invalid_operand_size
     push _eax
     call take_avx512_mask
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -28983,33 +29006,33 @@ avx_extractf_reg:
     ret
 
 avx512_insert_64x4_instruction:
-    strings.emit 'avx512_insert_64x4_instruction | 28985'
+    ;strings.emit 'avx512_insert_64x4_instruction | 28985'
     or [rex_prefix],8
 
     avx512_insert_32x8_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov cl,32
     jmp avx_insertf_instruction
     ret
 
 avx512_insert_64x2_instruction:
-    strings.emit 'avx512_insert_64x2_instruction | 28995'
+    ;strings.emit 'avx512_insert_64x2_instruction | 28995'
     or [rex_prefix],8
 
     avx512_insert_32x4_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     mov cl,16
     jmp avx_insertf_instruction
     ret
 
 avx_insertf128_instruction:
-    strings.emit 'avx_insertf128_instruction | 29005'
-    or [vex_required],2
+    ;strings.emit 'avx_insertf128_instruction | 29005'
+    or [vex_required],TEXT
     mov cl,16
 
     avx_insertf_instruction:
     mov [mmx_size],cl
-    mov [broadcast_size],0
+    mov [broadcast_size],NUL
     call setup_66_0f_3a
     call take_avx_register
     cmp ah,[mmx_size]
@@ -29029,7 +29052,7 @@ avx_insertf128_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_insertf_reg_reg_reg
     cmp al,'['
     jne invalid_operand
@@ -29040,7 +29063,7 @@ avx_insertf128_instruction:
     ret
 
 avx_insertf_reg_reg_reg:
-    strings.emit 'avx_insertf_reg_reg_reg | 29043'
+    ;strings.emit 'avx_insertf_reg_reg_reg | 29043'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
@@ -29050,35 +29073,35 @@ avx_insertf_reg_reg_reg:
     ret
 
 avx_extract_b_instruction:
-    strings.emit 'avx_extract_b_instruction | 29052'
-    mov cl,1
+    ;strings.emit 'avx_extract_b_instruction | 29052'
+    mov cl,HEAD
     jmp avx_extract_instruction
     ret
 
 avx_extract_w_instruction:
-    strings.emit 'avx_extract_w_instruction | 29058'
-    mov cl,2
+    ;strings.emit 'avx_extract_w_instruction | 29058'
+    mov cl,TEXT
     jmp avx_extract_instruction
     ret
 
 avx_extract_q_instruction:
-    strings.emit 'avx_extract_q_instruction | 29064'
-    or [rex_prefix],8
-    mov cl,8
+    ;strings.emit 'avx_extract_q_instruction | 29064'
+    or [rex_prefix],RECTIFY
+    mov cl,RECTIFY
     jmp avx_extract_instruction
     ret
 
 avx_extract_d_instruction:
-    strings.emit 'avx_extract_d_instruction | 29071'
-    mov cl,4
+    ;strings.emit 'avx_extract_d_instruction | 29071'
+    mov cl,TAIL
 
     avx_extract_instruction:
     mov [mmx_size],cl
     call setup_66_0f_3a
-    or [vex_required],1
+    or [vex_required],HEAD
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je avx_extractps_reg
     cmp al,'['
     jne invalid_operand
@@ -29092,7 +29115,7 @@ avx_extract_d_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
@@ -29103,31 +29126,31 @@ avx_extract_d_instruction:
     ret
 
 avx_extractps_reg:
-    strings.emit 'avx_extractps_reg | 29106'
+    ;strings.emit 'avx_extractps_reg | 29106'
     lods u8 [esi]
     call convert_register
     mov bl,al
     mov al,[mmx_size]
     cmp ah,al
     jb invalid_operand_size
-    cmp ah,4
+    cmp ah,TAIL
     je avx_extractps_reg_size_ok
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     cmp [code_type],64
     jne invalid_operand
-    cmp al,4
+    cmp al,TAIL
     jae avx_extractps_reg_size_ok
     or [rex_prefix],8
 
     avx_extractps_reg_size_ok:
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_avx_register
@@ -29142,39 +29165,39 @@ avx_extractps_reg:
     ret
 
 avx_insertps_instruction:
-    strings.emit 'avx_insertps_instruction | 29144'
-    mov [immediate_size],1
-    or [operand_flags],10h
+    ;strings.emit 'avx_insertps_instruction | 29144'
+    mov [immediate_size],HEAD
+    or [operand_flags],DELINK
     mov [opcode_prefix],66h
     mov [supplemental_code],al
     mov al,3Ah
-    mov cl,4
+    mov cl,TAIL
     jmp avx_instruction
     ret
 
 avx_pinsrb_instruction:
-    strings.emit 'avx_pinsrb_instruction | 29154'
-    mov cl,1
+    ;strings.emit 'avx_pinsrb_instruction | 29154'
+    mov cl,HEAD
     jmp avx_pinsr_instruction_3a
     ret
 
 avx_pinsrw_instruction:
-    strings.emit 'avx_pinsrw_instruction | 29162'
-    mov cl,2
+    ;strings.emit 'avx_pinsrw_instruction | 29162'
+    mov cl,TEXT
     jmp avx_pinsr_instruction
     ret
 
 avx_pinsrd_instruction:
-    strings.emit 'avx_pinsrd_instruction | 29167'
-    mov cl,4
+    ;strings.emit 'avx_pinsrd_instruction | 29167'
+    mov cl,TAIL
     jmp avx_pinsr_instruction_3a
     ret
 
 avx_pinsrq_instruction:
-    strings.emit 'avx_pinsrq_instruction | 29172'
+    ;strings.emit 'avx_pinsrq_instruction | 29172'
     cmp [code_type],64
     jne illegal_instruction
-    mov cl,8
+    mov cl,RECTIFY
     or [rex_prefix],8
 
     avx_pinsr_instruction_3a:
@@ -29183,10 +29206,10 @@ avx_pinsrq_instruction:
 
     avx_pinsr_instruction:
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     mov [mmx_size],cl
-    or [vex_required],1
+    or [vex_required],HEAD
     call take_avx_register
     cmp ah,16
     jne invalid_operand_size
@@ -29200,36 +29223,36 @@ avx_pinsrq_instruction:
     ret
 
 avx_cvtudq2pd_instruction:
-    strings.emit 'avx_cvtudq2pd_instruction | 29202'
+    ;strings.emit 'avx_cvtudq2pd_instruction | 29202'
     or [vex_required],8
 
     avx_cvtdq2pd_instruction:
     mov [opcode_prefix],0F3h
-    mov cl,4
+    mov cl,TAIL
     jmp avx_cvt_d_instruction
     ret
 
 avx_cvtps2qq_instruction:
-    strings.emit 'avx_cvtps2qq_instruction | 29212'
+    ;strings.emit 'avx_cvtps2qq_instruction | 29212'
     or [operand_flags],8
 
     avx_cvttps2qq_instruction:
-    or [operand_flags],4
-    or [vex_required],8
+    or [operand_flags],TAIL
+    or [vex_required],RECTIFY
     mov [opcode_prefix],66h
-    mov cl,4
+    mov cl,TAIL
     jmp avx_cvt_d_instruction
     ret
 
 avx_cvtps2pd_instruction:
-    strings.emit 'avx_cvtps2pd_instruction | 29224'
-    or [operand_flags],4
-    mov cl,4
+    ;strings.emit 'avx_cvtps2pd_instruction | 29224'
+    or [operand_flags],TAIL
+    mov cl,TAIL
 
     avx_cvt_d_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     mov [broadcast_size],cl
     call take_avx_register
     mov [postbyte_register],al
@@ -29240,15 +29263,15 @@ avx_cvtps2pd_instruction:
     xor ecx,ecx
     xchg cl,[operand_size]
     mov al,cl
-    shr al,1
+    shr al,HEAD
     mov [mmx_size],al
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
     je avx_cvt_d_reg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call convert_avx_register
     cmp ah,[mmx_size]
@@ -29265,44 +29288,44 @@ avx_cvtps2pd_instruction:
     ret
 
 avx_cvt_d_reg_mem:
-    strings.emit 'avx_cvt_d_reg_mem | 29267'
+    ;strings.emit 'avx_cvt_d_reg_mem | 29267'
     call take_avx_mem
     jmp instruction_ready
     ret
 
 avx_cvtpd2dq_instruction:
-    strings.emit 'avx_cvtpd2dq_instruction | 29273'
-    or [operand_flags],4+8
+    ;strings.emit 'avx_cvtpd2dq_instruction | 29273'
+    or [operand_flags],TAIL+RECTIFY
     mov [opcode_prefix],0F2h
     jmp avx_cvt_q_instruction
     ret
 
 avx_cvtuqq2ps_instruction:
-    strings.emit 'avx_cvtuqq2ps_instruction | 29280'
+    ;strings.emit 'avx_cvtuqq2ps_instruction | 29280'
     mov [opcode_prefix],0F2h
 
     avx_cvtpd2udq_instruction:
     or [operand_flags],8
 
     avx_cvttpd2udq_instruction:
-    or [operand_flags],4
-    or [vex_required],8
+    or [operand_flags],TAIL
+    or [vex_required],RECTIFY
     jmp avx_cvt_q_instruction
     ret
 
 avx_cvtpd2ps_instruction:
-    strings.emit 'avx_cvtpd2ps_instruction | 29293'
+    ;strings.emit 'avx_cvtpd2ps_instruction | 29293'
     or [operand_flags],8
 
     avx_cvttpd2dq_instruction:
-    or [operand_flags],4
+    or [operand_flags],TAIL
     mov [opcode_prefix],66h
 
     avx_cvt_q_instruction:
-    mov [broadcast_size],8
-    mov [base_code],0Fh
+    mov [broadcast_size],RECTIFY
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     or [rex_prefix],80h
     call take_avx_register
     mov [postbyte_register],al
@@ -29324,20 +29347,20 @@ avx_cvtpd2ps_instruction:
     ret
 
 avx_cvt_q_reg_mem:
-    strings.emit 'avx_cvt_q_reg_mem | 29326'
+    ;strings.emit 'avx_cvt_q_reg_mem | 29326'
     pop _eax
     call avx_cvt_q_check_size
     jmp instruction_ready
     ret
 
 avx_cvt_q_check_size:
-    strings.emit 'avx_cvt_q_check_size | 29333'
+    ;strings.emit 'avx_cvt_q_check_size | 29333'
     mov al,[operand_size]
     or al,al
     jz avx_cvt_q_size_not_specified
     cmp al,64
     ja invalid_operand_size
-    shr al,1
+    shr al,HEAD
     cmp al,ah
     ;je avx_cvt_q_size_ok
     je return_ok
@@ -29347,46 +29370,46 @@ avx_cvt_q_check_size:
     ret
 
 avx_cvt_q_size_not_specified:
-    strings.emit 'avx_cvt_q_size_not_specified | 29349'
+    ;strings.emit 'avx_cvt_q_size_not_specified | 29349'
     cmp ah,64 shr 1
     jne recoverable_unknown_size
     mov [operand_size],64
     ret
 
 avx_cvttps2udq_instruction:
-    strings.emit 'avx_cvttps2udq_instruction | 29356'
-    or [vex_required],8
-    or [operand_flags],2+4
+    ;strings.emit 'avx_cvttps2udq_instruction | 29356'
+    or [vex_required],RECTIFY
+    or [operand_flags],2+TAIL
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
 avx_cvttps2dq_instruction:
-    strings.emit 'avx_cvttps2dq_instruction | 29364'
+    ;strings.emit 'avx_cvttps2dq_instruction | 29364'
     mov [opcode_prefix],0F3h
-    or [operand_flags],2+4
+    or [operand_flags],2+TAIL
     mov cx,0400h
     jmp avx_instruction_with_broadcast
     ret
 
 avx_cvtph2ps_instruction:
-    strings.emit 'avx_cvtph2ps_instruction | 29372'
+    ;strings.emit 'avx_cvtph2ps_instruction | 29372'
     mov [opcode_prefix],66h
     mov [supplemental_code],al
-    or [operand_flags],4
+    or [operand_flags],TAIL
     mov al,38h
     xor cl,cl
     jmp avx_cvt_d_instruction
     ret
 
 avx_cvtps2ph_instruction:
-    strings.emit 'avx_cvtps2ph_instruction | 29382'
+    ;strings.emit 'avx_cvtps2ph_instruction | 29382'
     call setup_66_0f_3a
-    or [vex_required],1
-    or [operand_flags],4
+    or [vex_required],HEAD
+    or [operand_flags],TAIL
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je vcvtps2ph_reg
     cmp al,'['
     jne invalid_operand
@@ -29395,23 +29418,23 @@ avx_cvtps2ph_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    shl [operand_size],1
+    shl [operand_size],HEAD
     call take_avx_register
     mov [postbyte_register],al
-    shr ah,1
+    shr ah,HEAD
     mov [mmx_size],ah
     jmp mmx_imm8
     ret
 
 vcvtps2ph_reg:
-    strings.emit 'vcvtps2ph_reg | 29406'
+    ;strings.emit 'vcvtps2ph_reg | 29406'
     lods u8 [esi]
     call convert_avx_register
     mov bl,al
     call take_avx512_mask
     xor cl,cl
     xchg cl,[operand_size]
-    shl cl,1
+    shl cl,HEAD
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -29431,60 +29454,60 @@ vcvtps2ph_reg:
     ret
 
 avx_cvtsd2usi_instruction:
-    strings.emit 'avx_cvtsd2usi_instruction | 29433'
+    ;strings.emit 'avx_cvtsd2usi_instruction | 29433'
     or [operand_flags],8
 
     avx_cvttsd2usi_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     jmp avx_cvttsd2si_instruction
     ret
 
 avx_cvtsd2si_instruction:
-    strings.emit 'avx_cvtsd2si_instruction | 29442'
+    ;strings.emit 'avx_cvtsd2si_instruction | 29442'
     or [operand_flags],8
 
     avx_cvttsd2si_instruction:
     mov ah,0F2h
-    mov cl,8
+    mov cl,RECTIFY
     jmp avx_cvt_2si_instruction
     ret
 
 avx_cvtss2usi_instruction:
-    strings.emit 'avx_cvtss2usi_instruction | 29452'
+    ;strings.emit 'avx_cvtss2usi_instruction | 29452'
     or [operand_flags],8
 
     avx_cvttss2usi_instruction:
-    or [vex_required],8
+    or [vex_required],RECTIFY
     jmp avx_cvttss2si_instruction
     ret
 
 avx_cvtss2si_instruction:
-    strings.emit 'avx_cvtss2si_instruction | 29461'
+    ;strings.emit 'avx_cvtss2si_instruction | 29461'
     or [operand_flags],8
 
     avx_cvttss2si_instruction:
     mov ah,0F3h
-    mov cl,4
+    mov cl,TAIL
 
     avx_cvt_2si_instruction:
-    or [operand_flags],2+4
+    or [operand_flags],2+TAIL
     mov [mmx_size],cl
-    mov [broadcast_size],0
+    mov [broadcast_size],NUL
     mov [opcode_prefix],ah
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
-    mov [operand_size],0
-    cmp ah,4
+    mov [operand_size],NUL
+    cmp  ah,TAIL
     je avx_cvt_2si_reg
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     call operand_64bit
 
@@ -29500,30 +29523,30 @@ avx_cvtss2si_instruction:
     ret
 
 avx_cvtusi2sd_instruction:
-    strings.emit 'avx_cvtusi2sd_instruction | 29502'
+    ;strings.emit 'avx_cvtusi2sd_instruction | 29502'
     or [vex_required],8
 
     avx_cvtsi2sd_instruction:
     mov ah,0F2h
-    mov cl,8
+    mov cl,RECTIFY
     jmp avx_cvtsi_instruction
     ret
 
 avx_cvtusi2ss_instruction:
-    strings.emit 'avx_cvtusi2ss_instruction | 29512'
+    ;strings.emit 'avx_cvtusi2ss_instruction | 29512'
     or [vex_required],8
 
     avx_cvtsi2ss_instruction:
     mov ah,0F3h
-    mov cl,4
+    mov cl,TAIL
 
     avx_cvtsi_instruction:
-    or [operand_flags],2+4+8
+    or [operand_flags],2+TAIL+RECTIFY
     mov [mmx_size],cl
     mov [opcode_prefix],ah
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
-    or [vex_required],1
+    or [vex_required],HEAD
     call take_avx_register
     cmp ah,16
     jne invalid_operand_size
@@ -29536,19 +29559,19 @@ avx_cvtusi2ss_instruction:
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
     je avx_cvtsi_reg_reg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
     mov bl,al
-    cmp ah,4
+    cmp ah,TAIL
     je avx_cvtsi_reg_reg_reg32
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     call operand_64bit
 
@@ -29558,38 +29581,38 @@ avx_cvtusi2ss_instruction:
     ret
 
 avx_cvtsi_reg_reg_reg32:
-    strings.emit 'avx_cvtsi_reg_reg_reg32 | 29560'
-    cmp [mmx_size],8
+    ;strings.emit 'avx_cvtsi_reg_reg_reg32 | 29560'
+    cmp [mmx_size],RECTIFY
     jne avx_cvtsi_rounding
     jmp nomem_instruction_ready
     ret
 
 avx_cvtsi_reg_reg_mem:
-    strings.emit 'avx_cvtsi_reg_reg_mem | 29567'
+    ;strings.emit 'avx_cvtsi_reg_reg_mem | 29567'
     call get_address
     mov al,[operand_size]
     mov [mmx_size],al
     or al,al
     jz single_mem_nosize
-    cmp al,4
+    cmp al,TAIL
     je instruction_ready
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
     call operand_64bit
     jmp instruction_ready
     ret
 
 avx_maskmov_w1_instruction:
-    strings.emit 'avx_maskmov_w1_instruction | 29582'
+    ;strings.emit 'avx_maskmov_w1_instruction | 29582'
     or [rex_prefix],8
 
     avx_maskmov_instruction:
     call setup_66_0f_38
-    mov [mmx_size],0
-    or [vex_required],2
+    mov [mmx_size],NUL
+    or [vex_required],TEXT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne avx_maskmov_mem
     lods u8 [esi]
     call convert_avx_register
@@ -29611,7 +29634,7 @@ avx_maskmov_w1_instruction:
     ret
 
 avx_maskmov_mem:
-    strings.emit 'avx_maskmov_mem | 29613'
+    ;strings.emit 'avx_maskmov_mem | 29613'
     cmp al,'['
     jne invalid_operand
     call get_address
@@ -29625,34 +29648,34 @@ avx_maskmov_mem:
     jne invalid_operand
     call take_avx_register
     mov [postbyte_register],al
-    add [supplemental_code],2
+    add [supplemental_code],TEXT
     jmp instruction_ready
     ret
 
 avx_movmskpd_instruction:
-    strings.emit 'avx_movmskpd_instruction | 29632'
+    ;strings.emit 'avx_movmskpd_instruction | 29632'
     mov [opcode_prefix],66h
 
     avx_movmskps_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],50h
-    or [vex_required],2
+    or [vex_required],TEXT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
     mov [postbyte_register],al
-    cmp ah,4
+    cmp ah,TAIL
     je avx_movmskps_reg_ok
-    cmp ah,8
+    cmp ah,RECTIFY
     jne invalid_operand_size
     cmp [code_type],64
     jne invalid_operand
 
     avx_movmskps_reg_ok:
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -29662,33 +29685,33 @@ avx_movmskpd_instruction:
     ret
 
 avx_maskmovdqu_instruction:
-    strings.emit 'avx_maskmovdqu_instruction | 29664'
-    or [vex_required],2
+    ;strings.emit 'avx_maskmovdqu_instruction | 29664'
+    or [vex_required],TEXT
     jmp maskmovdqu_instruction
     ret
 
 avx_pmovmskb_instruction:
-    strings.emit 'avx_pmovmskb_instruction | 29670'
-    or [vex_required],2
+    ;strings.emit 'avx_pmovmskb_instruction | 29670'
+    or [vex_required],TEXT
     mov [opcode_prefix],66h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     je avx_pmovmskb_reg_size_ok
     cmp [code_type],64
     jne invalid_operand_size
-    cmp ah,8
+    cmp ah,RECTIFY
     jnz invalid_operand_size
 
     avx_pmovmskb_reg_size_ok:
     mov [postbyte_register],al
-    mov [operand_size],0
+    mov [operand_size],NUL
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -29698,13 +29721,13 @@ avx_pmovmskb_instruction:
     ret
 
 gather_pd_instruction:
-    strings.emit 'gather_pd_instruction | 29700'
+    ;strings.emit 'gather_pd_instruction | 29700'
     or [rex_prefix],8
 
     gather_ps_instruction:
     call setup_66_0f_38
-    or [vex_required],4
-    or [operand_flags],20h
+    or [vex_required],TAIL
+    or [operand_flags],SPACE
     call take_avx_register
     mov [postbyte_register],al
     call take_avx512_mask
@@ -29723,8 +29746,8 @@ gather_pd_instruction:
     xchg al,[operand_size]
 
     gather_mem_size_check:
-    mov ah,4
-    test [rex_prefix],8
+    mov ah,TAIL
+    test [rex_prefix],RECTIFY
     jz gather_elements_size_ok
     add ah,ah
 
@@ -29738,7 +29761,7 @@ gather_pd_instruction:
     gather_mem_size_ok:
     cmp u8 [esi],','
     je gather_reg_mem_reg
-    test [vex_required],20h
+    test [vex_required],SPACE
     jz invalid_operand
     mov ah,[operand_size]
     mov al,80h
@@ -29746,8 +29769,8 @@ gather_pd_instruction:
     ret
 
 gather_reg_mem_reg:
-    strings.emit 'gather_reg_mem_reg | 29748'
-    or [vex_required],2
+    ;strings.emit 'gather_reg_mem_reg | 29748'
+    or [vex_required],TEXT
     inc esi
     call take_avx_register
 
@@ -29762,7 +29785,7 @@ gather_reg_mem_reg:
     cmp al,[vex_register]
     je disallowed_combination_of_registers
     mov al,bl
-    shr al,5
+    shr al,QUERY
     cmp al,0Ch shr 1
     je gather_vr128
     mov ah,32
@@ -29772,11 +29795,11 @@ gather_reg_mem_reg:
 
     gather_regular:
     mov al,[rex_prefix]
-    shr al,3
+    shr al,TXT
     xor al,[supplemental_code]
-    test al,1
+    test al,HEAD
     jz gather_uniform
-    test [supplemental_code],1
+    test [supplemental_code],HEAD
     jz gather_double
     mov al,ah
     xchg al,[operand_size]
@@ -29787,7 +29810,7 @@ gather_reg_mem_reg:
     ret
 
 gather_double:
-    strings.emit 'gather_double | 29789'
+    ;strings.emit 'gather_double | 29789'
     add ah,ah
 
     gather_uniform:
@@ -29797,26 +29820,26 @@ gather_double:
     ret
 
 gather_vr128:
-    strings.emit 'gather_vr128 | 29799'
+    ;strings.emit 'gather_vr128 | 29799'
     cmp ah,16
     je instruction_ready
     cmp ah,32
     jne invalid_operand_size
-    test [supplemental_code],1
+    test [supplemental_code],HEAD
     jnz invalid_operand_size
-    test [rex_prefix],8
+    test [rex_prefix],RECTIFY
     jz invalid_operand_size
     jmp instruction_ready
     ret
 
 scatter_pd_instruction:
-    strings.emit 'scatter_pd_instruction | 29812'
+    ;strings.emit 'scatter_pd_instruction | 29812'
     or [rex_prefix],8
 
     scatter_ps_instruction:
     call setup_66_0f_38
-    or [vex_required],4+8
-    or [operand_flags],20h
+    or [vex_required],TAIL+RECTIFY
+    or [operand_flags],SPACE
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -29836,41 +29859,41 @@ scatter_pd_instruction:
     ret
 
 gatherpf_qpd_instruction:
-    strings.emit 'gatherpf_qpd_instruction | 29838'
+    ;strings.emit 'gatherpf_qpd_instruction | 29838'
     mov ah,0C7h
     jmp gatherpf_pd_instruction
     ret
 
 gatherpf_dpd_instruction:
-    strings.emit 'gatherpf_dpd_instruction | 29844'
+    ;strings.emit 'gatherpf_dpd_instruction | 29844'
     mov ah,0C6h
 
     gatherpf_pd_instruction:
-    or [rex_prefix],8
-    mov cl,8
+    or [rex_prefix],RECTIFY
+    mov cl,RECTIFY
     jmp gatherpf_instruction
     ret
 
 gatherpf_qps_instruction:
-    strings.emit 'gatherpf_qps_instruction | 29854'
+    ;strings.emit 'gatherpf_qps_instruction | 29854'
     mov ah,0C7h
     jmp gatherpf_ps_instruction
     ret
 
 gatherpf_dps_instruction:
-    strings.emit 'gatherpf_dps_instruction | 29860'
+    ;strings.emit 'gatherpf_dps_instruction | 29860'
     mov ah,0C6h
 
     gatherpf_ps_instruction:
-    mov cl,4
+    mov cl,TAIL
 
     gatherpf_instruction:
     mov [mmx_size],cl
     mov [postbyte_register],al
     mov al,ah
     call setup_66_0f_38
-    or [vex_required],4+8
-    or [operand_flags],20h
+    or [vex_required],TAIL+RECTIFY
+    or [operand_flags],SPACE
     lods u8 [esi]
     call get_size_operator
     cmp al,'['
@@ -29887,7 +29910,7 @@ gatherpf_dps_instruction:
     gatherpf_mem_size_ok:
     mov [operand_size],64
     mov al,6 shr 1
-    cmp ah,4
+    cmp ah,TAIL
     je gatherpf_check_vsib
     cmp [supplemental_code],0C6h
     jne gatherpf_check_vsib
@@ -29895,24 +29918,24 @@ gatherpf_dps_instruction:
 
     gatherpf_check_vsib:
     mov ah,bl
-    shr ah,5
+    shr ah,QUERY
     cmp al,ah
     jne invalid_operand
     jmp instruction_ready
     ret
 
 bmi_instruction:
-    strings.emit 'bmi_instruction | 29904'
-    mov [base_code],0Fh
+    ;strings.emit 'bmi_instruction | 29904'
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],0F3h
     mov [postbyte_register],al
 
     bmi_reg:
-    or [vex_required],2
+    or [vex_required],TEXT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
@@ -29922,7 +29945,7 @@ bmi_instruction:
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je bmi_reg_reg
     cmp al,'['
     jne invalid_argument
@@ -29932,7 +29955,7 @@ bmi_instruction:
     ret
 
 bmi_reg_reg:
-    strings.emit 'bmi_reg_reg | 29934'
+    ;strings.emit 'bmi_reg_reg | 29934'
     lods u8 [esi]
     call convert_register
     mov bl,al
@@ -29941,36 +29964,36 @@ bmi_reg_reg:
     ret
 
 operand_32or64:
-    strings.emit 'operand_32or64 | 29943'
+    ;strings.emit 'operand_32or64 | 29943'
     mov al,[operand_size]
-    cmp al,4
+    cmp al,TAIL
     ;je operand_32or64_ok
     je return_ok
-    cmp al,8
+    cmp al,RECTIFY
     jne invalid_operand_size
     cmp [code_type],64
     jne invalid_operand
-    or [rex_prefix],8
+    or [rex_prefix],RECTIFY
     ret
 
 pdep_instruction:
-    strings.emit 'pdep_instruction | 29956'
+    ;strings.emit 'pdep_instruction | 29956'
     mov [opcode_prefix],0F2h
     jmp andn_instruction
     ret
 
 pext_instruction:
-    strings.emit 'pext_instruction | 29962'
+    ;strings.emit 'pext_instruction | 29962'
     mov [opcode_prefix],0F3h
 
     andn_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],al
-    or [vex_required],2
+    or [vex_required],TEXT
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
@@ -29982,26 +30005,26 @@ pext_instruction:
     ret
 
 sarx_instruction:
-    strings.emit 'sarx_instruction | 29984'
+    ;strings.emit 'sarx_instruction | 29984'
     mov [opcode_prefix],0F3h
     jmp bzhi_instruction
     ret
 
 shrx_instruction:
-    strings.emit 'shrx_instruction | 29990'
+    ;strings.emit 'shrx_instruction | 29990'
     mov [opcode_prefix],0F2h
     jmp bzhi_instruction
     ret
 
 shlx_instruction:
-    strings.emit 'shlx_instruction | 29996'
+    ;strings.emit 'shlx_instruction | 29996'
     mov [opcode_prefix],66h
 
     bzhi_instruction:
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],al
-    or [vex_required],2
+    or [vex_required],TEXT
     call get_reg_mem
     jc bzhi_reg_reg
     call get_vex_source_register
@@ -30011,7 +30034,7 @@ shlx_instruction:
     ret
 
 bzhi_reg_reg:
-    strings.emit 'bzhi_reg_reg | 30013'
+    ;strings.emit 'bzhi_reg_reg | 30013'
     call get_vex_source_register
     jc invalid_operand
     call operand_32or64
@@ -30019,13 +30042,13 @@ bzhi_reg_reg:
     ret
 
 get_vex_source_register:
-    strings.emit 'get_vex_source_register | 30021'
+    ;strings.emit 'get_vex_source_register | 30021'
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     ;jne no_vex_source_register
     jne carry_then_return
     lods u8 [esi]
@@ -30035,11 +30058,11 @@ get_vex_source_register:
     ret
 
 bextr_instruction:
-    strings.emit 'bextr_instruction | 30037'
-    mov [base_code],0Fh
+    ;strings.emit 'bextr_instruction | 30037'
+    mov [base_code],SHIFT
     mov [extended_code],38h
     mov [supplemental_code],al
-    or [vex_required],2
+    or [vex_required],TEXT
     call get_reg_mem
     jc bextr_reg_reg
     call get_vex_source_register
@@ -30049,7 +30072,7 @@ bextr_instruction:
     ret
 
 bextr_reg_reg:
-    strings.emit 'bextr_reg_reg | 30051'
+    ;strings.emit 'bextr_reg_reg | 30051'
     call get_vex_source_register
     jc bextr_reg_reg_imm32
     call operand_32or64
@@ -30057,21 +30080,21 @@ bextr_reg_reg:
     ret
 
 setup_bextr_imm_opcode:
-    strings.emit 'setup_bextr_imm_opcode | 30059'
-    mov [xop_opcode_map],0Ah
-    mov [base_code],10h
+    ;strings.emit 'setup_bextr_imm_opcode | 30059'
+    mov [xop_opcode_map],LF
+    mov [base_code],DELINK
     call operand_32or64
     ret
 
 bextr_reg_mem_imm32:
-    strings.emit 'bextr_reg_mem_imm32 | 30066'
+    ;strings.emit 'bextr_reg_mem_imm32 | 30066'
     call get_imm32
     call setup_bextr_imm_opcode
     jmp store_instruction_with_imm32
     ret
 
 bextr_reg_reg_imm32:
-    strings.emit 'bextr_reg_reg_imm32 | 30073'
+    ;strings.emit 'bextr_reg_reg_imm32 | 30073'
     call get_imm32
     call setup_bextr_imm_opcode
 
@@ -30084,7 +30107,7 @@ bextr_reg_reg_imm32:
     ret
 
 get_imm32:
-    strings.emit 'get_imm32 | 30086'
+    ;strings.emit 'get_imm32 | 30086'
     cmp al,'('
     jne invalid_operand
     push _edx _ebx _ecx
@@ -30094,12 +30117,12 @@ get_imm32:
     ret
 
 rorx_instruction:
-    strings.emit 'rorx_instruction | 30096'
+    ;strings.emit 'rorx_instruction | 30096'
     mov [opcode_prefix],0F2h
-    mov [base_code],0Fh
+    mov [base_code],SHIFT
     mov [extended_code],3Ah
     mov [supplemental_code],al
-    or [vex_required],2
+    or [vex_required],TEXT
     call get_reg_mem
     jc rorx_reg_reg
     call operand_32or64
@@ -30107,16 +30130,16 @@ rorx_instruction:
     ret
 
 rorx_reg_reg:
-    strings.emit 'rorx_reg_reg | 30109'
+    ;strings.emit 'rorx_reg_reg | 30109'
     call operand_32or64
     jmp mmx_nomem_imm8
     ret
 
 tbm_instruction:
-    strings.emit 'tbm_instruction | 30115'
-    mov [xop_opcode_map],9
+    ;strings.emit 'tbm_instruction | 30115'
+    mov [xop_opcode_map],HT
     mov ah,al
-    shr ah,4
+    shr ah,TAIL
     and al,111b
     mov [base_code],ah
     mov [postbyte_register],al
@@ -30124,14 +30147,14 @@ tbm_instruction:
     ret
 
 llwpcb_instruction:
-    strings.emit 'llwpcb_instruction | 30126'
-    or [vex_required],2
-    mov [xop_opcode_map],9
+    ;strings.emit 'llwpcb_instruction | 30126'
+    or [vex_required],TEXT
+    mov [xop_opcode_map],HT
     mov [base_code],12h
     mov [postbyte_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
@@ -30141,14 +30164,14 @@ llwpcb_instruction:
     ret
 
 lwpins_instruction:
-    strings.emit 'lwpins_instruction | 30143'
-    or [vex_required],2
-    mov [xop_opcode_map],0Ah
+    ;strings.emit 'lwpins_instruction | 30143'
+    or [vex_required],TEXT
+    mov [xop_opcode_map],LF
     mov [base_code],12h
     mov [vex_register],al
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_register
@@ -30160,7 +30183,7 @@ lwpins_instruction:
     xchg cl,[operand_size]
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     je lwpins_reg_reg
     cmp al,'['
     jne invalid_argument
@@ -30170,7 +30193,7 @@ lwpins_instruction:
     xchg al,[operand_size]
     test al,al
     jz lwpins_reg_mem_size_ok
-    cmp al,4
+    cmp al,TAIL
     jne invalid_operand_size
 
     lwpins_reg_mem_size_ok:
@@ -30179,10 +30202,10 @@ lwpins_instruction:
     ret
 
 lwpins_reg_reg:
-    strings.emit 'lwpins_reg_reg | 30181'
+    ;strings.emit 'lwpins_reg_reg | 30181'
     lods u8 [esi]
     call convert_register
-    cmp ah,4
+    cmp ah,TAIL
     jne invalid_operand_size
     mov [operand_size],cl
     mov bl,al
@@ -30191,7 +30214,7 @@ lwpins_reg_reg:
     ret
 
 prepare_lwpins:
-    strings.emit 'prepare_lwpins | 30193'
+    ;strings.emit 'prepare_lwpins | 30193'
     lods u8 [esi]
     cmp al,','
     jne invalid_operand
@@ -30204,128 +30227,128 @@ prepare_lwpins:
     ret
 
 xop_single_source_sd_instruction:
-    strings.emit 'xop_single_source_sd_instruction | 30206'
-    or [operand_flags],2
-    mov [mmx_size],8
+    ;strings.emit 'xop_single_source_sd_instruction | 30206'
+    or [operand_flags],TEXT
+    mov [mmx_size],RECTIFY
     jmp xop_instruction_9
     ret
 
 xop_single_source_ss_instruction:
-    strings.emit 'xop_single_source_ss_instruction | 30213'
-    or [operand_flags],2
-    mov [mmx_size],4
+    ;strings.emit 'xop_single_source_ss_instruction | 30213'
+    or [operand_flags],TEXT
+    mov [mmx_size],TAIL
     jmp xop_instruction_9
     ret
 
 xop_single_source_instruction:
-    strings.emit 'xop_single_source_instruction | 30220'
-    or [operand_flags],2
-    mov [mmx_size],0
+    ;strings.emit 'xop_single_source_instruction | 30220'
+    or [operand_flags],TEXT
+    mov [mmx_size],NUL
 
     xop_instruction_9:
     mov [base_code],al
-    mov [xop_opcode_map],9
+    mov [xop_opcode_map],HT
     jmp avx_xop_common
     ret
 
 xop_single_source_128bit_instruction:
-    strings.emit 'xop_single_source_128bit_instruction | 30231'
-    or [operand_flags],2
+    ;strings.emit 'xop_single_source_128bit_instruction | 30231'
+    or [operand_flags],TEXT
     mov [mmx_size],16
     jmp xop_instruction_9
     ret
 
 xop_triple_source_128bit_instruction:
-    strings.emit 'xop_triple_source_128bit_instruction | 30238'
-    mov [immediate_size],-1
-    mov u8 [value],0
+    ;strings.emit 'xop_triple_source_128bit_instruction | 30238'
+    mov [immediate_size],-HEAD
+    mov u8 [value],NUL
     mov [mmx_size],16
     jmp xop_instruction_8
     ret
 
 xop_128bit_instruction:
-    strings.emit 'xop_128bit_instruction | 30245'
-    mov [immediate_size],-2
-    mov u8 [value],0
+    ;strings.emit 'xop_128bit_instruction | 30245'
+    mov [immediate_size],-TEXT
+    mov u8 [value],NUL
     mov [mmx_size],16
 
     xop_instruction_8:
     mov [base_code],al
-    mov [xop_opcode_map],8
+    mov [xop_opcode_map],RECTIFY
     jmp avx_xop_common
     ret
 
 xop_pcom_b_instruction:
-    strings.emit 'xop_pcom_b_instruction | 30258'
+    ;strings.emit 'xop_pcom_b_instruction | 30258'
     mov ah,0CCh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_d_instruction:
-    strings.emit 'xop_pcom_d_instruction | 30264'
+    ;strings.emit 'xop_pcom_d_instruction | 30264'
     mov ah,0CEh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_q_instruction:
-    strings.emit 'xop_pcom_q_instruction | 30270'
+    ;strings.emit 'xop_pcom_q_instruction | 30270'
     mov ah,0CFh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_w_instruction:
-    strings.emit 'xop_pcom_w_instruction | 30276'
+    ;strings.emit 'xop_pcom_w_instruction | 30276'
     mov ah,0CDh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_ub_instruction:
-    strings.emit 'xop_pcom_ub_instruction | 30282'
+    ;strings.emit 'xop_pcom_ub_instruction | 30282'
     mov ah,0ECh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_ud_instruction:
-    strings.emit 'xop_pcom_ud_instruction | 30288'
+    ;strings.emit 'xop_pcom_ud_instruction | 30288'
     mov ah,0EEh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_uq_instruction:
-    strings.emit 'xop_pcom_uq_instruction | 30294'
+    ;strings.emit 'xop_pcom_uq_instruction | 30294'
     mov ah,0EFh
     jmp xop_pcom_instruction
     ret
 
 xop_pcom_uw_instruction:
-    strings.emit 'xop_pcom_uw_instruction | 30300'
+    ;strings.emit 'xop_pcom_uw_instruction | 30300'
     mov ah,0EDh
 
     xop_pcom_instruction:
     mov u8 [value],al
-    mov [immediate_size],-4
+    mov [immediate_size],-TAIL
     mov [mmx_size],16
     mov [base_code],ah
-    mov [xop_opcode_map],8
+    mov [xop_opcode_map],RECTIFY
     jmp avx_xop_common
     ret
 
 vpcmov_instruction:
-    strings.emit 'vpcmov_instruction | 30313'
-    or [vex_required],2
-    mov [immediate_size],-2
-    mov u8 [value],0
-    mov [mmx_size],0
+    ;strings.emit 'vpcmov_instruction | 30313'
+    or [vex_required],TEXT
+    mov [immediate_size],-TEXT
+    mov u8 [value],NUL
+    mov [mmx_size],NUL
     mov [base_code],al
-    mov [xop_opcode_map],8
+    mov [xop_opcode_map],RECTIFY
     jmp avx_xop_common
     ret
 
 xop_shift_instruction:
-    strings.emit 'xop_shift_instruction | 30324'
+    ;strings.emit 'xop_shift_instruction | 30324'
     mov [base_code],al
-    or [vex_required],2
-    mov [xop_opcode_map],9
+    or [vex_required],TEXT
+    mov [xop_opcode_map],HT
     call take_avx_register
     cmp ah,16
     jne invalid_operand
@@ -30337,7 +30360,7 @@ xop_shift_instruction:
     call get_size_operator
     cmp al,'['
     je xop_shift_reg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
     call convert_xmm_register
@@ -30354,7 +30377,7 @@ xop_shift_instruction:
     xchg cl,[operand_size]
     cmp al,'['
     je xop_shift_reg_reg_mem
-    cmp al,10h
+    cmp al,DELINK
     jne xop_shift_reg_reg_imm
     call take_avx_register
     mov bl,al
@@ -30363,8 +30386,8 @@ xop_shift_instruction:
     ret
 
 xop_shift_reg_reg_mem:
-    strings.emit 'xop_shift_reg_reg_mem | 30365'
-    or [rex_prefix],8
+    ;strings.emit 'xop_shift_reg_reg_mem | 30365'
+    or [rex_prefix],RECTIFY
     lods u8 [esi]
     call get_size_operator
     call get_address
@@ -30372,19 +30395,19 @@ xop_shift_reg_reg_mem:
     ret
 
 xop_shift_reg_reg_imm:
-    strings.emit 'xop_shift_reg_reg_imm | 30374'
+    ;strings.emit 'xop_shift_reg_reg_imm | 30374'
     xor bl,bl
     xchg bl,[vex_register]
     cmp [base_code],94h
     jae invalid_operand
-    add [base_code],30h
-    mov [xop_opcode_map],8
+    add [base_code],'0'
+    mov [xop_opcode_map],RECTIFY
     dec esi
     jmp mmx_nomem_imm8
     ret
 
 xop_shift_reg_mem:
-    strings.emit 'xop_shift_reg_mem | 30386'
+    ;strings.emit 'xop_shift_reg_mem | 30386'
     call get_address
     lods u8 [esi]
     cmp al,','
@@ -30396,7 +30419,7 @@ xop_shift_reg_mem:
     call get_size_operator
     pop _esi
     xchg cl,[operand_size]
-    cmp al,10h
+    cmp al,DELINK
     jne xop_shift_reg_mem_imm
     call take_avx_register
     mov [vex_register],al
@@ -30404,26 +30427,26 @@ xop_shift_reg_mem:
     ret
 
 xop_shift_reg_mem_imm:
-    strings.emit 'xop_shift_reg_mem_imm | 30406'
+    ;strings.emit 'xop_shift_reg_mem_imm | 30406'
     cmp [base_code],94h
     jae invalid_operand
-    add [base_code],30h
-    mov [xop_opcode_map],8
+    add [base_code],'0'
+    mov [xop_opcode_map],RECTIFY
     dec esi
     jmp mmx_imm8
     ret
 
 set_evex_mode:
-    strings.emit 'set_evex_mode | 30416'
+    ;strings.emit 'set_evex_mode | 30416'
     mov [evex_mode],al
     jmp instruction_assembled
     ret
 
 take_avx_register:
-    strings.emit 'take_avx_register | 30422'
+    ;strings.emit 'take_avx_register | 30422'
     lods u8 [esi]
     call get_size_operator
-    cmp al,10h
+    cmp al,DELINK
     jne invalid_operand
     lods u8 [esi]
 
@@ -30442,11 +30465,11 @@ take_avx_register:
     ret
 
 avx512_register_size:
-    strings.emit 'avx512_register_size | 30444'
+    ;strings.emit 'avx512_register_size | 30444'
     mov ah,64
 
     avx_register_size_ok:
-    cmp al,8
+    cmp al,RECTIFY
     jb match_register_size
     cmp [code_type],64
     jne invalid_operand
@@ -30454,8 +30477,8 @@ avx512_register_size:
     ret
 
 store_vex_instruction_code:
-    strings.emit 'store_vex_instruction_code | 30456'
-    test [rex_prefix],10h
+    ;strings.emit 'store_vex_instruction_code | 30456'
+    test [rex_prefix],DELINK
     jnz invalid_operand
     test [vex_required],0F8h
     jnz store_evex_instruction_code
@@ -30464,13 +30487,13 @@ store_vex_instruction_code:
     cmp [operand_size],64
     je store_evex_instruction_code
     mov al,[base_code]
-    cmp al,0Fh
+    cmp al,SHIFT
     jne store_xop_instruction_code
-    test [vex_required],2
+    test [vex_required],TEXT
     jnz prepare_vex
-    cmp [evex_mode],0
+    cmp [evex_mode],NUL
     je prepare_vex
-    cmp [displacement_compression],1
+    cmp [displacement_compression],HEAD
     jne prepare_vex
     cmp edx,80h
     jb prepare_vex
@@ -30478,11 +30501,11 @@ store_vex_instruction_code:
     jae prepare_vex
     mov al,bl
     or al,bh
-    shr al,4
-    cmp al,2
+    shr al,TAIL
+    cmp al,TEXT
     je prepare_vex
     call compress_displacement
-    cmp [displacement_compression],2
+    cmp [displacement_compression],TEXT
     ja prepare_evex
     jb prepare_vex
     dec [displacement_compression]
@@ -30496,23 +30519,23 @@ store_vex_instruction_code:
     je store_vex_0f3a_instruction_code
     test [rex_prefix],1011b
     jnz store_vex_0f_instruction_code
-    mov [edi+2],ah
+    mov [edi+TEXT],ah
     mov u8 [edi],0C5h
     mov al,[vex_register]
     not al
-    shl al,3
+    shl al,TXT
     mov ah,[rex_prefix]
-    shl ah,5
+    shl ah,QUERY
     and ah,80h
     xor al,ah
     call get_vex_lpp_bits
-    mov [edi+1],al
+    mov [edi+HEAD],al
     call check_vex
-    add edi,3
+    add edi,TXT
     ret
 
 get_vex_lpp_bits:
-    strings.emit 'get_vex_lpp_bits | 30513'
+    ;strings.emit 'get_vex_lpp_bits | 30513'
     cmp [operand_size],32
     jne get_vex_pp_bits
     or al,100b
@@ -30530,89 +30553,89 @@ get_vex_lpp_bits:
     ret
 
 store_vex_0f38_instruction_code:
-    strings.emit 'store_vex_0f38_instruction_code | 30532'
+    ;strings.emit 'store_vex_0f38_instruction_code | 30532'
     mov al,11100010b
     mov ah,[supplemental_code]
     jmp make_c4_vex
     ret
 
 store_vex_0f3a_instruction_code:
-    strings.emit 'store_vex_0f3a_instruction_code | 30539'
+    ;strings.emit 'store_vex_0f3a_instruction_code | 30539'
     mov al,11100011b
     mov ah,[supplemental_code]
     jmp make_c4_vex
     ret
 
 store_vex_0f_instruction_code:
-    strings.emit 'store_vex_0f_instruction_code | 30546'
+    ;strings.emit 'store_vex_0f_instruction_code | 30546'
     mov al,11100001b
 
     make_c4_vex:
     mov [edi+3],ah
     mov u8 [edi],0C4h
     mov ah,[rex_prefix]
-    shl ah,5
+    shl ah,QUERY
     xor al,ah
-    mov [edi+1],al
+    mov [edi+HEAD],al
     call check_vex
     mov al,[vex_register]
     xor al,1111b
-    shl al,3
+    shl al,TXT
     mov ah,[rex_prefix]
-    shl ah,4
+    shl ah,TAIL
     and ah,80h
     or al,ah
     call get_vex_lpp_bits
-    mov [edi+2],al
-    add edi,4
+    mov [edi+TEXT],al
+    add edi,TAIL
     ret
 
 check_vex:
-    strings.emit 'check_vex | 30570'
+    ;strings.emit 'check_vex | 30570'
     cmp [code_type],64
     je return_ok
     not al
     test al,11000000b
     jnz invalid_operand
-    test [rex_prefix],40h
+    test [rex_prefix],AMP
     jnz invalid_operand
     jmp return_ok
     ret
 
 store_xop_instruction_code:
-    strings.emit 'store_xop_instruction_code | 30582'
+    ;strings.emit 'store_xop_instruction_code | 30582'
     mov [edi+3],al
     mov u8 [edi],8Fh
     mov al,[xop_opcode_map]
     mov ah,[rex_prefix]
-    test ah,40h
+    test ah,AMP
     jz xop_ok
     cmp [code_type],64
     jne invalid_operand
     xop_ok:
     not ah
-    shl ah,5
+    shl ah,QUERY
     xor al,ah
-    mov [edi+1],al
+    mov [edi+HEAD],al
     mov al,[vex_register]
     xor al,1111b
-    shl al,3
+    shl al,TXT
     mov ah,[rex_prefix]
-    shl ah,4
+    shl ah,TAIL
     and ah,80h
     or al,ah
     call get_vex_lpp_bits
-    mov [edi+2],al
-    add edi,4
+    mov [edi+TEXT],al
+    add edi,TAIL
     ret
 
 store_evex_instruction_code:
-    strings.emit 'store_evex_instruction_code | 30609'
-    test [vex_required],2
+    ;strings.emit 'store_evex_instruction_code | 30609'
+    test [vex_required],TEXT
     jnz invalid_operand
-    cmp [base_code],0Fh
+    cmp [base_code],SHIFT
     jne invalid_operand
-    cmp [displacement_compression],1
+    cmp [displacement_compression],HEAD
     jne prepare_evex
     call compress_displacement
 
@@ -30625,31 +30648,31 @@ store_evex_instruction_code:
     mov al,11110001b
 
     make_evex:
-    mov [edi+4],ah
+    mov [edi+TAIL],ah
     mov u8 [edi],62h
     mov ah,[rex_prefix]
-    shl ah,5
+    shl ah,QUERY
     xor al,ah
     mov ah,[vex_required]
-    and ah,10h
+    and ah,DELINK
     xor al,ah
-    mov [edi+1],al
+    mov [edi+HEAD],al
     call check_vex
     mov al,[vex_register]
     not al
     and al,1111b
-    shl al,3
+    shl al,TXT
     mov ah,[rex_prefix]
-    shl ah,4
+    shl ah,TAIL
     or ah,[rex_prefix]
     and ah,80h
     or al,ah
     or al,100b
     call get_vex_pp_bits
-    mov [edi+2],al
+    mov [edi+TEXT],al
     mov al,[vex_register]
     not al
-    shr al,1
+    shr al,HEAD
     and al,1000b
     test [vex_required],80h
     jne evex_rounding
@@ -30661,41 +30684,41 @@ store_evex_instruction_code:
     ret
 
 evex_rounding:
-    strings.emit 'evex_rounding | 30663'
+    ;strings.emit 'evex_rounding | 30663'
     mov ah,[rounding_mode]
-    shl ah,5
+    shl ah,QUERY
     or al,ah
 
     evex_l_ok:
-    test [vex_required],20h
+    test [vex_required],SPACE
     jz evex_zaaa_ok
     or al,[mask_register]
     evex_zaaa_ok:
-    test [vex_required],40h
+    test [vex_required],AMP
     jz evex_b_ok
-    or al,10h
+    or al,DELINK
 
     evex_b_ok:
     mov [edi+3],al
-    add edi,5
+    add edi,QUERY
     ret
 
 store_evex_0f38_instruction_code:
-    strings.emit 'store_evex_0f38_instruction_code | 30683'
+    ;strings.emit 'store_evex_0f38_instruction_code | 30683'
     mov al,11110010b
     mov ah,[supplemental_code]
     jmp make_evex
     ret
 
 store_evex_0f3a_instruction_code:
-    strings.emit 'store_evex_0f3a_instruction_code | 30690'
+    ;strings.emit 'store_evex_0f3a_instruction_code | 30690'
     mov al,11110011b
     mov ah,[supplemental_code]
     jmp make_evex
     ret
 
 compress_displacement:
-    strings.emit 'compress_displacement | 30697'
+    ;strings.emit 'compress_displacement | 30697'
     mov ebp,ecx
     mov [uncompressed_displacement],edx
     or edx,edx
@@ -30725,8 +30748,8 @@ compress_displacement:
     ret
 
 displacement_compressed:
-    strings.emit 'displacement_compressed | 30728'
-    add [displacement_compression],2
+    ;strings.emit 'displacement_compressed | 30728'
+    add [displacement_compression],TEXT
 
     displacement_compression_ok:
     mov ecx,ebp
@@ -30743,7 +30766,7 @@ vex_f3:
     ret
 
 vex_66:
-    or al,1
+    or al,HEAD
     ret
 
 carry_then_return:
@@ -30760,7 +30783,7 @@ near_ok:
 include_variable db 'INCLUDE',0
 
 symbol_characters db 27
- db 9,0Ah,0Dh,1Ah,20h,'+-/*=<>()[]{}:,|&~#`;\'
+ db 9,LF,CR,SUB,SPACE,'+-/*=<>()[]{}:,|&~#`;\'
 
 preprocessor_directives:
  db 6,'define'
@@ -30845,7 +30868,7 @@ address_sizes:
  db 4,'byte',1
  db 5,'dword',4
  db 5,'qword',8
- db 4,'word',2
+ db 4,'word',TEXT
  db 0
 
 symbols:
@@ -30864,25 +30887,25 @@ symbols:
 symbols_1:
  db 'z',1Fh,0
 symbols_2:
- db 'ah',10h,04h
- db 'al',10h,10h
- db 'ax',10h,20h
- db 'bh',10h,07h
- db 'bl',10h,13h
- db 'bp',10h,25h
- db 'bx',10h,23h
- db 'ch',10h,05h
- db 'cl',10h,11h
- db 'cs',10h,32h
- db 'cx',10h,21h
- db 'dh',10h,06h
- db 'di',10h,27h
- db 'dl',10h,12h
- db 'ds',10h,34h
- db 'dx',10h,22h
- db 'es',10h,31h
- db 'fs',10h,35h
- db 'gs',10h,36h
+ db 'ah',DELINK,04h
+ db 'al',DELINK,DELINK
+ db 'ax',DELINK,SPACE
+ db 'bh',DELINK,07h
+ db 'bl',DELINK,13h
+ db 'bp',DELINK,25h
+ db 'bx',DELINK,23h
+ db 'ch',DELINK,05h
+ db 'cl',DELINK,11h
+ db 'cs',DELINK,32h
+ db 'cx',DELINK,21h
+ db 'dh',DELINK,06h
+ db 'di',DELINK,QUOTE
+ db 'dl',DELINK,12h
+ db 'ds',DELINK,34h
+ db 'dx',DELINK,SYN
+ db 'es',DELINK,31h
+ db 'fs',DELINK,35h
+ db 'gs',DELINK,36h
  db 'k0',14h,50h
  db 'k1',14h,51h
  db 'k2',14h,52h
@@ -30892,21 +30915,21 @@ symbols_2:
  db 'k6',14h,56h
  db 'k7',14h,57h
  db 'ms',1Ch,41h
- db 'mz',18h,20h
+ db 'mz',18h,SPACE
  db 'nx',1Bh,83h
  db 'pe',18h,30h
- db 'r8',10h,88h
- db 'r9',10h,89h
+ db 'r8',DELINK,88h
+ db 'r9',DELINK,89h
  db 'rd',1Fh,21h
- db 'rn',1Fh,20h
- db 'ru',1Fh,22h
+ db 'rn',1Fh,SPACE
+ db 'ru',1Fh,SYN
  db 'rz',1Fh,23h
- db 'si',10h,26h
- db 'sp',10h,24h
- db 'ss',10h,33h
- db 'st',10h,0A0h
+ db 'si',DELINK,26h
+ db 'sp',DELINK,24h
+ db 'ss',DELINK,33h
+ db 'st',DELINK,0A0h
 symbols_3:
- db 'bpl',10h,15h
+ db 'bpl',DELINK,15h
  db 'cr0',14h,00h
  db 'cr1',14h,01h
  db 'cr2',14h,02h
@@ -30916,10 +30939,10 @@ symbols_3:
  db 'cr6',14h,06h
  db 'cr7',14h,07h
  db 'cr8',14h,08h
- db 'cr9',14h,09h
- db 'dil',10h,17h
+ db 'cr9',14h,HT
+ db 'dil',DELINK,17h
  db 'dll',1Bh,80h
- db 'dr0',14h,10h
+ db 'dr0',14h,DELINK
  db 'dr1',14h,11h
  db 'dr2',14h,12h
  db 'dr3',14h,13h
@@ -30929,61 +30952,61 @@ symbols_3:
  db 'dr7',14h,17h
  db 'dr8',14h,18h
  db 'dr9',14h,19h
- db 'eax',10h,40h
- db 'ebp',10h,45h
- db 'ebx',10h,43h
- db 'ecx',10h,41h
- db 'edi',10h,47h
- db 'edx',10h,42h
+ db 'eax',DELINK,AMP
+ db 'ebp',DELINK,45h
+ db 'ebx',DELINK,43h
+ db 'ecx',DELINK,41h
+ db 'edi',DELINK,47h
+ db 'edx',DELINK,42h
  db 'efi',1Bh,10
- db 'eip',10h,94h
- db 'esi',10h,46h
- db 'esp',10h,44h
+ db 'eip',DELINK,94h
+ db 'esi',DELINK,46h
+ db 'esp',DELINK,44h
  db 'far',12h,3
- db 'gui',1Bh,2
- db 'mm0',10h,0B0h
- db 'mm1',10h,0B1h
- db 'mm2',10h,0B2h
- db 'mm3',10h,0B3h
- db 'mm4',10h,0B4h
- db 'mm5',10h,0B5h
- db 'mm6',10h,0B6h
- db 'mm7',10h,0B7h
- db 'r10',10h,8Ah
- db 'r11',10h,8Bh
- db 'r12',10h,8Ch
- db 'r13',10h,8Dh
- db 'r14',10h,8Eh
- db 'r15',10h,8Fh
- db 'r8b',10h,18h
- db 'r8d',10h,48h
- db 'r8l',10h,18h
- db 'r8w',10h,28h
- db 'r9b',10h,19h
- db 'r9d',10h,49h
- db 'r9l',10h,19h
- db 'r9w',10h,29h
- db 'rax',10h,80h
- db 'rbp',10h,85h
- db 'rbx',10h,83h
- db 'rcx',10h,81h
- db 'rdi',10h,87h
- db 'rdx',10h,82h
- db 'rip',10h,98h
- db 'rsi',10h,86h
- db 'rsp',10h,84h
+ db 'gui',1Bh,TEXT
+ db 'mm0',DELINK,0B0h
+ db 'mm1',DELINK,0B1h
+ db 'mm2',DELINK,0B2h
+ db 'mm3',DELINK,0B3h
+ db 'mm4',DELINK,0B4h
+ db 'mm5',DELINK,0B5h
+ db 'mm6',DELINK,0B6h
+ db 'mm7',DELINK,0B7h
+ db 'r10',DELINK,8Ah
+ db 'r11',DELINK,8Bh
+ db 'r12',DELINK,8Ch
+ db 'r13',DELINK,8Dh
+ db 'r14',DELINK,8Eh
+ db 'r15',DELINK,8Fh
+ db 'r8b',DELINK,18h
+ db 'r8d',DELINK,48h
+ db 'r8l',DELINK,18h
+ db 'r8w',DELINK,28h
+ db 'r9b',DELINK,19h
+ db 'r9d',DELINK,49h
+ db 'r9l',DELINK,19h
+ db 'r9w',DELINK,29h
+ db 'rax',DELINK,80h
+ db 'rbp',DELINK,85h
+ db 'rbx',DELINK,83h
+ db 'rcx',DELINK,81h
+ db 'rdi',DELINK,87h
+ db 'rdx',DELINK,82h
+ db 'rip',DELINK,98h
+ db 'rsi',DELINK,86h
+ db 'rsp',DELINK,84h
  db 'sae',1Fh,30h
- db 'sil',10h,16h
- db 'spl',10h,14h
- db 'st0',10h,0A0h
- db 'st1',10h,0A1h
- db 'st2',10h,0A2h
- db 'st3',10h,0A3h
- db 'st4',10h,0A4h
- db 'st5',10h,0A5h
- db 'st6',10h,0A6h
- db 'st7',10h,0A7h
- db 'tr0',14h,40h
+ db 'sil',DELINK,16h
+ db 'spl',DELINK,14h
+ db 'st0',DELINK,0A0h
+ db 'st1',DELINK,0A1h
+ db 'st2',DELINK,0A2h
+ db 'st3',DELINK,0A3h
+ db 'st4',DELINK,0A4h
+ db 'st5',DELINK,0A5h
+ db 'st6',DELINK,0A6h
+ db 'st7',DELINK,0A7h
+ db 'tr0',14h,AMP
  db 'tr1',14h,41h
  db 'tr2',14h,42h
  db 'tr3',14h,43h
@@ -31002,79 +31025,79 @@ symbols_4:
  db 'bnd3',14h,63h
  db 'byte',11h,1
  db 'code',19h,5
- db 'coff',18h,40h
- db 'cr10',14h,0Ah
+ db 'coff',18h,AMP
+ db 'cr10',14h,LF
  db 'cr11',14h,0Bh
  db 'cr12',14h,0Ch
- db 'cr13',14h,0Dh
+ db 'cr13',14h,CR
  db 'cr14',14h,0Eh
- db 'cr15',14h,0Fh
+ db 'cr15',14h,SHIFT
  db 'data',19h,6
- db 'dr10',14h,1Ah
+ db 'dr10',14h,SUB
  db 'dr11',14h,1Bh
  db 'dr12',14h,1Ch
  db 'dr13',14h,1Dh
  db 'dr14',14h,1Eh
  db 'dr15',14h,1Fh
  db 'ms64',1Ch,49h
- db 'near',12h,2
+ db 'near',12h,TEXT
  db 'note',1Eh,4
  db 'pe64',18h,3Ch
- db 'r10b',10h,1Ah
- db 'r10d',10h,4Ah
- db 'r10l',10h,1Ah
- db 'r10w',10h,2Ah
- db 'r11b',10h,1Bh
- db 'r11d',10h,4Bh
- db 'r11l',10h,1Bh
- db 'r11w',10h,2Bh
- db 'r12b',10h,1Ch
- db 'r12d',10h,4Ch
- db 'r12l',10h,1Ch
- db 'r12w',10h,2Ch
- db 'r13b',10h,1Dh
- db 'r13d',10h,4Dh
- db 'r13l',10h,1Dh
- db 'r13w',10h,2Dh
- db 'r14b',10h,1Eh
- db 'r14d',10h,4Eh
- db 'r14l',10h,1Eh
- db 'r14w',10h,2Eh
- db 'r15b',10h,1Fh
- db 'r15d',10h,4Fh
- db 'r15l',10h,1Fh
- db 'r15w',10h,2Fh
- db 'word',11h,2
- db 'xmm0',10h,0C0h
- db 'xmm1',10h,0C1h
- db 'xmm2',10h,0C2h
- db 'xmm3',10h,0C3h
- db 'xmm4',10h,0C4h
- db 'xmm5',10h,0C5h
- db 'xmm6',10h,0C6h
- db 'xmm7',10h,0C7h
- db 'xmm8',10h,0C8h
- db 'xmm9',10h,0C9h
- db 'ymm0',10h,0E0h
- db 'ymm1',10h,0E1h
- db 'ymm2',10h,0E2h
- db 'ymm3',10h,0E3h
- db 'ymm4',10h,0E4h
- db 'ymm5',10h,0E5h
- db 'ymm6',10h,0E6h
- db 'ymm7',10h,0E7h
- db 'ymm8',10h,0E8h
- db 'ymm9',10h,0E9h
- db 'zmm0',10h,60h
- db 'zmm1',10h,61h
- db 'zmm2',10h,62h
- db 'zmm3',10h,63h
- db 'zmm4',10h,64h
- db 'zmm5',10h,65h
- db 'zmm6',10h,66h
- db 'zmm7',10h,67h
- db 'zmm8',10h,68h
- db 'zmm9',10h,69h
+ db 'r10b',DELINK,SUB
+ db 'r10d',DELINK,4Ah
+ db 'r10l',DELINK,SUB
+ db 'r10w',DELINK,2Ah
+ db 'r11b',DELINK,1Bh
+ db 'r11d',DELINK,4Bh
+ db 'r11l',DELINK,1Bh
+ db 'r11w',DELINK,2Bh
+ db 'r12b',DELINK,1Ch
+ db 'r12d',DELINK,4Ch
+ db 'r12l',DELINK,1Ch
+ db 'r12w',DELINK,2Ch
+ db 'r13b',DELINK,1Dh
+ db 'r13d',DELINK,4Dh
+ db 'r13l',DELINK,1Dh
+ db 'r13w',DELINK,2Dh
+ db 'r14b',DELINK,1Eh
+ db 'r14d',DELINK,4Eh
+ db 'r14l',DELINK,1Eh
+ db 'r14w',DELINK,2Eh
+ db 'r15b',DELINK,1Fh
+ db 'r15d',DELINK,4Fh
+ db 'r15l',DELINK,1Fh
+ db 'r15w',DELINK,2Fh
+ db 'word',11h,TEXT
+ db 'xmm0',DELINK,0C0h
+ db 'xmm1',DELINK,0C1h
+ db 'xmm2',DELINK,0C2h
+ db 'xmm3',DELINK,0C3h
+ db 'xmm4',DELINK,0C4h
+ db 'xmm5',DELINK,0C5h
+ db 'xmm6',DELINK,0C6h
+ db 'xmm7',DELINK,0C7h
+ db 'xmm8',DELINK,0C8h
+ db 'xmm9',DELINK,0C9h
+ db 'ymm0',DELINK,0E0h
+ db 'ymm1',DELINK,0E1h
+ db 'ymm2',DELINK,0E2h
+ db 'ymm3',DELINK,0E3h
+ db 'ymm4',DELINK,0E4h
+ db 'ymm5',DELINK,0E5h
+ db 'ymm6',DELINK,0E6h
+ db 'ymm7',DELINK,0E7h
+ db 'ymm8',DELINK,0E8h
+ db 'ymm9',DELINK,0E9h
+ db 'zmm0',DELINK,60h
+ db 'zmm1',DELINK,61h
+ db 'zmm2',DELINK,62h
+ db 'zmm3',DELINK,63h
+ db 'zmm4',DELINK,64h
+ db 'zmm5',DELINK,65h
+ db 'zmm6',DELINK,66h
+ db 'zmm7',DELINK,67h
+ db 'zmm8',DELINK,68h
+ db 'zmm9',DELINK,69h
 symbols_5:
  db '1to16',1Fh,14h
  db 'dword',11h,4
@@ -31083,99 +31106,99 @@ symbols_5:
  db 'pword',11h,6
  db 'qword',11h,8
  db 'short',12h,1
- db 'tbyte',11h,0Ah
- db 'tword',11h,0Ah
+ db 'tbyte',11h,LF
+ db 'tword',11h,LF
  db 'use16',13h,16
  db 'use32',13h,32
  db 'use64',13h,64
- db 'xmm10',10h,0CAh
- db 'xmm11',10h,0CBh
- db 'xmm12',10h,0CCh
- db 'xmm13',10h,0CDh
- db 'xmm14',10h,0CEh
- db 'xmm15',10h,0CFh
- db 'xmm16',10h,0D0h
- db 'xmm17',10h,0D1h
- db 'xmm18',10h,0D2h
- db 'xmm19',10h,0D3h
- db 'xmm20',10h,0D4h
- db 'xmm21',10h,0D5h
- db 'xmm22',10h,0D6h
- db 'xmm23',10h,0D7h
- db 'xmm24',10h,0D8h
- db 'xmm25',10h,0D9h
- db 'xmm26',10h,0DAh
- db 'xmm27',10h,0DBh
- db 'xmm28',10h,0DCh
- db 'xmm29',10h,0DDh
- db 'xmm30',10h,0DEh
- db 'xmm31',10h,0DFh
+ db 'xmm10',DELINK,0CAh
+ db 'xmm11',DELINK,0CBh
+ db 'xmm12',DELINK,0CCh
+ db 'xmm13',DELINK,0CDh
+ db 'xmm14',DELINK,0CEh
+ db 'xmm15',DELINK,0CFh
+ db 'xmm16',DELINK,0D0h
+ db 'xmm17',DELINK,0D1h
+ db 'xmm18',DELINK,0D2h
+ db 'xmm19',DELINK,0D3h
+ db 'xmm20',DELINK,0D4h
+ db 'xmm21',DELINK,0D5h
+ db 'xmm22',DELINK,0D6h
+ db 'xmm23',DELINK,0D7h
+ db 'xmm24',DELINK,0D8h
+ db 'xmm25',DELINK,0D9h
+ db 'xmm26',DELINK,0DAh
+ db 'xmm27',DELINK,0DBh
+ db 'xmm28',DELINK,0DCh
+ db 'xmm29',DELINK,0DDh
+ db 'xmm30',DELINK,0DEh
+ db 'xmm31',DELINK,0DFh
  db 'xword',11h,16
- db 'ymm10',10h,0EAh
- db 'ymm11',10h,0EBh
- db 'ymm12',10h,0ECh
- db 'ymm13',10h,0EDh
- db 'ymm14',10h,0EEh
- db 'ymm15',10h,0EFh
- db 'ymm16',10h,0F0h
- db 'ymm17',10h,0F1h
- db 'ymm18',10h,0F2h
- db 'ymm19',10h,0F3h
- db 'ymm20',10h,0F4h
- db 'ymm21',10h,0F5h
- db 'ymm22',10h,0F6h
- db 'ymm23',10h,0F7h
- db 'ymm24',10h,0F8h
- db 'ymm25',10h,0F9h
- db 'ymm26',10h,0FAh
- db 'ymm27',10h,0FBh
- db 'ymm28',10h,0FCh
- db 'ymm29',10h,0FDh
- db 'ymm30',10h,0FEh
- db 'ymm31',10h,0FFh
+ db 'ymm10',DELINK,0EAh
+ db 'ymm11',DELINK,0EBh
+ db 'ymm12',DELINK,0ECh
+ db 'ymm13',DELINK,0EDh
+ db 'ymm14',DELINK,0EEh
+ db 'ymm15',DELINK,0EFh
+ db 'ymm16',DELINK,0F0h
+ db 'ymm17',DELINK,0F1h
+ db 'ymm18',DELINK,0F2h
+ db 'ymm19',DELINK,0F3h
+ db 'ymm20',DELINK,0F4h
+ db 'ymm21',DELINK,0F5h
+ db 'ymm22',DELINK,0F6h
+ db 'ymm23',DELINK,0F7h
+ db 'ymm24',DELINK,0F8h
+ db 'ymm25',DELINK,0F9h
+ db 'ymm26',DELINK,0FAh
+ db 'ymm27',DELINK,0FBh
+ db 'ymm28',DELINK,0FCh
+ db 'ymm29',DELINK,0FDh
+ db 'ymm30',DELINK,0FEh
+ db 'ymm31',DELINK,0FFh
  db 'yword',11h,32
- db 'zmm10',10h,6Ah
- db 'zmm11',10h,6Bh
- db 'zmm12',10h,6Ch
- db 'zmm13',10h,6Dh
- db 'zmm14',10h,6Eh
- db 'zmm15',10h,6Fh
- db 'zmm16',10h,70h
- db 'zmm17',10h,71h
- db 'zmm18',10h,72h
- db 'zmm19',10h,73h
- db 'zmm20',10h,74h
- db 'zmm21',10h,75h
- db 'zmm22',10h,76h
- db 'zmm23',10h,77h
- db 'zmm24',10h,78h
- db 'zmm25',10h,79h
- db 'zmm26',10h,7Ah
- db 'zmm27',10h,7Bh
- db 'zmm28',10h,7Ch
- db 'zmm29',10h,7Dh
- db 'zmm30',10h,7Eh
- db 'zmm31',10h,7Fh
+ db 'zmm10',DELINK,6Ah
+ db 'zmm11',DELINK,6Bh
+ db 'zmm12',DELINK,6Ch
+ db 'zmm13',DELINK,6Dh
+ db 'zmm14',DELINK,6Eh
+ db 'zmm15',DELINK,6Fh
+ db 'zmm16',DELINK,70h
+ db 'zmm17',DELINK,71h
+ db 'zmm18',DELINK,72h
+ db 'zmm19',DELINK,73h
+ db 'zmm20',DELINK,74h
+ db 'zmm21',DELINK,75h
+ db 'zmm22',DELINK,76h
+ db 'zmm23',DELINK,77h
+ db 'zmm24',DELINK,78h
+ db 'zmm25',DELINK,79h
+ db 'zmm26',DELINK,7Ah
+ db 'zmm27',DELINK,7Bh
+ db 'zmm28',DELINK,7Ch
+ db 'zmm29',DELINK,7Dh
+ db 'zmm30',DELINK,7Eh
+ db 'zmm31',DELINK,7Fh
  db 'zword',11h,64
 symbols_6:
- db 'binary',18h,10h
+ db 'binary',18h,DELINK
  db 'dqword',11h,16
- db 'export',1Ah,0
- db 'fixups',1Ah,5
- db 'import',1Ah,1
+ db 'export',SUB,0
+ db 'fixups',SUB,5
+ db 'import',SUB,1
  db 'native',1Bh,1
  db 'qqword',11h,32
  db 'static',1Dh,1
 symbols_7:
  db 'console',1Bh,3
  db 'dqqword',11h,64
- db 'dynamic',1Eh,2
+ db 'dynamic',1Eh,TEXT
  db 'efiboot',1Bh,11
 symbols_8:
  db 'gnustack',1Eh,51h
  db 'linkinfo',19h,9
  db 'readable',19h,30
- db 'resource',1Ah,2
+ db 'resource',SUB,TEXT
  db 'writable',19h,31
 symbols_9:
  db 'shareable',19h,28
@@ -31246,11 +31269,11 @@ instructions_3:
  dw aa_instruction-instruction_handler
  db 'aas',3Fh
  dw simple_instruction_except64-instruction_handler
- db 'adc',10h
+ db 'adc',DELINK
  dw basic_instruction-instruction_handler
  db 'add',00h
  dw basic_instruction-instruction_handler
- db 'and',20h
+ db 'and',SPACE
  dw basic_instruction-instruction_handler
  db 'bnd',0F2h
  dw bnd_prefix_instruction-instruction_handler
@@ -31282,7 +31305,7 @@ instructions_3:
  dw simple_instruction_64bit-instruction_handler
  db 'cwd',99h
  dw simple_instruction_16bit-instruction_handler
- db 'daa',27h
+ db 'daa',QUOTE
  dw simple_instruction_except64-instruction_handler
  db 'das',2Fh
  dw simple_instruction_except64-instruction_handler
@@ -31296,7 +31319,7 @@ instructions_3:
  dw err_directive-instruction_handler
  db 'fld',0
  dw fld_instruction-instruction_handler
- db 'fst',2
+ db 'fst',TEXT
  dw fld_instruction-instruction_handler
  db 'hlt',0F4h
  dw simple_instruction-instruction_handler
@@ -31340,7 +31363,7 @@ instructions_3:
  dw conditional_jump-instruction_handler
  db 'jpo',7Bh
  dw conditional_jump-instruction_handler
- db 'lar',2
+ db 'lar',TEXT
  dw lar_instruction-instruction_handler
  db 'lds',3
  dw ls_instruction-instruction_handler
@@ -31354,7 +31377,7 @@ instructions_3:
  dw ls_instruction-instruction_handler
  db 'lsl',3
  dw lar_instruction-instruction_handler
- db 'lss',2
+ db 'lss',TEXT
  dw ls_instruction-instruction_handler
  db 'ltr',3
  dw pm_word_instruction-instruction_handler
@@ -31366,7 +31389,7 @@ instructions_3:
  dw single_operand_instruction-instruction_handler
  db 'nop',90h
  dw nop_instruction-instruction_handler
- db 'not',2
+ db 'not',TEXT
  dw single_operand_instruction-instruction_handler
  db 'org',0
  dw org_directive-instruction_handler
@@ -31376,7 +31399,7 @@ instructions_3:
  dw pop_instruction-instruction_handler
  db 'por',0EBh
  dw basic_mmx_instruction-instruction_handler
- db 'rcl',2
+ db 'rcl',TEXT
  dw sh_instruction-instruction_handler
  db 'rcr',3
  dw sh_instruction-instruction_handler
@@ -31453,7 +31476,7 @@ instructions_4:
  dw data_directive-instruction_handler
  db 'dppd',41h
  dw sse4_instruction_66_3a_imm8-instruction_handler
- db 'dpps',40h
+ db 'dpps',AMP
  dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'else',0
  dw else_directive-instruction_handler
@@ -31467,7 +31490,7 @@ instructions_4:
  dw fbld_instruction-instruction_handler
  db 'fchs',100000b
  dw simple_fpu_instruction-instruction_handler
- db 'fcom',2
+ db 'fcom',TEXT
  dw basic_fpu_instruction-instruction_handler
  db 'fcos',111111b
  dw simple_fpu_instruction-instruction_handler
@@ -31477,7 +31500,7 @@ instructions_4:
  dw finit_instruction-instruction_handler
  db 'fild',0
  dw fild_instruction-instruction_handler
- db 'fist',2
+ db 'fist',TEXT
  dw fild_instruction-instruction_handler
  db 'fld1',101000b
  dw simple_fpu_instruction-instruction_handler
@@ -31541,11 +31564,11 @@ instructions_4:
  dw mask_instruction_w-instruction_handler
  db 'lahf',9Fh
  dw simple_instruction-instruction_handler
- db 'lgdt',2
+ db 'lgdt',TEXT
  dw lgdt_instruction-instruction_handler
  db 'lidt',3
  dw lgdt_instruction-instruction_handler
- db 'lldt',2
+ db 'lldt',TEXT
  dw pm_word_instruction-instruction_handler
  db 'lmsw',16h
  dw pm_word_instruction-instruction_handler
@@ -31585,7 +31608,7 @@ instructions_4:
  dw simple_instruction-instruction_handler
  db 'popq',8
  dw pop_instruction-instruction_handler
- db 'popw',2
+ db 'popw',TEXT
  dw pop_instruction-instruction_handler
  db 'push',0
  dw push_instruction-instruction_handler
@@ -31696,11 +31719,11 @@ instructions_5:
  dw tbm_instruction-instruction_handler
  db 'blsic',16h
  dw tbm_instruction-instruction_handler
- db 'bndcl',1Ah
+ db 'bndcl',SUB
  dw bndcl_instruction-instruction_handler
  db 'bndcn',1Bh
  dw bndcu_instruction-instruction_handler
- db 'bndcu',1Ah
+ db 'bndcu',SUB
  dw bndcu_instruction-instruction_handler
  db 'bndmk',1Bh
  dw bndmk_instruction-instruction_handler
@@ -31722,7 +31745,7 @@ instructions_5:
  dw bs_instruction-instruction_handler
  db 'cmovl',4Ch
  dw bs_instruction-instruction_handler
- db 'cmovo',40h
+ db 'cmovo',AMP
  dw bs_instruction-instruction_handler
  db 'cmovp',4Ah
  dw bs_instruction-instruction_handler
@@ -31730,17 +31753,17 @@ instructions_5:
  dw bs_instruction-instruction_handler
  db 'cmovz',44h
  dw bs_instruction-instruction_handler
- db 'cmppd',-1
+ db 'cmppd',-HEAD
  dw cmp_pd_instruction-instruction_handler
- db 'cmpps',-1
+ db 'cmpps',-HEAD
  dw cmp_ps_instruction-instruction_handler
  db 'cmpsb',0A6h
  dw simple_instruction-instruction_handler
- db 'cmpsd',-1
+ db 'cmpsd',-HEAD
  dw cmpsd_instruction-instruction_handler
  db 'cmpsq',0A7h
  dw simple_instruction_64bit-instruction_handler
- db 'cmpss',-1
+ db 'cmpss',-HEAD
  dw cmp_ss_instruction-instruction_handler
  db 'cmpsw',0A7h
  dw simple_instruction_16bit-instruction_handler
@@ -31788,7 +31811,7 @@ instructions_5:
  dw ffree_instruction-instruction_handler
  db 'fiadd',0
  dw fi_instruction-instruction_handler
- db 'ficom',2
+ db 'ficom',TEXT
  dw fi_instruction-instruction_handler
  db 'fidiv',6
  dw fi_instruction-instruction_handler
@@ -31864,7 +31887,7 @@ instructions_5:
  dw kmov_instruction-instruction_handler
  db 'kmovq',8
  dw kmov_instruction-instruction_handler
- db 'kmovw',2
+ db 'kmovw',TEXT
  dw kmov_instruction-instruction_handler
  db 'knotb',44h
  dw mask_instruction_single_source_b-instruction_handler
@@ -31996,7 +32019,7 @@ instructions_5:
  dw amd3dnow_instruction-instruction_handler
  db 'pfsub',9Ah
  dw amd3dnow_instruction-instruction_handler
- db 'pi2fd',0Dh
+ db 'pi2fd',CR
  dw amd3dnow_instruction-instruction_handler
  db 'pi2fw',0Ch
  dw amd3dnow_instruction-instruction_handler
@@ -32044,7 +32067,7 @@ instructions_5:
  dw simple_instruction-instruction_handler
  db 'pushq',8
  dw push_instruction-instruction_handler
- db 'pushw',2
+ db 'pushw',TEXT
  dw push_instruction-instruction_handler
  db 'rcpps',53h
  dw sse_ps_instruction-instruction_handler
@@ -32142,7 +32165,7 @@ instructions_5:
  dw tbm_instruction-instruction_handler
  db 'vdppd',41h
  dw avx_128bit_instruction_3a_imm8_noevex-instruction_handler
- db 'vdpps',40h
+ db 'vdpps',AMP
  dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
  db 'vmovd',0
  dw avx_movd_instruction-instruction_handler
@@ -32193,11 +32216,11 @@ instructions_6:
  dw assert_directive-instruction_handler
  db 'blcmsk',21h
  dw tbm_instruction-instruction_handler
- db 'blsmsk',2
+ db 'blsmsk',TEXT
  dw bmi_instruction-instruction_handler
- db 'bndldx',1Ah
+ db 'bndldx',SUB
  dw bndldx_instruction-instruction_handler
- db 'bndmov',1Ah
+ db 'bndmov',SUB
  dw bndmov_instruction-instruction_handler
  db 'bndstx',1Bh
  dw bndstx_instruction-instruction_handler
@@ -32397,9 +32420,9 @@ instructions_6:
  dw movntq_instruction-instruction_handler
  db 'movsxd',63h
  dw movsxd_instruction-instruction_handler
- db 'movupd',10h
+ db 'movupd',DELINK
  dw movpd_instruction-instruction_handler
- db 'movups',10h
+ db 'movups',DELINK
  dw movps_instruction-instruction_handler
  db 'mwaitx',0FBh
  dw monitor_instruction-instruction_handler
@@ -32419,7 +32442,7 @@ instructions_6:
  dw amd3dnow_instruction-instruction_handler
  db 'pfsubr',0AAh
  dw amd3dnow_instruction-instruction_handler
- db 'phaddd',2
+ db 'phaddd',TEXT
  dw ssse3_instruction-instruction_handler
  db 'phaddw',1
  dw ssse3_instruction-instruction_handler
@@ -32427,11 +32450,11 @@ instructions_6:
  dw ssse3_instruction-instruction_handler
  db 'phsubw',5
  dw ssse3_instruction-instruction_handler
- db 'pinsrb',20h
+ db 'pinsrb',SPACE
  dw pinsrb_instruction-instruction_handler
- db 'pinsrd',22h
+ db 'pinsrd',SYN
  dw pinsrd_instruction-instruction_handler
- db 'pinsrq',22h
+ db 'pinsrq',SYN
  dw pinsrq_instruction-instruction_handler
  db 'pinsrw',0C4h
  dw pinsrw_instruction-instruction_handler
@@ -32455,7 +32478,7 @@ instructions_6:
  dw basic_mmx_instruction-instruction_handler
  db 'pminub',0DAh
  dw basic_mmx_instruction-instruction_handler
- db 'pminud',3Bh
+ db 'pminud',SEMI
  dw sse4_instruction_66_38-instruction_handler
  db 'pminuw',3Ah
  dw sse4_instruction_66_38-instruction_handler
@@ -32463,7 +32486,7 @@ instructions_6:
  dw sse4_instruction_66_38-instruction_handler
  db 'pmulhw',0E5h
  dw basic_mmx_instruction-instruction_handler
- db 'pmulld',40h
+ db 'pmulld',AMP
  dw sse4_instruction_66_38-instruction_handler
  db 'pmullw',0D5h
  dw basic_mmx_instruction-instruction_handler
@@ -32479,7 +32502,7 @@ instructions_6:
  dw pshufw_instruction-instruction_handler
  db 'psignb',8
  dw ssse3_instruction-instruction_handler
- db 'psignd',0Ah
+ db 'psignd',LF
  dw ssse3_instruction-instruction_handler
  db 'psignw',9
  dw ssse3_instruction-instruction_handler
@@ -32563,13 +32586,13 @@ instructions_6:
  dw avx_pd_instruction-instruction_handler
  db 'vandps',54h
  dw avx_ps_instruction-instruction_handler
- db 'vcmppd',-1
+ db 'vcmppd',-HEAD
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpps',-1
+ db 'vcmpps',-HEAD
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpsd',-1
+ db 'vcmpsd',-HEAD
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpss',-1
+ db 'vcmpss',-HEAD
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vdivpd',5Eh
  dw avx_pd_instruction_er-instruction_handler
@@ -32649,21 +32672,21 @@ instructions_6:
  dw avx_bw_instruction-instruction_handler
  db 'vpcmov',0A2h
  dw vpcmov_instruction-instruction_handler
- db 'vpcmpb',-1
+ db 'vpcmpb',-HEAD
  dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpd',-1
+ db 'vpcmpd',-HEAD
  dw avx512_cmp_d_instruction-instruction_handler
- db 'vpcmpq',-1
+ db 'vpcmpq',-HEAD
  dw avx512_cmp_q_instruction-instruction_handler
- db 'vpcmpw',-1
+ db 'vpcmpw',-HEAD
  dw avx512_cmp_w_instruction-instruction_handler
- db 'vpcomb',-1
+ db 'vpcomb',-HEAD
  dw xop_pcom_b_instruction-instruction_handler
- db 'vpcomd',-1
+ db 'vpcomd',-HEAD
  dw xop_pcom_d_instruction-instruction_handler
- db 'vpcomq',-1
+ db 'vpcomq',-HEAD
  dw xop_pcom_q_instruction-instruction_handler
- db 'vpcomw',-1
+ db 'vpcomw',-HEAD
  dw xop_pcom_w_instruction-instruction_handler
  db 'vpermb',8Dh
  dw avx_bw_instruction_38_evex-instruction_handler
@@ -32778,7 +32801,7 @@ instructions_6:
 instructions_7:
  db 'blcfill',11h
  dw tbm_instruction-instruction_handler
- db 'blendpd',0Dh
+ db 'blendpd',CR
  dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'blendps',0Ch
  dw sse4_instruction_66_3a_imm8-instruction_handler
@@ -32802,13 +32825,13 @@ instructions_7:
  dw cmp_sd_instruction-instruction_handler
  db 'cmpeqss',0
  dw cmp_ss_instruction-instruction_handler
- db 'cmplepd',2
+ db 'cmplepd',TEXT
  dw cmp_pd_instruction-instruction_handler
- db 'cmpleps',2
+ db 'cmpleps',TEXT
  dw cmp_ps_instruction-instruction_handler
- db 'cmplesd',2
+ db 'cmplesd',TEXT
  dw cmp_sd_instruction-instruction_handler
- db 'cmpless',2
+ db 'cmpless',TEXT
  dw cmp_ss_instruction-instruction_handler
  db 'cmpltpd',1
  dw cmp_pd_instruction-instruction_handler
@@ -32976,7 +32999,7 @@ instructions_7:
  dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'roundsd',0Bh
  dw sse4_sd_instruction_66_3a_imm8-instruction_handler
- db 'roundss',0Ah
+ db 'roundss',LF
  dw sse4_ss_instruction_66_3a_imm8-instruction_handler
  db 'rsqrtps',52h
  dw sse_ps_instruction-instruction_handler
@@ -33056,9 +33079,9 @@ instructions_7:
  dw avx_movlpd_instruction-instruction_handler
  db 'vmovlps',12h
  dw avx_movlps_instruction-instruction_handler
- db 'vmovupd',10h
+ db 'vmovupd',DELINK
  dw avx_movpd_instruction-instruction_handler
- db 'vmovups',10h
+ db 'vmovups',DELINK
  dw avx_movps_instruction-instruction_handler
  db 'vmptrld',6
  dw vmx_instruction-instruction_handler
@@ -33074,21 +33097,21 @@ instructions_7:
  dw avx_d_instruction_evex-instruction_handler
  db 'vpandnq',0DFh
  dw avx_q_instruction_evex-instruction_handler
- db 'vpcmpub',-1
+ db 'vpcmpub',-HEAD
  dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpud',-1
+ db 'vpcmpud',-HEAD
  dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpuq',-1
+ db 'vpcmpuq',-HEAD
  dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpuw',-1
+ db 'vpcmpuw',-HEAD
  dw avx512_cmp_uw_instruction-instruction_handler
- db 'vpcomub',-1
+ db 'vpcomub',-HEAD
  dw xop_pcom_ub_instruction-instruction_handler
- db 'vpcomud',-1
+ db 'vpcomud',-HEAD
  dw xop_pcom_ud_instruction-instruction_handler
- db 'vpcomuq',-1
+ db 'vpcomuq',-HEAD
  dw xop_pcom_uq_instruction-instruction_handler
- db 'vpcomuw',-1
+ db 'vpcomuw',-HEAD
  dw xop_pcom_uw_instruction-instruction_handler
  db 'vpermpd',1
  dw avx_permq_instruction-instruction_handler
@@ -33102,7 +33125,7 @@ instructions_7:
  dw avx_extract_q_instruction-instruction_handler
  db 'vpextrw',15h
  dw avx_extract_w_instruction-instruction_handler
- db 'vphaddd',2
+ db 'vphaddd',TEXT
  dw avx_pi_instruction_38_noevex-instruction_handler
  db 'vphaddw',1
  dw avx_pi_instruction_38_noevex-instruction_handler
@@ -33110,11 +33133,11 @@ instructions_7:
  dw avx_pi_instruction_38_noevex-instruction_handler
  db 'vphsubw',5
  dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vpinsrb',20h
+ db 'vpinsrb',SPACE
  dw avx_pinsrb_instruction-instruction_handler
- db 'vpinsrd',22h
+ db 'vpinsrd',SYN
  dw avx_pinsrd_instruction-instruction_handler
- db 'vpinsrq',22h
+ db 'vpinsrq',SYN
  dw avx_pinsrq_instruction-instruction_handler
  db 'vpinsrw',0C4h
  dw avx_pinsrw_instruction-instruction_handler
@@ -33144,9 +33167,9 @@ instructions_7:
  dw avx_bw_instruction-instruction_handler
  db 'vpminub',0DAh
  dw avx_bw_instruction-instruction_handler
- db 'vpminud',3Bh
+ db 'vpminud',SEMI
  dw avx_d_instruction_38-instruction_handler
- db 'vpminuq',3Bh
+ db 'vpminuq',SEMI
  dw avx_q_instruction_38_evex-instruction_handler
  db 'vpminuw',3Ah
  dw avx_bw_instruction_38-instruction_handler
@@ -33166,9 +33189,9 @@ instructions_7:
  dw avx_q_instruction_38-instruction_handler
  db 'vpmulhw',0E5h
  dw avx_bw_instruction-instruction_handler
- db 'vpmulld',40h
+ db 'vpmulld',AMP
  dw avx_d_instruction_38-instruction_handler
- db 'vpmullq',40h
+ db 'vpmullq',AMP
  dw avx_q_instruction_38_evex-instruction_handler
  db 'vpmullw',0D5h
  dw avx_bw_instruction-instruction_handler
@@ -33188,7 +33211,7 @@ instructions_7:
  dw avx_single_source_d_instruction_imm8-instruction_handler
  db 'vpsignb',8
  dw avx_pi_instruction_38_noevex-instruction_handler
- db 'vpsignd',0Ah
+ db 'vpsignd',LF
  dw avx_pi_instruction_38_noevex-instruction_handler
  db 'vpsignw',9
  dw avx_pi_instruction_38_noevex-instruction_handler
@@ -33212,7 +33235,7 @@ instructions_7:
  dw avx_d_instruction_38-instruction_handler
  db 'vpsrlvq',45h
  dw avx_q_instruction_38_w1-instruction_handler
- db 'vpsrlvw',10h
+ db 'vpsrlvw',DELINK
  dw avx_bw_instruction_38_w1_evex-instruction_handler
  db 'vpsubsb',0E8h
  dw avx_bw_instruction-instruction_handler
@@ -33230,7 +33253,7 @@ instructions_7:
  dw avx_sd_instruction_er-instruction_handler
  db 'vsqrtss',51h
  dw avx_ss_instruction_er-instruction_handler
- db 'vtestpd',0Fh
+ db 'vtestpd',SHIFT
  dw avx_single_source_instruction_38_noevex-instruction_handler
  db 'vtestps',0Eh
  dw avx_single_source_instruction_38_noevex-instruction_handler
@@ -33373,7 +33396,7 @@ instructions_8:
  dw sse4_instruction_66_38-instruction_handler
  db 'packuswb',67h
  dw basic_mmx_instruction-instruction_handler
- db 'pblendvb',10h
+ db 'pblendvb',DELINK
  dw sse4_instruction_66_38_xmm0-instruction_handler
  db 'pfrcpit1',0A6h
  dw amd3dnow_instruction-instruction_handler
@@ -33385,9 +33408,9 @@ instructions_8:
  dw pmovmskb_instruction-instruction_handler
  db 'pmovsxbd',21h
  dw pmovsxbd_instruction-instruction_handler
- db 'pmovsxbq',22h
+ db 'pmovsxbq',SYN
  dw pmovsxbq_instruction-instruction_handler
- db 'pmovsxbw',20h
+ db 'pmovsxbw',SPACE
  dw pmovsxbw_instruction-instruction_handler
  db 'pmovsxdq',25h
  dw pmovsxdq_instruction-instruction_handler
@@ -33431,7 +33454,7 @@ instructions_8:
  dw sse_pd_instruction-instruction_handler
  db 'unpcklps',14h
  dw sse_ps_instruction-instruction_handler
- db 'vblendpd',0Dh
+ db 'vblendpd',CR
  dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
  db 'vblendps',0Ch
  dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
@@ -33443,13 +33466,13 @@ instructions_8:
  dw avx_cmp_sd_instruction-instruction_handler
  db 'vcmpeqss',0
  dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpgepd',0Dh
+ db 'vcmpgepd',CR
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpgeps',0Dh
+ db 'vcmpgeps',CR
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpgesd',0Dh
+ db 'vcmpgesd',CR
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpgess',0Dh
+ db 'vcmpgess',CR
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vcmpgtpd',0Eh
  dw avx_cmp_pd_instruction-instruction_handler
@@ -33459,13 +33482,13 @@ instructions_8:
  dw avx_cmp_sd_instruction-instruction_handler
  db 'vcmpgtss',0Eh
  dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmplepd',2
+ db 'vcmplepd',TEXT
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpleps',2
+ db 'vcmpleps',TEXT
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmplesd',2
+ db 'vcmplesd',TEXT
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpless',2
+ db 'vcmpless',TEXT
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vcmpltpd',1
  dw avx_cmp_pd_instruction-instruction_handler
@@ -33517,9 +33540,9 @@ instructions_8:
  dw avx_bw_instruction-instruction_handler
  db 'vpaddusw',0DDh
  dw avx_bw_instruction-instruction_handler
- db 'vpalignr',0Fh
+ db 'vpalignr',SHIFT
  dw avx_pi_instruction_3a_imm8-instruction_handler
- db 'vpblendd',2
+ db 'vpblendd',TEXT
  dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
  db 'vpblendw',0Eh
  dw avx_pi_instruction_3a_imm8_noevex-instruction_handler
@@ -33539,13 +33562,13 @@ instructions_8:
  dw avx_cmpeqq_instruction-instruction_handler
  db 'vpcmpgtw',65h
  dw avx_cmpeqb_instruction-instruction_handler
- db 'vpcmpleb',2
+ db 'vpcmpleb',TEXT
  dw avx512_cmp_b_instruction-instruction_handler
- db 'vpcmpled',2
+ db 'vpcmpled',TEXT
  dw avx512_cmp_d_instruction-instruction_handler
- db 'vpcmpleq',2
+ db 'vpcmpleq',TEXT
  dw avx512_cmp_q_instruction-instruction_handler
- db 'vpcmplew',2
+ db 'vpcmplew',TEXT
  dw avx512_cmp_w_instruction-instruction_handler
  db 'vpcmpltb',1
  dw avx512_cmp_b_instruction-instruction_handler
@@ -33571,13 +33594,13 @@ instructions_8:
  dw xop_pcom_q_instruction-instruction_handler
  db 'vpcomgew',3
  dw xop_pcom_w_instruction-instruction_handler
- db 'vpcomgtb',2
+ db 'vpcomgtb',TEXT
  dw xop_pcom_b_instruction-instruction_handler
- db 'vpcomgtd',2
+ db 'vpcomgtd',TEXT
  dw xop_pcom_d_instruction-instruction_handler
- db 'vpcomgtq',2
+ db 'vpcomgtq',TEXT
  dw xop_pcom_q_instruction-instruction_handler
- db 'vpcomgtw',2
+ db 'vpcomgtw',TEXT
  dw xop_pcom_w_instruction-instruction_handler
  db 'vpcomleb',1
  dw xop_pcom_b_instruction-instruction_handler
@@ -33663,13 +33686,13 @@ instructions_8:
  dw avx512_pmovdb_instruction-instruction_handler
  db 'vpmovsdw',23h
  dw avx512_pmovwb_instruction-instruction_handler
- db 'vpmovsqb',22h
+ db 'vpmovsqb',SYN
  dw avx512_pmovqb_instruction-instruction_handler
  db 'vpmovsqd',25h
  dw avx512_pmovwb_instruction-instruction_handler
  db 'vpmovsqw',24h
  dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovswb',20h
+ db 'vpmovswb',SPACE
  dw avx512_pmovwb_instruction-instruction_handler
  db 'vpmovw2m',29h
  dw avx512_pmov_2m_instruction_w1-instruction_handler
@@ -33687,9 +33710,9 @@ instructions_8:
  dw avx_bw_instruction-instruction_handler
  db 'vptestmb',26h
  dw avx512_ptestmb_instruction-instruction_handler
- db 'vptestmd',27h
+ db 'vptestmd',QUOTE
  dw avx512_ptestmd_instruction-instruction_handler
- db 'vptestmq',27h
+ db 'vptestmq',QUOTE
  dw avx512_ptestmq_instruction-instruction_handler
  db 'vptestmw',26h
  dw avx512_ptestmw_instruction-instruction_handler
@@ -33723,7 +33746,7 @@ instructions_8:
  dw avx_single_source_instruction_3a_imm8_noevex-instruction_handler
  db 'vroundsd',0Bh
  dw avx_sd_instruction_3a_imm8_noevex-instruction_handler
- db 'vroundss',0Ah
+ db 'vroundss',LF
  dw avx_ss_instruction_3a_imm8_noevex-instruction_handler
  db 'vrsqrtps',52h
  dw avx_single_source_ps_instruction_noevex-instruction_handler
@@ -33737,7 +33760,7 @@ instructions_8:
  dw avx_comiss_instruction-instruction_handler
  db 'vzeroall',77h
  dw vzeroall_instruction-instruction_handler
- db 'wrfsbase',2
+ db 'wrfsbase',TEXT
  dw rdfsbase_instruction-instruction_handler
  db 'wrgsbase',3
  dw rdfsbase_instruction-instruction_handler
@@ -33772,7 +33795,7 @@ instructions_9:
  dw extractps_instruction-instruction_handler
  db 'fxrstor64',1
  dw fxsave_instruction_64bit-instruction_handler
- db 'pclmulqdq',-1
+ db 'pclmulqdq',-HEAD
  dw pclmulqdq_instruction-instruction_handler
  db 'pcmpestri',61h
  dw sse4_instruction_66_3a_imm8-instruction_handler
@@ -33834,13 +33857,13 @@ instructions_9:
  dw avx_cmp_sd_instruction-instruction_handler
  db 'vcmpngess',9
  dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpngtpd',0Ah
+ db 'vcmpngtpd',LF
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpngtps',0Ah
+ db 'vcmpngtps',LF
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpngtsd',0Ah
+ db 'vcmpngtsd',LF
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpngtss',0Ah
+ db 'vcmpngtss',LF
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vcmpnlepd',6
  dw avx_cmp_pd_instruction-instruction_handler
@@ -33972,13 +33995,13 @@ instructions_9:
  dw avx_bw_instruction_38_w1_evex-instruction_handler
  db 'vpblendvb',4Ch
  dw avx_triple_source_instruction_3a_noevex-instruction_handler
- db 'vpcmpleub',2
+ db 'vpcmpleub',TEXT
  dw avx512_cmp_ub_instruction-instruction_handler
- db 'vpcmpleud',2
+ db 'vpcmpleud',TEXT
  dw avx512_cmp_ud_instruction-instruction_handler
- db 'vpcmpleuq',2
+ db 'vpcmpleuq',TEXT
  dw avx512_cmp_uq_instruction-instruction_handler
- db 'vpcmpleuw',2
+ db 'vpcmpleuw',TEXT
  dw avx512_cmp_uw_instruction-instruction_handler
  db 'vpcmpltub',1
  dw avx512_cmp_ub_instruction-instruction_handler
@@ -34028,13 +34051,13 @@ instructions_9:
  dw xop_pcom_uq_instruction-instruction_handler
  db 'vpcomgeuw',3
  dw xop_pcom_uw_instruction-instruction_handler
- db 'vpcomgtub',2
+ db 'vpcomgtub',TEXT
  dw xop_pcom_ub_instruction-instruction_handler
- db 'vpcomgtud',2
+ db 'vpcomgtud',TEXT
  dw xop_pcom_ud_instruction-instruction_handler
- db 'vpcomgtuq',2
+ db 'vpcomgtuq',TEXT
  dw xop_pcom_uq_instruction-instruction_handler
- db 'vpcomgtuw',2
+ db 'vpcomgtuw',TEXT
  dw xop_pcom_uw_instruction-instruction_handler
  db 'vpcomleub',1
  dw xop_pcom_ub_instruction-instruction_handler
@@ -34104,9 +34127,9 @@ instructions_9:
  dw avx_pmovmskb_instruction-instruction_handler
  db 'vpmovsxbd',21h
  dw avx_pmovsxbd_instruction-instruction_handler
- db 'vpmovsxbq',22h
+ db 'vpmovsxbq',SYN
  dw avx_pmovsxbq_instruction-instruction_handler
- db 'vpmovsxbw',20h
+ db 'vpmovsxbw',SPACE
  dw avx_pmovsxbw_instruction-instruction_handler
  db 'vpmovsxdq',25h
  dw avx_pmovsxbw_instruction-instruction_handler
@@ -34124,7 +34147,7 @@ instructions_9:
  dw avx512_pmovwb_instruction-instruction_handler
  db 'vpmovusqw',14h
  dw avx512_pmovdb_instruction-instruction_handler
- db 'vpmovuswb',10h
+ db 'vpmovuswb',DELINK
  dw avx512_pmovwb_instruction-instruction_handler
  db 'vpmovzxbd',31h
  dw avx_pmovsxbd_instruction-instruction_handler
@@ -34142,9 +34165,9 @@ instructions_9:
  dw avx_bw_instruction_38-instruction_handler
  db 'vptestnmb',26h
  dw avx512_ptestnmb_instruction-instruction_handler
- db 'vptestnmd',27h
+ db 'vptestnmd',QUOTE
  dw avx512_ptestnmd_instruction-instruction_handler
- db 'vptestnmq',27h
+ db 'vptestnmq',QUOTE
  dw avx512_ptestnmq_instruction-instruction_handler
  db 'vptestnmw',26h
  dw avx512_ptestnmw_instruction-instruction_handler
@@ -34201,7 +34224,7 @@ instructions_10:
  dw sse4_instruction_66_38-instruction_handler
  db 'prefetcht0',1
  dw prefetch_instruction-instruction_handler
- db 'prefetcht1',2
+ db 'prefetcht1',TEXT
  dw prefetch_instruction-instruction_handler
  db 'prefetcht2',3
  dw prefetch_instruction-instruction_handler
@@ -34213,13 +34236,13 @@ instructions_10:
  dw sse4_instruction_38-instruction_handler
  db 'sha256msg2',0CDh
  dw sse4_instruction_38-instruction_handler
- db 'vcmptruepd',0Fh
+ db 'vcmptruepd',SHIFT
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmptrueps',0Fh
+ db 'vcmptrueps',SHIFT
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmptruesd',0Fh
+ db 'vcmptruesd',SHIFT
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmptruess',0Fh
+ db 'vcmptruess',SHIFT
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vcvtpd2udq',79h
  dw avx_cvtpd2udq_instruction-instruction_handler
@@ -34279,15 +34302,15 @@ instructions_10:
  dw avx512_single_source_pd_instruction_sae_imm8-instruction_handler
  db 'vgetmantps',26h
  dw avx512_single_source_ps_instruction_sae_imm8-instruction_handler
- db 'vgetmantsd',27h
+ db 'vgetmantsd',QUOTE
  dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vgetmantss',27h
+ db 'vgetmantss',QUOTE
  dw avx512_ss_instruction_sae_imm8-instruction_handler
  db 'vmaskmovpd',2Dh
  dw avx_maskmov_instruction-instruction_handler
  db 'vmaskmovps',2Ch
  dw avx_maskmov_instruction-instruction_handler
- db 'vpclmulqdq',-1
+ db 'vpclmulqdq',-HEAD
  dw avx_pclmulqdq_instruction-instruction_handler
  db 'vpcmpestri',61h
  dw avx_single_source_128bit_instruction_3a_imm8_noevex-instruction_handler
@@ -34416,7 +34439,7 @@ instructions_11:
  dw pclmulqdq_instruction-instruction_handler
  db 'prefetchnta',0
  dw prefetch_instruction-instruction_handler
- db 'prefetchwt1',2
+ db 'prefetchwt1',TEXT
  dw amd_prefetch_instruction-instruction_handler
  db 'sha256rnds2',0CBh
  dw sse4_instruction_38_xmm0-instruction_handler
@@ -34424,13 +34447,13 @@ instructions_11:
  dw avx_128bit_instruction_38_noevex-instruction_handler
  db 'vaesenclast',0DDh
  dw avx_128bit_instruction_38_noevex-instruction_handler
- db 'vcmpeq_ospd',10h
+ db 'vcmpeq_ospd',DELINK
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpeq_osps',10h
+ db 'vcmpeq_osps',DELINK
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpeq_ossd',10h
+ db 'vcmpeq_ossd',DELINK
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpeq_osss',10h
+ db 'vcmpeq_osss',DELINK
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vcmpeq_uqpd',8
  dw avx_cmp_pd_instruction-instruction_handler
@@ -34638,7 +34661,7 @@ instructions_11:
  dw avx512_single_source_ps_instruction_sae_imm8-instruction_handler
  db 'vrndscalesd',0Bh
  dw avx512_sd_instruction_sae_imm8-instruction_handler
- db 'vrndscaless',0Ah
+ db 'vrndscaless',LF
  dw avx512_ss_instruction_sae_imm8-instruction_handler
  db 'vscatterdpd',0A2h
  dw scatter_pd_instruction-instruction_handler
@@ -34693,13 +34716,13 @@ instructions_12:
  dw avx_cmp_sd_instruction-instruction_handler
  db 'vcmpnge_uqss',19h
  dw avx_cmp_ss_instruction-instruction_handler
- db 'vcmpngt_uqpd',1Ah
+ db 'vcmpngt_uqpd',SUB
  dw avx_cmp_pd_instruction-instruction_handler
- db 'vcmpngt_uqps',1Ah
+ db 'vcmpngt_uqps',SUB
  dw avx_cmp_ps_instruction-instruction_handler
- db 'vcmpngt_uqsd',1Ah
+ db 'vcmpngt_uqsd',SUB
  dw avx_cmp_sd_instruction-instruction_handler
- db 'vcmpngt_uqss',1Ah
+ db 'vcmpngt_uqss',SUB
  dw avx_cmp_ss_instruction-instruction_handler
  db 'vcmpnle_uqpd',16h
  dw avx_cmp_pd_instruction-instruction_handler
@@ -34771,11 +34794,11 @@ instructions_12:
  dw fma_instruction_ss-instruction_handler
  db 'vinsertf32x4',18h
  dw avx512_insert_32x4_instruction-instruction_handler
- db 'vinsertf32x8',1Ah
+ db 'vinsertf32x8',SUB
  dw avx512_insert_32x8_instruction-instruction_handler
  db 'vinsertf64x2',18h
  dw avx512_insert_64x2_instruction-instruction_handler
- db 'vinsertf64x4',1Ah
+ db 'vinsertf64x4',SUB
  dw avx512_insert_64x4_instruction-instruction_handler
  db 'vinserti32x4',38h
  dw avx512_insert_32x4_instruction-instruction_handler
@@ -34844,11 +34867,11 @@ instructions_13:
  dw avx512_extract_64x4_instruction-instruction_handler
  db 'vextracti32x4',39h
  dw avx512_extract_32x4_instruction-instruction_handler
- db 'vextracti32x8',3Bh
+ db 'vextracti32x8',SEMI
  dw avx512_extract_32x8_instruction-instruction_handler
  db 'vextracti64x2',39h
  dw avx512_extract_64x2_instruction-instruction_handler
- db 'vextracti64x4',3Bh
+ db 'vextracti64x4',SEMI
  dw avx512_extract_64x4_instruction-instruction_handler
  db 'vgatherpf0dpd',1
  dw gatherpf_dpd_instruction-instruction_handler
@@ -34858,20 +34881,20 @@ instructions_13:
  dw gatherpf_qpd_instruction-instruction_handler
  db 'vgatherpf0qps',1
  dw gatherpf_qps_instruction-instruction_handler
- db 'vgatherpf1dpd',2
+ db 'vgatherpf1dpd',TEXT
  dw gatherpf_dpd_instruction-instruction_handler
- db 'vgatherpf1dps',2
+ db 'vgatherpf1dps',TEXT
  dw gatherpf_dps_instruction-instruction_handler
- db 'vgatherpf1qpd',2
+ db 'vgatherpf1qpd',TEXT
  dw gatherpf_qpd_instruction-instruction_handler
- db 'vgatherpf1qps',2
+ db 'vgatherpf1qps',TEXT
  dw gatherpf_qps_instruction-instruction_handler
  db 'vpclmulhqlqdq',1
  dw avx_pclmulqdq_instruction-instruction_handler
  db 'vpclmullqlqdq',0
  dw avx_pclmulqdq_instruction-instruction_handler
 instructions_14:
- db 'vbroadcastf128',1Ah
+ db 'vbroadcastf128',SUB
  dw avx_broadcast_128_instruction_noevex-instruction_handler
  db 'vbroadcasti128',5Ah
  dw avx_broadcast_128_instruction_noevex-instruction_handler
@@ -34930,11 +34953,11 @@ instructions_15:
  dw sse4_instruction_66_3a_imm8-instruction_handler
  db 'vbroadcastf32x2',19h
  dw avx512_broadcast_32x2_instruction-instruction_handler
- db 'vbroadcastf32x4',1Ah
+ db 'vbroadcastf32x4',SUB
  dw avx512_broadcast_32x4_instruction-instruction_handler
  db 'vbroadcastf32x8',1Bh
  dw avx512_broadcast_32x8_instruction-instruction_handler
- db 'vbroadcastf64x2',1Ah
+ db 'vbroadcastf64x2',SUB
  dw avx512_broadcast_64x2_instruction-instruction_handler
  db 'vbroadcastf64x4',1Bh
  dw avx512_broadcast_64x4_instruction-instruction_handler
@@ -34975,9 +34998,9 @@ data_directives_2:
  dw data_qwords-instruction_handler
  db 'dt',10
  dw data_twords-instruction_handler
- db 'du',2
+ db 'du',TEXT
  dw data_unicode-instruction_handler
- db 'dw',2
+ db 'dw',TEXT
  dw data_words-instruction_handler
  db 'rb',1
  dw reserve_bytes-instruction_handler
@@ -34991,7 +35014,7 @@ data_directives_2:
  dw reserve_qwords-instruction_handler
  db 'rt',10
  dw reserve_twords-instruction_handler
- db 'rw',2
+ db 'rw',TEXT
  dw reserve_words-instruction_handler
 data_directives_3:
 data_directives_4:
@@ -35054,22 +35077,22 @@ VERSION_STRING equ "1.73.04"
 VERSION_MAJOR = 1
 VERSION_MINOR = 73
 
-_copyright db 'Copyright (c) 1999-2018, Tomasz Grysztar',0Dh,0Ah,0
+_copyright db 'Copyright (c) 1999-2018, Tomasz Grysztar',CR,LF,0
 
 _logo db 'flat assembler version ',VERSION_STRING,0
-_usage db 0Dh,0Ah
-       db 'usage: fasm <source> [output]',0Dh,0Ah
-       db 'optional settings:',0Dh,0Ah
-       db ' -m <limit>         set the limit in kilobytes for the available memory',0Dh,0Ah
-       db ' -p <limit>         set the maximum allowed number of passes',0Dh,0Ah
-       db ' -d <name>=<value>  define symbolic variable',0Dh,0Ah
-       db ' -s <file>          dump symbolic information for debugging',0Dh,0Ah
+_usage db 0Dh,LF
+       db 'usage: fasm <source> [output]',CR,LF
+       db 'optional settings:',CR,LF
+       db ' -m <limit>         set the limit in kilobytes for the available memory',CR,LF
+       db ' -p <limit>         set the maximum allowed number of passes',CR,LF
+       db ' -d <name>=<value>  define symbolic variable',CR,LF
+       db ' -s <file>          dump symbolic information for debugging',CR,LF
        db 0
 _memory_prefix db '  (',0
-_memory_suffix db ' kilobytes memory)',0Dh,0Ah,0
+_memory_suffix db ' kilobytes memory)',CR,LF,0
 _passes_suffix db ' passes, ',0
 _seconds_suffix db ' seconds, ',0
-_bytes_suffix db ' bytes.',0Dh,0Ah,0
+_bytes_suffix db ' bytes.',CR,LF,0
 
 align 4
 
