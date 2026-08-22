@@ -52,7 +52,17 @@ QUOTE   equ 27H
 
 macro str [from*]
 {
-	call define_data from
+	;call define_data
+    ;jc instruction_assembled
+    ;lods u8 [esi]
+    ;cmp al,'('
+    ;je get_byte
+    ;cmp al,'?'
+    ;jne invalid_argument
+    ;mov eax,edi
+    ;mov u8 [edi],NUL
+    ;inc edi
+    ;jmp undefined_data
 }
 
 macro strings.emits from
