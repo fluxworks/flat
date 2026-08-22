@@ -37,6 +37,32 @@ SPACE   equ 20H
 SHIFT   equ 0FH
 QUOTE   equ 27H
 
+;call define_data
+;jc instruction_assembled
+;lods u8 [esi]
+;cmp al,'('
+;je get_byte
+;cmp al,'?'
+;jne invalid_argument
+;mov eax,edi
+;mov u8 [edi],NUL
+;inc edi
+;jmp undefined_data
+;ret
+
+macro str [from*]
+{
+	call define_data from
+}
+
+macro strings.emits from
+{
+	push _esi
+    str from, CR, LF, NUL
+	call display_string
+	pop _esi
+}
+
 macro strings.emit from
 {
 	local addr, behind
@@ -35240,6 +35266,9 @@ free_address_range db ?
 characters rb 100h
 converted rb 100h
 message rb 200h
+
+strings.length dd 0
+strings.buffer rb 800h
 
 con_handle dq ?
 memory_setting dd ?
