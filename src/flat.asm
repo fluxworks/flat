@@ -43,11 +43,10 @@ macro strings.emit from
 	push _esi
 	push addr
 	jmp behind
-	addr db from, NUL
+	addr db from, CR, LF, NUL
 	behind:
 	mov _esi, u64[_esp]
 	call display_string
-	pop _esi
 	pop _esi
 }
 
@@ -55,7 +54,7 @@ section '.text' code readable executable
 start:
     mov eax,STD_OUTPUT_HANDLE
     mov u64[con_handle],_eax
-	;strings.emit 'flat assembler v26.08.05.1915'
+	strings.emit 'flat assembler v26.08.05.1915'
     ;mov esi, _logo
     ;call display_string
     call get_params
@@ -469,7 +468,7 @@ definition_value_end:
     PAGE_READWRITE	       = 4
     PAGE_WRITECOPY	       = 8
     PAGE_EXECUTE	       = 10h
-    PAGE_EXECUTE_READ      = 20h
+    PAGE_EXECUTE_READ      = SPACE
     PAGE_EXECUTE_READWRITE = 40h
     PAGE_EXECUTE_WRITECOPY = 80h
     PAGE_GUARD	       = 100h
@@ -860,7 +859,7 @@ display_error_line:
     pop _esi
     cmp ebx,esi
     je line_number_ok
-    mov dl,SPACE
+    mov dl, SPACE
     call display_character
     push _esi
     mov esi,[esi]
@@ -1452,7 +1451,7 @@ prepare_string:
     ret
 
 prepare_section_string:
-    ;strings.emit 'prepare_section_string | 1410'
+    strings.emit 'prepare_section_string | 1410'
     mov ecx,[number_of_sections]
     mov eax,ecx
     inc eax
@@ -1574,7 +1573,7 @@ labels_dump_ok:
     sub ecx,[labels_list]
     mov [ebx-40h+1Ch],ecx
     add eax,ecx
-    mov [ebx-40h+20h],eax
+    mov [ebx-40h+SPACE],eax
     mov ecx,[source_start]
     sub _ecx,u64[memory_start]
     mov [ebx-40h+24h],ecx
@@ -1884,7 +1883,7 @@ dump_preprocessed_source:
     sub eax,ebx
     mov [ebx-40h+14h],eax
     add eax,AMP
-    mov [ebx-40h+20h],eax
+    mov [ebx-40h+SPACE],eax
     call prepare_preprocessed_source
     sub _esi,u64[memory_start]
     mov [ebx-40h+24h],esi
@@ -2449,9 +2448,9 @@ backslashed_symbol_character:
     ret
 
 concatenate_lines:
-    ;strings.emit 'concatenate_lines | 2428'
+    strings.emit 'concatenate_lines | 2428'
     lods u8 [esi]
-    cmp al,SPACE
+    cmp al, SPACE
     je concatenate_lines
     cmp al,HT
     je concatenate_lines
@@ -2627,7 +2626,7 @@ preprocess_line:
     ret
 
 macro_preprocessing:
-    ;strings.emit 'macro_preprocessing | 2606'
+    strings.emit 'macro_preprocessing | 2606' ;'
     call process_macro_operators
     initial_preprocessing_ok:
     mov _esi,u64[current_line]
@@ -7257,7 +7256,7 @@ fp_expression:
 
 convert_number:
     ;strings.emit 'convert_number | 7233'
-    lea eax,[edi+20h]
+    lea eax,[edi+SPACE]
     mov _edx,u64[memory_end]
     cmp [source_start],NUL
     je check_memory_for_number
@@ -11605,7 +11604,7 @@ create_addressing_space:
     mov [ebx+14h],eax
     mov [ebx+18h],edi
     mov [ebx+1Ch],eax
-    mov [ebx+20h],eax
+    mov [ebx+SPACE],eax
     ret
 
 assemble_line:
@@ -12324,7 +12323,7 @@ show_display_buffer:
 
 write_addressing_space:
     ;strings.emit 'write_addressing_space | 12301'
-    mov ecx,[esi+20h]
+    mov ecx,[esi+SPACE]
     jecxz skip_block
     push _esi
     mov _edi,u64[free_additional_memory]
@@ -12497,7 +12496,7 @@ virtual_at_current:
     mov ecx,[esi+3]
     add esi, 3+TAIL
     add [ebx+18h],ecx
-    mov [ebx+20h],ecx
+    mov [ebx+SPACE],ecx
     or u8 [ebx+0Ah],TEXT
     push _ebx
     mov ebx,characters
@@ -12611,7 +12610,7 @@ continue_virtual_area:
     push _esi
     mov esi, [edx+18h]
     mov ecx,[edx+1Ch]
-    mov eax,[edx+20h]
+    mov eax,[edx+SPACE]
     sub esi, eax
     add ecx,eax
     lea eax,[edi+ecx]
@@ -12675,7 +12674,7 @@ close_virtual_addressing_space:
     mov eax,edi
     sub eax,[ebx+18h]
     mov [ebx+1Ch],eax
-    add eax,[ebx+20h]
+    add eax,[ebx+SPACE]
     test u8 [ebx+0Ah],TEXT
     ;jz addressing_space_closed
     jz return_ok
@@ -12689,9 +12688,9 @@ close_virtual_addressing_space:
     sub eax,ecx
     mov [tagged_blocks],eax
     lea edi,[eax+ecx-HEAD]
-    add eax,[ebx+20h]
+    add eax,[ebx+SPACE]
     xchg eax,[ebx+18h]
-    sub eax,[ebx+20h]
+    sub eax,[ebx+SPACE]
     lea esi, [eax+ecx-HEAD]
     mov eax,edi
     sub eax,esi
@@ -15270,7 +15269,7 @@ finish_section:
     pe_code_sum_ok:
     test u8 [ebx+24h],AMP
     jz pe_data_sum_ok
-    add [edx+20h],ecx
+    add [edx+SPACE],ecx
     test [format_flags],TAIL
     jnz pe_data_sum_ok
     cmp dword [edx+30h],NUL
@@ -15722,7 +15721,7 @@ resource_from_file:
     call open_binary_file
     push _ebx
     mov _esi,u64[free_additional_memory]
-    lea eax,[esi+20h]
+    lea eax,[esi+SPACE]
     cmp eax,[structures_buffer]
     ja out_of_memory
     mov edx,esi
@@ -16498,7 +16497,7 @@ coff_section:
     ;strings.emit 'coff_section | 16473'
     call close_coff_section
     mov _ebx,u64[free_additional_memory]
-    lea eax,[ebx+20h]
+    lea eax,[ebx+SPACE]
     cmp eax,[structures_buffer]
     jae out_of_memory
     mov u64[free_additional_memory],_eax
@@ -16755,7 +16754,7 @@ enumerate_section:
     inc eax
     inc ecx
     mov [esi+1Eh],cx
-    add esi, 20h
+    add esi, SPACE
     jmp enumerate_symbols
     ret
 
@@ -16907,7 +16906,7 @@ default_section:
     add ebx,edx
     add edx,ebp
     xor ecx,ecx
-    add esi, 20h
+    add esi, SPACE
 
     find_relocations:
     cmp _esi,u64[free_additional_memory]
@@ -16950,7 +16949,7 @@ section_relocations_done:
     jb section_relocations_count_16bit
     bt      [format_flags],NUL
     jnc format_limitations_exceeded
-    mov u16 [edi+20h],0FFFFh
+    mov u16 [edi+SPACE],0FFFFh
     or dword [edi+24h],1000000h
     mov [edi+18h],edx
     push _esi _edi
@@ -16975,7 +16974,7 @@ section_relocations_done:
 
 section_relocations_count_16bit:
     ;strings.emit 'section_relocations_count_16bit | 16952'
-    mov [edi+20h],cx
+    mov [edi+SPACE],cx
     jecxz section_relocations_ok
     mov [edi+18h],edx
     section_relocations_ok:
@@ -17026,7 +17025,7 @@ add_section_symbol:
     movzx eax, u16 [esi+1Eh]
     mov [ebx+0Ch],ax
     mov u8 [ebx+10h],TXT
-    add esi, 20h
+    add esi, SPACE
     add ebx,12h
     jmp make_symbols_table
     ret
@@ -17203,7 +17202,7 @@ first_section_found:
     ;strings.emit 'first_section_found | 17178'
     mov ebx,esi
     mov ebp,esi
-    add esi, 20h
+    add esi, SPACE
     xor ecx,ecx
     xor edx,edx
 
@@ -17266,7 +17265,7 @@ store_section_index:
 section_symbol_ok:
     ;strings.emit 'section_symbol_ok | 17242'
     mov ebx,esi
-    add esi, 20h
+    add esi, SPACE
     cmp _ebx,u64[free_additional_memory]
     jne find_next_section
     inc dx
@@ -17288,7 +17287,7 @@ section_symbol_ok:
 
 skip_section:
     ;strings.emit 'skip_section | 17265'
-    add esi, 20h
+    add esi, SPACE
     jmp find_other_symbols
     ret
 
@@ -27797,7 +27796,7 @@ avx_cmp_ss_instruction:
     avx_cmp_instruction:
     mov u8 [value],al
     mov [immediate_size],-TAIL
-    or [operand_flags],TAIL+20h
+    or [operand_flags],TAIL + SPACE
     mov al,0C2h
     jmp avx_cmp_common
     ret
