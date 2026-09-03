@@ -49,6 +49,7 @@ pub fn find_param( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn get_output_file( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -64,6 +65,7 @@ pub fn copy_param( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn string_param( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -74,6 +76,7 @@ pub fn option_param( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn get_option_value( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -84,21 +87,25 @@ pub fn get_option_digit( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn option_value_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn memory_option( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn passes_option( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn definition_option( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -114,6 +121,7 @@ pub fn find_symbols_file_name( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Ret
 
 pub fn param_end( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -124,11 +132,13 @@ pub fn string_param_end( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn all_params( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn convert_definition_option( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -144,11 +154,13 @@ pub fn copy_definition_value( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retu
 
 pub fn definition_value_character( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn definition_value_end( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -194,21 +206,25 @@ pub fn buffer_for_variable_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Ret
 
 pub fn open( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn create( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn write( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn read( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -219,6 +235,7 @@ pub fn close( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn lseek( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -2024,6 +2041,7 @@ pub fn match_more_elements( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn skip_match_element( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -2344,11 +2362,13 @@ pub fn new_macro_block( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn close_macro_block( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn reverse_counter( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -2384,6 +2404,7 @@ pub fn find_macro_symbol_leaf( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Ret
 
 pub fn follow_macro_symbols_tree( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -3474,6 +3495,7 @@ pub fn oct_out_of_range( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn hex_number_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -3489,6 +3511,7 @@ pub fn number_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn get_text_number( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -3779,6 +3802,7 @@ pub fn skip_logical_value( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn negation_skipped( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -3794,6 +3818,7 @@ pub fn wrongly_structured_logical_expression( rcx:usize, rdx:usize, r8:usize, r9
 
 pub fn skip_simple_logical_value( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5199,11 +5224,13 @@ pub fn logical_value_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn skip_symbol( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn skip_label( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5219,6 +5246,7 @@ pub fn skip_assembler_symbol( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retu
 
 pub fn skip_special_label( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5229,6 +5257,7 @@ pub fn skip_address( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn skip_expression( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5244,11 +5273,13 @@ pub fn skip_register( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn skip_fp_value( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn skip_string( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5389,6 +5420,7 @@ pub fn code_type_setting( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn new_line( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5494,6 +5526,7 @@ pub fn instruction_handler( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn instruction_assembled( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5734,6 +5767,7 @@ pub fn find_structure_data( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn scan_structures( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -5879,6 +5913,7 @@ pub fn end_if( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn find_else( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -9684,6 +9719,8 @@ pub fn calculate_jump_offset( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retu
 
 pub fn check_for_short_jump( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -9694,6 +9731,7 @@ pub fn forced_short( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn jmp_short_value_type_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -11824,6 +11862,7 @@ pub fn segment_prefix_386( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn store_instruction_code( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let store_vex_instruction_code = store_vex_instruction_code( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12469,6 +12508,7 @@ pub fn avx_reg( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn avx_vex_reg( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12484,6 +12524,7 @@ pub fn avx_regs_size_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn avx_regs_rm( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12509,16 +12550,19 @@ pub fn avx_regs_reg_reg( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn take_avx_rm( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn take_avx_mem( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn avx_mem_broadcast_check( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12539,6 +12583,7 @@ return None;
 
 pub fn avx_mem_size_deciding( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12554,11 +12599,13 @@ pub fn take_imm4_if_needed( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn take_avx512_mask( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let near_ok = near_ok( rcx, rdx, r9, r9 );
     return None;
 }
 
 pub fn take_avx512_rounding( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let near_ok = near_ok( rcx, rdx, r9, r9 );
     return None;
 }
 
@@ -12659,6 +12706,7 @@ pub fn avx_compress_q_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) ->
 
 pub fn avx_compress_d_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12669,6 +12717,7 @@ pub fn avx_lddqu_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retu
 
 pub fn avx_load_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12744,6 +12793,7 @@ pub fn avx_movlpd_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Ret
 
 pub fn avx_movlps_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12759,11 +12809,13 @@ pub fn avx_movlps_mem_( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn avx_movlps_mem_size_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn avx_movhlps_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -12779,6 +12831,7 @@ pub fn avx_movss_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retu
 
 pub fn avx_movs_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13404,6 +13457,7 @@ pub fn avx512_pmov_m2_instruction_w1( rcx:usize, rdx:usize, r8:usize, r9:usize )
 
 pub fn avx512_pmov_m2_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13414,6 +13468,7 @@ pub fn avx512_pmov_2m_instruction_w1( rcx:usize, rdx:usize, r8:usize, r9:usize )
 
 pub fn avx512_pmov_2m_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13429,6 +13484,7 @@ pub fn vzeroall_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retur
 
 pub fn vzeroupper_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let store_vex_instruction_code = store_vex_instruction_code( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13464,6 +13520,7 @@ pub fn avx_permd_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retu
 
 pub fn avx_instruction_without_128bit( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13489,6 +13546,7 @@ pub fn avx_permilps_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> R
 
 pub fn avx_permil_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13549,6 +13607,7 @@ pub fn avx_shift_bw_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> R
 
 pub fn avx_shift_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -13574,6 +13633,7 @@ pub fn avx_shift_reg_mem( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn avx_shift_dq_instruction( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let take_avx_register = take_avx_register( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14344,6 +14404,7 @@ pub fn bzhi_reg_reg( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn get_vex_source_register( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let carry_then_return = carry_then_return( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14549,6 +14610,7 @@ pub fn take_avx_register( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn convert_avx_register( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let avx512_register_size = avx512_register_size( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14564,11 +14626,20 @@ pub fn avx_register_size_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retur
 
 pub fn store_vex_instruction_code( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let compress_displacement = compress_displacement( rcx, rdx, r8, r9 );
+    let prepare_vex = prepare_vex( rcx, rdx, r8, r9 );
+    let store_evex_instruction_code = store_evex_instruction_code( rcx, rdx, r8, r9 );
+    let store_xop_instruction_code = store_xop_instruction_code( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn prepare_vex( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let check_vex = check_vex( rcx, rdx, r8, r9 );
+    let store_vex_0f_instruction_code = store_vex_0f_instruction_code( rcx, rdx, r8, r9 );
+    let store_vex_0f38_instruction_code = store_vex_0f38_instruction_code( rcx, rdx, r8, r9 );
+    let store_vex_0f3a_instruction_code = store_vex_0f3a_instruction_code( rcx, rdx, r8, r9 );
+    let get_vex_lpp_bits = get_vex_lpp_bits( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14579,6 +14650,9 @@ pub fn get_vex_lpp_bits( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn get_vex_pp_bits( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let v66 = vex_66( rcx, rdx, r8, r9 );
+    let vf2 = vex_f2( rcx, rdx, r8, r9 );
+    let vf3 = vex_f3( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14599,6 +14673,8 @@ pub fn store_vex_0f_instruction_code( rcx:usize, rdx:usize, r8:usize, r9:usize )
 
 pub fn make_c4_vex( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let check_vex = check_vex( rcx, rdx, r8, r9 );
+    let get_vex_lpp_bits = get_vex_lpp_bits( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14609,6 +14685,7 @@ pub fn check_vex( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn store_xop_instruction_code( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let get_vex_lpp_bits = get_vex_lpp_bits( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14619,16 +14696,21 @@ pub fn xop_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn store_evex_instruction_code( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let compress_displacement = compress_displacement( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn prepare_evex( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let store_evex_0f38_instruction_code = store_evex_0f38_instruction_code( rcx, rdx, r8, r9 );
+    let store_evex_0f3a_instruction_code = store_evex_0f3a_instruction_code( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn make_evex( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let check_vex = check_vex( rcx, rdx, r8, r9 );
+    let evex_rounding = evex_rounding( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14664,11 +14746,13 @@ pub fn store_evex_0f3a_instruction_code( rcx:usize, rdx:usize, r8:usize, r9:usiz
 
 pub fn compress_displacement( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let displacement_compressed = displacement_compressed( rcx, rdx, r8, r9 );
     return None;
 }
 
 pub fn calculate_displacement_scale( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    let displacement_compressed = displacement_compressed( rcx, rdx, r8, r9 );
     return None;
 }
 
@@ -14726,3 +14810,4 @@ fn main()
 {
     println!("Hello, world!");
 }
+// 14813 | 26642 asm lines 
