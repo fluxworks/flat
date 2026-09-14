@@ -9,6 +9,10 @@ pub type Return = Option<( usize, usize, usize, usize )>;
 
 pub const VERSION = r#"26.09.14.1000"#;
 
+pub static mut CURRENT_PASS:usize = 0;
+
+pub static mut START_TIME:usize = 0;
+
 pub static mut MEMORY_START:usize = 0;
 pub static mut MEMORY_END:usize = 0;
 pub static mut MEMORY_BOUNDARY:usize = 0; // additional_memory
@@ -39,6 +43,16 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
                         rax = rax - MEMORY_BOUNDARY;
                         // shr eax, 10
                         println!( r#"{}"#, rax );
+
+                        let preprocessed = preprocessor( rcx, rdx, r8, r9 );
+                        let parsed = parse( rcx, rdx, r8, r9 );
+                        let assembled = assembler( rcx, rdx, r8, r9 );
+                        let formatted = formatter( rcx, rdx, r8, r9 );
+                        let messaged = display_user_messages( rcx, rdx, r8, r9 );
+
+                        println!( r#"{}"#, CURRENT_PASS );
+
+                        let Some( started, _, _, _ ) = crate::time::read_ticks();
                     }
                 }
             }
@@ -14848,7 +14862,44 @@ pub mod env
     use std::env::{ * };
 }
 
+pub mod time
+{
+    use crate::
+    {
+        *
+    };
+    // crate::time::read_ticks
+    pub fn read_ticks() -> Return
+    {
+        return Some( GetTickCount() as u64, 0, 0, 0 )
+    }
+}
 
+pub mod system
+{
+    use crate::
+    {
+        *
+    };
+
+    pub mod common
+    {
+        use crate::
+        {
+            *
+        };
+
+        pub type c_ulong = u32;
+    }
+
+    pub type DWORD = c_ulong;
+
+    #[link="kernel32"]
+    extern "system"
+    {
+        pub fn GetTickCount() -> DWORD;
+    }
+}
 
 unsafe fn domain() -> Return
 {
