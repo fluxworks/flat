@@ -7,9 +7,46 @@
 )]
 pub type Return = Option<( usize, usize, usize, usize )>;
 
-pub fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+pub const VERSION = r#"26.09.14.1000"#;
+
+pub static mut MEMORY_START:usize = 0;
+pub static mut MEMORY_END:usize = 0;
+pub static mut MEMORY_BOUNDARY:usize = 0; // additional_memory
+pub static mut MEMORY_LIMIT:usize = 0; // additional_memory_end
+
+pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
-    return None;
+    unsafe
+    {
+        println!( r#"flat assembler v{}"#, VERSION );
+
+        let arguments = env::args().skip( 1 ).collect();
+        match arguments.length
+        {
+            0 =>
+            {
+                return information( rcx, rdx, r8, r9 );
+            }
+
+            _ =>
+            {
+                match init_memory( rcx, rdx, r8, r9 )
+                {
+                    Some( ( memory_prefix, rdx, r9, r9 ) ) =>
+                    {
+                        let mut rax = MEMORY_START - MEMORY_END;
+                        rax = rax + MEMORY_LIMIT;
+                        rax = rax - MEMORY_BOUNDARY;
+                        // shr eax, 10
+                        println!( r#"{}"#, rax );
+                    }
+                }
+            }
+
+        }
+
+        return None;
+    }
 }
 
 pub fn display_bytes_count( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
@@ -14806,8 +14843,25 @@ pub fn near_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
     return None;
 }
 
+pub mod env
+{
+    use std::env::{ * };
+}
+
+
+
+unsafe fn domain() -> Return
+{
+    start( 0, 0, 0, 0  );
+    return Some(( 0, 0, 0, 0 ));
+}
+
 fn main()
 {
     println!("Hello, world!");
+    unsafe
+    {
+        let flat = domain();
+    }
 }
 // 14813 | 26642 asm lines 
