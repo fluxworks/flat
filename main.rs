@@ -3,11 +3,16 @@
 */
 #![allow
 (
+    dead_code,
+    non_camel_case_types,
+    static_mut_refs,
+    unused_imports,
     unused_variables,
 )]
+
 pub type Return = Option<( usize, usize, usize, usize )>;
 
-pub const VERSION = r#"26.09.14.1000"#;
+pub const VERSION:&str = r#"26.09.14.1000"#;
 
 pub static mut CURRENT_PASS:usize = 0;
 
@@ -16,7 +21,7 @@ pub static mut START_TIME:usize = 0;
 pub static mut MEMORY_START:usize = 0;
 pub static mut MEMORY_END:usize = 0;
 pub static mut MEMORY_BOUNDARY:usize = 0; // additional_memory
-pub static mut MEMORY_LIMIT:usize = 0; // additional_memory_end
+pub static mut MEMORY_LIMIT:usize = 0;    // additional_memory_end
 
 pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
@@ -24,8 +29,8 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
     {
         println!( r#"flat assembler v{}"#, VERSION );
 
-        let arguments = env::args().skip( 1 ).collect();
-        match arguments.length
+        let arguments: Vec<_> = env::args().skip( 1 ).collect();
+        match arguments.len()
         {
             0 =>
             {
@@ -36,7 +41,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
             {
                 match init_memory( rcx, rdx, r8, r9 )
                 {
-                    Some( ( memory_prefix, rdx, r9, r9 ) ) =>
+                    Some( ( memory_prefix, rdx, r8, r9 ) ) =>
                     {
                         let mut rax = MEMORY_START - MEMORY_END;
                         rax = rax + MEMORY_LIMIT;
@@ -52,7 +57,11 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
                         println!( r#"{}"#, CURRENT_PASS );
 
-                        let Some( started, _, _, _ ) = crate::time::read_ticks();
+                        let Some( ( started, _, _, _ ) ) = crate::time::read_ticks() else { todo!() };
+                    }
+                    _=>
+                    {
+                        return Some((0,0,0,0))
                     }
                 }
             }
@@ -14859,19 +14868,20 @@ pub fn near_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub mod env
 {
-    use std::env::{ * };
+    pub use std::env::{ * };
 }
 
 pub mod time
 {
     use crate::
     {
+        system::{ * },
         *
     };
     // crate::time::read_ticks
     pub fn read_ticks() -> Return
     {
-        return Some( GetTickCount() as u64, 0, 0, 0 )
+        unsafe { return Some((GetTickCount() as usize, 0, 0, 0)) }
     }
 }
 
@@ -14879,6 +14889,10 @@ pub mod system
 {
     use crate::
     {
+        system::
+        {
+            common::{*},
+        },
         *
     };
 
@@ -14894,8 +14908,8 @@ pub mod system
 
     pub type DWORD = c_ulong;
 
-    #[link="kernel32"]
-    extern "system"
+    #[link(name = "kernel32")]
+    unsafe extern "system"
     {
         pub fn GetTickCount() -> DWORD;
     }
@@ -14903,8 +14917,11 @@ pub mod system
 
 unsafe fn domain() -> Return
 {
-    start( 0, 0, 0, 0  );
-    return Some(( 0, 0, 0, 0 ));
+    unsafe
+    {
+        start( 0, 0, 0, 0  );
+        return Some(( 0, 0, 0, 0 ));
+    }
 }
 
 fn main()
