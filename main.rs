@@ -111,7 +111,8 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
                         flat.exe | thread( nth ) application ( handling second line )
                         flat.exe | thread( nth ) application ( handling third line )
                         flat.exe | thread( nth ) application ( handling fourth line )
-                */
+
+                
                 match init_memory( rcx, rdx, r8, r9 )
                 {
                     Some( ( memory_prefix, rdx, r8, r9 ) ) =>
@@ -140,6 +141,18 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
                         return Some((0,0,0,0))
                     }
                 }
+                */
+                let mut parameters =  crate::parameters::Parameters::create( arguments );
+                let preprocessed = lex( rcx, rdx, r8, r9 );
+                let parsed = parse( rcx, rdx, r8, r9 );
+                let assembled = assembler( rcx, rdx, r8, r9 );
+                let assembled = test( rcx, rdx, r8, r9 );
+                let formatted = emit( rcx, rdx, r8, r9 );
+                let messaged = display_user_messages( rcx, rdx, r8, r9 );
+
+                println!( r#"{}"#, CURRENT_PASS );
+
+                let Some( ( started, _, _, _ ) ) = crate::time::read_ticks() else { todo!() };
             }
 
         }
@@ -348,11 +361,11 @@ pub fn definition_value_end( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Retur
     let drop_then_return = drop_then_return( rcx, rdx, r8, r9 );
     return None;
 }
-
+/*
 pub fn init_memory( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
     return None;
-}
+} */
 
 pub fn large_memory( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
@@ -15008,7 +15021,27 @@ pub mod env
     pub use std::env::{ * };
 }
 
+pub mod mem
+{
+    pub use std::mem::{ * };
 
+    use crate::
+    {
+        *,
+    };
+
+    pub fn initialize( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+    {
+        /*
+        let mut rax = MEMORY_START - MEMORY_END;
+        rax = rax + MEMORY_LIMIT;
+        rax = rax - MEMORY_BOUNDARY;
+        // shr eax, 10
+        println!( r#"{}"#, rax );
+        */
+        return None;
+    }
+}
 
 pub mod parameters
 {
@@ -15159,22 +15192,29 @@ Please confirm your arguments to flat."#, self.arguments[0] );
 
                 2 =>
                 {
-                    let first = &self.0[0];
-                    let second = &self.0[1];
+                    let first = &self.arguments[0];
+                    let second = &self.arguments[1];
 
                     match first.as_str()
                     {
                         "from" | "From" | "FROM" =>
                         {
                             /*
-                            This is use <input-file>*/
+                            This is use <input-file>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 );*/
+                            let input_file = second.clone();
+                            let output_file:String = format!( r#"{}.out"#, input_file );
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "to" | "To" | "TO" =>
                         {
                             /*
-                            This is use <output-file>*/
+                            This is use <output-file>
+                            */
+                            let output_file:String = second.clone();
+                            let split:Vec<&str> = output_file.split( r#"."# ).collect();
+                            let input_file = format!( r#"{}.flat"#, split[0] );
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15210,42 +15250,48 @@ Please confirm your arguments to flat."#, argument );
                         "create" | "Create" | "CREATE" =>
                         {
                             /*
-                            This is flat create <pointer-to-lex-object> <line-number-to-lex>*/
+                            This is flat create <pointer-to-lex-object> <line-number-to-lex>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "read" | "Read" | "READ" =>
                         {
                             /*
-                            This is flat read <pointer-to-lex-object> <line-number-to-lex>*/
+                            This is flat read <pointer-to-lex-object> <line-number-to-lex>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
-                        "evaluate" | "Evaluate" | "Evaluate" | "eval" | "Eval" | "EVAL" =>
+                        "evaluate" | "Evaluate" | "EVALUATE" | "eval" | "Eval" | "EVAL" =>
                         {
                             /*
-                            This is flat evaluate <pointer-to-eval-object> <line-number-to-evaluate>*/
+                            This is flat evaluate <pointer-to-eval-object> <line-number-to-evaluate>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "assemble" | "Assemble" | "ASSEMBLE" =>
                         {
                             /*
-                            This is flat flat assemble <pointer-to-assemble-object> <line-number-to-assemble>*/
+                            This is flat flat assemble <pointer-to-assemble-object> <line-number-to-assemble>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "test" | "Test" | "TEST" =>
                         {
                             /*
-                            This is flat flat test <pointer-to-test-object> <line-number-to-test>*/
+                            This is flat flat test <pointer-to-test-object> <line-number-to-test>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "emit" | "Emit" | "EMIT" =>
                         {
                             /*
-                            This is flat emit <pointer-to-emit-object> <line-number-to-emit>*/
+                            This is flat emit <pointer-to-emit-object> <line-number-to-emit>
+                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
