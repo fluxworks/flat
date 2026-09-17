@@ -15252,6 +15252,8 @@ Please confirm your arguments to flat."#, argument );
                             /*
                             This is flat create <pointer-to-lex-object> <line-number-to-lex>
                             let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            let pointer = second.clone();
+                            let index = third.clone()
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15260,6 +15262,8 @@ Please confirm your arguments to flat."#, argument );
                             /*
                             This is flat read <pointer-to-lex-object> <line-number-to-lex>
                             let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            let pointer = second.clone();
+                            let index = third.clone()
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15268,6 +15272,8 @@ Please confirm your arguments to flat."#, argument );
                             /*
                             This is flat evaluate <pointer-to-eval-object> <line-number-to-evaluate>
                             let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            let pointer = second.clone();
+                            let index = third.clone()
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15276,6 +15282,8 @@ Please confirm your arguments to flat."#, argument );
                             /*
                             This is flat flat assemble <pointer-to-assemble-object> <line-number-to-assemble>
                             let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            let pointer = second.clone();
+                            let index = third.clone()
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15284,6 +15292,8 @@ Please confirm your arguments to flat."#, argument );
                             /*
                             This is flat flat test <pointer-to-test-object> <line-number-to-test>
                             let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            let pointer = second.clone();
+                            let index = third.clone()
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15292,6 +15302,8 @@ Please confirm your arguments to flat."#, argument );
                             /*
                             This is flat emit <pointer-to-emit-object> <line-number-to-emit>
                             let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            let pointer = second.clone();
+                            let index = third.clone()
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
