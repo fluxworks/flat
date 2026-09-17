@@ -83,7 +83,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
         {
             0 =>
             {
-                return information( rcx, rdx, r8, r9 );
+                return help( rcx, rdx, r8, r9 );
             }
 
             _ =>
@@ -123,10 +123,11 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
                         println!( r#"{}"#, rax );
                         let mut parameters =  crate::parameters::Parameters::create( arguments );
 
-                        let preprocessed = preprocessor( rcx, rdx, r8, r9 );
+                        let preprocessed = lex( rcx, rdx, r8, r9 );
                         let parsed = parse( rcx, rdx, r8, r9 );
                         let assembled = assembler( rcx, rdx, r8, r9 );
-                        let formatted = formatter( rcx, rdx, r8, r9 );
+                        let assembled = test( rcx, rdx, r8, r9 );
+                        let formatted = emit( rcx, rdx, r8, r9 );
                         let messaged = display_user_messages( rcx, rdx, r8, r9 );
 
                         println!( r#"{}"#, CURRENT_PASS );
@@ -151,35 +152,59 @@ pub fn display_bytes_count( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
     return None;
 }
-
-pub fn information( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+// pub fn information( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+pub fn help( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
-    println!( r#"flat | information"# );
+    println!( r#"
+flat | {}
+
+     usage
+     ━━━━━━
+     help                               | General help with flat.
+     help <with>                        | Specific help with flat <term-to-help-with>.
+     from <input-file>                  | Assemble from <input-file> to <.input-filename>.
+     to   <output-file>                 | Assemble to <output-file> from corresponding <output-filename.flat>.
+     from <input-file> to <output-file> | Assemble from <input-file> to <outut-file>.
+     
+     additional arguments
+     ━━━━━━━━━━━━━━━━━━━━━
+     ... with <memory in kilobytes> | Used to specify the limit for kilobytes of memory the assembler uses.
+     ... until <limit of passes>    | Used to specify the limit for number of passes the assembler performs.
+     ... uses <symbols-file>        | Used to specify a symbols file the assembler uses.
+     ... use <name>=<value>         | Used to specify a symbolic defintion the assembler uses.
+     
+     API arguments
+     ━━━━━━━━━━━━━━━━━━━━━
+     create   <pointer-to-lex-object>      <line-number-to-lex>      | Multithreaded lexing argument.
+     read     <pointer-to-parse-object>    <line-number-to-parse>    | Multithreaded parsing argument.
+     evaluate <pointer-to-eval-object>     <line-number-to-evaluate> | Multithreaded evaluation argument.
+     assemble <pointer-to-assemble-object> <line-number-to-assemble> | Multithreaded assembly argument.
+     test     <pointer-to-test-object>     <line-number-to-test>     | Multithreaded testing argument.
+     emit     <pointer-to-emit-object>     <line-number-to-emit>     | Multithreaded emission argument.
+"#, VERSION );
     return None;
 }
 
-pub mod parameters
+pub fn flat( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
-    use crate::
-    {
-        *,
-    };
+    println!( r#"
+flat | {}
+Copyright 2026 fluxworks®
 
-    #[derive(Clone, Debug)]
-    pub struct Parameters( Vec<String> );
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
+associated documentation files (the “Software”), to deal in the Software without restriction, 
+including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-    impl Parameters
-    {
-        pub const fn new() -> Self
-        {
-            Self( vec!() )
-        }
-
-        pub fn create( from:Vec<String> ) -> Self
-        {
-            Self( from )
-        }
-    }
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
+    TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+    THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"#, VERSION );
+    return None;
 }
 
 pub fn get_params( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
@@ -1034,7 +1059,8 @@ pub fn dump_preprocessed_source( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> R
     return None;
 }
 
-pub fn preprocessor( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+//pub fn preprocessor( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+pub fn lex( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
     return None;
 }
@@ -6522,7 +6548,13 @@ pub fn assert_directive( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
     return None;
 }
 
-pub fn formatter( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+pub fn test( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+{
+    return None;
+}
+
+//pub fn formatter( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+pub fn emit( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
     return None;
 }
@@ -14974,6 +15006,190 @@ pub mod collections
 pub mod env
 {
     pub use std::env::{ * };
+}
+
+
+
+pub mod parameters
+{
+    use crate::
+    {
+        *,
+    };
+
+    #[derive(Clone, Debug)]
+    pub struct Parameters( Vec<String> );
+
+    impl Parameters
+    {
+        pub const fn new() -> Self
+        {
+            Self( vec!() )
+        }
+
+        pub fn create( from:Vec<String> ) -> Self
+        {
+            Self( from )
+        }
+        // pub fn get_params( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+        pub fn read( &mut self, rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
+        {
+            /*
+                flat                                  
+                flat from <input-file> to <output-file>
+                flat from <input-file>
+                flat to <output-file>
+                flat ... with <memory in kilobytes> | -m, -M
+                flat ... until <limit of passes>    | -p, -P | Used to specify the limit for number of passes the assembler performs
+                flat ... uses <symbols-file>        | -s, -S
+                flat ... use <name>=<value>         | -d, -D
+                flat create   <pointer-to-lex-object>      <line-number-to-lex>
+                flat read     <pointer-to-parse-object>    <line-number-to-parse>
+                flat evaluate <pointer-to-eval-object>     <line-number-to-evaluate>
+                flat assemble <pointer-to-assemble-object> <line-number-to-assemble>
+                flat test     <pointer-to-test-object>     <line-number-to-test>
+                flat emit     <pointer-to-emit-object>     <line-number-to-emit>
+                flat help
+            */
+            let Some( ( length, _, _, _ ) ) = self.read_length() else { todo!() };
+            match length
+            {
+                0 => { return flat( rcx, rdx, r8, r9 ); }
+
+                1 =>
+                {
+                    let first = &self.0[0];
+                    match first.as_str()
+                    {
+                        "help" | "Help" | "HELP" =>
+                        {
+                            return help( rcx, rdx, r8, r9 );
+                        }
+
+                        _=>
+                        {
+                            println!( r#"
+Error( 0xE0000000 )::flat needs more than one argument( {} ) to function.
+Please confirm your arguments to flat."#, self.0[0] );
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+                    }
+                }
+
+                2 =>
+                {
+                    let first = &self.0[0];
+                    let second = &self.0[1];
+
+                    match first.as_str()
+                    {
+                        "from" | "From" | "FROM" =>
+                        {
+                            /*
+                            This is use <input-file>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        "to" | "To" | "TO" =>
+                        {
+                            /*
+                            This is use <output-file>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        argument =>
+                        {
+                            println!( r#"
+Error( 0xE0000001 )::flat did not find any valid argument( {} ) to function.
+Please confirm your arguments to flat."#, argument );
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+                    }
+
+                }
+
+                3 =>
+                {
+                    let first = &self.0[0];
+                    let second = &self.0[1];
+                    let third = &self.0[2];
+                    /*
+                        flat create   <pointer-to-lex-object>      <line-number-to-lex>
+                        flat read     <pointer-to-parse-object>    <line-number-to-parse>
+                        flat evaluate <pointer-to-eval-object>     <line-number-to-evaluate>
+                        flat assemble <pointer-to-assemble-object> <line-number-to-assemble>
+                        flat test     <pointer-to-test-object>     <line-number-to-test>
+                        flat emit     <pointer-to-emit-object>     <line-number-to-emit>
+                    */
+
+                    match first.as_str()
+                    {
+                        /*
+                        Multithreaded Arguments*/
+                        "create" | "Create" | "CREATE" =>
+                        {
+                            /*
+                            This is flat create <pointer-to-lex-object> <line-number-to-lex>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        "read" | "Read" | "READ" =>
+                        {
+                            /*
+                            This is flat read <pointer-to-lex-object> <line-number-to-lex>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        "evaluate" | "Evaluate" | "Evaluate" | "eval" | "Eval" | "EVAL" =>
+                        {
+                            /*
+                            This is flat evaluate <pointer-to-eval-object> <line-number-to-evaluate>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        "assemble" | "Assemble" | "ASSEMBLE" =>
+                        {
+                            /*
+                            This is flat flat assemble <pointer-to-assemble-object> <line-number-to-assemble>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        "test" | "Test" | "TEST" =>
+                        {
+                            /*
+                            This is flat flat test <pointer-to-test-object> <line-number-to-test>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        "emit" | "Emit" | "EMIT" =>
+                        {
+                            /*
+                            This is flat emit <pointer-to-emit-object> <line-number-to-emit>*/
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+
+                        argument =>
+                        {
+                            println!( r#"
+Error( 0xE0000001 )::flat did not find any valid argument( {} ) to function.
+Please confirm your arguments to flat."#, argument );
+                            return Some( ( 0, 0, 0, 0 ) );
+                        }
+                    }
+
+                }
+
+                _=> {} // Impossible
+            }
+
+            return Some( ( rcx, rdx, r8, r9 ) )
+        }
+
+        pub fn read_length( &self ) -> Return
+        {
+            return Some( ( self.0.len(), 0, 0 , 0 ) )
+        }
+    }
 }
 
 pub mod time
