@@ -15018,18 +15018,99 @@ pub mod parameters
     };
 
     #[derive(Clone, Debug)]
-    pub struct Parameters( Vec<String> );
-
+    pub struct Parameters
+    {
+        pub arguments:Vec<String>,
+        pub memory:Option<usize>,
+        pub passes:Option<usize>,
+        pub symbols:Option<String>,
+        pub definitions:Vec<String>,
+    }
+    
     impl Parameters
     {
         pub const fn new() -> Self
         {
-            Self( vec!() )
+            Self
+            {
+                arguments:vec!(),
+                memory:None,
+                passes:None,
+                symbols:None,
+                definitions:vec!(),
+            }
         }
 
         pub fn create( from:Vec<String> ) -> Self
         {
-            Self( from )
+            Self
+            {
+                arguments:from,
+                memory:None,
+                passes:None,
+                symbols:None,
+                definitions:vec!(),
+            }
+        }
+
+        pub fn create_with( from:Vec<String>, memory:Option<usize>, passes:Option<usize>, symbols:Option<String>, definitions:Vec<String> ) -> Self
+        {
+            Self
+            {
+                arguments:from,
+                memory,
+                passes,
+                symbols,
+                definitions
+            }
+        }
+
+        pub fn create_with_memory( from:Vec<String>, memory:Option<usize> ) -> Self
+        {
+            Self
+            {
+                arguments:from,
+                memory,
+                passes:None,
+                symbols:None,
+                definitions:vec!()
+            }
+        }
+
+        pub fn create_with_passes( from:Vec<String>, passes:Option<usize> ) -> Self
+        {
+            Self
+            {
+                arguments:from,
+                memory:None,
+                passes,
+                symbols:None,
+                definitions:vec!()
+            }
+        }
+
+        pub fn create_with_symbols( from:Vec<String>, symbols:Option<String> ) -> Self
+        {
+            Self
+            {
+                arguments:from,
+                memory:None,
+                passes:None,
+                symbols,
+                definitions:vec!()
+            }
+        }
+
+        pub fn create_with_defintions( from:Vec<String>, definitions:Vec<String> ) -> Self
+        {
+            Self
+            {
+                arguments:from,
+                memory:None,
+                passes:None,
+                symbols:None,
+                definitions
+            }
         }
         // pub fn get_params( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
         pub fn read( &mut self, rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
@@ -15058,7 +15139,7 @@ pub mod parameters
 
                 1 =>
                 {
-                    let first = &self.0[0];
+                    let first = &self.arguments[0];
                     match first.as_str()
                     {
                         "help" | "Help" | "HELP" =>
@@ -15070,7 +15151,7 @@ pub mod parameters
                         {
                             println!( r#"
 Error( 0xE0000000 )::flat needs more than one argument( {} ) to function.
-Please confirm your arguments to flat."#, self.0[0] );
+Please confirm your arguments to flat."#, self.arguments[0] );
                             return Some( ( 0, 0, 0, 0 ) );
                         }
                     }
@@ -15110,9 +15191,9 @@ Please confirm your arguments to flat."#, argument );
 
                 3 =>
                 {
-                    let first = &self.0[0];
-                    let second = &self.0[1];
-                    let third = &self.0[2];
+                    let first = &self.arguments[0];
+                    let second = &self.arguments[1];
+                    let third = &self.arguments[2];
                     /*
                         flat create   <pointer-to-lex-object>      <line-number-to-lex>
                         flat read     <pointer-to-parse-object>    <line-number-to-parse>
@@ -15187,7 +15268,7 @@ Please confirm your arguments to flat."#, argument );
 
         pub fn read_length( &self ) -> Return
         {
-            return Some( ( self.0.len(), 0, 0 , 0 ) )
+            return Some( ( self.arguments.len(), 0, 0 , 0 ) )
         }
     }
 }
