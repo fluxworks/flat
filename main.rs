@@ -7,21 +7,70 @@
     non_camel_case_types,
     static_mut_refs,
     unused_imports,
+    unused_mut,
     unused_variables,
 )]
+
+use crate::collections::HashMap;
 
 pub type Return = Option<( usize, usize, usize, usize )>;
 
 pub const VERSION:&str = r#"26.09.14.1000"#;
 
 pub static mut CURRENT_PASS:usize = 0;
+pub static mut MAX_PASS:usize = 100; // passes_limit
 
 pub static mut START_TIME:usize = 0;
 
+pub static mut MEMORY_SETTING:usize = 0; // memory_setting
 pub static mut MEMORY_START:usize = 0;
 pub static mut MEMORY_END:usize = 0;
 pub static mut MEMORY_BOUNDARY:usize = 0; // additional_memory
 pub static mut MEMORY_LIMIT:usize = 0;    // additional_memory_end
+
+pub static mut INPUT_FILE:&str = r#""#; // input_file
+pub static mut OUTPUT_FILE:&str = r#""#; // output_file
+pub static mut SYMBOLS_FILE:&str = r#""#; // symbols_file
+
+pub const CREATE_NEW:usize	      = 1;
+pub const CREATE_ALWAYS:usize     = 2;
+pub const OPEN_EXISTING:usize	  = 3;
+pub const OPEN_ALWAYS:usize	      = 4;
+pub const TRUNCATE_EXISTING:usize = 5;
+
+pub const FILE_SHARE_READ:usize = 1;
+pub const FILE_SHARE_WRITE:usize = 2;
+pub const FILE_SHARE_DELETE:usize = 4;
+
+pub const GENERIC_READ:usize 	       = 0x80000000;
+pub const GENERIC_WRITE:usize 	       = 0x40000000;
+
+pub const STD_INPUT_HANDLE:usize        = 0xFFFFFFF6;
+pub const STD_OUTPUT_HANDLE:usize       = 0xFFFFFFF5;
+pub const STD_ERROR_HANDLE:usize        = 0xFFFFFFF4;
+
+pub const MEM_COMMIT:usize   = 0x1000;
+pub const MEM_RESERVE:usize  = 0x2000;
+pub const MEM_DECOMMIT:usize = 0x4000;
+pub const MEM_RELEASE:usize  = 0x8000;
+pub const MEM_FREE:usize 	 = 0x10000;
+pub const MEM_PRIVATE:usize  = 0x20000;
+pub const MEM_MAPPED:usize 	 = 0x40000;
+pub const MEM_RESET:usize 	 = 0x80000;
+pub const MEM_TOP_DOWN:usize = 0x100000;
+
+pub const PAGE_NOACCESS:usize          = 1;
+pub const PAGE_READONLY:usize 	       = 2;
+pub const PAGE_READWRITE:usize 	       = 4;
+pub const PAGE_WRITECOPY:usize 	       = 8;
+pub const PAGE_EXECUTE:usize 	       = 0x10;
+pub const PAGE_EXECUTE_READ:usize      = 0x20;
+pub const PAGE_EXECUTE_READWRITE:usize = 0x40;
+pub const PAGE_EXECUTE_WRITECOPY:usize = 0x80;
+pub const PAGE_GUARD:usize 	           = 0x100;
+pub const PAGE_NOCACHE:usize           = 0x200;
+
+pub static mut PREDEFINITIONS:Option<HashMap<usize, String>> = None;
 
 pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
@@ -29,7 +78,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
     {
         println!( r#"flat assembler v{}"#, VERSION );
 
-        let arguments: Vec<_> = env::args().skip( 1 ).collect();
+        let arguments: Vec<String> = env::args().skip( 1 ).collect();
         match arguments.len()
         {
             0 =>
@@ -39,6 +88,30 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
             _ =>
             {
+                /*
+                TODO
+                    Add four function types for flat:
+                        func <name of function> ( ... ) | <name of function>( ... )  | normal function
+                        rule <name of function> ( ... ) | <name of function>!( ... ) | macro rules
+                        auto <name of function> ( ... ) | <name of function>?( ... ) | function which returns a result
+                        call <name of function> ( ... ) | <name of function>=( ... ) | function which returns a option...rename this if can?
+                            call | this
+
+                Multi-threaded Application starts here by checking the arguments for:
+                    flat create <pointer to lex object> <line number of object> | lexes a line 
+                    flat read <pointer to parse object> <line number of object> | parses a line 
+                    flat evaluate <pointer to evaluate object> <line number of object> | evaluates a line 
+                    flat assemble <pointer to assemble object> <line number of object> | assembles a line 
+                    flat test <pointer to test object> <line number of object> | test a line 
+                    flat emit <pointer to emit object> <line number of object> | emit a line 
+
+                These application arguments allow for multithreaded application deployment:
+                    flat.exe     | main application
+                        flat.exe | thread( nth ) application ( handling first line )
+                        flat.exe | thread( nth ) application ( handling second line )
+                        flat.exe | thread( nth ) application ( handling third line )
+                        flat.exe | thread( nth ) application ( handling fourth line )
+                */
                 match init_memory( rcx, rdx, r8, r9 )
                 {
                     Some( ( memory_prefix, rdx, r8, r9 ) ) =>
@@ -48,6 +121,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
                         rax = rax - MEMORY_BOUNDARY;
                         // shr eax, 10
                         println!( r#"{}"#, rax );
+                        let mut parameters =  crate::parameters::Parameters::create( arguments );
 
                         let preprocessed = preprocessor( rcx, rdx, r8, r9 );
                         let parsed = parse( rcx, rdx, r8, r9 );
@@ -59,6 +133,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
                         let Some( ( started, _, _, _ ) ) = crate::time::read_ticks() else { todo!() };
                     }
+
                     _=>
                     {
                         return Some((0,0,0,0))
@@ -79,7 +154,32 @@ pub fn display_bytes_count( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 
 pub fn information( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
+    println!( r#"flat | information"# );
     return None;
+}
+
+pub mod parameters
+{
+    use crate::
+    {
+        *,
+    };
+
+    #[derive(Clone, Debug)]
+    pub struct Parameters( Vec<String> );
+
+    impl Parameters
+    {
+        pub const fn new() -> Self
+        {
+            Self( vec!() )
+        }
+
+        pub fn create( from:Vec<String> ) -> Self
+        {
+            Self( from )
+        }
+    }
 }
 
 pub fn get_params( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
@@ -14864,6 +14964,11 @@ pub fn drop_then_return( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 pub fn near_ok( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 {
     return None;
+}
+
+pub mod collections
+{
+    pub use std::collections::{ * };
 }
 
 pub mod env
