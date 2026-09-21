@@ -142,6 +142,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
                     }
                 }
                 */
+                let initialized = crate::mem::initialize( rcx, rdx, r8, r9 );
                 let mut parameters =  crate::parameters::Parameters::create( arguments );
                 let preprocessed = lex( rcx, rdx, r8, r9 );
                 let parsed = parse( rcx, rdx, r8, r9 );
@@ -15027,19 +15028,56 @@ pub mod mem
 
     use crate::
     {
+        system::{ AttachConsole, GetCurrentThreadStackLimits },
         *,
     };
 
     pub fn initialize( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
     {
-        /*
-        let mut rax = MEMORY_START - MEMORY_END;
-        rax = rax + MEMORY_LIMIT;
-        rax = rax - MEMORY_BOUNDARY;
-        // shr eax, 10
-        println!( r#"{}"#, rax );
-        */
-        return None;
+        unsafe
+        {    
+            let mut rcx:usize = 0xFFFFFFFF;
+            let mut rax = AttachConsole( rcx as u32 );
+            /*
+            [rcx] LowLimit | A pointer variable that receives the lower boundary of the current thread stack.
+            [rdx] HighLimit | A pointer variable that receives the upper boundary of the current thread stack. */
+            GetCurrentThreadStackLimits( rcx as *mut usize, rdx as *mut usize );
+            /*
+             ;strings.emit 'init_memory | 455'
+            xor eax,eax
+            mov rcx, 0xFFFFFFFF
+            call u64[AttachConsole]
+            mov u64[memory_start],_eax
+            mov _eax,_esp
+            and eax,not 0FFFh
+            add eax,1000h-10000h
+            mov u64[stack_limit],_eax
+            mov eax,[memory_setting]
+            shl eax,10
+            jnz allocate_memory
+            sub rsp, 40
+            mov rcx, buffer
+            call u64[GlobalMemoryStatus]
+            add rsp, 40
+            mov rax, u64 [buffer+32]
+            mov rdx, u64 [buffer+16]
+            cmp eax,NUL
+            jl large_memory
+            cmp edx,NUL
+            jl large_memory
+            shr _eax,TEXT
+            add _eax,_edx
+            jmp allocate_memory
+            ret
+
+            let mut rax = MEMORY_START - MEMORY_END;
+            rax = rax + MEMORY_LIMIT;
+            rax = rax - MEMORY_BOUNDARY;
+            // shr eax, 10
+            println!( r#"{}"#, rax );
+            */
+            return None;
+        }
     }
 }
 
@@ -15200,8 +15238,7 @@ Please confirm your arguments to flat."#, self.arguments[0] );
                         "from" | "From" | "FROM" =>
                         {
                             /*
-                            This is use <input-file>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 );*/
+                            This is use <input-file> */
                             let input_file = second.clone();
                             let output_file:String = format!( r#"{}.out"#, input_file );
                             return Some( ( 0, 0, 0, 0 ) );
@@ -15250,60 +15287,54 @@ Please confirm your arguments to flat."#, argument );
                         "create" | "Create" | "CREATE" =>
                         {
                             /*
-                            This is flat create <pointer-to-lex-object> <line-number-to-lex>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            This is flat create <pointer-to-lex-object> <line-number-to-lex>*/
                             let pointer = second.clone();
-                            let index = third.clone()
+                            let index = third.clone();
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "read" | "Read" | "READ" =>
                         {
                             /*
-                            This is flat read <pointer-to-lex-object> <line-number-to-lex>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            This is flat read <pointer-to-lex-object> <line-number-to-lex>*/
                             let pointer = second.clone();
-                            let index = third.clone()
+                            let index = third.clone();
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "evaluate" | "Evaluate" | "EVALUATE" | "eval" | "Eval" | "EVAL" =>
                         {
                             /*
-                            This is flat evaluate <pointer-to-eval-object> <line-number-to-evaluate>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            This is flat evaluate <pointer-to-eval-object> <line-number-to-evaluate>*/
                             let pointer = second.clone();
-                            let index = third.clone()
+                            let index = third.clone();
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "assemble" | "Assemble" | "ASSEMBLE" =>
                         {
                             /*
-                            This is flat flat assemble <pointer-to-assemble-object> <line-number-to-assemble>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            This is flat flat assemble <pointer-to-assemble-object> <line-number-to-assemble>*/
                             let pointer = second.clone();
-                            let index = third.clone()
+                            let index = third.clone();
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "test" | "Test" | "TEST" =>
                         {
                             /*
-                            This is flat flat test <pointer-to-test-object> <line-number-to-test>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            This is flat flat test <pointer-to-test-object> <line-number-to-test> */
                             let pointer = second.clone();
-                            let index = third.clone()
+                            let index = third.clone();
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
                         "emit" | "Emit" | "EMIT" =>
                         {
                             /*
-                            This is flat emit <pointer-to-emit-object> <line-number-to-emit>
-                            let initialized = crate::mem::initialize( rcx, rdx, r8, r9 ); */
+                            This is flat emit <pointer-to-emit-object> <line-number-to-emit>*/
                             let pointer = second.clone();
-                            let index = third.clone()
+                            let index = third.clone();
                             return Some( ( 0, 0, 0, 0 ) );
                         }
 
@@ -15362,8 +15393,13 @@ pub mod system
         {
             *
         };
-
+        
+        pub type c_int = i32;
         pub type c_ulong = u32;
+
+        pub type BOOL = c_int;
+
+        pub type PULONG_PTR = *mut usize;
     }
 
     pub type DWORD = c_ulong;
@@ -15371,6 +15407,8 @@ pub mod system
     #[link(name = "kernel32")]
     unsafe extern "system"
     {
+        pub fn AttachConsole( dwProcessId:DWORD ) -> BOOL;
+        pub fn GetCurrentThreadStackLimits(LowLimit: PULONG_PTR, HighLimit: PULONG_PTR);
         pub fn GetTickCount() -> DWORD;
     }
 }
