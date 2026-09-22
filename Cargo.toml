@@ -2,7 +2,7 @@
 name = "flat"
 version = "26.9.22"
 authors = ["The Operator <op@gmail.com>"]
-description = "An assembler for x64 processors."
+description = "An assembler for x86-64 processors."
 repository = "https://github.com"
 keywords = ["shell"]
 categories = ["development-tools"]
