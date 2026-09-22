@@ -15424,7 +15424,6 @@ unsafe fn domain() -> Return
 
 fn main()
 {
-    println!("Hello, world!");
     unsafe
     {
         let flat = domain();

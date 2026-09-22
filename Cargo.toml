@@ -1,0 +1,24 @@
+[package]
+name = "flat"
+version = "26.9.22"
+authors = ["The Operator <op@gmail.com>"]
+description = "An assembler for x64 processors."
+repository = "https://github.com"
+keywords = ["shell"]
+categories = ["development-tools"]
+license = "MIT"
+
+[profile.release]
+lto = true
+strip = true
+
+[lib]
+name = "flat"
+path = "src/lib.rs"
+
+[[bin]]
+name = "flat"
+path = "main.rs"
+doc = false
+
+[dependencies]
