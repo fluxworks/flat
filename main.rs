@@ -205,18 +205,17 @@ pub fn flat( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
 flat | {}
 Copyright 2026 fluxworks®
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
-associated documentation files (the “Software”), to deal in the Software without restriction, 
-including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
+Permission is hereby granted, free of charge, to any obtaining a copy of this software and associated documentation
+(the “Software”), to deal in the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit to whom
+the Software is furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-    THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-    TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
-    THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+The above copyright notice and this notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
+THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 "#, VERSION );
     return None;
 }
@@ -15387,21 +15386,6 @@ pub mod system
         *
     };
 
-    pub mod common
-    {
-        use crate::
-        {
-            *
-        };
-        
-        pub type c_int = i32;
-        pub type c_ulong = u32;
-
-        pub type BOOL = c_int;
-
-        pub type PULONG_PTR = *mut usize;
-    }
-
     pub type DWORD = c_ulong;
 
     #[link(name = "kernel32")]
@@ -15410,6 +15394,77 @@ pub mod system
         pub fn AttachConsole( dwProcessId:DWORD ) -> BOOL;
         pub fn GetCurrentThreadStackLimits(LowLimit: PULONG_PTR, HighLimit: PULONG_PTR);
         pub fn GetTickCount() -> DWORD;
+    }
+
+    pub mod common
+    {
+        use crate::
+        {
+            *
+        };
+        
+        pub type c_int = i32;
+        pub type c_long = i32;
+        pub type c_ulong = u32;
+
+        pub enum c_void {}
+
+        pub type BOOL = c_int;
+
+        pub type PULONG_PTR = *mut usize;
+
+        pub type PVOID = *mut c_void;
+
+        pub type LONG = c_long;
+
+        pub type LPCWSTR = *const WCHAR;
+
+        pub type ULONG = c_ulong;
+
+        pub type NTSTATUS = LONG;
+    }
+
+    pub mod shared
+    {
+        use crate::
+        {
+            *,
+        };
+
+        pub mod bcrypt
+        {
+            use crate::
+            {
+                *,
+            };
+
+            pub type BCRYPT_SECRET_HANDLE = PVOID;
+
+            pub type PCRYPT_CONTEXT_CONFIG = *mut CRYPT_CONTEXT_CONFIG;
+
+            pub type PCRYPT_CONTEXT_FUNCTION_CONFIG = *mut CRYPT_CONTEXT_FUNCTION_CONFIG;
+
+            #[link(name = "kernel32")]
+            unsafe extern "system"
+            {
+                pub fn BCryptDestroySecret( hSecret: BCRYPT_SECRET_HANDLE ) -> NTSTATUS;
+                pub fn BCryptCloseAlgorithmProvider( hAlgorithm: BCRYPT_ALG_HANDLE, dwFlags: ULONG ) -> NTSTATUS;
+                pub fn BCryptConfigureContext( dwTable: ULONG, pszContext: LPCWSTR, pConfig: PCRYPT_CONTEXT_CONFIG ) -> NTSTATUS;
+                pub fn BCryptConfigureContextFunction( dwTable: ULONG, pszContext: LPCWSTR, dwInterface: ULONG, pszFunction: LPCWSTR, pConfig: PCRYPT_CONTEXT_FUNCTION_CONFIG ) -> NTSTATUS;
+            }
+
+            #[repr(C)] pub struct CRYPT_CONTEXT_CONFIG
+            {
+                pub dwFlags: ULONG,
+                pub dwReserved: ULONG,
+            }
+
+            #[repr(C)] pub struct CRYPT_CONTEXT_FUNCTION_CONFIG
+            {
+                pub dwFlags: ULONG,
+                pub dwReserved: ULONG,
+            }
+        }
     }
 }
 
