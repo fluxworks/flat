@@ -5,9 +5,11 @@
 (
     dead_code,
     non_camel_case_types,
+    non_snake_case,
     static_mut_refs,
     unused_imports,
     unused_mut,
+    unused_unsafe,
     unused_variables,
 )]
 
@@ -79,6 +81,19 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
         println!( r#"flat assembler v{}"#, VERSION );
 
         let arguments: Vec<String> = env::args().skip( 1 ).collect();
+        println!( r#"   args( {:?} )"#, arguments );
+        match arguments.len()
+        {
+
+            0 => { return help( rcx, rdx, r8, r9 ); }
+            len =>
+            {
+                println!( r#"   len( {:?} )"#, len );
+                let initialized = crate::mem::initialize( rcx, rdx, r8, r9 );
+            }
+        }
+        /*
+
         match arguments.len()
         {
             0 =>
@@ -157,7 +172,7 @@ pub unsafe fn start( rcx:usize, rdx:usize, r8:usize, r9:usize ) -> Return
             }
 
         }
-
+        */
         return None;
     }
 }
@@ -15024,7 +15039,7 @@ pub mod env
 pub mod mem
 {
     pub use std::mem::{ * };
-
+    use system::common::PULONG_PTR;
     use crate::
     {
         system::{ AttachConsole, GetCurrentThreadStackLimits },
@@ -15037,10 +15052,15 @@ pub mod mem
         {    
             let mut rcx:usize = 0xFFFFFFFF;
             let mut rax = AttachConsole( rcx as u32 );
+            println!( r#"   rax( {} )"#, rax );
+            let mut pcx = crate::ptr::null_mut();
+            let mut pdx = crate::ptr::null_mut();
+            println!( r#"   ( pcx, pdx )( {:?} )"#, ( pcx, pdx ) );
             /*
             [rcx] LowLimit | A pointer variable that receives the lower boundary of the current thread stack.
             [rdx] HighLimit | A pointer variable that receives the upper boundary of the current thread stack. */
-            GetCurrentThreadStackLimits( rcx as *mut usize, rdx as *mut usize );
+            GetCurrentThreadStackLimits( pcx as PULONG_PTR, pdx as PULONG_PTR );
+            println!( r#"   ( pcx, pdx )( {:?} )"#, ( pcx, pdx ) );
             /*
              ;strings.emit 'init_memory | 455'
             xor eax,eax
@@ -15078,6 +15098,11 @@ pub mod mem
             return None;
         }
     }
+}
+
+pub mod ptr
+{
+    pub use std::ptr::{ * };
 }
 
 pub mod parameters
@@ -15406,8 +15431,9 @@ pub mod system
         pub type c_int = i32;
         pub type c_long = i32;
         pub type c_ulong = u32;
+        pub type c_void = void;
 
-        pub enum c_void {}
+        pub type WCHAR = u16;
 
         pub type BOOL = c_int;
 
@@ -15422,6 +15448,8 @@ pub mod system
         pub type ULONG = c_ulong;
 
         pub type NTSTATUS = LONG;
+
+        pub enum void {}
     }
 
     pub mod shared
@@ -15435,8 +15463,11 @@ pub mod system
         {
             use crate::
             {
+                system::{ * },
                 *,
             };
+
+            pub type BCRYPT_ALG_HANDLE = PVOID;
 
             pub type BCRYPT_SECRET_HANDLE = PVOID;
 
