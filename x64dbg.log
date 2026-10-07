@@ -1,0 +1,188 @@
+Initializing wait objects...
+Initializing debugger...
+Initializing debugger functions...
+Setting JSON memory management functions...
+Getting directory information...
+Symbol Path: C:\Users\CKGuest\Downloads\.x96\release\x64\symbols
+Start file read thread...
+Retrieving syscall indices...
+Allocating message stack...
+Initializing global script variables...
+Registering debugger commands...
+Registering GUI command handler...
+Registering expression functions...
+Registering format functions...
+Registering Script DLL command handler...
+Starting command loop...
+Initialization successful!
+Loading plugins...
+Handling command line...
+  "C:\Users\CKGuest\Downloads\.x96\release\x64\x64dbg.exe" 
+Syscall indices loaded!
+Error codes database loaded!
+Exception codes database loaded!
+NTSTATUS codes database loaded!
+Windows constant database loaded!
+Reading notes file...
+File read thread finished!
+Debugging: C:\Users\CKGuest\Downloads\fasmdll64mod\testdll.exe
+Database file: C:\Users\CKGuest\Downloads\.x96\release\x64\db\testdll.exe.dd64
+Process Started: 0000000000400000 C:\Users\CKGuest\Downloads\fasmdll64mod\testdll.exe
+  "C:\Users\CKGuest\Downloads\fasmdll64mod\testdll.exe"
+  argv[0]: C:\Users\CKGuest\Downloads\fasmdll64mod\testdll.exe
+Module testdll.exe loaded from disk path
+Breakpoint at 0000000000401000 (entry breakpoint) set!
+DLL Loaded: 00007FFEBD060000 C:\Windows\System32\ntdll.dll
+DLL Loaded: 00007FFEBB120000 C:\Windows\System32\kernel32.dll
+DLL Loaded: 00007FFEBA4A0000 C:\Windows\System32\KernelBase.dll
+DLL Loaded: 00007FFEBAEE0000 C:\Windows\System32\msvcrt.dll
+Thread 8680 created, Entry: ntdll.00007FFEBD0B1A40, Parameter: 0000000000525D10
+Thread 2408 created, Entry: ntdll.00007FFEBD0B1A40, Parameter: 0000000000525D10
+DLL Loaded: 000000005D890000 C:\Users\CKGuest\Downloads\fasmdll64mod\fasm64.dll
+System breakpoint reached!
+User code reached at <fasm64.OptionalHeader.AddressOfEntryPoint> (000000005D893000)
+User code reached at <testdll.OptionalHeader.AddressOfEntryPoint> (0000000000401000)
+INT3 breakpoint "entry breakpoint" at <testdll.OptionalHeader.AddressOfEntryPoint> (0000000000401000)!
+00007FFEBD0759E0 | 48:895C24 08             | mov qword ptr ss:[rsp+8],rbx            | SbSelectProcedure
+EXCEPTION_DEBUG_INFO:
+  dwFirstChance: 1
+  ExceptionCode: C0000005 (EXCEPTION_ACCESS_VIOLATION)
+  ExceptionFlags: 00000000
+  ExceptionAddress: ntdll.00007FFEBD075B4B
+  NumberParameters: 2
+  ExceptionInformation[00]: 0000000000000000 Read
+  ExceptionInformation[01]: FFFFFFFFFFFFFFFF Inaccessible Address
+
+First chance exception on 00007FFEBD075B4B (C0000005, EXCEPTION_ACCESS_VIOLATION)!
+EXCEPTION_DEBUG_INFO:
+  dwFirstChance: 0
+  ExceptionCode: C0000005 (EXCEPTION_ACCESS_VIOLATION)
+  ExceptionFlags: 00000000
+  ExceptionAddress: ntdll.00007FFEBD075B4B
+  NumberParameters: 2
+  ExceptionInformation[00]: 0000000000000000 Read
+  ExceptionInformation[01]: FFFFFFFFFFFFFFFF Inaccessible Address
+  Last chance exception on 00007FFEBD075B4B (C0000005, EXCEPTION_ACCESS_VIOLATION)!
+
+EXCEPTION_DEBUG_INFO:
+  dwFirstChance: 1
+  ExceptionCode: C0000005 (EXCEPTION_ACCESS_VIOLATION)
+  ExceptionFlags: 00000000
+  ExceptionAddress: ntdll.00007FFEBD075B4B
+  NumberParameters: 2
+  ExceptionInformation[00]: 0000000000000000 Read
+  ExceptionInformation[01]: FFFFFFFFFFFFFFFF Inaccessible Address
+  First chance exception on 00007FFEBD075B4B (C0000005, EXCEPTION_ACCESS_VIOLATION)!
+
+Address          Size             Party  Info                                                Content Typ Prote Initi
+0000000000010000 0000000000001000 User                                                        MAP -RW-- -RW--
+0000000000011000 0000000000001000 User   Reserved (0000000000010000)                          MAP       -RW--
+0000000000030000 0000000000020000 User                                                        MAP -R--- -R---
+0000000000050000 0000000000038000 User   Reserved                                             PRV       -RW--
+0000000000088000 0000000000008000 User   Stack (11188)                                        PRV -RW-G -RW--
+0000000000090000 0000000000004000 User                                                        MAP -R--- -R---
+00000000000A0000 0000000000002000 User                                                        PRV -RW-- -RW--
+00000000000B0000 0000000000011000 User   \Device\HarddiskVolume4\Windows\System32\C_1252.NLS  MAP -R--- -R---
+00000000000D0000 0000000000011000 User   \Device\HarddiskVolume4\Windows\System32\C_437.NLS   MAP -R--- -R---
+00000000000F0000 0000000000003000 User   \Device\HarddiskVolume4\Windows\System32\l_intl.nls  MAP -R--- -R---
+0000000000100000 0000000000004000 User                                                        MAP -R--- -R---
+0000000000110000 0000000000004000 User                                                        MAP -R--- -R---
+0000000000120000 0000000000003000 User                                                        MAP -R--- -R---
+0000000000130000 0000000000003000 User   \Device\HarddiskVolume4\Windows\System32\l_intl.nls  MAP -R--- -R---
+0000000000140000 0000000000011000 User   \Device\HarddiskVolume4\Windows\System32\C_1252.NLS  MAP -R--- -R---
+0000000000160000 0000000000011000 User   \Device\HarddiskVolume4\Windows\System32\C_437.NLS   MAP -R--- -R---
+00000000001F0000 0000000000005000 User   Heap (ID 2)                                          PRV -RW-- -RW--
+00000000001F5000 000000000000B000 User   Reserved (00000000001F0000)                          PRV       -RW--
+0000000000200000 00000000001BD000 User   Reserved                                             PRV       -RW--
+00000000003BD000 0000000000009000 User   PEB, TEB (11188), TEB (2408), TEB (8680)             PRV -RW-- -RW--
+00000000003C6000 000000000003A000 User   Reserved (0000000000200000)                          PRV       -RW--
+0000000000400000 0000000000001000 User   testdll.exe                                          IMG -R--- ERWC-
+0000000000401000 0000000000001000 User    ".text"                                             IMG ER--- ERWC-
+0000000000402000 0000000000001000 User    ".data"                                             IMG -RWC- ERWC-
+0000000000403000 0000000000001000 User    ".idata"                                            IMG -RW-- ERWC-
+0000000000410000 00000000000D3000 User   \Device\HarddiskVolume4\Windows\System32\locale.nls  MAP -R--- -R---
+0000000000520000 000000000000F000 User   Heap (ID 0)                                          PRV -RW-- -RW--
+000000000052F000 0000000000001000 User   Reserved (0000000000520000)                          PRV       -RW--
+0000000000530000 00000000000FC000 User   Reserved                                             PRV       -RW--
+000000000062C000 0000000000004000 User   Stack (8680)                                         PRV -RW-G -RW--
+0000000000630000 00000000000FC000 User   Reserved                                             PRV       -RW--
+000000000072C000 0000000000004000 User   Stack (2408)                                         PRV -RW-G -RW--
+0000000000730000 000000000000D000 User   Reserved                                             PRV       -RW--
+000000000073D000 0000000002626000 User                                                        PRV -RW-- -RW--
+0000000002D63000 0000000000001000 User   Reserved (0000000000730000)                          PRV       -RW--
+0000000002D70000 00000000000FC000 User   Reserved                                             PRV       -RW--
+0000000002E6C000 0000000000004000 User                                                        PRV -RW-G -RW--
+000000005D890000 0000000000001000 User   fasm64.dll                                           IMG -R--- ERWC-
+000000005D891000 0000000000002000 User    ".data"                                             IMG -RW-- ERWC-
+000000005D893000 000000000001A000 User    ".text"                                             IMG ER--- ERWC-
+000000005D8AD000 0000000000001000 User    ".idata"                                            IMG -RW-- ERWC-
+000000005D8AE000 0000000000001000 User    ".edata"                                            IMG -R--- ERWC-
+000000005D8AF000 0000000000001000 User    ".reloc"                                            IMG -R--- ERWC-
+000000005D8B0000 0000000000001000 User    ".rsrc"                                             IMG -R--- ERWC-
+000000007FFE0000 0000000000001000 User   KUSER_SHARED_DATA                                    PRV -R--- -R---
+000000007FFEB000 0000000000001000 User                                                        PRV -R--- -R---
+00007FF4FDEC0000 0000000000005000 User                                                        MAP -R--- -R---
+00007FF4FDEC5000 00000000000FB000 User   Reserved (00007FF4FDEC0000)                          MAP       -R---
+00007FF4FDFC0000 0000000100020000 User   Reserved                                             PRV       -RW--
+00007FF5FDFE0000 0000000002000000 User   Reserved                                             PRV       -RW--
+00007FF5FFFE0000 0000000000001000 User                                                        PRV -RW-- -RW--
+00007FF5FFFF0000 0000000000001000 User                                                        MAP -R--- -R---
+00007FFEBA4A0000 0000000000001000 System kernelbase.dll                                       IMG -R--- ERWC-
+00007FFEBA4A1000 000000000017C000 System  ".text"                                             IMG ER--- ERWC-
+00007FFEBA61D000 0000000000001000 System  "fothk"                                             IMG ER--- ERWC-
+00007FFEBA61E000 00000000001D4000 System  ".rdata"                                            IMG -R--- ERWC-
+00007FFEBA7F2000 0000000000006000 System  ".data"                                             IMG -RW-- ERWC-
+00007FFEBA7F8000 0000000000012000 System  ".pdata"                                            IMG -R--- ERWC-
+00007FFEBA80A000 0000000000001000 System  ".didat"                                            IMG -R--- ERWC-
+00007FFEBA80B000 0000000000001000 System  ".rsrc"                                             IMG -R--- ERWC-
+00007FFEBA80C000 0000000000035000 System  ".reloc"                                            IMG -R--- ERWC-
+00007FFEBA841000 0000000000001000 User   ImageExtension                                       N/A       
+00007FFEBA842000 0000000000002000 User   Reserved (00007FFEBA4A0000)                          IMG       ERWC-
+00007FFEBAEE0000 0000000000001000 System msvcrt.dll                                           IMG -R--- ERWC-
+00007FFEBAEE1000 000000000007D000 System  ".text"                                             IMG ER--- ERWC-
+00007FFEBAF5E000 0000000000001000 System  "fothk"                                             IMG ER--- ERWC-
+00007FFEBAF5F000 000000000001E000 System  ".rdata"                                            IMG -R--- ERWC-
+00007FFEBAF7D000 0000000000005000 System  ".data"                                             IMG -RW-- ERWC-
+00007FFEBAF82000 0000000000005000 System  ".pdata"                                            IMG -R--- ERWC-
+00007FFEBAF87000 0000000000001000 System  ".rsrc"                                             IMG -R--- ERWC-
+00007FFEBAF88000 0000000000001000 System  ".reloc"                                            IMG -R--- ERWC-
+00007FFEBAF89000 0000000000001000 User   ImageExtension                                       N/A       
+00007FFEBAF8A000 0000000000002000 User   Reserved (00007FFEBAEE0000)                          IMG       ERWC-
+00007FFEBB120000 0000000000001000 System kernel32.dll                                         IMG -R--- ERWC-
+00007FFEBB121000 0000000000084000 System  ".text"                                             IMG ER--- ERWC-
+00007FFEBB1A5000 0000000000001000 System  "fothk"                                             IMG ER--- ERWC-
+00007FFEBB1A6000 0000000000037000 System  ".rdata"                                            IMG -R--- ERWC-
+00007FFEBB1DD000 0000000000002000 System  ".data"                                             IMG -RW-- ERWC-
+00007FFEBB1DF000 0000000000005000 System  ".pdata"                                            IMG -R--- ERWC-
+00007FFEBB1E4000 0000000000001000 System  ".didat"                                            IMG -R--- ERWC-
+00007FFEBB1E5000 0000000000001000 System  ".rsrc"                                             IMG -R--- ERWC-
+00007FFEBB1E6000 0000000000001000 System  ".reloc"                                            IMG -R--- ERWC-
+00007FFEBB1E7000 0000000000001000 User   ImageExtension                                       N/A       
+00007FFEBB1E8000 0000000000002000 User   Reserved (00007FFEBB120000)                          IMG       ERWC-
+00007FFEBD060000 0000000000001000 System ntdll.dll                                            IMG -R--- ERWC-
+00007FFEBD061000 0000000000169000 System  ".text"                                             IMG ER--- ERWC-
+00007FFEBD1CA000 0000000000001000 System  "SCPCFG"                                            IMG ER--- ERWC-
+00007FFEBD1CB000 0000000000001000 System  "SCPCFGFP"                                          IMG ER--- ERWC-
+00007FFEBD1CC000 0000000000001000 System  "SCPCFGNP"                                          IMG ER--- ERWC-
+00007FFEBD1CD000 0000000000001000 System  "SCPCFGES"                                          IMG ER--- ERWC-
+00007FFEBD1CE000 0000000000001000 System  "RT"                                                IMG ER--- ERWC-
+00007FFEBD1CF000 0000000000001000 System  "PAGE"                                              IMG ER--- ERWC-
+00007FFEBD1D0000 0000000000001000 System  "fothk"                                             IMG ER--- ERWC-
+00007FFEBD1D1000 0000000000059000 System  ".rdata"                                            IMG -R--- ERWC-
+00007FFEBD22A000 0000000000009000 System  ".data"                                             IMG -RW-- ERWC-
+00007FFEBD233000 0000000000011000 System  ".pdata"                                            IMG -R--- ERWC-
+00007FFEBD244000 0000000000004000 System  ".mrdata"                                           IMG -R--- ERWC-
+00007FFEBD248000 0000000000001000 System  ".00cfg"                                            IMG -R--- ERWC-
+00007FFEBD249000 0000000000079000 System  ".rsrc"                                             IMG -R--- ERWC-
+00007FFEBD2C2000 0000000000001000 System  ".reloc"                                            IMG -R--- ERWC-
+00007FFEBD2C3000 0000000000001000 User   ImageExtension                                       N/A       
+00007FFEBD2C4000 0000000000002000 User   Reserved (00007FFEBD060000)                          IMG       ERWC-
+
+Base             Module         Party  Path                                                Status  
+0000000000400000 testdll.exe    User   C:\Users\CKGuest\Downloads\fasmdll64mod\testdll.exe Unloaded
+000000005D890000 fasm64.dll     User   C:\Users\CKGuest\Downloads\fasmdll64mod\fasm64.dll  Unloaded
+00007FFEBA4A0000 kernelbase.dll System C:\Windows\System32\KernelBase.dll                  Unloaded
+00007FFEBAEE0000 msvcrt.dll     System C:\Windows\System32\msvcrt.dll                      Unloaded
+00007FFEBB120000 kernel32.dll   System C:\Windows\System32\kernel32.dll                    Unloaded
+00007FFEBD060000 ntdll.dll      System C:\Windows\System32\ntdll.dll                       Unloaded
+
